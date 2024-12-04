@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Cookie, Response, Depends
 from schema.user import UserLoginShema
 from service.userService import UserService
-from auth.auth import decode_jwt
 from auth.httpexceptions import UserCreationException, UserNotFoundException, InvalidPasswordException
 
 router = APIRouter(

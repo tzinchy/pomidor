@@ -2,8 +2,12 @@ import logging
 from database import pwd_context
 from schema.user import EmailStr, UserSchemaForDump
 from dao.userDAO import UserDAO
-from auth.auth import create_jwt, decode_jwt
 from auth.httpexceptions import UserNotFoundException, InvalidPasswordException, UserAlreadyExistsException
+from fastapi import HTTPException
+from datetime import datetime, timedelta, timezone
+from config import Settings
+import jwt
+
 
 # Setting up a logger
 logger = logging.getLogger(__name__)
@@ -55,8 +59,8 @@ class UserService:
             user_payload = UserSchemaForDump(**user_data)
             
             # Генерация JWT токена
-            jwt_token = create_jwt(user_payload)
-            return decode_jwt(jwt_token)
+            jwt_token = UserService.create_jwt(user_payload)
+            return UserService.decode_jwt(jwt_token)
         else:
             logger.warning(f"Данные пользователя не найдены для {email}.")
             raise UserNotFoundException()  # Если данные не найдены, генерируем исключение
@@ -83,3 +87,24 @@ class UserService:
         Hashes the provided password using bcrypt.
         """
         return pwd_context.hash(password)
+    
+    @classmethod
+    def create_jwt(cls, user_payload: UserSchemaForDump) -> str:
+        payload = user_payload.model_dump()
+
+        payload['exp'] = datetime.now(timezone.utc) + timedelta(hours=1)
+
+        token = jwt.encode(payload, Settings.SECRET_KEY, algorithm=Settings.ALGORITHM)
+    
+        return token
+
+    @classmethod  
+    def decode_jwt(cls, jwt_token: str): 
+        try:
+            payload = jwt.decode(jwt_token, Settings.SECRET_KEY, algorithms=[Settings.ALGORITHM])
+            return payload
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Token has expired")
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+

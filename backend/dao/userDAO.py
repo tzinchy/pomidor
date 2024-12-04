@@ -5,6 +5,8 @@ from config import Settings
 from auth.httpexceptions import UserNotFoundException
 from schema.user import UserLoginShema, UserSchemaForDump
 import jwt
+from datetime import datetime, timedelta, timezone
+from fastapi import HTTPException
 
 class UserDAO:
     """
@@ -38,7 +40,7 @@ class UserDAO:
     @classmethod
     async def find_user_info_for_jwt(cls, email: EmailStr):
         """
-        Получение всей информации о пользователе для создания JWT (включая group и role).
+        Получение всей информации о пользователе для создания JWT
         """
         async with async_session_maker() as session:
             query = text(f'''
@@ -52,7 +54,6 @@ class UserDAO:
             row = result.fetchone()
 
             if row:
-                # Преобразуем кортеж в словарь
                 return {
                     "id": row[0],
                     "email": row[1],
@@ -63,16 +64,14 @@ class UserDAO:
     
     @classmethod
     async def create_user(cls, email: EmailStr, password: str):
-        # Перед созданием проверим, существует ли пользователь с таким email
+
         user = await cls.find_user_by_email(email)
         print(user)
         if user:
-            raise UserNotFoundException()  # Выбрасываем ошибку, если пользователь найден
+            raise UserNotFoundException()  
 
         async with async_session_maker() as cursor:
             query = text(f'INSERT INTO {Settings.DB_SCHEMA}.user (email, password) VALUES (:email, :password)')
             await cursor.execute(query.params(email=email, password=password))
             await cursor.commit()
 
-    def create_jwt(user_payload: UserSchemaForDump) -> str:
-        return jwt.encode(user_payload.model_dump(), Settings.SECRET_KEY, algorithm="HS256")
