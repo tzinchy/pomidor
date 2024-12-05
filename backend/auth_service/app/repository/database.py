@@ -1,11 +1,7 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from passlib.context import CryptContext
-from sqlalchemy import text
 
-from app.config import Settings
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from app.core.config import Settings
 
 schema = Settings.DB_SCHEMA
 

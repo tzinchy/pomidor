@@ -1,11 +1,5 @@
 from pydantic import BaseModel, EmailStr
 
-
-class UserLoginShema(BaseModel):
-    email: EmailStr
-    password: str
-
-
 class UserSchemaForDump(BaseModel):
     id: int
     email: EmailStr

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Cookie, Response, Depends, Request
-from schema.user import UserLoginShema
-from service.userService import UserService
+from models.auth import UserLoginShema
+from services.user_service import UserService
 from app.core.httpexceptions import (
     UserCreationException,
     UserNotFoundException,
