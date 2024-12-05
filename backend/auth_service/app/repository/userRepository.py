@@ -1,8 +1,8 @@
-from database import async_session_maker
+from app.database import async_session_maker
 from pydantic import EmailStr
 from sqlalchemy import text
-from config import Settings
-from auth.httpexceptions import UserNotFoundException
+from app.config import Settings
+from app.core.httpexceptions import UserNotFoundException
 from schema.user import UserLoginShema, UserSchemaForDump
 import jwt
 from datetime import datetime, timedelta, timezone

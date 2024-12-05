@@ -2,18 +2,17 @@ import logging
 from database import pwd_context
 from schema.user import EmailStr, UserSchemaForDump
 from repository.userRepository import UserRepository
-from auth.httpexceptions import (
-    UserNotFoundException,
+from core.httpexceptions import (
     InvalidPasswordException,
-    UserAlreadyExistsException,
+    UserNotFoundException,
+
 )
 from fastapi import HTTPException, Request
 from datetime import datetime, timedelta, timezone
-from config import Settings
+from app.config import Settings
 import jwt
 
 
-# Setting up a logger
 logger = logging.getLogger(__name__)
 
 

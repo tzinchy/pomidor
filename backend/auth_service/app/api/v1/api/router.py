@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Cookie, Response, Depends, Request
 from schema.user import UserLoginShema
 from service.userService import UserService
-from auth.httpexceptions import (
+from app.core.httpexceptions import (
     UserCreationException,
     UserNotFoundException,
     InvalidPasswordException,
@@ -42,12 +42,10 @@ async def login_user(response: Response, user: UserLoginShema, ):
 
             # Set the cookie
             response.set_cookie(
-                key="access_token",  # Cookie key
-                value=token,          # JWT token as the value
-                httponly=True,        # Prevent access to cookie via JavaScript (important for security)
-                secure=True,          # Only send the cookie over HTTPS (important for security)
-                samesite="Strict",    # CSRF protection - allow cookie only in same-site requests
-                max_age=3600          # Expiration time for the cookie (optional)
+                key="access_token",  
+                value=token,          
+                httponly=True,       
+                max_age=3600          
             )
 
             return {"token": token}
@@ -64,12 +62,3 @@ async def login_user(response: Response, user: UserLoginShema, ):
         print(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
     
-
-tester = APIRouter(prefix='/test')
-
-@tester.get('/test')
-async def test(request: Request, current_user : Depends(UserService.decode_jwt)):
-    """
-    Test endpoint that requires a valid JWT token to access.
-    """
-    return {"message": f"Hello, {current_user['email']}"}

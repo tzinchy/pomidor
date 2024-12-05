@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from passlib.context import CryptContext
 from sqlalchemy import text
 
-from config import Settings
+from app.config import Settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
