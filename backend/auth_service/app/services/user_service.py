@@ -1,12 +1,12 @@
 import logging
-from app.repository.database import pwd_context
-from models.user import EmailStr, UserSchemaForDump
-from app.repository.user_repository import UserRepository
+from models.user import EmailStr
+from repository.user_repository import UserRepository
 from core.httpexceptions import (
     InvalidPasswordException,
     UserNotFoundException,
     UserAlreadyExistsException
 )
+from utils.password_utils import validate_password
 
 
 logger = logging.getLogger(__name__)
@@ -26,8 +26,8 @@ class UserService:
                 raise UserNotFoundException()  # Raise a UserNotFoundException if no user is found
 
             password_from_db = await UserRepository.find_password_by_email(email=email)
-            if cls.validate_password(
-                password_provided=password, password_from_db=password_from_db
+            if validate_password(
+                provided_password = password, stored_hash=password_from_db
             ):
                 logger.info(f"User {email} validated successfully.")
                 return True

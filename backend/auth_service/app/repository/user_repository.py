@@ -1,16 +1,12 @@
-from app.repository.database import async_session_maker
+from repository.database import async_session_maker
 from pydantic import EmailStr
 from sqlalchemy import text
-from app.core.config import Settings
-from app.core.httpexceptions import UserNotFoundException
+from core.config import Settings
+from core.httpexceptions import UserNotFoundException
 
 
 class UserRepository:
-    """
-    Базовый класс для работы с пользовательскими данными.
-    Включает методы для получения данных пользователя, пароля и информации для создания JWT.
-    """
-
+    # Пример исправленного метода для получения пользователя по email
     @classmethod
     async def find_user_by_email(cls, email: EmailStr):
         """
@@ -22,9 +18,12 @@ class UserRepository:
                 f"SELECT email FROM {Settings.DB_SCHEMA}.user WHERE email = :email"
             )
             result = await cursor.execute(query.params(email=email))
-            result = result.fetchone()[0]
-            return result
+            row = result.fetchone()  # Получаем первую строку результата
+            if row:
+                return row[0]  # Если строка найдена, возвращаем email
+            return None  # Если нет, возвращаем None
 
+    # Аналогично для поиска пароля
     @classmethod
     async def find_password_by_email(cls, email: EmailStr):
         """
@@ -36,8 +35,11 @@ class UserRepository:
                 f"SELECT password FROM {Settings.DB_SCHEMA}.user WHERE email = :email"
             )
             result = await cursor.execute(query.params(email=email))
-            result = result.fetchone()[0]
-            return result
+            row = result.fetchone()  # Получаем первую строку результата
+            if row:
+                return row[0]  # Если строка найдена, возвращаем пароль
+            return None  # Если нет, возвращаем None
+
 
     @classmethod
     async def find_user_info_for_jwt(cls, email: EmailStr):

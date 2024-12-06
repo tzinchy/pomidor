@@ -1,16 +1,18 @@
 import jwt
 from datetime import datetime, timezone, timedelta
-from app.core.config import Settings
+from core.config import Settings
 from fastapi import HTTPException, Request 
 from repository.user_repository import UserRepository
 import logging
 from core.httpexceptions import UserNotFoundException
 from pydantic import EmailStr
-
+from models.user import UserSchemaForDump
+from fastapi import Depends
+from services.auth_service import get_token
 
 logger = logging.getLogger(__name__)
 
-async def create_jwt_token(cls, email: EmailStr) -> str:
+async def create_jwt_token(email: EmailStr) -> str:
     """
     Create jwt 
     """
@@ -28,23 +30,15 @@ async def create_jwt_token(cls, email: EmailStr) -> str:
         logger.warning(f"Данные пользователя не найдены для {email}.")
         raise UserNotFoundException()  
 
-
-async def decode_jwt(request: Request):
-
-    token = request.cookies.get('access_token')
-    
+def decode_jwt(token: str = Depends(get_token)):
     if not token:
         raise HTTPException(status_code=401, detail="Token is missing")
 
     try:
-
         payload = jwt.decode(
             token, Settings.SECRET_KEY, algorithms=[Settings.ALGORITHM]
         )
-
-        if "sub" not in payload:
-            raise HTTPException(status_code=401, detail="Token does not contain user information")
-
+        
         return payload
 
     except jwt.ExpiredSignatureError:

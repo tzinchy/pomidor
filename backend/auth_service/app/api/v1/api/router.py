@@ -1,11 +1,14 @@
-from fastapi import APIRouter, HTTPException, status, Cookie, Response, Depends, Request
+from fastapi import APIRouter, HTTPException, Response, Depends, Request
 from models.auth import UserLoginShema
+from models.user import UserSchemaForDump
 from services.user_service import UserService
-from app.core.httpexceptions import (
-    UserCreationException,
+from core.httpexceptions import (
     UserNotFoundException,
     InvalidPasswordException,
 )
+from utils.jwt_utils import create_jwt_token, decode_jwt
+from utils.password_utils import get_password_hash
+
 
 router = APIRouter(prefix="/auth", tags=["Auth % Users"])
 
@@ -17,7 +20,7 @@ async def register_user(user: UserLoginShema):
     """
     try:
         # Хешируем пароль и создаем нового пользователя
-        hashed_password = UserService.get_password_hash(user.password)
+        hashed_password = get_password_hash(user.password)
         await UserService.register_user(email=user.email, password=hashed_password)
 
         # Возвращаем успешный ответ или токен
@@ -27,6 +30,7 @@ async def register_user(user: UserLoginShema):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+
 @router.post("/login", description='Иосиф латентный фронтеднре ')
 async def login_user(response: Response, user: UserLoginShema, ):
     try:
@@ -34,9 +38,10 @@ async def login_user(response: Response, user: UserLoginShema, ):
         is_valid_user = await UserService.validate_user(
             email=user.email, password=user.password
         )
+        print(is_valid_user)
         if is_valid_user:
             print("User validated, generating JWT token")
-            token = await UserService.create_jwt_token(user.email)
+            token = await create_jwt_token(user.email)
 
             print(f"Generated token: {token}")
 
@@ -48,7 +53,7 @@ async def login_user(response: Response, user: UserLoginShema, ):
                 max_age=3600          
             )
 
-            return {"token": token}
+            return token
         else:
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -62,3 +67,6 @@ async def login_user(response: Response, user: UserLoginShema, ):
         print(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
     
+@router.post('/test')
+async def get_user(request : Request, user : UserSchemaForDump = Depends(decode_jwt)):
+    return user
