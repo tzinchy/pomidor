@@ -3,21 +3,21 @@ FROM python:3.12
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Устанавливаем рабочую директорию на auth_service
+#set workdir = auth_service
 WORKDIR /auth_service
 
-# Копируем зависимости
+# install lib 
 COPY requirements.txt /auth_service/
 RUN pip install -r requirements.txt
 
-# Копируем весь проект в контейнер
+# copy to container 
 COPY . /auth_service/
 
-# Устанавливаем PYTHONPATH
+# PYTHONPATH 
 ENV PYTHONPATH=/auth_service/app
 
-# Открываем порт
+# Open port
 EXPOSE 8000
 
-# Указываем команду для запуска приложения
+# For starting app 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

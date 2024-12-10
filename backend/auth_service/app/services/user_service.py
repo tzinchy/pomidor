@@ -16,24 +16,23 @@ class UserService:
     @classmethod
     async def validate_user(cls, email: EmailStr, password: str):
         """
-        Validates the user's email and password.
-        Returns True if the user is valid, raises exceptions otherwise.
+        Validate users by email and password.
         """
         try:
             user = await UserRepository.find_user_by_email(email=email)
             if not user:
                 logger.warning(f"User with email {email} not found.")
-                raise UserNotFoundException()  # Raise a UserNotFoundException if no user is found
+                raise UserNotFoundException()
 
             password_from_db = await UserRepository.find_password_by_email(email=email)
             if validate_password(
-                provided_password = password, stored_hash=password_from_db
+                provided_password=password, stored_hash=password_from_db
             ):
                 logger.info(f"User {email} validated successfully.")
                 return True
             else:
                 logger.warning(f"Invalid password for user {email}.")
-                raise InvalidPasswordException()  # Raise an exception for invalid password
+                raise InvalidPasswordException()
         except Exception as e:
             logger.error(f"Error during validation for user {email}: {str(e)}")
             raise e
@@ -41,15 +40,27 @@ class UserService:
     @classmethod
     async def register_user(cls, email: EmailStr, password: str):
         """
-        Registers a new user by checking if the user already exists.
+        Register new user
         """
-        # Check if the user already exists
         existing_user = await UserRepository.find_user_by_email(email=email)
         if existing_user:
             logger.warning(f"User with email {email} already exists.")
-            raise UserAlreadyExistsException()  # Raise exception if user already exists
+            raise UserAlreadyExistsException()
 
-        # Create the new user
         await UserRepository.create_user(email=email, password=password)
         logger.info(f"User {email} registered successfully.")
         return {"message": "User registered successfully"}
+
+    @classmethod
+    async def get_user_data_for_jwt(cls, email: EmailStr):
+        """
+        Get user data to create JWT (only payload)
+        """
+        user_data = await UserRepository.all_user_data(email=email)
+        print(user_data)
+        if not user_data:
+            logger.warning(f"User data for JWT not found for email: {email}")
+            raise UserNotFoundException(detail="User data not found")
+        
+        logger.info(f"User data for JWT retrieved for email: {email}")
+        return user_data

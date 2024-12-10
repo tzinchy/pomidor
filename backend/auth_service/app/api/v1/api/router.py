@@ -1,22 +1,25 @@
-from fastapi import APIRouter, HTTPException, Response, Depends, Request
+from fastapi import APIRouter, HTTPException, Response, Depends
 from models.auth import UserLoginShema
-from models.user import UserSchemaForDump
 from services.user_service import UserService
 from core.httpexceptions import (
     UserNotFoundException,
     InvalidPasswordException,
 )
-from utils.jwt_utils import create_jwt_token, decode_jwt
 from utils.password_utils import get_password_hash
+import logging
+from JWTs.JWT_tapo44ek import create_jwt_token, DecodeJWT
+from models.user import UserJWTData
 
+deshif_test = DecodeJWT(UserJWTData)
 
 router = APIRouter(prefix="/auth", tags=["Auth % Users"])
 
+logger = logging.getLogger(__name__)
 
 @router.post("/register")
-async def register_user(user: UserLoginShema):
+async def register_user(user: UserLoginShema, response : Response):
     """
-    Регистрирует нового пользователя. Проверяет, существует ли уже пользователь с таким email.
+    Register user and check of existing 
     """
     try:
         # Хешируем пароль и создаем нового пользователя
@@ -30,43 +33,40 @@ async def register_user(user: UserLoginShema):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-
-@router.post("/login", description='Иосиф латентный фронтеднре ')
-async def login_user(response: Response, user: UserLoginShema, ):
+@router.post("/login", summary="Авторизация пользователя")
+async def login_user(response: Response, user: UserLoginShema):
+    """
+    Logining user and create JWT
+    """
     try:
-        print(f"Logging in user: {user.email}")
-        is_valid_user = await UserService.validate_user(
-            email=user.email, password=user.password
-        )
-        print(is_valid_user)
-        if is_valid_user:
-            print("User validated, generating JWT token")
-            token = await create_jwt_token(user.email)
-
-            print(f"Generated token: {token}")
-
-            # Set the cookie
-            response.set_cookie(
-                key="access_token",  
-                value=token,          
-                httponly=True,       
-                max_age=3600          
-            )
-
-            return token
-        else:
+        logger.info(f"Authorization user: {user.email}")
+        
+        # Проверка валидности пользователя
+        is_valid_user = await UserService.validate_user(email=user.email, password=user.password)
+        if not is_valid_user:
             raise HTTPException(status_code=401, detail="Invalid credentials")
-
+        
+        # Получение данных для JWT
+        user_data = await UserService.get_user_data_for_jwt(email=user.email)
+        
+        # Генерация токена
+        token = await create_jwt_token(user_data)
+        
+        # Установка токена в куки
+        response.set_cookie(
+            key="access_token",
+            value=token,
+            httponly=True,
+            max_age=36000,
+            secure=True,
+        )
+        return {"access_token": token}
     except UserNotFoundException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
-
+        logger.warning(f"Пользователь не найден: {e.detail}")
+        raise HTTPException(status_code=404, detail="User not found")
     except InvalidPasswordException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
-
+        logger.warning(f"Неверный пароль для пользователя: {user.email}")
+        raise HTTPException(status_code=401, detail="Invalid password")
     except Exception as e:
-        print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-    
-@router.post('/test')
-async def get_user(request : Request, user : UserSchemaForDump = Depends(decode_jwt)):
-    return user
+        logger.error(f"Ошибка авторизации: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")

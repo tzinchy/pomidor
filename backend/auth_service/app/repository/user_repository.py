@@ -3,73 +3,67 @@ from pydantic import EmailStr
 from sqlalchemy import text
 from core.config import Settings
 from core.httpexceptions import UserNotFoundException
-
+from models.user import UserJWTData
 
 class UserRepository:
-    # Пример исправленного метода для получения пользователя по email
     @classmethod
     async def find_user_by_email(cls, email: EmailStr):
         """
-        Получение пользователя по email.
-        Возвращает пользователя, если он найден, иначе None.
+        Find user by email
         """
         async with async_session_maker() as cursor:
             query = text(
                 f"SELECT email FROM {Settings.DB_SCHEMA}.user WHERE email = :email"
             )
             result = await cursor.execute(query.params(email=email))
-            row = result.fetchone()  # Получаем первую строку результата
-            if row:
-                return row[0]  # Если строка найдена, возвращаем email
-            return None  # Если нет, возвращаем None
+            row = result.fetchone()
+            return row[0] if row else None
 
-    # Аналогично для поиска пароля
     @classmethod
     async def find_password_by_email(cls, email: EmailStr):
         """
-        Получение пароля пользователя по email.
-        Возвращает пароль, если найден, иначе None.
+        Get password by email
         """
         async with async_session_maker() as cursor:
             query = text(
                 f"SELECT password FROM {Settings.DB_SCHEMA}.user WHERE email = :email"
             )
             result = await cursor.execute(query.params(email=email))
-            row = result.fetchone()  # Получаем первую строку результата
-            if row:
-                return row[0]  # Если строка найдена, возвращаем пароль
-            return None  # Если нет, возвращаем None
-
+            row = result.fetchone()
+            return row[0] if row else None
 
     @classmethod
-    async def find_user_info_for_jwt(cls, email: EmailStr):
+    async def all_user_data(cls, email: EmailStr) -> UserJWTData | None:
         """
-        Получение всей информации о пользователе для создания JWT
+        Get all user data for payload
         """
         async with async_session_maker() as session:
             query = text(f"""
                 SELECT user_id, email, "group", "role" 
                 FROM public.user
-                LEFT JOIN public.group using (group_id)
-                LEFT JOIN public.role using (role_id)
+                LEFT JOIN public.group USING (group_id)
+                LEFT JOIN public.role USING (role_id)
                 WHERE email = :email
             """)
             result = await session.execute(query.params(email=email))
             row = result.fetchone()
-
+            print(row)
             if row:
-                return {
-                    "id": row[0],
+                result = {
+                    "user_id": row[0],  # Измените 'user_id' на 'id'
                     "email": row[1],
                     "group": row[2],
-                    "role": row[3],
+                    "role": row[3]
                 }
+                return result
             return None
 
     @classmethod
     async def create_user(cls, email: EmailStr, password: str):
+        """
+        Creating new user
+        """
         user = await cls.find_user_by_email(email)
-        print(user)
         if user:
             raise UserNotFoundException()
 

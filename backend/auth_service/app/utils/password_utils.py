@@ -1,4 +1,3 @@
-from core.config import Settings
 import bcrypt
 
 def get_password_hash(password: str) -> str:
