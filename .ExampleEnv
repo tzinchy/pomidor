@@ -1,8 +1,13 @@
-DB_HOST=host.docker.internal
+DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASS=postgres
-DB_NAME=pomidor
+DB_NAME=postgres
 DB_SCHEMA=public
 ALGORITHM=HS256
-SECRET_KEY=fsnfsDFLSFFJSFJDLSJFSDLKS31231#@#@121
+SECRET_KEY=random_key123
+EMAIL_SENDER=your@gmail.com
+EMAIL_LOGIN=your_login
+EMAIL_PASSWORD=super_password 
+EMAIL_SERVER=server.gmail
+EMAIL_PORT=587

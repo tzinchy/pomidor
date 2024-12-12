@@ -10,3 +10,4 @@ backend/dao/__pycache__
 backend/schema/__pycache__
 backend/service/__pycache__
 backend/auth/__pycache__
+resettlement_department
