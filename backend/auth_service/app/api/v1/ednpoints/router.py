@@ -10,7 +10,7 @@ import logging
 from JWTs.JWT_tapo44ek import create_jwt_token, DecodeJWT
 from models.user import UserJWTData
 
-deshif_test = DecodeJWT(UserJWTData)
+get_user = DecodeJWT(UserJWTData)
 
 router = APIRouter(prefix="/auth", tags=["Auth % Users"])
 
@@ -70,3 +70,8 @@ async def login_user(response: Response, user: UserLoginShema):
     except Exception as e:
         logger.error(f"Ошибка авторизации: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+'''
+@router.post("/reset_password")
+async def reset_password(email: E)'''

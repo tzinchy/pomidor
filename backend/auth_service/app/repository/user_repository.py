@@ -50,7 +50,7 @@ class UserRepository:
             print(row)
             if row:
                 result = {
-                    "user_id": row[0],  # Измените 'user_id' на 'id'
+                    "user_id": row[0], 
                     "email": row[1],
                     "group": row[2],
                     "role": row[3]
