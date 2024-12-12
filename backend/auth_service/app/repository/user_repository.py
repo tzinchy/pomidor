@@ -4,6 +4,7 @@ from pydantic import EmailStr
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from core.config import Settings
+from utils.password_utils import get_password_hash
 
 class UserRepository:
     @classmethod
@@ -55,12 +56,13 @@ class UserRepository:
     async def update_password(email: str, new_password: str) -> None:
         """Update a user's password."""
         async with async_session_maker() as session:
+            hashed_password = get_password_hash(new_password)
             query = text(f"""
                 UPDATE {Settings.DB_SCHEMA}.user 
                 SET password = :new_password 
                 WHERE email = :email
             """)
-            await session.execute(query.params(email=email, new_password=new_password))
+            await session.execute(query.params(email=email, new_password=hashed_password))
             await session.commit()
 
 

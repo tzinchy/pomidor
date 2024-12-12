@@ -7,7 +7,7 @@ def get_password_hash(password: str) -> str:
     Get password hash.
     bcrypt generates a random salt internally.
     """
-    salt = bcrypt.gensalt()  # Генерирует случайную соль
+    salt = bcrypt.gensalt()  
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed_password.decode('utf-8')
 
