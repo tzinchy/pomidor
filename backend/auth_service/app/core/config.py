@@ -18,3 +18,8 @@ class Settings:
 
     ALGORITHM = os.environ["ALGORITHM"]
     SECRET_KEY = os.environ["SECRET_KEY"]
+    EMAIL_SENDER = os.environ['EMAIL_SENDER']
+    EMAIL_PASSWORD = os.environ['EMAIL_PASSWORD']
+    EMAIL_SERVER = os.environ['EMAIL_SERVER']
+    EMAIL_PORT = os.environ['EMAIL_PORT']
+    EMAIL_LOGIN= os.environ['EMAIL_LOGIN']

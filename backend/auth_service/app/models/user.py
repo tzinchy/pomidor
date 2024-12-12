@@ -1,10 +1,11 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
+from typing import Optional
 
 class UserJWTData(BaseModel):
-    user_id: int  # Обновлено с id на user_id
+    user_id: int
     email: EmailStr
-    group: str
-    role: str
-    exp : int
+    group: Optional[str]  # Сделать поле необязательным
+    role: Optional[str]   # Сделать поле необязательным
+    exp: int
 
     model_config = ConfigDict(from_attributes=True)

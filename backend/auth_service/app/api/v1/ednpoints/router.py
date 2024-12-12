@@ -7,8 +7,10 @@ from core.httpexceptions import (
 )
 from utils.password_utils import get_password_hash
 import logging
-from JWTs.JWT_tapo44ek import create_jwt_token, DecodeJWT
+from JWTs import create_jwt_token, DecodeJWT
 from models.user import UserJWTData
+from pydantic import EmailStr
+from core.httpexceptions import EmailSendException
 
 get_user = DecodeJWT(UserJWTData)
 
@@ -72,6 +74,51 @@ async def login_user(response: Response, user: UserLoginShema):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-'''
 @router.post("/reset_password")
-async def reset_password(email: E)'''
+async def reset_password(email: EmailStr):
+    """
+    Endpoint to reset a user's password.
+    """
+    try:
+        await UserService.reset_password(email=email)
+        logger.info(f"Password reset successfully for email: {email}")
+        return {"message": "Password reset successfully. Check your email for the new password."}
+    except UserNotFoundException as e:
+        logger.error(f"Password reset failed: {e.detail}")
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    except EmailSendException as e:
+        logger.error(f"Email sending failed: {e.detail}")
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    except Exception as e:
+        logger.error(f"Unexpected error during password reset for email {email}: {str(e)}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred. Please try again later.")
+    
+
+@router.post("/change_password")
+async def change_password(
+    old_password: str,
+    new_password: str,
+    confirm_password: str,
+    user: UserJWTData = Depends(DecodeJWT(UserJWTData))
+):
+    """
+    Endpoint to change the password of the authenticated user.
+    """
+    try:
+        response = await UserService.change_password(
+            email=user.email,
+            old_password=old_password,
+            new_password=new_password,
+            confirm_password=confirm_password
+        )
+        return response
+    except HTTPException as e:
+        logger.error(f"Password change failed for user {user.email}: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"Unexpected error during password change for user {user.email}: {str(e)}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred. Please try again later.")
+    
+@router.get('/test')
+async def test(user = Depends(get_user)):
+    return user
