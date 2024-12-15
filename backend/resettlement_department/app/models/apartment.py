@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-class FamilyStructureBase(BaseModel):
+class FamilyStructure(BaseModel):
     affair_id: int = Field(..., description="ID дела")
     district: Optional[str] = Field(None, description="Район")
     house_address: Optional[str] = Field(None, description="Адрес дома")
