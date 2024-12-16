@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import HTMLResponse
 from models.auth import UserLoginShema
 from services.user_service import UserService
 from core.httpexceptions import (
@@ -11,6 +12,7 @@ from JWTs import create_jwt_token, DecodeJWT
 from models.user import UserJWTData
 from pydantic import EmailStr
 from core.httpexceptions import EmailSendException
+from fastapi.responses import RedirectResponse
 
 get_user = DecodeJWT(UserJWTData)
 
@@ -62,7 +64,7 @@ async def login_user(response: Response, user: UserLoginShema):
             max_age=36000,
             secure=True,
         )
-        return {"access_token": token}
+        return {"message": "Login successful"}
     except UserNotFoundException as e:
         logger.warning(f"Пользователь не найден: {e.detail}")
         raise HTTPException(status_code=404, detail="User not found")
@@ -73,6 +75,58 @@ async def login_user(response: Response, user: UserLoginShema):
         logger.error(f"Ошибка авторизации: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+@router.get("/login-form", summary="Тестовая форма для входа", response_class=HTMLResponse)
+async def login_form():
+    """
+    HTML-форма для тестирования редиректа через браузер.
+    """
+    html_content = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login</title>
+    <script>
+        async function handleLogin(event) {
+            event.preventDefault(); // Отключаем стандартную отправку формы
+
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            try {
+                const response = await fetch("/dgi/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (response.ok) {
+                    window.location.href = "http://127.0.0.1:8001/docs#/";
+                } else {
+                    const data = await response.json();
+                    alert(`Error: ${data.detail || "Login failed"}`);
+                }
+            } catch (error) {
+                console.error("An error occurred during login:", error);
+                alert("An error occurred. Please try again.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Login</h1>
+    <form onsubmit="handleLogin(event)">
+        <label>Email:</label>
+        <input type="email" id="email" value="user@example.com" required><br>
+        <label>Password:</label>
+        <input type="password" id="password" value="string" required><br>
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html>
+    """
+    return HTMLResponse(content=html_content)
 
 @router.post("/reset_password")
 async def reset_password(email: EmailStr):
