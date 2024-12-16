@@ -15,7 +15,7 @@ async def change_password(
     old_password: str,
     new_password: str,
     confirm_password: str,
-    user: UserJWTData = Depends(DecodeJWT(UserJWTData))
+    user: str = Depends(get_user)
 ):
     """
     Endpoint to change the password of the authenticated user.

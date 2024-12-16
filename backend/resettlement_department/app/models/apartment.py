@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-
+from enum import Enum
 class FamilyStructure(BaseModel):
     affair_id: int = Field(..., description="ID дела")
     district: Optional[str] = Field(None, description="Район")
@@ -16,5 +16,6 @@ class NewApartment(BaseModel):
     area: float = Field(..., description="Площадь")
     house_address: str = Field(..., description="Адрес дома")
 
-
-
+class ApartType(str, Enum):
+    NEW = "NewApartment"
+    OLD = "FamilyStructure"

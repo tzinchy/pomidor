@@ -12,7 +12,6 @@ from JWTs import create_jwt_token, DecodeJWT
 from models.user import UserJWTData
 from pydantic import EmailStr
 from core.httpexceptions import EmailSendException
-from fastapi.responses import RedirectResponse
 
 get_user = DecodeJWT(UserJWTData)
 
