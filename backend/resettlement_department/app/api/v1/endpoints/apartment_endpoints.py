@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query, HTTPException
 from service.apartment_service import ApartmentService
 from models.apartment import ApartType
 
-router = APIRouter(prefix="/tables", tags=["tables"])
+router = APIRouter(prefix="/tables", tags=["Дерево"])
 
 # Получение текущего типа апартаментов
 @router.get("/apart_type")
@@ -57,3 +57,14 @@ async def get_apartment_by_id(
     if not apartment:
         raise HTTPException(status_code=404, detail="Apartment not found")
     return apartment
+
+@router.post("/apartment/{apartment_id}/rematch")
+async def rematch_for_family(
+    apartment_id: int,  
+    apart_type: ApartType = Query(
+        ApartType.OLD, description="Только старые квартиры разрешены"
+    )
+):
+    if apart_type != ApartType.OLD:
+        raise HTTPException(status_code=400, detail="Переподбор доступен только для старых квартир")
+    return {"res": "Позже здесь будет вызываться функция переподбора", "apartment_id": apartment_id}
