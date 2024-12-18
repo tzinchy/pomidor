@@ -1,20 +1,28 @@
 import psycopg2
 import pandas as pd
 from core.config import Settings
-import numpy as np 
+import numpy as np
 from datetime import datetime
+from core.config import Settings
+ 
 
 def insert_data_to_needs(family_apartments_needs_df):
-    '''dataframe income data!'''
+    """dataframe income data!"""
     connection = None
     cursor = None
     try:
         # 1. Drop rows where 'affair_id' is NaN
-        family_apartments_needs_df = family_apartments_needs_df.dropna(subset=['affair_id'])
+        family_apartments_needs_df = family_apartments_needs_df.dropna(
+            subset=["affair_id"]
+        )
 
         # Rename columns to match database fields
-        family_apartments_needs_df.rename(columns={'CountBusiness_x': 'kpu_num', 'ID': 'up_id'}, inplace=True)
-        family_apartments_needs_df = family_apartments_needs_df[['kpu_num', 'up_id', 'affair_id']]
+        family_apartments_needs_df.rename(
+            columns={"CountBusiness_x": "kpu_num", "ID": "up_id"}, inplace=True
+        )
+        family_apartments_needs_df = family_apartments_needs_df[
+            ["kpu_num", "up_id", "affair_id"]
+        ]
 
         # Replace NaN with None
         family_apartments_needs_df = family_apartments_needs_df.replace({np.nan: None})
@@ -24,9 +32,11 @@ def insert_data_to_needs(family_apartments_needs_df):
 
         # Connect to the PostgreSQL database
         connection = psycopg2.connect(
-            host=Settings.DB_HOST, port=Settings.DB_PORT, 
-            database=Settings.DB_NAME, user=Settings.DB_USER, 
-            password=Settings.DB_PASS
+            host=Settings.DB_HOST,
+            port=Settings.DB_PORT,
+            database=Settings.DB_NAME,
+            user=Settings.DB_USER,
+            password=Settings.DB_PASS,
         )
         cursor = connection.cursor()
 
@@ -34,7 +44,11 @@ def insert_data_to_needs(family_apartments_needs_df):
         args_str = ",".join(
             "({})".format(
                 ", ".join(
-                    "'{}'".format(x.replace("'", "''")) if isinstance(x, str) else "NULL" if x is None else str(x)
+                    "'{}'".format(x.replace("'", "''"))
+                    if isinstance(x, str)
+                    else "NULL"
+                    if x is None
+                    else str(x)
                     for x in arg
                 )
             )
@@ -42,7 +56,7 @@ def insert_data_to_needs(family_apartments_needs_df):
         )
 
         # Execute the SQL query
-        cursor.execute(f'''
+        cursor.execute(f"""
         INSERT INTO public.family_apartment_needs (kpu_num, up_id, affair_id)
         VALUES
         {args_str}
@@ -51,7 +65,7 @@ def insert_data_to_needs(family_apartments_needs_df):
             kpu_num = EXCLUDED.kpu_num,
             affair_id = EXCLUDED.affair_id,
             updated_at = NOW()
-        ''')
+        """)
 
         connection.commit()
         ds = 1
@@ -68,35 +82,38 @@ def insert_data_to_needs(family_apartments_needs_df):
 
 
 def insert_data_to_structure(family_structure):
-    '''dataframe income data!'''
+    """dataframe income data!"""
     try:
-        family_structure = family_structure.dropna(subset=['ID'])
+        family_structure = family_structure.dropna(subset=["ID"])
 
         # 2. Rename columns to match the database schema
-        family_structure.rename(columns={
-            'ID': 'affair_id',
-            'КПУ_Дело_№ полный(новый)': 'kpu_number',
-            'КПУ_Заявитель_Фамилия': 'surname',
-            'КПУ_Заявитель_Имя': 'firstname',
-            'КПУ_Заявитель_Отчество': 'lastname',
-            'КПУ_кадастровый_номер_адреса': 'cad_num',
-            'К_Тип_Кв': 'apart_type',
-            'К_Комн': 'room_count',
-            'К_Этаж': 'floor',
-            'К_Общ': 'full_living_area',
-            'К_Общ(б/л)': 'total_living_area',
-            'К_Жил': 'living_area',
-            'КПУ_ФИО': 'fio',
-            'Notes': 'notes',
-            'Адрес_Округ': 'district',
-            'Адрес_Короткий': 'house_address',
-            'Адрес_№ кв': 'apart_number',
-            'КПУ_Чел.в деле': 'people_v_dele',
-            'КПУ_Чел.учете': 'people_uchet',
-            'КПУ_Чел.в семье': 'people_in_family',
-            'КПУ_Состояние' : 'status_id',
-            'КПУ_Направление' : 'category'
-        }, inplace=True)
+        family_structure.rename(
+            columns={
+                "ID": "affair_id",
+                "КПУ_Дело_№ полный(новый)": "kpu_number",
+                "КПУ_Заявитель_Фамилия": "surname",
+                "КПУ_Заявитель_Имя": "firstname",
+                "КПУ_Заявитель_Отчество": "lastname",
+                "КПУ_кадастровый_номер_адреса": "cad_num",
+                "К_Тип_Кв": "apart_type",
+                "К_Комн": "room_count",
+                "К_Этаж": "floor",
+                "К_Общ": "full_living_area",
+                "К_Общ(б/л)": "total_living_area",
+                "К_Жил": "living_area",
+                "КПУ_ФИО": "fio",
+                "Notes": "notes",
+                "Адрес_Округ": "district",
+                "Адрес_Короткий": "house_address",
+                "Адрес_№ кв": "apart_number",
+                "КПУ_Чел.в деле": "people_v_dele",
+                "КПУ_Чел.учете": "people_uchet",
+                "КПУ_Чел.в семье": "people_in_family",
+                "КПУ_Состояние": "status_id",
+                "КПУ_Направление": "category",
+            },
+            inplace=True,
+        )
 
         status_mapping = {
             "в орд.гр": 1,
@@ -104,46 +121,89 @@ def insert_data_to_structure(family_structure):
             "на учете": 3,
             "перед.в др.АО": 4,
             "пред.пл.": 5,
-            "снято": 6
+            "снято": 6,
         }
-            # Применение маппинга
-        family_structure['status_id'] = family_structure['status_id'].apply(lambda x: status_mapping.get(x, x))
-        family_structure['floor'] = family_structure['floor'].astype('Int64')
-        family_structure['category'] = family_structure['category'].astype('Int64')
-        family_structure['full_living_area'] = family_structure['full_living_area'].astype(float)
-        family_structure['total_living_area'] = family_structure['total_living_area'].astype(float)
-        family_structure['living_area'] = family_structure['living_area'].astype(float)
-        family_structure['people_v_dele'] = family_structure['people_v_dele'].astype('Int64')
-        family_structure['people_uchet'] = family_structure['people_uchet'].astype('Int64')
-        family_structure['people_in_family'] = family_structure['people_in_family'].astype('Int64')
-        family_structure = family_structure[['affair_id', 'kpu_number', 'fio', 'surname', 'firstname', 'lastname',
-                                            'people_in_family', 'cad_num', 'notes', 'district', 'house_address',
-                                            'apart_number', 'room_count', 'floor', 'full_living_area', 'living_area',
-                                            'people_v_dele', 'people_uchet', 'total_living_area', 'apart_type', 'status_id', 'category']]
+        # Применение маппинга
+        family_structure["status_id"] = family_structure["status_id"].apply(
+            lambda x: status_mapping.get(x, x)
+        )
+        family_structure["floor"] = family_structure["floor"].astype("Int64")
+        family_structure["category"] = family_structure["category"].astype("Int64")
+        family_structure["full_living_area"] = family_structure[
+            "full_living_area"
+        ].astype(float)
+        family_structure["total_living_area"] = family_structure[
+            "total_living_area"
+        ].astype(float)
+        family_structure["living_area"] = family_structure["living_area"].astype(float)
+        family_structure["people_v_dele"] = family_structure["people_v_dele"].astype(
+            "Int64"
+        )
+        family_structure["people_uchet"] = family_structure["people_uchet"].astype(
+            "Int64"
+        )
+        family_structure["people_in_family"] = family_structure[
+            "people_in_family"
+        ].astype("Int64")
+        family_structure = family_structure[
+            [
+                "affair_id",
+                "kpu_number",
+                "fio",
+                "surname",
+                "firstname",
+                "lastname",
+                "people_in_family",
+                "cad_num",
+                "notes",
+                "district",
+                "house_address",
+                "apart_number",
+                "room_count",
+                "floor",
+                "full_living_area",
+                "living_area",
+                "people_v_dele",
+                "people_uchet",
+                "total_living_area",
+                "apart_type",
+                "status_id",
+                "category",
+            ]
+        ]
         # Convert to list of dictionaries for batch insertion
         family_structure = family_structure.replace({np.nan: None})
-        family_structure['status_id'] = family_structure['status_id'].astype('Int64')
+        family_structure["status_id"] = family_structure["status_id"].astype("Int64")
         # Convert DataFrame rows into a list of tuples for bulk insert
         args = list(family_structure.itertuples(index=False, name=None))
         # Prepare the arguments string for the SQL query
 
         # Connect to the PostgreSQL database
-        connection = psycopg2.connect(host=Settings.DB_HOST, port=Settings.DB_PORT, database=Settings.DB_NAME,
-                                    user=Settings.DB_USER, password=Settings.DB_PASS)
+        connection = psycopg2.connect(
+            host=Settings.DB_HOST,
+            port=Settings.DB_PORT,
+            database=Settings.DB_NAME,
+            user=Settings.DB_USER,
+            password=Settings.DB_PASS,
+        )
         cursor = connection.cursor()
 
         # Prepare the arguments string for the SQL query
         args_str = ",".join(
             "({})".format(
                 ", ".join(
-                    "'{}'".format(x.replace("'", "''")) if isinstance(x, str) else "NULL" if x is None else str(x)
+                    "'{}'".format(x.replace("'", "''"))
+                    if isinstance(x, str)
+                    else "NULL"
+                    if x is None
+                    else str(x)
                     for x in arg
                 )
             )
             for arg in args
         )
 
-        cursor.execute(f'''
+        cursor.execute(f"""
         INSERT INTO public.family_structure (
             affair_id, kpu_number, fio, surname, firstname, lastname, 
             people_in_family, cad_num, notes, district, house_address, 
@@ -176,7 +236,7 @@ def insert_data_to_structure(family_structure):
         status_id = EXCLUDED.status_id,
         category = EXCLUDED.category,
         updated_at = NOW()
-    ''')
+    """)
         connection.commit()
         ds = 1
     except Exception as e:
@@ -187,68 +247,75 @@ def insert_data_to_structure(family_structure):
         return ds
 
 
-
 def new_apart_insert(new_apart_df: pd.DataFrame):
     # Define the column renaming mapping
     try:
         column_mapping = {
-            'Сл.инф_APART_ID': 'new_apart_id',
-            'Сл.инф_UNOM': 'building_id',
-            'Адрес_Округ': 'district',
-            'Адрес_Мун.округ': 'municipal_district',
-            'Адрес_Короткий': 'house_address',
-            'Адрес_№ кв': 'apart_number',
-            'К_Этаж': 'floor',
-            'Площадь общая': 'full_living_area',
-            'Площадь общая(б/л)': 'total_living_area',
-            'Площадь жилая': 'living_area',
-            'К_Комн': 'room_count',
-            'К_Тип.пл': 'type_of_settlement',
-            'К_Ресурс': 'apart_resource',
-            'Сл.инф_UNKV': 'un_kv',
-            'Распорядитель_Название': 'owner',
-            'К_Состояние': 'status',
-            'К_Инв/к': 'special_needs_accommodation_marker',
-            'РСМ_Кад номер, квартира': 'apart_kad_number',
-            'РСМ, Кад номер, комната': 'room_kad_number',
-            'Адрес_улица': 'street_address',
-            'Адрес_дом_№': 'house_number',
-            'Адрес_дом_индекс': 'house_index',
-            'Адрес_корпус_№': 'bulding_body_number',
-            'id_up': 'up_id',
-            'notes': 'notes'
+            "Сл.инф_APART_ID": "new_apart_id",
+            "Сл.инф_UNOM": "building_id",
+            "Адрес_Округ": "district",
+            "Адрес_Мун.округ": "municipal_district",
+            "Адрес_Короткий": "house_address",
+            "Адрес_№ кв": "apart_number",
+            "К_Этаж": "floor",
+            "Площадь общая": "full_living_area",
+            "Площадь общая(б/л)": "total_living_area",
+            "Площадь жилая": "living_area",
+            "К_Комн": "room_count",
+            "К_Тип.пл": "type_of_settlement",
+            "К_Ресурс": "apart_resource",
+            "Сл.инф_UNKV": "un_kv",
+            "Распорядитель_Название": "owner",
+            "К_Состояние": "status",
+            "К_Инв/к": "special_needs_accommodation_marker",
+            "РСМ_Кад номер, квартира": "apart_kad_number",
+            "РСМ, Кад номер, комната": "room_kad_number",
+            "Адрес_улица": "street_address",
+            "Адрес_дом_№": "house_number",
+            "Адрес_дом_индекс": "house_index",
+            "Адрес_корпус_№": "bulding_body_number",
+            "id_up": "up_id",
+            "notes": "notes",
         }
 
         # Rename columns in the DataFrame
         new_apart_df = new_apart_df.rename(columns=column_mapping)
-        print('Column mapping applied successfully.')
+        print("Column mapping applied successfully.")
 
         # Replace NaN values with None for SQL compatibility
         new_apart_df = new_apart_df.replace({np.nan: None})
 
         # Check for duplicates in 'new_apart_id' and print them if any
-        duplicates = new_apart_df[new_apart_df.duplicated(subset=['up_id'], keep=False)]
+        duplicates = new_apart_df[new_apart_df.duplicated(subset=["up_id"], keep=False)]
         if not duplicates.empty:
             print("Duplicate rows found for 'new_apart_id':")
             print(duplicates)
-            new_apart_df = new_apart_df.drop_duplicates(subset=['up_id'])
+            new_apart_df = new_apart_df.drop_duplicates(subset=["up_id"])
         else:
             print("No duplicates found for 'new_apart_id'.")
 
         # Convert DataFrame rows into a list of tuples for bulk insert
         args = list(new_apart_df.itertuples(index=False, name=None))
-        print('Data converted to list of tuples for insertion.')
+        print("Data converted to list of tuples for insertion.")
 
-        connection = psycopg2.connect(host=Settings.DB_HOST, port=Settings.DB_PORT, database=Settings.DB_NAME,
-                                    user=Settings.DB_USER, password=Settings.DB_PASS)
+        connection = psycopg2.connect(
+            host=Settings.DB_HOST,
+            port=Settings.DB_PORT,
+            database=Settings.DB_NAME,
+            user=Settings.DB_USER,
+            password=Settings.DB_PASS,
+        )
         cursor = connection.cursor()
-
 
         # Prepare the arguments string for the SQL query
         args_str = ",".join(
             "({})".format(
                 ", ".join(
-                    "'{}'".format(x.replace("'", "''")) if isinstance(x, str) else "NULL" if x is None else str(x)
+                    "'{}'".format(x.replace("'", "''"))
+                    if isinstance(x, str)
+                    else "NULL"
+                    if x is None
+                    else str(x)
                     for x in arg
                 )
             )
@@ -264,7 +331,7 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         )
 
         # Execute the insert query with conflict handling
-        cursor.execute(f'''
+        cursor.execute(f"""
         INSERT INTO public.new_apartment ({insert_columns})
             VALUES {args_str}
             ON CONFLICT (new_apart_id) 
@@ -294,14 +361,16 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
                 up_id = EXCLUDED.up_id,
                 notes = EXCLUDED.notes,
                 updated_at = NOW()
-        ''')
+        """)
 
         # Commit the transaction
         connection.commit()
         print("Insertion successful.")
-        ds = 1 
+        ds = 1
     except Exception as e:
-        print("An error occurred:", e)  # Capture the exception for logging or troubleshooting
+        print(
+            "An error occurred:", e
+        )  # Capture the exception for logging or troubleshooting
         ds = e
     finally:
         # Close cursor and connection
@@ -309,11 +378,19 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         connection.close()
         return ds
 
+
 # Функция для преобразования строк в datetime с нужным форматом
 def format_datetime_columns(df, columns):
     for col in columns:
-        df.loc[:, col] = df[col].apply(lambda x: datetime.strptime(x, "%m/%d/%y %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S") if pd.notnull(x) else None)
+        df.loc[:, col] = df[col].apply(
+            lambda x: datetime.strptime(x, "%m/%d/%y %H:%M:%S").strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            if pd.notnull(x)
+            else None
+        )
     return df
+
 
 # Функция для маппинга статуса в числовое поле status_id
 def map_status(df):
@@ -324,41 +401,59 @@ def map_status(df):
         "фонд компенсация": 4,
         "фонд докупка": 5,
         "ожидание": 6,
-        "подобрано": 7
+        "подобрано": 7,
     }
 
     # Проверка значений перед маппингом
-    unmapped_values = df.loc[~df['Result'].isin(status_map.keys()), 'Result'].unique()
+    unmapped_values = df.loc[~df["Result"].isin(status_map.keys()), "Result"].unique()
     if unmapped_values.size > 0:
         raise ValueError(f"Unmapped values in 'Result': {unmapped_values}")
 
     # Маппинг значений
-    df['status_id'] = df['Result'].map(status_map)
+    df["status_id"] = df["Result"].map(status_map)
     return df
 
 
 def insert_offer(offer_df: pd.DataFrame):
     # Удаляем дубликаты по полю 'ID'
-    offer_df = offer_df.drop_duplicates(subset=['ID'])
-    
+    offer_df = offer_df.drop_duplicates(subset=["ID"])
+
     # Преобразование формата даты и времени
-    offer_df = format_datetime_columns(offer_df, ['SentenceDate', 'GiveDate', 'AnswerDate'])
-    
+    offer_df = format_datetime_columns(
+        offer_df, ["SentenceDate", "GiveDate", "AnswerDate"]
+    )
+
     # Применяем маппинг статуса
     offer_df = map_status(offer_df)
-    
+
     # Заменяем NaN значения на None для корректной вставки в базу данных
     offer_df = offer_df.replace({np.nan: None})
-    
+
     # Подготовка кортежей для вставки в SQL
-    columns = ['ID', 'SentenceDate', 'GiveDate', 'AnswerDate', 
-               'SentenceNumber', 'SelectionAction', 'Conditions', 'Notes', 
-               'Claim', 'SubjectID', 'ObjectID', 'status_id']
+    columns = [
+        "ID",
+        "SentenceDate",
+        "GiveDate",
+        "AnswerDate",
+        "SentenceNumber",
+        "SelectionAction",
+        "Conditions",
+        "Notes",
+        "Claim",
+        "SubjectID",
+        "ObjectID",
+        "status_id",
+    ]
     args = list(offer_df[columns].itertuples(index=False, name=None))
 
     # Подключение к базе данных PostgreSQL
-    connection = psycopg2.connect(host=Settings.DB_HOST, port=Settings.DB_PORT, database=Settings.DB_NAME,
-                                    user=Settings.DB_USER, password=Settings.DB_PASS)
+    connection = psycopg2.connect(
+        host=Settings.DB_HOST,
+        port=Settings.DB_PORT,
+        database=Settings.DB_NAME,
+        user=Settings.DB_USER,
+        password=Settings.DB_PASS,
+    )
     cursor = connection.cursor()
 
     try:
@@ -366,7 +461,11 @@ def insert_offer(offer_df: pd.DataFrame):
         args_str = ",".join(
             "({})".format(
                 ", ".join(
-                    "'{}'".format(x.replace("'", "''")) if isinstance(x, str) else "NULL" if x is None else str(x)
+                    "'{}'".format(x.replace("'", "''"))
+                    if isinstance(x, str)
+                    else "NULL"
+                    if x is None
+                    else str(x)
                     for x in arg
                 )
             )
@@ -374,7 +473,7 @@ def insert_offer(offer_df: pd.DataFrame):
         )
 
         # Выполнение SQL запроса для вставки данных
-        cursor.execute(f'''
+        cursor.execute(f"""
         INSERT INTO public.offer (
             offer_id, sentence_date, give_date, answer_date, 
             sentence_number, selection_action, conditions, notes, claim, 
@@ -396,7 +495,7 @@ def insert_offer(offer_df: pd.DataFrame):
             object_id = EXCLUDED.object_id,
             status_id = EXCLUDED.status_id,
             updated_at = NOW()
-        ''')
+        """)
 
         # Подтверждение изменений
         connection.commit()
@@ -411,4 +510,3 @@ def insert_offer(offer_df: pd.DataFrame):
     connection.close()
 
     return ds
-
