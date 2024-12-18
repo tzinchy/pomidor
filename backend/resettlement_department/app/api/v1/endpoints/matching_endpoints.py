@@ -48,7 +48,7 @@ async def get_new_apartment_areas(
 async def get_new_apartment_house_addresses(
     areas: list[str] = Query(..., description="Список областей")
 ):
-    return await ApartmentService.get_house_addresses(apart_type=ApartType.NEW, area=areas)
+    return await ApartmentService.get_house_addresses(apart_type=ApartType.NEW, areas=areas)
 
 @router.post('/matching')
 async def start_matching(

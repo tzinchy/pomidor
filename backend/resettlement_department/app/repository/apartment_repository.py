@@ -39,7 +39,7 @@ class ApartmentRepository:
             SELECT DISTINCT district 
             FROM {table}
         """
-        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apart"
+        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apartment"
 
         # Формирование запроса
         query = query.format(table=table)
@@ -59,7 +59,7 @@ class ApartmentRepository:
             FROM {table}
             WHERE district IN ({district_placeholders})
         """
-        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apart"
+        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apartment"
 
         # Генерация placeholders и параметров
         district_placeholders, params = ApartmentRepository._build_placeholders(districts, "district")
@@ -82,7 +82,7 @@ class ApartmentRepository:
             FROM {table}
             WHERE municipal_district IN ({area_placeholders})
         """
-        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apart"
+        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apartment"
 
         # Генерация placeholders и параметров
         area_placeholders, params = ApartmentRepository._build_placeholders(areas, "area")
@@ -104,7 +104,7 @@ class ApartmentRepository:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
         # Выбор таблицы
-        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apart"
+        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apartment"
 
         # Генерация placeholders и параметров
         house_addresses_placeholders, params = ApartmentRepository._build_placeholders(house_addresses, "house_address")
@@ -134,7 +134,7 @@ class ApartmentRepository:
 
         # Определяем таблицу и имя столбца для ID
         if apart_type == "NewApartment":
-            table = "public.new_apart"
+            table = "public.new_apartment"
             id_column = "new_apart_id"
         elif apart_type == "FamilyStructure":
             table = "public.family_structure"

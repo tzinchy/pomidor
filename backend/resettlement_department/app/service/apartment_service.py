@@ -9,11 +9,11 @@ class ApartmentService:
         return await ApartmentRepository.get_districts(apart_type)
 
     @staticmethod
-    async def get_municipal_districts(apart_type: str, districts: list[str]):
+    async def get_municipal_districts(apart_type: str, municipal_district: list[str]):
         """
         Получить список областей по районам.
         """
-        return await ApartmentRepository.get_municipal_district(apart_type, districts)
+        return await ApartmentRepository.get_municipal_district(apart_type, municipal_district)
 
     @staticmethod
     async def get_house_addresses(apart_type: str, areas: list[str]):
