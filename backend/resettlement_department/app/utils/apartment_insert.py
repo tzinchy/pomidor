@@ -248,8 +248,8 @@ def insert_data_to_structure(family_structure):
 
 
 def new_apart_insert(new_apart_df: pd.DataFrame):
-    # Define the column renaming mapping
     try:
+        # Define the column renaming mapping
         column_mapping = {
             "Сл.инф_APART_ID": "new_apart_id",
             "Сл.инф_UNOM": "building_id",
@@ -267,7 +267,7 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
             "Сл.инф_UNKV": "un_kv",
             "Распорядитель_Название": "owner",
             "К_Состояние": "status",
-            "К_Инв/к": "special_needs_accommodation_marker",
+            "К_Инв/к": "for_special_needs_marker",
             "РСМ_Кад номер, квартира": "apart_kad_number",
             "РСМ, Кад номер, комната": "room_kad_number",
             "Адрес_улица": "street_address",
@@ -281,6 +281,10 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         # Rename columns in the DataFrame
         new_apart_df = new_apart_df.rename(columns=column_mapping)
         print("Column mapping applied successfully.")
+
+        # Apply mapping for 'for_special_needs_marker'
+        special_needs_mapping = {"да": 1, "нет": 0}
+        new_apart_df["for_special_needs_marker"] = new_apart_df["for_special_needs_marker"].map(special_needs_mapping).fillna(0)
 
         # Replace NaN values with None for SQL compatibility
         new_apart_df = new_apart_df.replace({np.nan: None})
@@ -326,13 +330,13 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         insert_columns = (
             "new_apart_id, building_id, district, municipal_district, house_address, apart_number, "
             "floor, full_living_area, total_living_area, living_area, room_count, type_of_settlement, "
-            "apart_resource, un_kv, owner, status, special_needs_accommodation_marker, apart_kad_number, "
+            "apart_resource, un_kv, owner, status, for_special_needs_marker, apart_kad_number, "
             "room_kad_number, street_address, house_number, house_index, bulding_body_number, up_id, notes"
         )
-
+    
         # Execute the insert query with conflict handling
         cursor.execute(f"""
-        INSERT INTO public.new_apartment ({insert_columns})
+        INSERT INTO public.new_apart ({insert_columns})
             VALUES {args_str}
             ON CONFLICT (new_apart_id) 
             DO UPDATE SET 
@@ -351,7 +355,7 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
                 un_kv = EXCLUDED.un_kv,
                 owner = EXCLUDED.owner,
                 status = EXCLUDED.status,
-                special_needs_accommodation_marker = EXCLUDED.special_needs_accommodation_marker,
+                for_special_needs_marker = EXCLUDED.for_special_needs_marker,
                 apart_kad_number = EXCLUDED.apart_kad_number,
                 room_kad_number = EXCLUDED.room_kad_number,
                 street_address = EXCLUDED.street_address,
@@ -377,7 +381,6 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         cursor.close()
         connection.close()
         return ds
-
 
 # Функция для преобразования строк в datetime с нужным форматом
 def format_datetime_columns(df, columns):
