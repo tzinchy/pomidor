@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/htmx.org"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>{{ title }}</title>
+</head>
+<body class="bg-gray-100 text-gray-900 flex flex-col min-h-screen">
+    <!-- Основной контейнер -->
+    <div class="container mx-auto p-6">
+        <div id="auth-container" class="bg-white p-6 rounded shadow-md">
+            {% block content %}
+            {% endblock %}
+        </div>
+        <!-- Кнопки навигации -->
+        <div class="mt-4 flex justify-center space-x-4">
+            <button 
+                hx-get="/auth/login_form" 
+                hx-target="#auth-container" 
+                hx-swap="innerHTML" 
+                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">
+                Login
+            </button>
+            <button 
+                hx-get="/auth/register_form" 
+                hx-target="#auth-container" 
+                hx-swap="innerHTML" 
+                class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200">
+                Register
+            </button>
+            <a 
+                hx-get="/auth/reset_password_form" 
+                hx-target="#auth-container" 
+                hx-swap="innerHTML" 
+                class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition duration-200 text-center">
+                Reset Password
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll("form[data-json]").forEach((form) => {
+            form.addEventListener("submit", async function(event) {
+                event.preventDefault();
+                const formData = new FormData(this);
+                const jsonData = Object.fromEntries(formData);
+
+                try {
+                    const response = await fetch(this.action, {
+                        method: this.method || "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(jsonData)
+                    });
+
+                    const target = this.getAttribute("data-target") || "#auth-container";
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        document.querySelector(target).innerHTML = `<p class="text-red-500">${errorText}</p>`;
+                    } else {
+                        const result = await response.text();
+                        document.querySelector(target).innerHTML = result;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    document.querySelector("#auth-container").innerHTML = `<p class="text-red-500">Unexpected error occurred.</p>`;
+                }
+            });
+        });
+    });
+</script>
+</html>

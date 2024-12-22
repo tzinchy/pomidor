@@ -4,65 +4,70 @@ from models.auth import UserLoginShema
 from services.user_service import UserService
 from core.httpexceptions import (
     UserNotFoundException,
-    InvalidPasswordException,
+    InvalidPasswordException
 )
 from utils.password_utils import get_password_hash
-import logging
-from JWTs import create_jwt_token, DecodeJWT
-from models.user import UserJWTData
+from JWTs import create_jwt_token
 from pydantic import EmailStr
-from core.httpexceptions import EmailSendException
+import logging
+from fastapi import Request
+from fastapi.templating import Jinja2Templates
+import os
 
-get_user = DecodeJWT(UserJWTData)
+from fastapi import Form
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 logger = logging.getLogger(__name__)
 
-@router.post("/register")
-async def register_user(user: UserLoginShema, response : Response):
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "../../../templates")
+templates = Jinja2Templates(directory=TEMPLATE_DIR)
+
+@router.get("/login_form", response_class=HTMLResponse)
+async def get_login_form(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request, "title": "Login"})
+
+@router.get("/register_form", response_class=HTMLResponse)
+async def get_register_form(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request, "title": "Register"})
+
+@router.get("/reset_password_form", response_class=HTMLResponse)
+async def get_reset_password_form(request: Request):
+    return templates.TemplateResponse("reset_password.html", {"request": request, "title": "Reset Password"})
+
+@router.post("/register", response_class=HTMLResponse)
+async def register_user(user: UserLoginShema, response: Response):
     """
-    Register user and check of existing 
+    Register user and check if it already exists.
     """
     try:
-        # Хешируем пароль и создаем нового пользователя
         hashed_password = get_password_hash(user.password)
         await UserService.register_user(email=user.email, password=hashed_password)
 
-        # Возвращаем успешный ответ или токен
-        return {"message": "User created successfully!"}
-
+        return "<p>User registered successfully!</p>"
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Error during user registration: {str(e)}")
+        return f"<p style='color: red;'>Error: {str(e)}</p>"
 
-
-@router.post("/login", summary="Авторизация пользователя")
-async def login_user(response: Response, user: UserLoginShema):
-    """
-    Logining user and create JWT
-    """
+@router.post("/login", response_class=HTMLResponse)
+async def login_user(user: UserLoginShema, response: Response):
     try:
-        logger.info(f"Authorization user: {user.email}")
-        
-        # Проверка валидности пользователя
         is_valid_user = await UserService.validate_user(email=user.email, password=user.password)
         if not is_valid_user:
-            raise HTTPException(status_code=401, detail="Invalid credentials")
+            return "<p style='color: red;'>Invalid credentials</p>"
         
-        # Получение данных для JWT
         user_data = await UserService.get_user_data_for_jwt(email=user.email)
-        
-        # Генерация токена
         token = await create_jwt_token(user_data)
         
-        # Установка токена в куки
         response.set_cookie(
             key="access_token",
             value=token,
             httponly=True,
-            max_age=36000,
-            secure=True,
+            max_age=3600,
+            secure=True
         )
+<<<<<<< HEAD
         return {"message": "Login successful"}
     except UserNotFoundException as e:
         logger.warning(f"Пользователь не найден: {e.detail}")
@@ -70,10 +75,17 @@ async def login_user(response: Response, user: UserLoginShema):
     except InvalidPasswordException as e:
         logger.warning(f"Неверный пароль для пользователя: {user.email}")
         raise HTTPException(status_code=401, detail="Invalid password")
+=======
+        return "<p>Login successful!</p>"
+    except UserNotFoundException:
+        return "<p style='color: red;'>User not found</p>"
+    except InvalidPasswordException:
+        return "<p style='color: red;'>Invalid password</p>"
+>>>>>>> f787b29 (add frontend table view with tree)
     except Exception as e:
-        logger.error(f"Ошибка авторизации: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        return f"<p style='color: red;'>Error: {str(e)}</p>"
 
+<<<<<<< HEAD
 @router.get("/login-form", summary="Тестовая форма для входа", response_class=HTMLResponse)
 async def login_form():
     """
@@ -132,17 +144,15 @@ async def reset_password(email: EmailStr):
     """
     Endpoint to reset a user's password.
     """
+=======
+@router.post("/reset_password", response_class=HTMLResponse)
+async def reset_password(email: EmailStr = Form(...)):
+>>>>>>> f787b29 (add frontend table view with tree)
     try:
+        # Ваша логика сброса пароля
         await UserService.reset_password(email=email)
-        logger.info(f"Password reset successfully for email: {email}")
-        return {"message": "Password reset successfully. Check your email for the new password."}
+        return "<p class='text-green-500'>Password reset successfully. Check your email for the new password.</p>"
     except UserNotFoundException as e:
-        logger.error(f"Password reset failed: {e.detail}")
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
-    except EmailSendException as e:
-        logger.error(f"Email sending failed: {e.detail}")
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+        return f"<p class='text-red-500'>Error: {e.detail}</p>"
     except Exception as e:
-        logger.error(f"Unexpected error during password reset for email {email}: {str(e)}")
-        raise HTTPException(status_code=500, detail="An unexpected error occurred. Please try again later.")
-    
+        return "<p class='text-red-500'>An unexpected error occurred. Please try again later.</p>"
