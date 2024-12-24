@@ -15,7 +15,7 @@ async def change_password(
     old_password: str,
     new_password: str,
     confirm_password: str,
-    user: str = Depends(get_user)
+    user: UserJWTData = Depends(DecodeJWT(UserJWTData))
 ):
     """
     Endpoint to change the password of the authenticated user.
@@ -38,4 +38,3 @@ async def change_password(
 @router.get('/test')
 async def test(user = Depends(get_user)):
     return user
-
