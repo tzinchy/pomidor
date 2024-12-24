@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import LeftBar from "./LeftBar";
 
 function App() {
+
   // 1) Локальные состояния
   const [apartType, setApartType] = useState("NewApartment");
+  const [collapsed, setCollapsed] = useState(false);
+  const handleToggleSidebar = () => {
+    setCollapsed(!collapsed);
+  };
 
   // Данные для дерева
   const [districts, setDistricts] = useState([]);
@@ -93,6 +99,7 @@ function App() {
     }
   };
 
+
   const fetchApartmentDetails = async (apartmentId) => {
     try {
       const response = await axios.get(
@@ -104,13 +111,7 @@ function App() {
     }
   };
 
-  // Переключаем раскрытие для конкретного узла (district или municipal)
-  const toggleExpand = (key) => {
-    setExpandedNodes((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
+
 
   // 4) Фильтрация квартир по ID (new_apart_id)
   const filteredApartments = apartments.filter((apt) =>
@@ -121,149 +122,20 @@ function App() {
   return (
     <div className="flex min-h-screen bg-white text-gray-800">
       {/* ======== Сайдбар с деревом ======== */}
-      <div className="w-1/4 p-4 border-r border-gray-300 overflow-y-auto">
-        {/* Кнопки выбора типа */}
-        <div className="flex justify-between mb-4">
-          <button
-            onClick={() => setApartType("NewApartment")}
-            className={`px-16 py-4 rounded-md ${
-              apartType === "NewApartment"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200"
-            }`}
-          >
-            Ресурс
-          </button>
-          <button
-            onClick={() => setApartType("FamilyStructure")}
-            className={`px-16 py-4 rounded-md ${
-              apartType === "FamilyStructure"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200"
-            }`}
-          >
-            Семьи
-          </button>
-        </div>
-
-        {/* ======== Дерево район → муниципалитет → адрес ======== */}
-        <ul>
-          {districts.map((district) => {
-            const isDistOpen = expandedNodes[district] ?? false;
-            return (
-              <li key={district} className="mb-2">
-                {/* Шапка района */}
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault(); // убираем переход по ссылке
-                    toggleExpand(district);
-
-                    // Ленивая загрузка муниципальных округов
-                    if (!municipalDistricts[district]) {
-                      fetchMunicipalDistricts(district);
-                    }
-                  }}
-                  className="flex items-center px-2 hover:bg-secondary-100 focus:text-primary active:text-primary"
-                >
-                  {/* Стрелка, поворачиваем при раскрытии */}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2.5"
-                    stroke="currentColor"
-                    className="h-4 w-4 me-1"
-                    style={{
-                      transform: isDistOpen ? "rotate(90deg)" : "rotate(0deg)",
-                      transition: "transform 0.2s",
-                    }}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                    />
-                  </svg>
-                  {district}
-                </a>
-
-                {/* Список муниципалитетов */}
-                <ul className={`ml-4 !visible ${isDistOpen ? "" : "hidden"}`}>
-                  {municipalDistricts[district]?.map((municipal) => {
-                    const isMunOpen = expandedNodes[municipal] ?? false;
-                    return (
-                      <li key={municipal} className="mb-2">
-                        <a
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            toggleExpand(municipal);
-                            // Ленивая загрузка адресов
-                            if (!houseAddresses[municipal]) {
-                              fetchHouseAddresses(municipal);
-                            }
-                          }}
-                          className="flex items-center px-2 hover:bg-secondary-100 focus:text-primary active:text-primary"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth="2.5"
-                            stroke="currentColor"
-                            className="h-4 w-4 me-1"
-                            style={{
-                              transform: isMunOpen
-                                ? "rotate(90deg)"
-                                : "rotate(0deg)",
-                              transition: "transform 0.2s",
-                            }}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                            />
-                          </svg>
-                          {municipal}
-                        </a>
-
-                        {/* Список адресов */}
-                        <ul
-                          className={`ml-4 !visible ${
-                            isMunOpen ? "" : "hidden"
-                          }`}
-                        >
-                          {houseAddresses[municipal]?.map((address) => (
-                            <li
-                              key={address}
-                              className="px-2 hover:bg-secondary-100"
-                            >
-                              <a
-                                href="#"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  // По клику грузим квартиры этого адреса
-                                  fetchApartments([address]);
-                                }}
-                                className="flex items-center px-2 hover:bg-secondary-100 focus:text-primary active:text-primary"
-                              >
-                                {address}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-
+     <LeftBar        
+             apartType={apartType}
+             setApartType={setApartType}
+             collapsed={collapsed}
+             handleToggleSidebar={handleToggleSidebar}
+             districts={districts}
+             municipalDistricts={municipalDistricts}
+             fetchMunicipalDistricts={fetchMunicipalDistricts}
+             houseAddresses={houseAddresses}
+             fetchHouseAddresses={fetchHouseAddresses}
+             expandedNodes={expandedNodes}
+             setExpandedNodes={setExpandedNodes}
+             fetchApartments={fetchApartments}
+           />
       {/* ======== Правая часть: таблица + панель деталей ======== */}
       <div className="relative flex-1 p-4 overflow-y-auto">
         {/* Когда есть apartments, отображаем таблицу */}
