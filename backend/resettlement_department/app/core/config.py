@@ -18,8 +18,19 @@ class Settings:
 
     ALGORITHM = os.environ["ALGORITHM"]
     SECRET_KEY = os.environ["SECRET_KEY"]
-    EMAIL_SENDER = os.environ['EMAIL_SENDER']
-    EMAIL_PASSWORD = os.environ['EMAIL_PASSWORD']
-    EMAIL_SERVER = os.environ['EMAIL_SERVER']
-    EMAIL_PORT = os.environ['EMAIL_PORT']
-    EMAIL_LOGIN= os.environ['EMAIL_LOGIN']
+    EMAIL_SENDER = os.environ["EMAIL_SENDER"]
+    EMAIL_PASSWORD = os.environ["EMAIL_PASSWORD"]
+    EMAIL_SERVER = os.environ["EMAIL_SERVER"]
+    EMAIL_PORT = os.environ["EMAIL_PORT"]
+    EMAIL_LOGIN = os.environ["EMAIL_LOGIN"]
+
+
+class DashboardSetting:
+    DB_DASHBORD_HOST = os.environ["DB_HOST"]
+    DB_DASHBORD_PORT = os.environ["DB_PORT"]
+    DB_DASHBORD_USER = os.environ["DB_USER"]
+    DB_DASHBORD_PASS = os.environ["DB_PASS"]
+    DB_DASHBORD_NAME = os.environ["DB_NAME"]
+    DB_DASHBORD_SCHEMA = os.environ["DB_SCHEMA"]
+
+    DATABASE_URL = f"postgresql+asyncpg://{DB_DASHBORD_USER}:{DB_DASHBORD_PASS}@{DB_DASHBORD_HOST}:{DB_DASHBORD_PORT}/{DB_DASHBORD_NAME}"

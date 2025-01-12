@@ -1,5 +1,6 @@
 from repository.apartment_repository import ApartmentRepository
 
+
 class ApartmentService:
     @staticmethod
     async def get_district(apart_type: str):
@@ -13,15 +14,17 @@ class ApartmentService:
         """
         Получить список областей по районам.
         """
-        return await ApartmentRepository.get_municipal_district(apart_type, municipal_district)
+        return await ApartmentRepository.get_municipal_district(
+            apart_type, municipal_district
+        )
 
     @staticmethod
     async def get_house_addresses(apart_type: str, areas: list[str]):
         """
         Получить список адресов домов по районам и областям.
         """
-        return await ApartmentRepository.get_house_addresses(apart_type,  areas)
-    
+        return await ApartmentRepository.get_house_addresses(apart_type, areas)
+
     @staticmethod
     async def get_apartments(apart_type: str, house_addresses: list[str]):
         """
@@ -30,7 +33,7 @@ class ApartmentService:
         return await ApartmentRepository.get_apartments(apart_type, house_addresses)
 
     @staticmethod
-    async def get_apartment_by_id(apartment_id, apart_type): 
+    async def get_apartment_by_id(apartment_id, apart_type):
         """
         Получить всю информацию по квартире
         """

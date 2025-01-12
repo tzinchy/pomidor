@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Query, Body
 from service.apartment_service import ApartmentService
 from models.apartment import ApartType, MatchingSchema
+from utils.alghorithm import match_new_apart_to_family_batch
+from utils.balance_alghorithm import save_views_to_excel
 
 router = APIRouter(prefix="/mathing", tags=["Первичный подбор"])
 
@@ -54,4 +56,12 @@ async def get_new_apartment_house_addresses(
 async def start_matching(
     requirements: MatchingSchema = Body(...)
 ):
-    return {"message": "Matching process started", "requirements": requirements.model_dump()}
+    result = None 
+    try:
+        import os
+        #match_new_apart_to_family_batch(new_selected_addresses=requirements.new_apartment_house_address, old_selected_addresses=requirements.family_structure_house_address)
+        save_views_to_excel(output_path=os.path.join(os.getcwd(), 'matching_result.xlsx'), new_selected_addresses=requirements.new_apartment_house_address, old_selected_addresses=requirements.family_structure_house_address)
+        result = 'ok'
+    except Exception as e: 
+        result = e 
+    return {"message": result}

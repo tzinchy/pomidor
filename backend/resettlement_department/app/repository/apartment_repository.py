@@ -2,6 +2,7 @@ from sqlalchemy import text
 from repository.database import async_session_maker
 from models.apartment import ApartType
 
+
 class ApartmentRepository:
     @staticmethod
     async def _execute_query(query: str, params: dict) -> list[tuple]:
@@ -39,7 +40,11 @@ class ApartmentRepository:
             SELECT DISTINCT district 
             FROM {table}
         """
-        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apart"
+        table = (
+            "public.family_structure"
+            if apart_type == "FamilyStructure"
+            else "public.new_apart"
+        )
 
         # Формирование запроса
         query = query.format(table=table)
@@ -47,7 +52,9 @@ class ApartmentRepository:
         return [row[0] for row in result if row[0] is not None]
 
     @staticmethod
-    async def get_municipal_district(apart_type: str, districts: list[str]) -> list[str]:
+    async def get_municipal_district(
+        apart_type: str, districts: list[str]
+    ) -> list[str]:
         """
         Получить уникальные области по районам.
         """
@@ -59,13 +66,21 @@ class ApartmentRepository:
             FROM {table}
             WHERE district IN ({district_placeholders})
         """
-        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apart"
+        table = (
+            "public.family_structure"
+            if apart_type == "FamilyStructure"
+            else "public.new_apart"
+        )
 
         # Генерация placeholders и параметров
-        district_placeholders, params = ApartmentRepository._build_placeholders(districts, "district")
+        district_placeholders, params = ApartmentRepository._build_placeholders(
+            districts, "district"
+        )
 
         # Формирование запроса
-        query = query_template.format(table=table, district_placeholders=district_placeholders)
+        query = query_template.format(
+            table=table, district_placeholders=district_placeholders
+        )
         result = await ApartmentRepository._execute_query(query, params)
         return [row[0] for row in result if row[0] is not None]
 
@@ -82,16 +97,21 @@ class ApartmentRepository:
             FROM {table}
             WHERE municipal_district IN ({area_placeholders})
         """
-        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apart"
+        table = (
+            "public.family_structure"
+            if apart_type == "FamilyStructure"
+            else "public.new_apart"
+        )
 
         # Генерация placeholders и параметров
-        area_placeholders, params = ApartmentRepository._build_placeholders(areas, "area")
+        area_placeholders, params = ApartmentRepository._build_placeholders(
+            areas, "area"
+        )
 
         # Формирование запроса
         query = query_template.format(table=table, area_placeholders=area_placeholders)
         result = await ApartmentRepository._execute_query(query, params)
         return [row[0] for row in result if row[0] is not None]
-    
 
     @staticmethod
     async def get_apartments(apart_type: str, house_addresses: list[str]) -> list[dict]:
@@ -99,15 +119,22 @@ class ApartmentRepository:
         Получаем все квартиры по адресам.
         """
         from datetime import datetime
+
         print(datetime.now())
         if apart_type not in ApartType:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
         # Выбор таблицы
-        table = "public.family_structure" if apart_type == "FamilyStructure" else "public.new_apart"
+        table = (
+            "public.family_structure"
+            if apart_type == "FamilyStructure"
+            else "public.new_apart"
+        )
 
         # Генерация placeholders и параметров
-        house_addresses_placeholders, params = ApartmentRepository._build_placeholders(house_addresses, "house_address")
+        house_addresses_placeholders, params = ApartmentRepository._build_placeholders(
+            house_addresses, "house_address"
+        )
 
         # Шаблон SQL-запроса
         query_template = f"""
@@ -121,7 +148,6 @@ class ApartmentRepository:
         print(datetime.now())
         # Преобразуем результат в список словарей
         return [dict(row._mapping) for row in result]
-
 
     @staticmethod
     async def get_apartment_by_id(apartment_id: int, apart_type: str) -> dict:
@@ -149,10 +175,11 @@ class ApartmentRepository:
             WHERE {id_column} = :apart_id
         """
 
-        result = await ApartmentRepository._execute_query(query, {"apart_id": apartment_id})
+        result = await ApartmentRepository._execute_query(
+            query, {"apart_id": apartment_id}
+        )
 
         if not result:
             raise ValueError(f"Apartment with ID {apartment_id} not found in {table}")
 
         return dict(result[0]._mapping)
-

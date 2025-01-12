@@ -7,7 +7,7 @@ router = APIRouter(prefix="/tables", tags=["Дерево"])
 # Получение текущего типа апартаментов
 @router.get("/apart_type")
 async def get_current_apart_type(
-    apart_type: ApartType = Query(default=ApartType.OLD, description="Тип квартир")
+    apart_type: ApartType = Query(default=ApartType.NEW, description="Тип квартир")
 ):
     return {"apart_type": apart_type}
 

@@ -4,7 +4,7 @@ from core.config import Settings
 import numpy as np
 from datetime import datetime
 from core.config import Settings
- 
+
 
 def insert_data_to_needs(family_apartments_needs_df):
     """dataframe income data!"""
@@ -284,7 +284,11 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
 
         # Apply mapping for 'for_special_needs_marker'
         special_needs_mapping = {"да": 1, "нет": 0}
-        new_apart_df["for_special_needs_marker"] = new_apart_df["for_special_needs_marker"].map(special_needs_mapping).fillna(0)
+        new_apart_df["for_special_needs_marker"] = (
+            new_apart_df["for_special_needs_marker"]
+            .map(special_needs_mapping)
+            .fillna(0)
+        )
 
         # Replace NaN values with None for SQL compatibility
         new_apart_df = new_apart_df.replace({np.nan: None})
@@ -333,7 +337,7 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
             "apart_resource, un_kv, owner, status, for_special_needs_marker, apart_kad_number, "
             "room_kad_number, street_address, house_number, house_index, bulding_body_number, up_id, notes"
         )
-    
+
         # Execute the insert query with conflict handling
         cursor.execute(f"""
         INSERT INTO public.new_apart ({insert_columns})
@@ -381,6 +385,7 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         cursor.close()
         connection.close()
         return ds
+
 
 # Функция для преобразования строк в datetime с нужным форматом
 def format_datetime_columns(df, columns):
