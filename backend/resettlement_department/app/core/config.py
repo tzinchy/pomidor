@@ -26,11 +26,10 @@ class Settings:
 
 
 class DashboardSetting:
-    DB_DASHBORD_HOST = os.environ["DB_HOST"]
-    DB_DASHBORD_PORT = os.environ["DB_PORT"]
-    DB_DASHBORD_USER = os.environ["DB_USER"]
-    DB_DASHBORD_PASS = os.environ["DB_PASS"]
-    DB_DASHBORD_NAME = os.environ["DB_NAME"]
-    DB_DASHBORD_SCHEMA = os.environ["DB_SCHEMA"]
+    DB_DASHBORD_HOST = os.environ["DB_DASHBORD_HOST"]
+    DB_DASHBORD_PORT = os.environ["DB_DASHBORD_PORT"]
+    DB_DASHBORD_USER = os.environ["DB_DASHBORD_USER"]
+    DB_DASHBORD_PASS = os.environ["DB_DASHBORD_PASS"]
+    DB_DASHBORD_NAME = os.environ["DB_DASHBORD_NAME"]
 
     DATABASE_URL = f"postgresql+asyncpg://{DB_DASHBORD_USER}:{DB_DASHBORD_PASS}@{DB_DASHBORD_HOST}:{DB_DASHBORD_PORT}/{DB_DASHBORD_NAME}"

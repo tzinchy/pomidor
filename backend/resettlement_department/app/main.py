@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from api.v1.endpoints.apartment_endpoints import router as apartment_router
 from api.v1.endpoints.matching_endpoints import router as matching_router
 from api.v1.endpoints.load_endpoint import router as load_router
-from api.v1.endpoints.dashboard import router as dashboard_router
+from api.v1.endpoints.dashboard_endpoints import router as dashboard_router
 
 app = FastAPI()
 

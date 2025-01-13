@@ -46,20 +46,20 @@ def save_views_to_excel(
                     if view in ["ranked_with_district", "ranked_last"]:
                         # Запросы для извлечения данных из базы данных
                         query_old_ranked = """
-                            SELECT 
-                                offer.family_apartment_needs_id as old_apart_id, 
-                                family_structure.room_count, 
-                                family_structure.living_area, 
-                                family_structure.is_special_needs_marker, 
-                                family_structure.full_living_area, 
-                                family_structure.total_living_area, 
-                                family_structure.district, 
-                                family_structure.municipal_district, 
-                                family_structure.house_address, 
-                                family_apartment_needs.rank 
-                            FROM family_apartment_needs
-                            LEFT JOIN family_structure USING(affair_id)
-                            LEFT JOIN offer ON offer.subject_id = family_apartment_needs.up_id
+                            SELECT
+                                offer.family_apartment_needs_id as old_apart_id,
+                                family_structure.room_count,
+                                family_structure.living_area,
+                                family_structure.is_special_needs_marker,
+                                family_structure.full_living_area,
+                                family_structure.total_living_area,
+                                family_structure.district,
+                                family_structure.municipal_district,
+                                family_structure.house_address,
+                                family_apartment_needs.rank
+                            FROM offer
+                            LEFT JOIN family_apartment_needs ON offer.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+							LEFT JOIN family_structure ON family_apartment_needs.affair_id = family_structure.affair_id 
                             WHERE 1=1
                         """
 
@@ -111,9 +111,10 @@ def save_views_to_excel(
                         # Получаем данные из базы данных
                         query_old_ranked += " AND (offer.created_at = (SELECT MAX(created_at) FROM offer) OR family_apartment_needs.family_apartment_needs_id NOT IN (SELECT family_apartment_needs_id FROM offer))"
                         query_new_ranked += " AND (offer.created_at = (SELECT MAX(created_at) FROM offer) OR new_apart.new_apart_id NOT IN (SELECT new_apart_id FROM offer))"
-
+                        print(query_old_ranked)
                         df_old_ranked = pd.read_sql(query_old_ranked, conn, params=params_old)
                         df_new_ranked = pd.read_sql(query_new_ranked, conn, params=params_new)
+                        print(df_old_ranked)
 
                         # Получение максимальных рангов по количеству комнат из базы данных
                         max_rank_query = """

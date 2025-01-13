@@ -3,8 +3,9 @@ from service.apartment_service import ApartmentService
 from models.apartment import ApartType, MatchingSchema
 from utils.alghorithm import match_new_apart_to_family_batch
 from utils.balance_alghorithm import save_views_to_excel
+import os 
 
-router = APIRouter(prefix="/mathing", tags=["Первичный подбор"])
+router = APIRouter(prefix="/fisrt_matching", tags=["Первичный подбор"])
 
 
 # Получение списка районов
@@ -58,9 +59,23 @@ async def start_matching(
 ):
     result = None 
     try:
-        import os
-        #match_new_apart_to_family_batch(new_selected_addresses=requirements.new_apartment_house_address, old_selected_addresses=requirements.family_structure_house_address)
-        save_views_to_excel(output_path=os.path.join(os.getcwd(), 'matching_result.xlsx'), new_selected_addresses=requirements.new_apartment_house_address, old_selected_addresses=requirements.family_structure_house_address)
+        match_new_apart_to_family_batch(new_selected_addresses=requirements.new_apartment_house_address, old_selected_addresses=requirements.family_structure_house_address)
+        result = 'ok'
+    except Exception as e: 
+        result = e 
+    return {"message": result}
+
+@router.post('/balance')
+async def balance(
+    requirements: MatchingSchema = Body(...)
+):
+    result = None 
+    try:
+        save_views_to_excel(
+            output_path=os.path.join(os.getcwd(), 'uploads', 'matching_result.xlsx'),
+            new_selected_addresses=requirements.new_apartment_house_address,
+            old_selected_addresses=requirements.family_structure_house_address
+        )
         result = 'ok'
     except Exception as e: 
         result = e 
