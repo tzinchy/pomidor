@@ -32,7 +32,7 @@ def save_views_to_excel(
             if date
             else [
                 "new_apart_all",
-                "result_of_recommendation",
+                "res_of_rec_last",
                 "ranked_with_district",
                 "where_not_offered",
             ]
@@ -109,13 +109,14 @@ def save_views_to_excel(
                             query_new_ranked += " AND offer.created_at = (SELECT MAX(created_at) FROM offer)"
 
                         # Получаем данные из базы данных
-                        query_old_ranked += " AND (offer.created_at = (SELECT MAX(created_at) FROM offer) OR family_apartment_needs.family_apartment_needs_id NOT IN (SELECT family_apartment_needs_id FROM offer))"
-                        query_new_ranked += " AND (offer.created_at = (SELECT MAX(created_at) FROM offer) OR new_apart.new_apart_id NOT IN (SELECT new_apart_id FROM offer))"
+                        #query_old_ranked += " AND (offer.created_at = (SELECT MAX(created_at) FROM offer) OR family_apartment_needs.family_apartment_needs_id NOT IN (SELECT family_apartment_needs_id FROM offer))"
+                        #query_new_ranked += " AND (offer.created_at = (SELECT MAX(created_at) FROM offer) OR new_apart.new_apart_id NOT IN (SELECT new_apart_id FROM offer))"
                         print(query_old_ranked)
                         df_old_ranked = pd.read_sql(query_old_ranked, conn, params=params_old)
                         df_new_ranked = pd.read_sql(query_new_ranked, conn, params=params_new)
                         print(df_old_ranked)
-
+                        print('ЧИНАЗЕС')
+                        print(df_new_ranked)
                         # Получение максимальных рангов по количеству комнат из базы данных
                         max_rank_query = """
                             SELECT room_count, MAX(rank) as max_rank
@@ -125,9 +126,7 @@ def save_views_to_excel(
 
                         max_rank_df = pd.read_sql(max_rank_query, conn)
 
-                        max_rank_by_room_count = max_rank_df.set_index("room_count")[
-                            "max_rank"
-                        ].to_dict()
+                        max_rank_by_room_count = max_rank_df.set_index("room_count")["max_rank"].to_dict()
 
                         # Объединяем данные старых и новых квартир
                         df_combined = pd.concat(
@@ -239,13 +238,14 @@ def save_views_to_excel(
                             df_with_totals = pd.concat(
                                 [df_new, totals], ignore_index=True
                             )
-
+                            
                             return df_with_totals
 
                         # Добавляем итоговые данные по рангу для каждого типа квартиры с использованием add_totals
                         result_data = []
                         for room in df["room_count"].unique():
                             room_df = df[df["room_count"] == room].copy()
+                            print('ROOMDF - ',room_df)
                             grouped_df = add_totals(room_df, max_rank_by_room_count)
                             grouped_df["room_count"] = room
                             result_data.append(grouped_df)
@@ -322,7 +322,7 @@ def save_views_to_excel(
 
                     else:
                         query_params = []
-                        query = f"SELECT * FROM recommendation.{view}"
+                        query = f"SELECT * FROM public.{view}"
 
                         if (
                             old_selected_districts
@@ -344,14 +344,14 @@ def save_views_to_excel(
                                     placeholders = ", ".join(
                                         ["%s"] * len(new_selected_area)
                                     )
-                                    query += f" AND area IN ({placeholders})"
+                                    query += f" AND municipal_district IN ({placeholders})"
                                     query_params.extend(new_selected_area)
 
                                 if new_selected_addresses:
                                     placeholders = ", ".join(
                                         ["%s"] * len(new_selected_addresses)
                                     )
-                                    query += f" AND house_adress IN ({placeholders})"
+                                    query += f" AND house_address IN ({placeholders})"
                                     query_params.extend(new_selected_addresses)
 
                             elif view == "where_not_offered":
@@ -366,14 +366,14 @@ def save_views_to_excel(
                                     placeholders = ", ".join(
                                         ["%s"] * len(old_selected_area)
                                     )
-                                    query += f" AND area IN ({placeholders})"
+                                    query += f" AND municipal_district IN ({placeholders})"
                                     query_params.extend(old_selected_area)
 
                                 if old_selected_addresses:
                                     placeholders = ", ".join(
                                         ["%s"] * len(old_selected_addresses)
                                     )
-                                    query += f" AND house_adress IN ({placeholders})"
+                                    query += f" AND house_address IN ({placeholders})"
                                     query_params.extend(old_selected_addresses)
 
                             else:
@@ -409,7 +409,7 @@ def save_views_to_excel(
                                     placeholders = ", ".join(
                                         ["%s"] * len(old_selected_addresses)
                                     )
-                                    query += f" AND Старый_адрес IN ({placeholders})"
+                                    query += f' AND "res_of_rec_last"."Старый_адерс" IN ({placeholders})'
                                     query_params.extend(old_selected_addresses)
 
                         print(f"Выполнение запроса для представления {view}")

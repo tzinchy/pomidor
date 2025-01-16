@@ -45,7 +45,7 @@ def match_new_apart_to_family_batch(
                         fs.max_floor, 
                         fs.buying_date,
                         ARRAY_AGG(EXTRACT(YEAR FROM AGE(fm.date_of_birth))) AS ages,
-                        COUNT(fm.family_member_id) AS members_amount,
+                        count(fam.family_apartment_needs_id) AS members_amount,
                         MAX(EXTRACT(YEAR FROM AGE(fm.date_of_birth::timestamp with time zone))) AS oldest,
                         fs.is_queue,
                         fs.queue_square
@@ -148,105 +148,45 @@ def match_new_apart_to_family_batch(
                     return
 
                 # --- Создание DataFrame и расчет рангов ---
-                df_old_apart = pd.DataFrame(
-                    old_aparts,
-                    columns=[
-                        "family_apartment_needs_id",
-                        "kpu_number",
-                        "district",
-                        "municipal_district",
-                        "room_count",
-                        "full_living_area",
-                        "total_living_area",
-                        "living_area",
-                        "is_special_needs_marker",
-                        "min_floor",
-                        "max_floor",
-                        "buying_date",
-                        "ages",
-                        "members_amount",
-                        "oldest",
-                        "is_queue",
-                        "queue_square",
+                df_old_apart = pd.DataFrame(old_aparts,columns=[
+                        "family_apartment_needs_id", "kpu_number", "district", "municipal_district", "room_count", "full_living_area",
+                        "total_living_area", "living_area", "is_special_needs_marker", "min_floor", "max_floor", "buying_date", 
+                        "ages", "members_amount", "oldest", "is_queue", "queue_square",
                     ],
                 )
 
-                df_new_apart = pd.DataFrame(
-                    new_aparts,
-                    columns=[
-                        "new_apart_id",
-                        "district",
-                        "municipal_district",
-                        "house_address",
-                        "apart_number",
-                        "floor",
-                        "room_count",
-                        "full_living_area",
-                        "total_living_area",
-                        "living_area",
-                        "for_special_needs_marker",
+                df_new_apart = pd.DataFrame(new_aparts, columns=[
+                        "new_apart_id", "district", "municipal_district", "house_address", "apart_number", "floor",
+                        "room_count", "full_living_area", "total_living_area", "living_area", "for_special_needs_marker",
                     ],
                 )
 
-                df_new_apart_second = pd.DataFrame(
-                    new_aparts,
-                    columns=[
-                        "new_apart_id",
-                        "district",
-                        "municipal_district",
-                        "house_address",
-                        "apart_number",
-                        "floor",
-                        "room_count",
-                        "full_living_area",
-                        "total_living_area",
-                        "living_area",
-                        "for_special_needs_marker",
+                df_new_apart_second = pd.DataFrame(new_aparts, columns=[
+                        "new_apart_id", "district", "municipal_district", "house_address", "apart_number", "floor",
+                        "room_count", "full_living_area", "total_living_area", "living_area", "for_special_needs_marker",
                     ],
                 )
 
                 # Создаем комбинированный столбец для старых и новых квартир
-                df_old_apart["combined_area"] = (
-                    df_old_apart["living_area"] + df_old_apart["full_living_area"]
-                )
-                df_new_apart["combined_area"] = (
-                    df_new_apart["living_area"] + df_new_apart["full_living_area"]
-                )
-                df_old_apart["combined_area"] = df_old_apart["combined_area"].fillna(
-                    0
-                )  # или другой подходящий метод
-                df_new_apart["combined_area"] = df_new_apart["combined_area"].fillna(0)
+                df_old_apart["combined_area"] = (df_old_apart["living_area"] + df_old_apart["full_living_area"])
+                df_new_apart["combined_area"] = (df_new_apart["living_area"] + df_new_apart["full_living_area"])
 
                 # Присваиваем ранги старым квартирам
-                df_old_apart["rank"] = (
-                    df_old_apart.groupby("room_count")["combined_area"]
-                    .rank(method="dense")
-                    .astype(int)
-                )
+                df_old_apart["rank"] = df_old_apart.groupby("room_count")["combined_area"].rank(method="dense").astype(int)
 
                 # Определяем минимальную площадь среди старых квартир 1 ранга
-                min_area_rank_1 = (
-                    df_old_apart[df_old_apart["rank"] == 1]
-                    .groupby("room_count")["combined_area"]
-                    .min()
-                    .to_dict()
-                )
+                min_area_rank_1 = df_old_apart[df_old_apart["rank"] == 1].groupby("room_count")["combined_area"].min().to_dict()
 
                 # Создаем словарь для хранения максимальных рангов по количеству комнат среди старых квартир
-                max_rank_by_room_count = (
-                    df_old_apart.groupby("room_count")["rank"].max().to_dict()
-                )
+                max_rank_by_room_count = df_old_apart.groupby("room_count")["rank"].max().to_dict()
 
                 # Присваиваем ранги новым квартирам на основе рангов старых
-                df_new_apart["rank"] = (
-                    0  # Инициализация колонки для рангов в новых квартирах
-                )
+                df_new_apart["rank"] = 0  # Инициализация колонки для рангов в новых квартирах
+                
 
                 for idx, new_row in df_new_apart.iterrows():
                     # Определяем минимальную площадь для 1 ранга
-                    min_area_1_rank = min_area_rank_1.get(
-                        new_row["room_count"], float("inf")
-                    )
+                    min_area_1_rank = min_area_rank_1.get(new_row["room_count"], float("inf"))
 
                     # Присваиваем ранг 0, если площадь новой квартиры меньше минимальной площади старой квартиры с 1 рангом
                     if new_row["combined_area"] < min_area_1_rank:
@@ -254,20 +194,11 @@ def match_new_apart_to_family_batch(
                     else:
                         # Фильтруем старые квартиры, чтобы найти максимальную старую квартиру, которая покрывается новой
                         filtered_old = df_old_apart[
-                            (df_old_apart["room_count"] == new_row["room_count"])
-                            & (df_old_apart["living_area"] <= new_row["living_area"])
-                            & (
-                                df_old_apart["full_living_area"]
-                                <= new_row["full_living_area"]
-                            )
-                            & (
-                                df_old_apart["total_living_area"]
-                                <= new_row["total_living_area"]
-                            )
-                            & (
-                                df_old_apart["is_special_needs_marker"]
-                                == new_row["for_special_needs_marker"]
-                            )
+                            (df_old_apart["room_count"] == new_row["room_count"]) &
+                            (df_old_apart["living_area"] <= new_row["living_area"]) &
+                            (df_old_apart["full_living_area"] <= new_row["full_living_area"]) &
+                            (df_old_apart["total_living_area"] <= new_row["total_living_area"]) & 
+                            (df_old_apart["is_special_needs_marker"] == new_row["for_special_needs_marker"])
                         ]
 
                         if not filtered_old.empty:
@@ -275,24 +206,14 @@ def match_new_apart_to_family_batch(
                             df_new_apart.at[idx, "rank"] = max_rank
 
                 # Объединяем данные старых и новых квартир
-                df_combined = pd.concat(
-                    [
-                        df_old_apart.assign(status="old"),
-                        df_new_apart.assign(status="new"),
-                    ],
-                    ignore_index=True,
-                )
+                df_combined = pd.concat([df_old_apart.assign(status="old"), df_new_apart.assign(status="new")], ignore_index=True)
 
                 # Присваиваем индивидуальные ранги без группировки
                 df_combined["rank_group"] = df_combined["rank"].astype(int)
 
                 # Обновляем ранги в базе данных для старых и новых квартир
-                old_apart_rank_update = list(
-                    zip(df_old_apart["rank"], df_old_apart["family_apartment_needs_id"])
-                )
-                new_apart_rank_update = list(
-                    zip(df_new_apart["rank"], df_new_apart["new_apart_id"])
-                )
+                old_apart_rank_update = list(zip(df_old_apart["rank"], df_old_apart["family_apartment_needs_id"]))
+                new_apart_rank_update = list(zip(df_new_apart["rank"], df_new_apart["new_apart_id"]))
 
                 cursor.executemany(
                     """UPDATE public.family_apartment_needs
@@ -324,18 +245,9 @@ def match_new_apart_to_family_batch(
                 if not date:
                     # Распаковываем все колонки, чтобы избежать ошибки
                     for record in history_data:
-                        (
-                            history_id,
-                            old_house_addresses,
-                            new_house_addresses,
-                            status_id,
-                            created_at,
-                            updated_at,
+                        (history_id, old_house_addresses, new_house_addresses, status_id, created_at, updated_at,
                         ) = record
-                        if (
-                            old_house_addresses == old_selected_addresses
-                            and new_house_addresses == new_selected_addresses
-                        ):
+                        if (old_house_addresses == old_selected_addresses and new_house_addresses == new_selected_addresses):
                             record_exists = True
                             break
                 else:
@@ -394,78 +306,30 @@ def match_new_apart_to_family_batch(
 
                 current_date = datetime.now()
 
-                old_apart_ranks = (
-                    df_old_apart.groupby("room_count")["rank"].max().to_dict()
-                )
-                old_apart_count = (
-                    df_old_apart.groupby("room_count")["family_apartment_needs_id"]
-                    .count()
-                    .to_dict()
-                )
-                new_apart_count = (
-                    df_new_apart.groupby("room_count")["new_apart_id"].count().to_dict()
-                )
+                old_apart_ranks = df_old_apart.groupby("room_count")["rank"].max().to_dict()
+                old_apart_count = df_old_apart.groupby("room_count")["family_apartment_needs_id"].count().to_dict()
+                new_apart_count = df_new_apart.groupby("room_count")["new_apart_id"].count().to_dict()
+                
 
                 df_old_apart_reversed = df_old_apart.loc[::-1]
                 a = {}
                 delta = {1: 1.5, 2: 3, 3: 5, 4: 6.5, 5: 8, 6: 9.5, 7: 11, 8: 12.5}
 
-                for i in range(
-                    1,
-                    (
-                        df_old_apart["room_count"].max()
-                        if df_old_apart["room_count"].max()
-                        > df_new_apart["room_count"].max()
-                        else df_new_apart["room_count"].max()
-                    )
-                    + 1,
-                ):
-                    if (
-                        (
-                            old_apart_ranks[i]
-                            if old_apart_ranks.get(i) is not None
-                            else 0
-                        )
-                        > (
-                            max_rank_by_room_count[i]
-                            if max_rank_by_room_count.get(i) is not None
-                            else 0
-                        )
-                    ) or (
-                        (
-                            old_apart_count[i]
-                            if old_apart_count.get(i) is not None
-                            else 0
-                        )
-                        > (
-                            new_apart_count[i]
-                            if new_apart_count.get(i) is not None
-                            else 0
-                        )
-                    ):
+                for i in range(1, (df_old_apart['room_count'].max() if df_old_apart['room_count'].max() > df_new_apart['room_count'].max() else df_new_apart['room_count'].max()) + 1):
+                    if (((old_apart_ranks[i] if old_apart_ranks.get(i) is not None else  0) > (max_rank_by_room_count[i] if max_rank_by_room_count.get(i) is not None else  0)) 
+                    or ((old_apart_count[i] if old_apart_count.get(i) is not None else  0) > (new_apart_count[i] if new_apart_count.get(i) is not None else  0))):
                         a[i] = 0
 
                         old_apart_list = []
 
                         print("DEFICIT")
-                        for _, old_apart in df_old_apart_reversed[
-                            df_old_apart_reversed["room_count"] == i
-                        ].iterrows():
+                        for _, old_apart in df_old_apart_reversed[df_old_apart_reversed["room_count"] == i].iterrows():
                             old_apart_id = int(old_apart["family_apartment_needs_id"])
                             # Определяем условие по этажу
                             floor_condition = (
-                                (
-                                    (
-                                        df_new_apart["floor"]
-                                        >= (old_apart["min_floor"] - 2)
-                                    )
-                                    & (
-                                        df_new_apart["floor"]
-                                        <= (old_apart["max_floor"] + 2)
-                                    )
-                                )
-                                if old_apart["min_floor"] or old_apart["max_floor"]
-                                else True
+                                ((df_new_apart["floor"] >= (old_apart["min_floor"] - 2)) & 
+                                 (df_new_apart["floor"] <= (old_apart["max_floor"] + 2))
+                                ) if old_apart["min_floor"] or old_apart["max_floor"] else True
                             )
 
                             if (old_apart["is_queue"] == 1) and (ochered):
