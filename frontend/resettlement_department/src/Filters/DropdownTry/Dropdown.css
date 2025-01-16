@@ -1,0 +1,15 @@
+/* Анимация открытия */
+.dropdown-open {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 200ms ease-in;
+}
+  
+  /* Анимация закрытия */
+  .dropdown-closed {
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 200ms ease-out;
+  }
+  

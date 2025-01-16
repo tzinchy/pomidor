@@ -143,7 +143,7 @@ class ApartmentRepository:
                 SELECT * FROM {table}
                 LEFT JOIN family_apartment_needs USING (affair_id)
                 LEFT JOIN offer USING (family_apartment_needs_id)
-                LEFT JOIN status USING (status_id)
+                LEFT JOIN status on offer.status_id = status.status_id
                 WHERE house_address IN ({house_addresses_placeholders})
             """
         else:
