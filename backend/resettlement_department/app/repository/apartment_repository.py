@@ -138,7 +138,7 @@ class ApartmentRepository:
 
         # Шаблон SQL-запроса
         query_template = f"""
-            SELECT * FROM {table}
+            SELECT house_address, district, municipal_district, apart_number, room_count, full_living_area, total_living_area, living_area FROM {table}
             WHERE house_address IN ({house_addresses_placeholders})
         """
 
