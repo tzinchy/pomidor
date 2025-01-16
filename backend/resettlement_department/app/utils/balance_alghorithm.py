@@ -47,7 +47,7 @@ def save_views_to_excel(
                         # Запросы для извлечения данных из базы данных
                         query_old_ranked = """
                             SELECT
-                                offer.family_apartment_needs_id as old_apart_id,
+                                family_apartment_needs.family_apartment_needs_id as old_apart_id,
                                 family_structure.room_count,
                                 family_structure.living_area,
                                 family_structure.is_special_needs_marker,
@@ -57,15 +57,14 @@ def save_views_to_excel(
                                 family_structure.municipal_district,
                                 family_structure.house_address,
                                 family_apartment_needs.rank
-                            FROM offer
-                            LEFT JOIN family_apartment_needs ON offer.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+                            FROM family_apartment_needs
 							LEFT JOIN family_structure ON family_apartment_needs.affair_id = family_structure.affair_id 
                             WHERE 1=1
                         """
 
                         query_new_ranked = """
                             SELECT 
-                                offer.new_apart_id, 
+                                new_apart.new_apart_id, 
                                 new_apart.room_count, 
                                 new_apart.living_area, 
                                 new_apart.for_special_needs_marker, 
@@ -76,7 +75,6 @@ def save_views_to_excel(
                                 new_apart.house_address, 
                                 new_apart.rank
                             FROM new_apart 
-                            LEFT JOIN offer ON offer.new_apart_id = new_apart.new_apart_id
                             WHERE 1=1
                         """
 
@@ -105,16 +103,12 @@ def save_views_to_excel(
 
                         # Добавляем фильтрацию по дате, если указана
                         if date:
-                            query_old_ranked += " AND offer.created_at = (SELECT MAX(created_at) FROM offer)"
-                            query_new_ranked += " AND offer.created_at = (SELECT MAX(created_at) FROM offer)"
+                            query_old_ranked += " AND family_apartment_needs.created_at = (SELECT MAX(created_at) FROM family_apartment_needs)"
+                            query_new_ranked += " AND new_apart.created_at = (SELECT MAX(created_at) FROM new_apart)"
 
-                        # Получаем данные из базы данных
-                        #query_old_ranked += " AND (offer.created_at = (SELECT MAX(created_at) FROM offer) OR family_apartment_needs.family_apartment_needs_id NOT IN (SELECT family_apartment_needs_id FROM offer))"
-                        #query_new_ranked += " AND (offer.created_at = (SELECT MAX(created_at) FROM offer) OR new_apart.new_apart_id NOT IN (SELECT new_apart_id FROM offer))"
-                        print(query_old_ranked)
+
                         df_old_ranked = pd.read_sql(query_old_ranked, conn, params=params_old)
                         df_new_ranked = pd.read_sql(query_new_ranked, conn, params=params_new)
-                        print(df_old_ranked)
                         print('ЧИНАЗЕС')
                         print(df_new_ranked)
                         # Получение максимальных рангов по количеству комнат из базы данных
@@ -245,7 +239,6 @@ def save_views_to_excel(
                         result_data = []
                         for room in df["room_count"].unique():
                             room_df = df[df["room_count"] == room].copy()
-                            print('ROOMDF - ',room_df)
                             grouped_df = add_totals(room_df, max_rank_by_room_count)
                             grouped_df["room_count"] = room
                             result_data.append(grouped_df)
