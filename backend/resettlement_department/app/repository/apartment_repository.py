@@ -136,11 +136,24 @@ class ApartmentRepository:
             house_addresses, "house_address"
         )
 
-        # Шаблон SQL-запроса
-        query_template = f"""
-            SELECT * FROM {table}
-            WHERE house_address IN ({house_addresses_placeholders})
-        """
+        # Строим SQL-запрос
+        if apart_type == "FamilyStructure":
+            # Для "FamilyStructure" добавляем дополнительные LEFT JOIN
+            query_template = f"""
+                SELECT * FROM {table}
+                LEFT JOIN family_apartment_needs USING (affair_id)
+                LEFT JOIN offer USING (family_apartment_needs_id)
+                LEFT JOIN status USING (status_id)
+                WHERE house_address IN ({house_addresses_placeholders})
+            """
+        else:
+            # Для других типов квартир используем стандартный запрос
+            query_template = f"""
+                SELECT * FROM {table}
+                LEFT JOIN offer USING (new_apart_id)
+                LEFT JOIN status USING (status_id)
+                WHERE house_address IN ({house_addresses_placeholders})
+            """
 
         # Выполнение запроса
         result = await ApartmentRepository._execute_query(query_template, params)

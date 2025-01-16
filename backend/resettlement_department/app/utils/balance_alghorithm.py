@@ -347,27 +347,6 @@ def save_views_to_excel(
                                     query += f" AND house_address IN ({placeholders})"
                                     query_params.extend(new_selected_addresses)
 
-                            elif view == "where_not_offered":
-                                if old_selected_districts:
-                                    placeholders = ", ".join(
-                                        ["%s"] * len(old_selected_districts)
-                                    )
-                                    query += f" AND district IN ({placeholders})"
-                                    query_params.extend(old_selected_districts)
-
-                                if old_selected_area:
-                                    placeholders = ", ".join(
-                                        ["%s"] * len(old_selected_area)
-                                    )
-                                    query += f" AND municipal_district IN ({placeholders})"
-                                    query_params.extend(old_selected_area)
-
-                                if old_selected_addresses:
-                                    placeholders = ", ".join(
-                                        ["%s"] * len(old_selected_addresses)
-                                    )
-                                    query += f" AND house_address IN ({placeholders})"
-                                    query_params.extend(old_selected_addresses)
 
                             else:
                                 if old_selected_districts:

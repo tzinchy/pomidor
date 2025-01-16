@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Query, Body
+from fastapi.responses import FileResponse
 from service.apartment_service import ApartmentService
 from models.apartment import ApartType, MatchingSchema
 from utils.alghorithm import match_new_apart_to_family_batch
@@ -69,14 +70,22 @@ async def start_matching(
 async def balance(
     requirements: MatchingSchema = Body(...)
 ):
-    result = None 
     try:
+        # Формируем путь для сохранения файла
+        output_path = os.path.join(os.getcwd(), 'uploads', 'matching_result.xlsx')
+
+        # Сохраняем файл (здесь вызывается ваша функция)
         save_views_to_excel(
-            output_path=os.path.join(os.getcwd(), 'uploads', 'matching_result.xlsx'),
+            output_path=output_path,
             new_selected_addresses=requirements.new_apartment_house_address,
             old_selected_addresses=requirements.family_structure_house_address
         )
-        result = 'ok'
-    except Exception as e: 
-        result = e 
-    return {"message": result}
+
+        # Возвращаем файл клиенту
+        return FileResponse(
+            path=output_path,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            filename='matching_result.xlsx'
+        )
+    except Exception as e:
+        return {"error": str(e)}
