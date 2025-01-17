@@ -103,6 +103,7 @@ export default function ApartPage() {
 
 
   const fetchApartmentDetails = async (apartmentId) => {
+    console.log(apartmentId);
     try {
       const response = await axios.get(
         `/tables/apartment/${apartmentId}?apart_type=${apartType}`
@@ -149,7 +150,13 @@ export default function ApartPage() {
               setExpandedNodes={setExpandedNodes}
               fetchApartments={fetchApartments}
             />
-            <ApartTable data={apartments} />
+            <ApartTable 
+              apartType={apartType} 
+              data={apartments} 
+              fetchApartmentDetails={fetchApartmentDetails} 
+              apartmentDetails={apartmentDetails} 
+              detailsRef={detailsRef} 
+            />
         </div>
       </main>
     </div>

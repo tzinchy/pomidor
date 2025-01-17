@@ -140,7 +140,9 @@ class ApartmentRepository:
         if apart_type == "FamilyStructure":
             # Для "FamilyStructure" добавляем дополнительные LEFT JOIN
             query_template = f"""
-                SELECT * FROM {table}
+                SELECT house_address, apart_number, district, municipal_district, fio, full_living_area,
+                total_living_area, living_area, room_count, status.status, family_structure.notes, affair_id
+                 FROM {table}
                 LEFT JOIN family_apartment_needs USING (affair_id)
                 LEFT JOIN offer USING (family_apartment_needs_id)
                 LEFT JOIN status on offer.status_id = status.status_id
