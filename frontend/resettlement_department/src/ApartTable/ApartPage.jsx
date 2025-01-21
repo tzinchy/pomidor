@@ -5,40 +5,26 @@ import Aside from "../Navigation/Aside";
 import ApartTable from "./ApartTable";
 
 export default function ApartPage() {
-
-  // 1) Локальные состояния
   const [apartType, setApartType] = useState("FamilyStructure");
   const [collapsed, setCollapsed] = useState(false);
   const handleToggleSidebar = () => {
     setCollapsed(!collapsed);
   };
 
-  // Данные для дерева
   const [districts, setDistricts] = useState([]);
   const [municipalDistricts, setMunicipalDistricts] = useState({});
   const [houseAddresses, setHouseAddresses] = useState({});
-
-  // Данные для таблицы и деталей
   const [apartments, setApartments] = useState([]);
   const [apartmentDetails, setApartmentDetails] = useState(null);
-
-  // Кто раскрыт в дереве (ключ = district/municipal, значение = true/false)
   const [expandedNodes, setExpandedNodes] = useState({});
-
-  // Поиск по ID
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Ссылка на панель деталей (чтобы закрывать при клике вне)
   const detailsRef = useRef(null);
 
-  // 2) Эффекты
-  // При смене типа сбрасываем дерево и грузим районы
   useEffect(() => {
     resetFilters();
     fetchDistricts();
   }, [apartType]);
 
-  // Закрытие панели деталей при клике вне
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (detailsRef.current && !detailsRef.current.contains(e.target)) {
@@ -49,7 +35,6 @@ export default function ApartPage() {
     return () => window.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // 3) Методы
   const resetFilters = () => {
     setExpandedNodes({});
     setMunicipalDistricts({});
@@ -101,7 +86,6 @@ export default function ApartPage() {
     }
   };
 
-
   const fetchApartmentDetails = async (apartmentId) => {
     console.log(apartmentId);
     try {
@@ -115,28 +99,18 @@ export default function ApartPage() {
     }
   };
 
-
-
-  // 4) Фильтрация квартир по ID (new_apart_id)
   const filteredApartments = apartments.filter((apt) =>
     String(apt.new_apart_id).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const headers = [
-    "Адрес",
-    "Кв.",
-    "Квадратура"
-  ];
-
-
-  // 5) Рендер
   return (
     <div className="bg-muted/60 flex min-h-screen w-full flex-col">
       <Aside />
-      <main className="relative flex flex-1 flex-col gap-2 p-2 sm:pl-16 bg-neutral-100">
-        <div className="flex bg-white text-gray-800" style={{minHeight: 98+'vh'}}>
-          {/* ======== Сайдбар с деревом ======== */}
-          <LeftBar        
+      <main className="relative flex flex-1 flex-col gap-4 p-2 sm:pl-16 bg-neutral-100">
+        <div className="flex flex-col lg:flex-row bg-white text-gray-800 relative min-h-[98vh]">
+          {/* Сайдбар */}
+          
+            <LeftBar
               apartType={apartType}
               setApartType={setApartType}
               collapsed={collapsed}
@@ -150,13 +124,18 @@ export default function ApartPage() {
               setExpandedNodes={setExpandedNodes}
               fetchApartments={fetchApartments}
             />
-            <ApartTable 
-              apartType={apartType} 
-              data={apartments} 
-              fetchApartmentDetails={fetchApartmentDetails} 
-              apartmentDetails={apartmentDetails} 
-              detailsRef={detailsRef} 
+          
+
+          {/* Таблица */}
+          <div className="flex-1 overflow-auto">
+            <ApartTable
+              apartType={apartType}
+              data={filteredApartments}
+              fetchApartmentDetails={fetchApartmentDetails}
+              apartmentDetails={apartmentDetails}
+              detailsRef={detailsRef}
             />
+          </div>
         </div>
       </main>
     </div>

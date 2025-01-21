@@ -39,6 +39,7 @@ class ApartmentRepository:
         query = """
             SELECT DISTINCT district 
             FROM {table}
+            order by district
         """
         table = (
             "public.family_structure"
@@ -65,6 +66,7 @@ class ApartmentRepository:
             SELECT DISTINCT municipal_district
             FROM {table}
             WHERE district IN ({district_placeholders})
+            order by municipal_district
         """
         table = (
             "public.family_structure"
@@ -96,6 +98,7 @@ class ApartmentRepository:
             SELECT DISTINCT house_address
             FROM {table}
             WHERE municipal_district IN ({area_placeholders})
+            order by house_address
         """
         table = (
             "public.family_structure"
@@ -140,21 +143,65 @@ class ApartmentRepository:
         if apart_type == "FamilyStructure":
             # Для "FamilyStructure" добавляем дополнительные LEFT JOIN
             query_template = f"""
-                SELECT house_address, apart_number, district, municipal_district, fio, full_living_area,
-                total_living_area, living_area, room_count, status.status, family_structure.notes, affair_id
-                 FROM {table}
-                LEFT JOIN family_apartment_needs USING (affair_id)
-                LEFT JOIN offer USING (family_apartment_needs_id)
-                LEFT JOIN status on offer.status_id = status.status_id
-                WHERE house_address IN ({house_addresses_placeholders})
+                WITH ranked_apartments AS (
+                    SELECT
+                        house_address,
+                        apart_number,
+                        district,
+                        municipal_district,
+                        fio,
+                        full_living_area,
+                        total_living_area,
+                        living_area,
+                        room_count,
+                        family_structure.type_of_settlement,
+                        status.status,
+                        family_structure.notes,
+                        family_apartment_needs_id,
+                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date DESC) AS rn
+                    FROM
+                        family_structure
+                    LEFT JOIN
+                        family_apartment_needs USING (affair_id)
+                    LEFT JOIN
+                        offer USING (family_apartment_needs_id)
+                    LEFT JOIN
+                        status ON offer.status_id = status.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE house_address IN ({house_addresses_placeholders}) and rn = 1
+                ORDER BY full_living_area
             """
         else:
             # Для других типов квартир используем стандартный запрос
             query_template = f"""
-                SELECT * FROM {table}
-                LEFT JOIN offer USING (new_apart_id)
-                LEFT JOIN status USING (status_id)
-                WHERE house_address IN ({house_addresses_placeholders})
+                WITH ranked_apartments AS (
+                    SELECT 
+                        house_address, 
+                        apart_number, 
+                        district, 
+                        municipal_district, 
+                        full_living_area,
+                        total_living_area, 
+                        living_area, 
+                        room_count, 
+                        type_of_settlement, 
+                        status.status AS status, 
+                        new_apart.notes, 
+                        new_apart.new_apart_id,
+                        ROW_NUMBER() OVER (PARTITION BY new_apart.new_apart_id ORDER BY offer.sentence_date DESC) AS rn
+                    FROM 
+                        public.new_apart
+                    LEFT JOIN 
+                        offer USING (new_apart_id)
+                    LEFT JOIN 
+                        status ON offer.status_id = status.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE house_address IN ({house_addresses_placeholders}) and rn = 1
+                order by full_living_area
             """
 
         # Выполнение запроса
@@ -175,26 +222,133 @@ class ApartmentRepository:
 
         # Определяем таблицу и имя столбца для ID
         if apart_type == "NewApartment":
-            table = "public.new_apart"
-            id_column = "new_apart_id"
+            # SQL-запрос
+            query = f"""
+            WITH old_apartment_list AS (
+                    SELECT 
+                        na.new_apart_id,
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'house_address', fs.house_address,
+                                'apart_number', fs.apart_number,
+                                'district', fs.district,
+                                'municipal_district', fs.municipal_district,
+                                'full_living_area', fs.full_living_area,
+                                'total_living_area', fs.total_living_area,
+                                'living_area', fs.living_area,
+                                'room_count', fs.room_count,
+                                'type_of_settlement', fs.type_of_settlement,
+                                'notes', o.notes,
+                                'status', s.status,
+                                'sentence_date', o.sentence_date :: DATE,
+                                'answer_date', o.answer_date :: DATE
+                            )
+                        ) FILTER (WHERE fs.house_address IS NOT NULL OR fs.apart_number IS NOT NULL OR fs.district IS NOT NULL OR fs.municipal_district IS NOT NULL 
+                        OR fs.full_living_area IS NOT NULL OR fs.total_living_area IS NOT NULL OR fs.living_area IS NOT NULL 
+                        OR fs.room_count IS NOT NULL OR fs.type_of_settlement IS NOT NULL OR o.notes IS NOT NULL 
+                        OR s.status IS NOT NULL OR o.sentence_date IS NOT NULL OR o.answer_date IS NOT NULL) AS old_apartments
+                    FROM 
+                        public.new_apart na
+                    LEFT JOIN 
+                        offer o USING (new_apart_id)
+                    LEFT JOIN 
+                        family_apartment_needs fan USING (family_apartment_needs_id)
+                    LEFT JOIN 
+                        family_structure fs USING (affair_id)
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                    GROUP BY 
+                        na.new_apart_id
+                )
+                SELECT 
+                    na.new_apart_id,
+                    na.house_address,
+                    na.apart_number ,
+                    na.district ,
+                    na.municipal_district ,
+                    na.full_living_area  ,
+                    na.total_living_area ,
+                    na.living_area ,
+                    na.room_count ,
+                    na.type_of_settlement,
+                    na.notes ,
+                    oal.old_apartments
+                FROM 
+                    public.new_apart na
+                LEFT JOIN 
+                    old_apartment_list oal ON na.new_apart_id = oal.new_apart_id
+                WHERE
+                    na.new_apart_id = {apartment_id}
+                ORDER BY 
+                    na.new_apart_id;
+            """
         elif apart_type == "FamilyStructure":
-            table = "public.family_structure"
-            id_column = "affair_id"
+            query = f"""
+                WITH new_apartment_list AS (
+                    SELECT 
+                        o.family_apartment_needs_id,
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'house_address', na.house_address,
+                                'apart_number', na.apart_number,
+                                'district', na.district,
+                                'municipal_district', na.municipal_district,
+                                'full_living_area', na.full_living_area,
+                                'total_living_area', na.total_living_area,
+                                'living_area', na.living_area,
+                                'room_count', na.room_count,
+                                'type_of_settlement', na.type_of_settlement,
+                                'notes', na.notes,
+                                'status', COALESCE(s.status, '?'),
+                                'sentence_date', o.sentence_date :: DATE,
+                                'answer_date', o.answer_date :: DATE
+                            )
+                        ) FILTER (WHERE na.house_address IS NOT NULL OR na.apart_number IS NOT NULL OR na.district IS NOT NULL OR na.municipal_district IS NOT NULL 
+                        OR na.full_living_area IS NOT NULL OR na.total_living_area IS NOT NULL OR na.living_area IS NOT NULL 
+                        OR na.room_count IS NOT NULL OR na.type_of_settlement IS NOT NULL OR na.notes IS NOT NULL 
+                        OR s.status IS NOT NULL OR o.sentence_date IS NOT NULL OR o.answer_date IS NOT NULL) AS new_apartments
+                    FROM 
+                        offer o
+                    LEFT JOIN 
+                        new_apart na ON o.new_apart_id = na.new_apart_id
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                    GROUP BY 
+                        o.family_apartment_needs_id
+                )
+                SELECT 
+                    fan.family_apartment_needs_id,
+                    fs.house_address,
+                    fs.apart_number,
+                    fs.district,
+                    fs.municipal_district,
+                    fs.full_living_area,
+                    fs.total_living_area,
+                    fs.living_area,
+                    fs.room_count,
+                    fs.type_of_settlement,
+                    nal.new_apartments
+                FROM 
+                    family_apartment_needs fan
+                LEFT JOIN 
+                    family_structure fs ON fan.affair_id = fs.affair_id
+                LEFT JOIN 
+                    new_apartment_list nal ON fan.family_apartment_needs_id = nal.family_apartment_needs_id
+                WHERE
+                    fan.family_apartment_needs_id = {apartment_id} -- Фильтр по family_apartment_needs_id
+                ORDER BY 
+                    fs.affair_id;
+            """
         else:
             raise ValueError(f"Unsupported apartment type: {apart_type}")
 
-        # SQL-запрос
-        query = f"""
-            SELECT *
-            FROM {table}
-            WHERE {id_column} = :apart_id
-        """
+        
 
         result = await ApartmentRepository._execute_query(
             query, {"apart_id": apartment_id}
         )
 
         if not result:
-            raise ValueError(f"Apartment with ID {apartment_id} not found in {table}")
+            raise ValueError(f"Apartment with ID {apartment_id} not found")
 
         return dict(result[0]._mapping)

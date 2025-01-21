@@ -8,9 +8,9 @@ export default function ApartTable({
   data,
   fetchApartmentDetails,
   apartmentDetails,
-  detailsRef,
 }) {
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(-1);
 
   const headers =
     apartType === "FamilyStructure"
@@ -18,28 +18,41 @@ export default function ApartTable({
       : ["Адрес", "Площадь, тип, этаж", "Статус", "Примечания"];
 
   return (
-    <div className="relative flex h-[calc(100vh-1rem)] w-full">
+    <div className="relative flex flex-col lg:flex-row h-[calc(100vh-1rem)] gap-2 bg-neutral-100 w-full transition-all duration-300">
       {/* Таблица */}
       <div
-        className={`overflow-auto rounded-md border relative h-full w-full transition-all duration-300 ease-in-out`}
+        className={`overflow-auto rounded-md border h-full ${
+          isDetailsVisible ? "lg:w-2/4" : "w-full"
+        } transition-all duration-300 ease-in-out`}
+        style={{
+          scrollbarWidth: "thin", // Firefox
+          scrollbarColor: "#c1c1c1 #f1f1f1", // Firefox
+        }}
       >
-        <table className="text-sm caption-bottom w-full border-collapse bg-white">
-          <TableHead headers={headers} />
-          <ResursTbody
-            data={data}
-            apartType={apartType}
-            fetchApartmentDetails={fetchApartmentDetails}
-          />
-        </table>
+        <div className="overflow-x-auto">
+          <table className="text-sm caption-bottom w-full border-collapse bg-white">
+            <TableHead headers={headers} />
+            <ResursTbody
+              data={data}
+              apartType={apartType}
+              fetchApartmentDetails={fetchApartmentDetails}
+              isDetailsVisible={isDetailsVisible}
+              setIsDetailsVisible={setIsDetailsVisible}
+              selectedRow={selectedRow}
+              setSelectedRow={setSelectedRow}
+            />
+          </table>
+        </div>
       </div>
 
       {/* Боковая панель */}
-      {apartmentDetails && (
-        <ApartDetails
-          apartmentDetails={apartmentDetails}
-          detailsRef={detailsRef}
-          setIsDetailsVisible={setIsDetailsVisible}
-        />
+      {apartmentDetails && isDetailsVisible && (
+          <ApartDetails
+            apartmentDetails={apartmentDetails}
+            setIsDetailsVisible={setIsDetailsVisible}
+            apartType={apartType}
+            setSelectedRow={setSelectedRow}
+          />
       )}
     </div>
   );
