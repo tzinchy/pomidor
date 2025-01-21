@@ -38,4 +38,3 @@ async def change_password(
 @router.get('/test')
 async def test(user = Depends(get_user)):
     return user
-
