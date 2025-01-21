@@ -1,3 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Стили скролла */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px; /* Уменьшаем ширину скролла */
+    height: 6px; /* Уменьшаем высоту горизонтального скролла */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent; /* Прозрачный фон трека */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.5); /* Полупрозрачный цвет бегунка */
+    border-radius: 8px; /* Скругляем бегунок */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.7); /* Темнее при наведении */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-corner {
+    background: transparent; /* Убираем угловую стрелку */
+  }
+  
+  /* Убираем стандартные стрелки скролла */
+  .custom-scrollbar::-webkit-scrollbar-button {
+    display: none;
+  }
+  
