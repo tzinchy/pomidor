@@ -19,11 +19,11 @@ class ApartmentService:
         )
 
     @staticmethod
-    async def get_house_addresses(apart_type: str, areas: list[str]):
+    async def get_house_addresses(apart_type: str, areas: list[str], districts: list[str] = None):
         """
         Получить список адресов домов по районам и областям.
         """
-        return await ApartmentRepository.get_house_addresses(apart_type, areas)
+        return await ApartmentRepository.get_house_addresses(apart_type, areas, districts)
 
     @staticmethod
     async def get_apartments(apart_type: str, house_addresses: list[str]):
