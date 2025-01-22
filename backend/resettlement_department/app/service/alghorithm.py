@@ -1,18 +1,18 @@
 import psycopg2
 import pandas as pd
-from core.config import Settings
+from core.config import settings
 from datetime import datetime
 
 
 def get_db_connection():
     return psycopg2.connect(
-        host=Settings.DB_HOST,
-        port=Settings.DB_PORT,
-        database=Settings.DB_NAME,
-        user=Settings.DB_USER,
-        password=Settings.DB_PASS,
+        host=settings.project_management_setting.DB_HOST,
+        user=settings.project_management_setting.DB_USER,
+        password=settings.project_management_setting.DB_PASSWORD,
+        port=settings.project_management_setting.DB_PORT,
+        database=settings.project_management_setting.DB_NAME
+       
     )
-
 
 def match_new_apart_to_family_batch(
     start_date=None,

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import pandas as pd
 from io import BytesIO
-from utils.apartment_insert import insert_data_to_needs, insert_offer, insert_data_to_structure, new_apart_insert
+from service.apartment_insert import insert_data_to_needs, insert_offer, insert_data_to_structure, new_apart_insert
 from service.validation_service import ValidationService
 
 router = APIRouter(prefix="/load", tags=["Загрузка файлов"])

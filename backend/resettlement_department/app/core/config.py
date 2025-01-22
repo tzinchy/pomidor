@@ -1,35 +1,59 @@
+from dataclasses import dataclass, field
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
 
-class Settings:
-    DB_HOST = os.environ["DB_HOST"]
-    DB_PORT = os.environ["DB_PORT"]
-    DB_USER = os.environ["DB_USER"]
-    DB_PASS = os.environ["DB_PASS"]
-    DB_NAME = os.environ["DB_NAME"]
-    DB_SCHEMA = os.environ["DB_SCHEMA"]
+@dataclass
+class ProjectManagementSettings:
+    DB_HOST: str = os.environ.get("DB_HOST")
+    DB_PORT: str = os.environ.get("DB_PORT")
+    DB_USER: str = os.environ.get("DB_USER")
+    DB_PASSWORD: str = os.environ.get("DB_PASS")
+    DB_NAME: str = os.environ.get("DB_NAME")
+    DB_SCHEMA: str = os.environ.get("DB_SCHEMA")
 
-    DATABASE_URL = (
-        f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    )
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
-    ALGORITHM = os.environ["ALGORITHM"]
-    SECRET_KEY = os.environ["SECRET_KEY"]
-    EMAIL_SENDER = os.environ["EMAIL_SENDER"]
-    EMAIL_PASSWORD = os.environ["EMAIL_PASSWORD"]
-    EMAIL_SERVER = os.environ["EMAIL_SERVER"]
-    EMAIL_PORT = os.environ["EMAIL_PORT"]
-    EMAIL_LOGIN = os.environ["EMAIL_LOGIN"]
+    ALGORITHM: str = os.environ.get("ALGORITHM")
+    SECRET_KEY: str = os.environ.get("SECRET_KEY")
 
 
+@dataclass
+class EmailSetting:
+    EMAIL_SENDER: str = os.environ.get("EMAIL_SENDER")
+    EMAIL_PASSWORD: str = os.environ.get("EMAIL_PASSWORD")
+    EMAIL_SERVER: str = os.environ.get("EMAIL_SERVER")
+    EMAIL_PORT: str = os.environ.get("EMAIL_PORT")
+    EMAIL_LOGIN: str = os.environ.get("EMAIL_LOGIN")
+
+
+@dataclass
 class DashboardSetting:
-    DB_DASHBORD_HOST = os.environ["DB_DASHBORD_HOST"]
-    DB_DASHBORD_PORT = os.environ["DB_DASHBORD_PORT"]
-    DB_DASHBORD_USER = os.environ["DB_DASHBORD_USER"]
-    DB_DASHBORD_PASS = os.environ["DB_DASHBORD_PASS"]
-    DB_DASHBORD_NAME = os.environ["DB_DASHBORD_NAME"]
+    DB_DASHBORD_HOST: str = os.environ.get("DB_DASHBORD_HOST")
+    DB_DASHBORD_PORT: str = os.environ.get("DB_DASHBORD_PORT")
+    DB_DASHBORD_USER: str = os.environ.get("DB_DASHBORD_USER")
+    DB_DASHBORD_PASSWORD: str = os.environ.get("DB_DASHBORD_PASS")
+    DB_DASHBORD_NAME: str = os.environ.get("DB_DASHBORD_NAME")
 
-    DATABASE_URL = f"postgresql+asyncpg://{DB_DASHBORD_USER}:{DB_DASHBORD_PASS}@{DB_DASHBORD_HOST}:{DB_DASHBORD_PORT}/{DB_DASHBORD_NAME}"
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"postgresql+asyncpg://{self.DB_DASHBORD_USER}:{self.DB_DASHBORD_PASSWORD}@{self.DB_DASHBORD_HOST}:{self.DB_DASHBORD_PORT}/{self.DB_DASHBORD_NAME}"
+
+
+@dataclass
+class Settings:
+    project_management_setting: ProjectManagementSettings = field(default_factory=ProjectManagementSettings)
+    dashboard_setting: DashboardSetting = field(default_factory=DashboardSetting)
+    email_settings: EmailSetting = field(default_factory=EmailSetting)
+
+
+# Пример использования
+settings = Settings()
+
+print(settings.project_management_setting.DATABASE_URL)
+print(settings.dashboard_setting.DATABASE_URL)
+print(settings.email_settings.EMAIL_SENDER)
