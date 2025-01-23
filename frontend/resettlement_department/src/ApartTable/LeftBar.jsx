@@ -39,7 +39,7 @@ function LeftBar({
             <>
               <div className="flex justify-around mb-4">
                 <button
-                  onClick={() => {setIsDetailsVisible(false); setSelectedRow(-1); setApartType("FamilyStructure")}}
+                  onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("FamilyStructure")}}
                   className={`p-8 py-4 rounded-md ${
                     apartType === "FamilyStructure"
                       ? "bg-gray-200"
@@ -49,7 +49,7 @@ function LeftBar({
                   Семьи
                 </button>
                 <button
-                  onClick={() => {setIsDetailsVisible(false); setSelectedRow(-1); setApartType("NewApartment")}}
+                  onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("NewApartment")}}
                   className={`p-8 py-4 rounded-md ${
                     apartType === "NewApartment"
                       ? "bg-gray-200"

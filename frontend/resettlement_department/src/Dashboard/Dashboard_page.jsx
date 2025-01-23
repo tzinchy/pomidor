@@ -27,23 +27,23 @@ export default function Dashboard_page() {
       }, []);
 
     return (
-        <div className="bg-muted/60 flex min-h-screen w-full flex-col">
-            <Aside />
-            <main className="relative flex flex-1 flex-col gap-2 p-2 sm:pl-16 bg-neutral-100">
-                <div className="flex space-x-16 justify-center m-8">
-                    {isLoading ? (
-                        <p>Loading data...</p>
-                    ) : (
-                        data[0].map((value) => <Card value={value} />)
-                    )}
-                </div>
-                
+      <div className="bg-muted/60 flex min-h-screen w-full flex-col">
+        <Aside />
+        <main className="relative flex flex-1 flex-col gap-2 p-2 sm:pl-16 bg-neutral-100">
+            <div className="flex space-x-16 justify-center m-8">
                 {isLoading ? (
-                        <p></p>
-                    ) : (
-                        <BarChart chartData={data[1]} />
-                    )}
-            </main>
-        </div>
+                    <p>Loading data...</p>
+                ) : (
+                    data[0].map((value) => <Card value={value} />)
+                )}
+            </div>
+            
+            {isLoading ? (
+                    <p></p>
+                ) : (
+                    <BarChart chartData={data[1]} />
+                )}
+        </main>
+      </div>
     );
 }
