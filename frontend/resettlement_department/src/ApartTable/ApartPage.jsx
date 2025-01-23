@@ -19,6 +19,8 @@ export default function ApartPage() {
   const [expandedNodes, setExpandedNodes] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const detailsRef = useRef(null);
+  const [selectedRow, setSelectedRow] = useState(false);
+  const [isDetailsVisible, setIsDetailsVisible] = useState(false);
 
   useEffect(() => {
     resetFilters();
@@ -123,6 +125,8 @@ export default function ApartPage() {
               expandedNodes={expandedNodes}
               setExpandedNodes={setExpandedNodes}
               fetchApartments={fetchApartments}
+              setSelectedRow={setSelectedRow}
+              setIsDetailsVisible={setIsDetailsVisible}
             />
           
 
@@ -134,6 +138,10 @@ export default function ApartPage() {
               fetchApartmentDetails={fetchApartmentDetails}
               apartmentDetails={apartmentDetails}
               detailsRef={detailsRef}
+              selectedRow={selectedRow}
+              setSelectedRow={setSelectedRow}
+              isDetailsVisible={isDetailsVisible} 
+              setIsDetailsVisible={setIsDetailsVisible}
             />
           </div>
         </div>

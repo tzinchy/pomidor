@@ -205,7 +205,7 @@ class ApartmentRepository:
                         type_of_settlement, 
                         status.status AS status, 
                         new_apart.notes, 
-                        new_apart_id,
+                        new_apart.new_apart_id,
                         ROW_NUMBER() OVER (PARTITION BY new_apart.new_apart_id ORDER BY offer.sentence_date, offer.answer_date DESC) AS rn
                     FROM 
                         new_apart
