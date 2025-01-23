@@ -22,7 +22,7 @@ export default function Dashboard_page() {
           })
           .catch((err) => {
             console.error("Error fetching data:", err);
-            setIsLoading(false);
+            setIsLoading(true);
           });
       }, []);
 
