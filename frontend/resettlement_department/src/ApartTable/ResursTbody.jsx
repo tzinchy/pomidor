@@ -34,7 +34,7 @@ export default function ResursTbody({ data, apartType, fetchApartmentDetails, is
         <tbody>
             {data.map((val, index) => (
                 <tr key={index} 
-                    className={`bg-white border-b transition-colors ${index === selectedRow ? "bg-zinc-100" : "hover:bg-gray-100"} ${selectedRow && index != selectedRow ? 'blur-[2px]' : ''}`} 
+                    className={`bg-white border-b transition-colors ${index === selectedRow ? "bg-zinc-100" : "hover:bg-gray-100"} ${(selectedRow || selectedRow === 0) && (index != selectedRow) ? 'blur-[2px]' : ''}`} 
                     onClick={() => handleClick(index, isDetailsVisible, val)}
                 >
                     <td className="p-2 font-normal whitespace-nowrap" style={{width: 13+'vw'}}><AdressCell props={val} /></td>
