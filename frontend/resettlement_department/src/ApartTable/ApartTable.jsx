@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { TableHead } from "../PloshadkiTable/Table/Components";
 import ResursTbody from "./ResursTbody";
 import ApartDetails from "./ApartDetails";

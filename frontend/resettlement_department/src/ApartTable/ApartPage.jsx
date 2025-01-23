@@ -19,7 +19,7 @@ export default function ApartPage() {
   const [expandedNodes, setExpandedNodes] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const detailsRef = useRef(null);
-  const [selectedRow, setSelectedRow] = useState(-1);
+  const [selectedRow, setSelectedRow] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
 
   useEffect(() => {
