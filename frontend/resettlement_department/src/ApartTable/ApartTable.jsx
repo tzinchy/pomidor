@@ -8,9 +8,12 @@ export default function ApartTable({
   data,
   fetchApartmentDetails,
   apartmentDetails,
+  selectedRow,
+  setSelectedRow,
+  isDetailsVisible, 
+  setIsDetailsVisible
 }) {
-  const [isDetailsVisible, setIsDetailsVisible] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(-1);
+  
 
   const headers =
     apartType === "FamilyStructure"
@@ -29,7 +32,7 @@ export default function ApartTable({
           scrollbarColor: "#c1c1c1 #f1f1f1", // Firefox
         }}
       >
-        <div className="overflow-x-auto">
+        <div className="overflow-auto rounded-md border absolute left-0 h-[calc(100vh-1.5rem)] w-full transition-all ease-in-out">
           <table className="text-sm caption-bottom w-full border-collapse bg-white">
             <TableHead headers={headers} />
             <ResursTbody
