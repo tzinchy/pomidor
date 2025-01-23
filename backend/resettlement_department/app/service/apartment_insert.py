@@ -1,9 +1,8 @@
 import psycopg2
 import pandas as pd
-from core.config import Settings
 import numpy as np
 from datetime import datetime
-from core.config import Settings
+from core.config import settings
 
 
 def insert_data_to_needs(family_apartments_needs_df):
@@ -31,12 +30,12 @@ def insert_data_to_needs(family_apartments_needs_df):
         args = list(family_apartments_needs_df.itertuples(index=False, name=None))
 
         # Connect to the PostgreSQL database
-        connection = psycopg2.connect(
-            host=Settings.DB_HOST,
-            port=Settings.DB_PORT,
-            database=Settings.DB_NAME,
-            user=Settings.DB_USER,
-            password=Settings.DB_PASS,
+        connection  =  psycopg2.connect(
+            host=settings.project_management_setting.DB_HOST,
+            user=settings.project_management_setting.DB_USER,
+            password=settings.project_management_setting.DB_PASSWORD,
+            port=settings.project_management_setting.DB_PORT,
+            database=settings.project_management_setting.DB_NAME
         )
         cursor = connection.cursor()
 
@@ -179,12 +178,12 @@ def insert_data_to_structure(family_structure):
         # Prepare the arguments string for the SQL query
 
         # Connect to the PostgreSQL database
-        connection = psycopg2.connect(
-            host=Settings.DB_HOST,
-            port=Settings.DB_PORT,
-            database=Settings.DB_NAME,
-            user=Settings.DB_USER,
-            password=Settings.DB_PASS,
+        connection  =  psycopg2.connect(
+            host=settings.project_management_setting.DB_HOST,
+            user=settings.project_management_setting.DB_USER,
+            password=settings.project_management_setting.DB_PASSWORD,
+            port=settings.project_management_setting.DB_PORT,
+            database=settings.project_management_setting.DB_NAME
         )
         cursor = connection.cursor()
 
@@ -306,12 +305,12 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         args = list(new_apart_df.itertuples(index=False, name=None))
         print("Data converted to list of tuples for insertion.")
 
-        connection = psycopg2.connect(
-            host=Settings.DB_HOST,
-            port=Settings.DB_PORT,
-            database=Settings.DB_NAME,
-            user=Settings.DB_USER,
-            password=Settings.DB_PASS,
+        connection  =  psycopg2.connect(
+            host=settings.project_management_setting.DB_HOST,
+            user=settings.project_management_setting.DB_USER,
+            password=settings.project_management_setting.DB_PASSWORD,
+            port=settings.project_management_setting.DB_PORT,
+            database=settings.project_management_setting.DB_NAME
         )
         cursor = connection.cursor()
 
@@ -455,12 +454,12 @@ def insert_offer(offer_df: pd.DataFrame):
     args = list(offer_df[columns].itertuples(index=False, name=None))
 
     # Подключение к базе данных PostgreSQL
-    connection = psycopg2.connect(
-        host=Settings.DB_HOST,
-        port=Settings.DB_PORT,
-        database=Settings.DB_NAME,
-        user=Settings.DB_USER,
-        password=Settings.DB_PASS,
+    connection  =  psycopg2.connect(
+            host=settings.project_management_setting.DB_HOST,
+            user=settings.project_management_setting.DB_USER,
+            password=settings.project_management_setting.DB_PASSWORD,
+            port=settings.project_management_setting.DB_PORT,
+            database=settings.project_management_setting.DB_NAME
     )
     cursor = connection.cursor()
 
