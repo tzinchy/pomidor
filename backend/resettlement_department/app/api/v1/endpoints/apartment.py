@@ -24,9 +24,9 @@ async def get_districts(
 @router.get("/municipal_district")
 async def get_areas(
     apart_type: ApartType = Query(..., description="Тип апартаментов"),
-    municipal_district: list[str] = Query(..., description="Список районов")
+    district: list[str] = Query(..., description="Список районов")
 ):
-    return await apartment_service.get_municipal_districts(apart_type, municipal_district)
+    return await apartment_service.get_municipal_districts(apart_type, district)
 
 
 # Получение списка адресов домов

@@ -3,14 +3,21 @@ import axios from "axios";
 import LeftBar from "./LeftBar";
 import Aside from "../Navigation/Aside";
 import ApartTable from "./ApartTable";
+import { HOSTLINK } from "..";
+
+const APART_TYPES = {
+  NEW: "NewApartment",
+  OLD: "FamilyStructure"
+};
+
+const paramsSerializer = {
+  indexes: null,
+  encode: (value) => encodeURIComponent(value)
+};
 
 export default function ApartPage() {
-  const [apartType, setApartType] = useState("FamilyStructure");
+  const [apartType, setApartType] = useState(APART_TYPES.OLD);
   const [collapsed, setCollapsed] = useState(false);
-  const handleToggleSidebar = () => {
-    setCollapsed(!collapsed);
-  };
-
   const [districts, setDistricts] = useState([]);
   const [municipalDistricts, setMunicipalDistricts] = useState({});
   const [houseAddresses, setHouseAddresses] = useState({});
@@ -48,89 +55,113 @@ export default function ApartPage() {
 
   const fetchDistricts = async () => {
     try {
-      const response = await axios.get(`/tables/district?apart_type=${apartType}`);
+      const response = await axios.get(`${HOSTLINK}/tables/district`, {
+        params: { apart_type: apartType },
+        paramsSerializer
+      });
       setDistricts(response.data);
     } catch (error) {
-      console.error("Error fetching districts:", error);
+      console.error("Error fetching districts:", error.response?.data);
     }
   };
 
   const fetchMunicipalDistricts = async (district) => {
     try {
-      const response = await axios.get(
-        `/tables/municipal_district?apart_type=${apartType}&municipal_district=${district}`
-      );
-      setMunicipalDistricts((prev) => ({ ...prev, [district]: response.data }));
+      const response = await axios.get(`${HOSTLINK}/tables/municipal_district`, {
+        params: {
+          apart_type: apartType,
+          district: [district] // Исправленное имя параметра
+        },
+        paramsSerializer
+      });
+      setMunicipalDistricts(prev => ({
+        ...prev,
+        [district]: response.data
+      }));
     } catch (error) {
-      console.error("Error fetching municipal districts:", error);
+      console.error("Error fetching municipal districts:", error.response?.data);
     }
   };
 
   const fetchHouseAddresses = async (municipal) => {
     try {
-      const response = await axios.get(
-        `/tables/house_addresses?apart_type=${apartType}&areas=${municipal}`
-      );
-      setHouseAddresses((prev) => ({ ...prev, [municipal]: response.data }));
+      const response = await axios.get(`${HOSTLINK}/tables/house_addresses`, {
+        params: {
+          apart_type: apartType,
+          municipal_district: [municipal]
+        },
+        paramsSerializer
+      });
+      setHouseAddresses(prev => ({
+        ...prev,
+        [municipal]: response.data
+      }));
     } catch (error) {
-      console.error("Error fetching house addresses:", error);
+      console.error("Error fetching house addresses:", error.response?.data);
     }
   };
 
   const fetchApartments = async (addresses) => {
     try {
-      const response = await axios.get(
-        `/tables/apartments?apart_type=${apartType}&house_addresses=${addresses.join(",")}`
-      );
+      const response = await axios.get(`${HOSTLINK}/tables/apartments`, {
+        params: {
+          apart_type: apartType,
+          house_addresses: addresses,
+          districts: [],
+          municipal_districts: []
+        },
+        paramsSerializer
+      });
       setApartments(response.data);
     } catch (error) {
-      console.error("Error fetching apartments:", error);
+      console.error("Error fetching apartments:", error.response?.data);
     }
   };
 
   const fetchApartmentDetails = async (apartmentId) => {
-    console.log(apartmentId);
     try {
       const response = await axios.get(
-        `/tables/apartment/${apartmentId}?apart_type=${apartType}`
+        `${HOSTLINK}/tables/apartment/${apartmentId}`,
+        { 
+          params: { apart_type: apartType },
+          paramsSerializer
+        }
       );
       setApartmentDetails(response.data);
-      console.log(response.data);
     } catch (error) {
-      console.error("Error fetching apartment details:", error);
+      console.error("Error fetching apartment details:", error.response?.data);
     }
   };
 
-  const filteredApartments = apartments.filter((apt) =>
+  const filteredApartments = apartments.filter(apt =>
     String(apt.new_apart_id).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleToggleSidebar = () => setCollapsed(!collapsed);
 
   return (
     <div className="bg-muted/60 flex min-h-screen w-full flex-col">
       <Aside />
       <main className="relative flex flex-1 flex-col gap-4 p-2 sm:pl-16 bg-neutral-100">
         <div className="flex flex-col lg:flex-row bg-white text-gray-800 relative min-h-[98vh]">
-          {/* Сайдбар */}
-          
-            <LeftBar
-              apartType={apartType}
-              setApartType={setApartType}
-              collapsed={collapsed}
-              handleToggleSidebar={handleToggleSidebar}
-              districts={districts}
-              municipalDistricts={municipalDistricts}
-              fetchMunicipalDistricts={fetchMunicipalDistricts}
-              houseAddresses={houseAddresses}
-              fetchHouseAddresses={fetchHouseAddresses}
-              expandedNodes={expandedNodes}
-              setExpandedNodes={setExpandedNodes}
-              fetchApartments={fetchApartments}
-              setSelectedRow={setSelectedRow}
-              setIsDetailsVisible={setIsDetailsVisible}
-            />
-          
+          <LeftBar
+            apartType={apartType}
+            setApartType={setApartType}
+            APART_TYPES={APART_TYPES}
+            collapsed={collapsed}
+            handleToggleSidebar={handleToggleSidebar}
+            districts={districts}
+            municipalDistricts={municipalDistricts}
+            fetchMunicipalDistricts={fetchMunicipalDistricts}
+            houseAddresses={houseAddresses}
+            fetchHouseAddresses={fetchHouseAddresses}
+            expandedNodes={expandedNodes}
+            setExpandedNodes={setExpandedNodes}
+            fetchApartments={fetchApartments}
+            setSelectedRow={setSelectedRow}
+            setIsDetailsVisible={setIsDetailsVisible}
+          />
 
-          {/* Таблица */}
           <div className="flex-1 overflow-auto">
             <ApartTable
               apartType={apartType}
@@ -140,7 +171,7 @@ export default function ApartPage() {
               detailsRef={detailsRef}
               selectedRow={selectedRow}
               setSelectedRow={setSelectedRow}
-              isDetailsVisible={isDetailsVisible} 
+              isDetailsVisible={isDetailsVisible}
               setIsDetailsVisible={setIsDetailsVisible}
             />
           </div>

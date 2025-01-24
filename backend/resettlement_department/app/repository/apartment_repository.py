@@ -109,7 +109,6 @@ class ApartmentRepository:
         if area_type not in ['full_living_area', 'total_living_area', 'living_area']:
             raise ValueError(f"Invalid area type: {area_type}")
 
-        table = "family_structure" if apart_type == "FamilyStructure" else "new_apart"
         conditions = []
         params = {}
 
@@ -174,7 +173,7 @@ class ApartmentRepository:
                         status.status,
                         family_structure.notes,
                         family_apartment_needs_id,
-                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date, offer.answer_date DESC) AS rn
+                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
                     FROM
                         family_structure
                     LEFT JOIN
@@ -206,7 +205,7 @@ class ApartmentRepository:
                         status.status AS status, 
                         new_apart.notes, 
                         new_apart.new_apart_id,
-                        ROW_NUMBER() OVER (PARTITION BY new_apart.new_apart_id ORDER BY offer.sentence_date, offer.answer_date DESC) AS rn
+                        ROW_NUMBER() OVER (PARTITION BY new_apart.new_apart_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
                     FROM 
                         new_apart
                     LEFT JOIN 
@@ -221,6 +220,7 @@ class ApartmentRepository:
             """
 
         result = await self._execute_query(query, params)
+        print(len(result))
         return [dict(row._mapping) for row in result]
 
     async def get_apartment_by_id(self, apartment_id: int, apart_type: str) -> dict:
