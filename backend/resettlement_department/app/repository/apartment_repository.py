@@ -1,7 +1,5 @@
-from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 from schema.apartment import ApartType
-from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -73,7 +71,7 @@ class ApartmentRepository:
 
     async def get_house_addresses(self, apart_type: str, municipal_districts: list[str]) -> list[str]:
         """
-        Получить уникальные адреса домов по областям.
+        Получить уникальные адреса домов по областям и районам (если указаны)
         """
         if apart_type not in ApartType:
             raise ValueError(f"Invalid apartment type: {apart_type}")

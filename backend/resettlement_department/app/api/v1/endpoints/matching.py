@@ -5,6 +5,7 @@ from schema.apartment import ApartType, MatchingSchema
 from service.alghorithm import match_new_apart_to_family_batch
 from service.balance_alghorithm import save_views_to_excel
 import os 
+from fastapi import Depends
 
 router = APIRouter(prefix="/fisrt_matching", tags=["Первичный подбор"])
 
@@ -56,7 +57,7 @@ async def get_new_apartment_house_addresses(
 
 @router.post('/matching')
 async def start_matching(
-    requirements: MatchingSchema = Body(...)
+    requirements: MatchingSchema = Depends()
 ):
     result = None 
     try:
@@ -68,7 +69,7 @@ async def start_matching(
 
 @router.post('/balance')
 async def balance(
-    requirements: MatchingSchema = Body(...)
+    requirements: MatchingSchema = Depends()
 ):
     try:
         # Формируем путь для сохранения файла
