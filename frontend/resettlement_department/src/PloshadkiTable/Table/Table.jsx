@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { TableHead, TableBody } from "./Components";
+import { HOSTLINK } from '../../index';
 
 export default function Table({ filters, searchQuery }) {
   const headers = [
@@ -22,7 +23,7 @@ export default function Table({ filters, searchQuery }) {
   const itemsPerPage = 50; // Количество строк на страницу
 
   useEffect(() => { 
-    fetch("/dashboard/table")
+    fetch(`${HOSTLINK}/dashboard/table`)
       .then((res) => res.json())
       .then((fetchedData) => {
         setData(fetchedData);

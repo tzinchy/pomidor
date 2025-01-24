@@ -6,7 +6,7 @@ import {NavSvg, NavPng} from './NavSvg'
 
 export default function LinkButton({ name }) {
     const location = useLocation();
-    const isActive = location.pathname === `10.9.96.160:3001/${name}`;
+    const isActive = location.pathname === `http://10.9.96.160:3001/${name}`;
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0 });
     const [timeoutId, setTimeoutId] = useState(null);
 
@@ -34,7 +34,7 @@ export default function LinkButton({ name }) {
         onMouseLeave={handleMouseLeave}
         >
         <a
-            href={`http://10.9.96.160:3001/${name}`}
+            href={`http://localhost:3000/${name}`}
             className={`items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
             isActive ? "bg-neutral-400 text-white" : "text-primary-foreground"
             } h-10 flex p-0`}
