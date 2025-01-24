@@ -19,7 +19,7 @@ export default function ResursTbody({ data, apartType, fetchApartmentDetails, is
                 setSelectedRow(index); // Обновляем выбранную строку
                 apartType === "FamilyStructure" ? fetchApartmentDetails(val["family_apartment_needs_id"]) : fetchApartmentDetails(val["new_apart_id"]);
             } else {
-                setSelectedRow(-1)
+                setSelectedRow(false)
                 setIsDetailsVisible(false); // Закрываем панель
             }
         } else {
@@ -34,7 +34,7 @@ export default function ResursTbody({ data, apartType, fetchApartmentDetails, is
         <tbody>
             {data.map((val, index) => (
                 <tr key={index} 
-                    className={`bg-white border-b transition-colors ${index === selectedRow ? "bg-zinc-100" : "hover:bg-gray-100"}`} 
+                    className={`bg-white border-b transition-colors ${index === selectedRow ? "bg-zinc-100" : "hover:bg-gray-100"} ${(selectedRow || selectedRow === 0) && (index != selectedRow) ? 'blur-[2px]' : ''}`} 
                     onClick={() => handleClick(index, isDetailsVisible, val)}
                 >
                     <td className="p-2 font-normal whitespace-nowrap" style={{width: 13+'vw'}}><AdressCell props={val} /></td>

@@ -167,7 +167,7 @@ function DopRow({ details }) {
                               style={{ backgroundColor: color }}
                             ></div>
                           </td>
-                          <td className="align-middle [&:has([role=checkbox])]:pr-0 text-primary px-0 py-1 text-right text-xs font-bold">
+                          <td className="align-middle [&:has([role=checkbox])]:pr-0 px-0 py-1 text-right text-xs font-bold">
                             {value}
                           </td>
                           <td className="align-middle [&:has([role=checkbox])]:pr-0 px-4 py-1 text-left text-xs">
