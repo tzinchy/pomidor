@@ -7,6 +7,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Выполняем обновление репозитория и перезапуск сервиса
-git pull origin main
+git pull
 sudo systemctl restart resettlement_backend
-sudo systemctl restart resettlement_frontend
+#sudo systemctl restart resettlement_frontend
