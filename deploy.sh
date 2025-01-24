@@ -9,4 +9,4 @@ cd "$SCRIPT_DIR"
 # Выполняем обновление репозитория и перезапуск сервиса
 git pull origin main
 sudo systemctl restart resettlement_backend
-sudo systemctl restart resettlement_frontend
+#sudo systemctl restart resettlement_frontend
