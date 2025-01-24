@@ -3,6 +3,7 @@ import axios from "axios";
 import LeftBar from "./LeftBar";
 import Aside from "../Navigation/Aside";
 import ApartTable from "./ApartTable";
+import { HOSTLINK } from "..";
 
 export default function ApartPage() {
   const [apartType, setApartType] = useState("FamilyStructure");
@@ -48,7 +49,7 @@ export default function ApartPage() {
 
   const fetchDistricts = async () => {
     try {
-      const response = await axios.get(`/tables/district?apart_type=${apartType}`);
+      const response = await axios.get(`${HOSTLINK}/tables/district?apart_type=${apartType}`);
       setDistricts(response.data);
     } catch (error) {
       console.error("Error fetching districts:", error);
@@ -58,7 +59,7 @@ export default function ApartPage() {
   const fetchMunicipalDistricts = async (district) => {
     try {
       const response = await axios.get(
-        `/tables/municipal_district?apart_type=${apartType}&municipal_district=${district}`
+        `${HOSTLINK}/tables/municipal_district?apart_type=${apartType}&municipal_district=${district}`
       );
       setMunicipalDistricts((prev) => ({ ...prev, [district]: response.data }));
     } catch (error) {
@@ -69,7 +70,7 @@ export default function ApartPage() {
   const fetchHouseAddresses = async (municipal) => {
     try {
       const response = await axios.get(
-        `/tables/house_addresses?apart_type=${apartType}&areas=${municipal}`
+        `${HOSTLINK}/tables/house_addresses?apart_type=${apartType}&areas=${municipal}`
       );
       setHouseAddresses((prev) => ({ ...prev, [municipal]: response.data }));
     } catch (error) {
@@ -80,7 +81,7 @@ export default function ApartPage() {
   const fetchApartments = async (addresses) => {
     try {
       const response = await axios.get(
-        `/tables/apartments?apart_type=${apartType}&house_addresses=${addresses.join(",")}`
+        `${HOSTLINK}/tables/apartments?apart_type=${apartType}&house_addresses=${addresses.join(",")}`
       );
       setApartments(response.data);
     } catch (error) {
@@ -92,7 +93,7 @@ export default function ApartPage() {
     console.log(apartmentId);
     try {
       const response = await axios.get(
-        `/tables/apartment/${apartmentId}?apart_type=${apartType}`
+        `${HOSTLINK}/tables/apartment/${apartmentId}?apart_type=${apartType}`
       );
       setApartmentDetails(response.data);
       console.log(response.data);
@@ -111,7 +112,6 @@ export default function ApartPage() {
       <main className="relative flex flex-1 flex-col gap-4 p-2 sm:pl-16 bg-neutral-100">
         <div className="flex flex-col lg:flex-row bg-white text-gray-800 relative min-h-[98vh]">
           {/* Сайдбар */}
-          
             <LeftBar
               apartType={apartType}
               setApartType={setApartType}
@@ -128,8 +128,6 @@ export default function ApartPage() {
               setSelectedRow={setSelectedRow}
               setIsDetailsVisible={setIsDetailsVisible}
             />
-          
-
           {/* Таблица */}
           <div className="flex-1 overflow-auto">
             <ApartTable

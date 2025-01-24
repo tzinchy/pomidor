@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Aside from "../Navigation/Aside";
 import Card from "./Card";
 import BarChart from "./RiskChart";
+import { HOSTLINK } from "..";
 
 export default function Dashboard_page() {
     const [data, setData] = useState([]);
@@ -9,7 +10,7 @@ export default function Dashboard_page() {
 
     useEffect(() => {
         // Отправка запроса на FastAPI
-        fetch("/dashboard/dashboard") // полный путь к маршруту
+        fetch(`${HOSTLINK}/dashboard/dashboard`) // полный путь к маршруту
           .then((response) => {
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
-import {NavSvg, NavPng} from './NavSvg'
+import {NavSvg, NavPng} from './NavSvg';
 
 
 export default function LinkButton({ name }) {

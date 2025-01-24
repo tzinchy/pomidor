@@ -4,6 +4,7 @@
   "private": true,
   "proxy": "http://localhost:3123",
   "dependencies": {
+    "@tanstack/react-virtual": "^3.11.2",
     "axios": "^1.7.9",
     "chart.js": "^4.4.7",
     "chartjs-plugin-datalabels": "^2.2.0",
