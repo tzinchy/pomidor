@@ -158,7 +158,7 @@ class ApartmentRepository:
                         status.status,
                         family_structure.notes,
                         family_apartment_needs_id,
-                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date, offer.answer_date DESC) AS rn
+                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
                     FROM
                         family_structure
                     LEFT JOIN
@@ -190,7 +190,7 @@ class ApartmentRepository:
                         status.status AS status, 
                         new_apart.notes, 
                         new_apart.new_apart_id,
-                        ROW_NUMBER() OVER (PARTITION BY new_apart.new_apart_id ORDER BY offer.sentence_date, offer.answer_date DESC) AS rn
+                        ROW_NUMBER() OVER (PARTITION BY new_apart.new_apart_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
                     FROM 
                         public.new_apart
                     LEFT JOIN 
