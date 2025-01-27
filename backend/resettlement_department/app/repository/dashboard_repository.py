@@ -1,12 +1,12 @@
 from repository.database import get_db_connection_dashboard
 
 class DashboardRepository:
-    def get_building_details() -> list[tuple]:
+    def get_building_details(self) -> list[tuple]:
 
         conn = get_db_connection_dashboard()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute('''
             WITH apartment_totals AS (
                 SELECT 
                     building_id,
@@ -104,17 +104,17 @@ class DashboardRepository:
             JOIN renovation.buildings_new bn ON cbc.new_building_id = bn.id
             GROUP BY cbc.new_building_id, bn.adress, bn.okrug, bn.district, bn.terms
             ORDER BY otsel_type, status_flag, cbc.new_building_id
-        """)
+        ''')
 
         _building_info = cursor.fetchall()
         return _building_info
 
-    def get_dashboard_details():
+    def get_dashboard_details(self):
 
         conn = get_db_connection_dashboard()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute('''
             WITH apartment_totals AS (
                 SELECT 
                     building_id,
@@ -183,7 +183,7 @@ class DashboardRepository:
             join renovation.buildings_new bn on cbc.new_building_id = bn.id
             group by cbc.new_building_id, bn.adress, bn.okrug, bn.district, bn.terms
             order by new_building_id
-        """)
+        ''')
 
         _dashboard_data = cursor.fetchall()
 
