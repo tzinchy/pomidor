@@ -27,7 +27,7 @@ export function TableBody({ data }) {
             {Object.keys(item[4])
               .slice(1)
               .map((key, subIndex) => (
-                <DopRow key={subIndex} details={item[4][key]} />
+                <DopRow key={subIndex} details={item[4][key]}/>
               ))}
           </React.Fragment>
         ))}
@@ -73,7 +73,7 @@ function MainRow({ index }) {
     );
   }
   
-function DopRow({ details }) {
+function DopRow({ key, details }) {
     return (
       <tr className="bg-white border-b transition-colors">
         <RenderRowDetails details={details} />

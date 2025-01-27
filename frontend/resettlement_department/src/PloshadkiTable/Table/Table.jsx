@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { TableHead, TableBody } from "./Components";
 import { HOSTLINK } from "../..";
+import HouseDetails from '../HouseDetails/HouseDetails' 
 
 export default function Table({ filters, searchQuery }) {
   const headers = [
@@ -107,6 +108,7 @@ export default function Table({ filters, searchQuery }) {
           <TableHead headers={headers} />
           <TableBody data={displayData} /> {/* Передаём отображаемые данные */}
         </table>
+        <HouseDetails />
         <div ref={loaderRef} className="loader text-center py-4"></div>
       </div>
     </div>

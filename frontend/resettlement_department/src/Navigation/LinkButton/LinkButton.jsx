@@ -6,7 +6,7 @@ import {NavSvg, NavPng} from './NavSvg'
 
 export default function LinkButton({ name }) {
     const location = useLocation();
-    const isActive = location.pathname === `http://10.9.96.160:3001/${name}`;
+    const isActive = location.pathname === `/${name}`;
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0 });
     const [timeoutId, setTimeoutId] = useState(null);
 
