@@ -1,11 +1,11 @@
-from fastapi_cache import FastAPICache
+#from fastapi_cache import FastAPICache
 from fastapi import FastAPI
 
-from fastapi_cache.backends.inmemory import InMemoryBackend
+#from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi.middleware.cors import CORSMiddleware
 from api.v1.router import router
 
-FastAPICache.init(InMemoryBackend())
+#FastAPICache.init(InMemoryBackend())
 
 app = FastAPI()
 app.add_middleware(
