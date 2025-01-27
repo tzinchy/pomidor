@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { TableHead, TableBody } from "./Components";
-import { HOSTLINK } from '../../index';
+import { HOSTLINK } from "../..";
 
 export default function Table({ filters, searchQuery }) {
   const headers = [
@@ -35,8 +35,17 @@ export default function Table({ filters, searchQuery }) {
   // Фильтрация данных
   useEffect(() => {
     if (data.length > 0) {
-      const filterByQuery = (item) => 
-        !searchQuery || item[3].toLowerCase().includes(searchQuery.toLowerCase());
+      const filterByQuery = (item) => {
+        // Проверка на item[3]
+        const matchesItem3 = !searchQuery || item[3].toLowerCase().includes(searchQuery.toLowerCase());
+
+        // Проверка на item[4] и поле 'f1' в его под-объектах
+        const matchesItem4 = !searchQuery || Object.values(item[4]).some((subItem) => 
+          subItem?.f1?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+        return matchesItem3 || matchesItem4;  // Возвращаем true, если найдено совпадение в любом из полей
+      };
 
       const filterByFilters = (item) => {
         const matchesFilter1 = filters['okrugs']?.length ? filters['okrugs'].includes(item[1]) : true;
@@ -53,7 +62,8 @@ export default function Table({ filters, searchQuery }) {
       setDisplayData(filtered.slice(0, itemsPerPage)); // Сброс отображаемых данных
       setPage(1); // Сбрасываем страницу
     }
-  }, [filters, data, searchQuery]); // Добавляем зависимость от `searchQuery`
+  }, [filters, data, searchQuery]); // Добавляем зависимость от searchQuery
+
 
   const loadMoreData = () => {
     const startIndex = page * itemsPerPage;
