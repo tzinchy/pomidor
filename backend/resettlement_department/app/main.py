@@ -1,17 +1,21 @@
+from fastapi_cache import FastAPICache
 from fastapi import FastAPI
-from api.v1.router import router
+
+from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi.middleware.cors import CORSMiddleware
+from api.v1.router import router
+
+FastAPICache.init(InMemoryBackend())
 
 app = FastAPI()
-
-app.include_router(
-    router  
-)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.include_router(
+    router  
 )

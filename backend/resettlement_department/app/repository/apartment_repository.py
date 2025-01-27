@@ -231,7 +231,7 @@ class ApartmentRepository:
         if apart_type == "NewApartment":
             query = f"""
                 WITH old_apartment_list AS (
-                    SELECT 
+                    SELECT .
                         na.new_apart_id,
                         JSON_AGG(
                             JSON_BUILD_OBJECT(
@@ -354,3 +354,4 @@ class ApartmentRepository:
             raise ValueError(f"Apartment with ID {apartment_id} not found")
 
         return dict(result[0]._mapping)
+

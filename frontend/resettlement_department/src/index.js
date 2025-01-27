@@ -11,8 +11,11 @@ import Koren from './Koren';
 
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement); 
-export const HOSTLINK = 'http://10.9.96.160:3123';
+export const HOSTLINK = process.env.REACT_APP_HOST_LINK;
 // export const HOSTLINK = '';
+export const ASIDELINK = process.env.REACT_APP_REACT_LINK;
+console.log(ASIDELINK)
+//const ASIDELINK = 'http://10.9.96.160:3001';
 
 root.render(
     <BrowserRouter>
