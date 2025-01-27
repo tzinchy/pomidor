@@ -43,12 +43,16 @@ class DashboardSetting:
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.DB_DASHBORD_USER}:{self.DB_DASHBORD_PASSWORD}@{self.DB_DASHBORD_HOST}:{self.DB_DASHBORD_PORT}/{self.DB_DASHBORD_NAME}"
 
+@dataclass
+class RedisSetting:
+    REDIS_HOST : str = os.environ.get("REDIS_HOST")
 
 @dataclass
 class Settings:
     project_management_setting: ProjectManagementSettings = field(default_factory=ProjectManagementSettings)
     dashboard_setting: DashboardSetting = field(default_factory=DashboardSetting)
     email_settings: EmailSetting = field(default_factory=EmailSetting)
+    redis : RedisSetting = field(default_factory=RedisSetting)
 
 
 # Пример использования
@@ -57,3 +61,4 @@ settings = Settings()
 print(settings.project_management_setting.DATABASE_URL)
 print(settings.dashboard_setting.DATABASE_URL)
 print(settings.email_settings.EMAIL_SENDER)
+print(settings.redis.REDIS_HOST)
