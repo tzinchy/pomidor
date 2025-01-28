@@ -9,3 +9,4 @@ def member():
 @router.get('/dashboard')
 def dashboard():
     return dashboard_service.get_dashboard_data()
+
