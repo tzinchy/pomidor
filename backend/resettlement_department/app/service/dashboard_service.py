@@ -11,7 +11,7 @@ class DashboardService:
         """
         try:
             # Fetch data from the repository
-            tables_data = self.db.get_building_details()
+            tables_data = self.db.get_tables_data()
             print(tables_data)
             return tables_data
         except Exception as e:
@@ -150,3 +150,5 @@ class DashboardService:
         print(result)
         return result
     
+    def get_building_details(self,building_id : int):
+        return self.db.get_building_details(building_id)

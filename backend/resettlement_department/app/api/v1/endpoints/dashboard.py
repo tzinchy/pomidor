@@ -10,3 +10,6 @@ def member():
 def dashboard():
     return dashboard_service.get_dashboard_data()
 
+@router.get("/table/{building_id}")
+def get_building_info(building_id : int):
+    return dashboard_service.get_building_details(building_id)
