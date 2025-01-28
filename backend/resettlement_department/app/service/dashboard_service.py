@@ -2,22 +2,23 @@ from repository.dashboard_repository import DashboardRepository
 from datetime import datetime
 
 class DashboardService:
-    @staticmethod
-    def get_tables_data():
+    def __init__(self, repository : DashboardRepository):
+        self.db = repository
+
+    def get_tables_data(self):
         """
         Fetches dashboard data and applies any necessary business logic.
         """
         try:
             # Fetch data from the repository
-            tables_data = DashboardRepository.get_building_details()
+            tables_data = self.db.get_building_details()
             return tables_data
         except Exception as e:
             print(f"Error in DashboardService: {e}")
             raise
 
-    @staticmethod
-    def get_dashboard_data():
-        dashboard_data = DashboardRepository.get_dashboard_details()
+    def get_dashboard_data(self):
+        dashboard_data = self.db.get_dashboard_details()
         categories = {
         "done": {},
         "fullInProgress": {"risk": {}, "noRisk": {}},

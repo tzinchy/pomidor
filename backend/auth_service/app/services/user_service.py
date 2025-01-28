@@ -13,8 +13,8 @@ from utils.email_service import send_email_with_new_password
 logger = logging.getLogger(__name__)
 
 class UserService:
-    @classmethod
-    async def validate_user(cls, email: EmailStr, password: str) -> bool:
+
+    async def validate_user(self, email: EmailStr, password: str) -> bool:
         """Validate user credentials."""
         user = await UserRepository.find_user_by_email(email)
         if not user:
@@ -29,8 +29,7 @@ class UserService:
         logger.info(f"User {email} validated successfully.")
         return True
 
-    @classmethod
-    async def register_user(cls, email: EmailStr, password: str) -> dict:
+    async def register_user(self, email: EmailStr, password: str) -> dict:
         """Register a new user."""
         if await UserRepository.does_user_exist(email):
             logger.warning(f"User with email {email} already exists.")
@@ -40,8 +39,7 @@ class UserService:
         logger.info(f"User {email} registered successfully.")
         return {"message": "User registered successfully."}
 
-    @classmethod
-    async def reset_password(cls, email: str) -> str:
+    async def reset_password(self, email: str) -> str:
         """Reset a user's password."""
         user = await UserRepository.find_user_by_email(email)
         if not user:
@@ -60,8 +58,7 @@ class UserService:
         logger.info(f"Password reset successfully for user {email}.")
         return new_password
 
-    @classmethod
-    async def get_user_data_for_jwt(cls, email: EmailStr) -> dict | None:
+    async def get_user_data_for_jwt(self, email: EmailStr) -> dict | None:
         """Get user data for JWT payload."""
         user_data = await UserRepository.find_user_data_for_jwt(email)
         if not user_data:
@@ -71,8 +68,7 @@ class UserService:
         logger.info(f"User data for JWT retrieved for email: {email}")
         return user_data
 
-    @classmethod
-    async def change_password(cls, email: EmailStr, old_password: str, new_password: str, confirm_password: str) -> dict:
+    async def change_password(self, email: EmailStr, old_password: str, new_password: str, confirm_password: str) -> dict:
         """
         Change a user's password after validating the old password and ensuring the new password is not similar to the old one.
         """

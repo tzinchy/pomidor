@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Filters from '../Filters/Filters';
 import Table from './Table/Table';
@@ -18,6 +18,19 @@ export default function Table_page() {
     });
     const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
 
+    // Синхронизация состояния с URL (когда происходит обновление searchParams)
+    useEffect(() => {
+        const newValue = {
+            'okrugs': searchParams.getAll("okrugs"),
+            'districts': searchParams.getAll("districts"),
+            'deviation': searchParams.getAll("deviation"),
+            'otsel_type': searchParams.getAll("otsel_type"),
+            'relocationAge': searchParams.getAll("relocationAge"),
+        };
+        setValue(newValue);
+        setSearchQuery(searchParams.get("search") || "");
+    }, [searchParams]);
+
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setSearchQuery(value);
@@ -25,13 +38,12 @@ export default function Table_page() {
     };
 
     const handleValueSelect = (type, selectedValues) => {
-        const updatedValue = {
-            ...value,
-            [type]: selectedValues,
-        };
-        setValue(updatedValue);
         setIsFiltersReset(false); // Сбрасываем состояние "сброс фильтров"
-        updateUrl({ [type]: selectedValues });
+        
+        const updatedValue = { ...value, [type]: selectedValues };
+        setValue(updatedValue); // Обновляем состояние фильтров
+        
+        updateUrl({ ...value, [type]: selectedValues }); // Обновляем URL только для конкретного фильтра
     };
 
     const resetFilters = () => {

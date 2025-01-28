@@ -2,17 +2,7 @@
 from openpyxl.styles import PatternFill, Font, Alignment
 import pandas as pd
 from openpyxl.utils.dataframe import dataframe_to_rows
-import psycopg2
-from core.config import Settings
-
-def get_db_connection():
-    return psycopg2.connect(
-        host=Settings.DB_HOST,
-        port=Settings.DB_PORT,
-        database=Settings.DB_NAME,
-        user=Settings.DB_USER,
-        password=Settings.DB_PASS,
-    )
+from repository.database import get_db_connection
 
 
 def save_views_to_excel(

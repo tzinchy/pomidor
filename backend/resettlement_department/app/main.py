@@ -1,12 +1,21 @@
+#from fastapi_cache import FastAPICache
 from fastapi import FastAPI
-from api.v1.endpoints.apartment_endpoints import router as apartment_router
-from api.v1.endpoints.matching_endpoints import router as matching_router
-from api.v1.endpoints.load_endpoint import router as load_router
-from api.v1.endpoints.dashboard_endpoints import router as dashboard_router
+
+#from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi.middleware.cors import CORSMiddleware
+from api.v1.router import router
+
+#FastAPICache.init(InMemoryBackend())
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-app.include_router(apartment_router)
-app.include_router(matching_router)
-app.include_router(load_router)
-app.include_router(dashboard_router)
+app.include_router(
+    router  
+)

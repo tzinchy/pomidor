@@ -1,9 +1,9 @@
-from utils.apartment_insert import insert_data_to_needs, insert_offer, insert_data_to_structure, new_apart_insert
+from service.apartment_insert import insert_data_to_needs, insert_offer, insert_data_to_structure, new_apart_insert
 import pandas as pd
 
 class ValidationService:
-    @staticmethod
-    def validate_etl(df: pd.DataFrame, functions):
+
+    def validate_etl(self, df: pd.DataFrame, functions):
         """
         Проверяет наличие необходимых столбцов в DataFrame для каждой функции из списка.
         
