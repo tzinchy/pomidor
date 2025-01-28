@@ -231,7 +231,7 @@ class ApartmentRepository:
         if apart_type == "NewApartment":
             query = f"""
                 WITH old_apartment_list AS (
-                    SELECT .
+                    SELECT
                         na.new_apart_id,
                         JSON_AGG(
                             JSON_BUILD_OBJECT(

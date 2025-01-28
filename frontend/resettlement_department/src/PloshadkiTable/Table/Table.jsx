@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { TableHead, TableBody } from "./Components";
+import axios from "axios";
 import { HOSTLINK } from "../..";
 import HouseDetails from '../HouseDetails/HouseDetails' 
 
@@ -19,6 +20,9 @@ export default function Table({ filters, searchQuery }) {
   const [filteredData, setFilteredData] = useState([]); // Отфильтрованные данные
   const [displayData, setDisplayData] = useState([]); // Данные для отображения
   const [page, setPage] = useState(1); // Текущая страница
+  const [houseDetails, setHouseDetails] = useState([]);
+  const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+  const [opendDetailsId, setOpendDetailsId] = useState(null);
   const loaderRef = useRef(null); // Реф для отслеживания конца таблицы
 
   const itemsPerPage = 50; // Количество строк на страницу
@@ -32,6 +36,38 @@ export default function Table({ filters, searchQuery }) {
         setDisplayData(fetchedData.slice(0, itemsPerPage));
       });
   }, []);
+
+  function houseDetailsHandler(index, data){
+    if (index === opendDetailsId){
+      setIsDetailsVisible(false);
+      setOpendDetailsId(null);
+      setHouseDetails([]);
+    }
+    else {
+      setIsDetailsVisible(true);
+      setOpendDetailsId(index);
+      setHouseDetails(data);
+    }
+    console.log('CLICKED', index, isDetailsVisible);
+  }
+
+  /*const fetchHouseDetails = async (district) => {
+    try {
+      const response = await axios.get(`${HOSTLINK}/tables/municipal_district`, {
+        params: {
+          apart_type: apartType,
+          district: [district] // Исправленное имя параметра
+        },
+        paramsSerializer
+      });
+      setHouseDetails(prev => ({
+        ...prev,
+        [district]: response.data
+      }));
+    } catch (error) {
+      console.error("Error fetching municipal districts:", error.response?.data);
+    }
+  };*/
 
   // Фильтрация данных
   useEffect(() => {
@@ -102,15 +138,17 @@ export default function Table({ filters, searchQuery }) {
   }
 
   return (
-    <div className="relative flex h-[calc(100vh-3.5rem)] w-full">
-      <div className="overflow-auto rounded-md border absolute left-0 h-full transition-all ease-in-out w-[calc(100%)]">
-        <table className="text-sm caption-bottom w-full border-collapse bg-white">
-          <TableHead headers={headers} />
-          <TableBody data={displayData} /> {/* Передаём отображаемые данные */}
-        </table>
-        {/*<HouseDetails />*/}
-        <div ref={loaderRef} className="loader text-center py-4"></div>
+    <div className="relative flex flex-col lg:flex-row h-[calc(100vh-3.5rem)] gap-2 bg-neutral-100 w-full transition-all duration-300">
+      <div className="relative flex h-[calc(100vh-3.5rem)] w-full">
+        <div className="overflow-auto rounded-md border absolute left-0 h-full transition-all ease-in-out w-[calc(100%)] scrollbar-custom">
+          <table className="text-sm caption-bottom w-full border-collapse bg-white transition-all duration-300">
+            <TableHead headers={headers} />
+            <TableBody data={displayData} houseDetailsHandler={houseDetailsHandler} />
+          </table>
+          <div ref={loaderRef} className="loader text-center py-4"></div>
+        </div>
       </div>
+      {isDetailsVisible ? <HouseDetails houseDetails={houseDetails} setIsDetailsVisible={setIsDetailsVisible} /> : <></>}
     </div>
   );
 }

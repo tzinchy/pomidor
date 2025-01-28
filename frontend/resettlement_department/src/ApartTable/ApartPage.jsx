@@ -101,14 +101,14 @@ export default function ApartPage() {
     }
   };
 
-  const fetchApartments = async (addresses) => {
+  const fetchApartments = async (addresses, municipal_districts) => {
     try {
       const response = await axios.get(`${HOSTLINK}/tables/apartments`, {
         params: {
           apart_type: apartType,
           house_addresses: addresses,
           districts: [],
-          municipal_districts: []
+          municipal_districts: municipal_districts
         },
         paramsSerializer
       });
