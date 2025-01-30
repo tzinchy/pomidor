@@ -26,18 +26,12 @@ class ApartType(str, Enum):
 
 
 class MatchingSchema(BaseModel):
-    family_structure_district: Optional[List[str]] = Field(None, description="Район")
-    family_structure_municipal_district: Optional[List[str]] = Field(
-        None, description="Муниципальный район"
-    )
-    family_structure_house_address: Optional[List[str]] = Field(
-        None, description="Адрес дома"
-    )
+    family_structure_district: List[str] = None
+    family_structure_municipal_district: List[str] = None
+    family_structure_house_address: List[str] = None
+    new_apartment_district: List[str] = None
+    new_apartment_municipal_district: List[str] = None
+    new_apartment_house_address: List[str] = None 
 
-    new_apartment_district: Optional[List[str]] = Field(None, description="Район")
-    new_apartment_municipal_district: Optional[List[str]] = Field(
-        None, description="Муниципальный район"
-    )
-    new_apartment_house_address: Optional[List[str]] = Field(
-        None, description="Адрес дома"
-    )
+
+

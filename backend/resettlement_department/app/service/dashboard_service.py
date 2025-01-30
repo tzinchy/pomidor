@@ -12,7 +12,6 @@ class DashboardService:
         try:
             # Fetch data from the repository
             tables_data = self.db.get_tables_data()
-            print(tables_data)
             return tables_data
         except Exception as e:
             print(f"Error in DashboardService: {e}")
@@ -147,7 +146,6 @@ class DashboardService:
         }
 
         result = [[done, halfInProgress, fullInProgress, risk, notStarted], chart_data]
-        print(result)
         return result
     
     def get_building_details(self,building_id : int):
