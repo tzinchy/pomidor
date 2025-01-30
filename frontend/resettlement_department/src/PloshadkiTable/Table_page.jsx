@@ -1,94 +1,114 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Filters from '../Filters/Filters';
 import Table from './Table/Table';
 import Aside from "../Navigation/Aside";
 
-export default function Table_page() {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const [isFiltersReset, setIsFiltersReset] = useState(false);
-
-    // Инициализация значений из URL
-    const [value, setValue] = useState({
-        'okrugs': searchParams.getAll("okrugs") || [],
-        'districts': searchParams.getAll("districts") || [],
-        'deviation': searchParams.getAll("deviation") || [],
-        'otsel_type': searchParams.getAll("otsel_type") || [],
-        'relocationAge': searchParams.getAll("relocationAge") || [],
-    });
-    const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
-
-    // Синхронизация состояния с URL (когда происходит обновление searchParams)
+// Кастомный хук для дебаунса
+const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    
     useEffect(() => {
-        const newValue = {
-            'okrugs': searchParams.getAll("okrugs"),
-            'districts': searchParams.getAll("districts"),
-            'deviation': searchParams.getAll("deviation"),
-            'otsel_type': searchParams.getAll("otsel_type"),
-            'relocationAge': searchParams.getAll("relocationAge"),
-        };
-        setValue(newValue);
-        setSearchQuery(searchParams.get("search") || "");
-    }, [searchParams]);
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+      
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+  
+    return debouncedValue;
+  };
 
-    const handleSearchChange = (e) => {
-        const value = e.target.value;
-        setSearchQuery(value);
-        updateUrl({ search: value });
-    };
+// Оптимизированный хук для работы с URL
+const useUrlState = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const params = useMemo(() => 
+    Object.fromEntries(searchParams.entries()), 
+  [searchParams]);
 
-    const handleValueSelect = (type, selectedValues) => {
-        setIsFiltersReset(false); // Сбрасываем состояние "сброс фильтров"
-        
-        const updatedValue = { ...value, [type]: selectedValues };
-        setValue(updatedValue); // Обновляем состояние фильтров
-        
-        updateUrl({ ...value, [type]: selectedValues }); // Обновляем URL только для конкретного фильтра
-    };
+  const value = useMemo(() => ({
+    okrugs: params.okrugs?.split(',') || [],
+    districts: params.districts?.split(',') || [],
+    deviation: params.deviation?.split(',') || [],
+    otsel_type: params.otsel_type?.split(',') || [],
+    relocationAge: params.relocationAge?.split(',') || [],
+  }), [params]);
 
-    const resetFilters = () => {
-        // Сбрасываем локальное состояние и флаги
-        const resetValue = {
-            'okrugs': [],
-            'districts': [],
-            'deviation': [],
-            'otsel_type': [],
-            'relocationAge': [],
-        };
-        setValue(resetValue);
-        setSearchQuery("");
-        setIsFiltersReset(true);
+  const searchQuery = params.search || "";
 
-        // Обновляем URL только после сброса
-        setTimeout(() => setSearchParams({}), 0);
-    };
+  const updateUrl = React.useCallback((newParams) => {
+    const updatedParams = { ...params, ...newParams };
+    
+    // Очистка пустых значений
+    Object.entries(updatedParams).forEach(([key, val]) => {
+      if (!val || (Array.isArray(val) && val.length === 0)) {
+        delete updatedParams[key];
+      } else if (Array.isArray(val)) {
+        updatedParams[key] = val.join(',');
+      }
+    });
 
-    const updateUrl = (newParams) => {
-        const currentParams = Object.fromEntries(searchParams.entries());
-        const updatedParams = { ...currentParams, ...newParams };
+    setSearchParams(updatedParams);
+  }, [params, setSearchParams]);
 
-        // Удаляем пустые значения
-        Object.keys(updatedParams).forEach((key) => {
-            if (!updatedParams[key] || updatedParams[key].length === 0) {
-                delete updatedParams[key];
-            }
-        });
+  return { value, searchQuery, updateUrl };
+};
 
-        setSearchParams(updatedParams);
-    };
+export default function TablePage() {
+    const { value, searchQuery, updateUrl } = useUrlState();
+    const [isFiltersReset, setIsFiltersReset] = useState(false);
+    const [localSearch, setLocalSearch] = useState(searchQuery);
+    const debouncedSearch = useDebounce(localSearch, 300);
 
-    return (
-        <div className="bg-muted/60 flex min-h-screen w-full flex-col">
-            <Aside />
-            <main className="relative flex flex-1 flex-col gap-2 p-2 sm:pl-16 bg-neutral-100">
-                <Filters
-                    handleValueSelect={handleValueSelect}
-                    resetFilters={resetFilters}
-                    isFiltersReset={isFiltersReset}
-                    onSearch={handleSearchChange}
-                />
-                <Table filters={value} searchQuery={searchQuery} />
-            </main>
-        </div>
-    );
+  // Синхронизация дебаунс-поиска с URL
+  useEffect(() => {
+    updateUrl({ search: debouncedSearch });
+  }, [debouncedSearch, updateUrl]);
+
+  const handleSearchChange = (e) => {
+    setLocalSearch(e.target.value);
+  };
+
+  const handleValueSelect = (type, selectedValues) => {
+    setIsFiltersReset(false);
+    updateUrl({ 
+      [type]: selectedValues,
+      page: undefined 
+    });
+  };
+
+  const resetFilters = () => {
+    setIsFiltersReset(true);
+    setLocalSearch('');
+    updateUrl({
+      okrugs: undefined,
+      districts: undefined,
+      deviation: undefined,
+      otsel_type: undefined,
+      relocationAge: undefined,
+      search: undefined,
+    });
+  };
+
+  return (
+    <div className="bg-muted/60 flex min-h-screen w-full flex-col">
+      <Aside />
+      <main className="relative flex flex-1 flex-col gap-2 p-2 sm:pl-16 bg-neutral-100">
+        <Filters
+          handleValueSelect={handleValueSelect}
+          resetFilters={resetFilters}
+          isFiltersReset={isFiltersReset}
+          onSearch={handleSearchChange}
+          currentSearch={localSearch}
+        />
+        <Table 
+          filters={value} 
+          searchQuery={debouncedSearch} 
+        />
+      </main>
+    </div>
+  );
 }

@@ -36,12 +36,12 @@ export default function LinkButton({ name }) {
         >
         <a
             href={`${ASIDELINK}/${name}`}
-            className={`items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-            isActive ? "bg-neutral-400 text-white" : "text-primary-foreground"
+            className={`items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ${
+            isActive ? "text-gray-400" : "text-black"
             } h-10 flex p-0`}
         >
             <button
-            className="items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 flex p-0"
+            className="items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 flex p-0"
             data-state="closed"
             >
                 <NavPng state={name} />

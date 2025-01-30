@@ -7,6 +7,7 @@ import Table_page from './PloshadkiTable/Table_page';
 import Dashboard_page from './Dashboard/Dashboard_page';
 import ApartPage from './ApartTable/ApartPage';
 import Koren from './Koren';
+import BalancePage from './Balance/BalancePage';
 
 
 const rootElement = document.getElementById("root");
@@ -24,6 +25,7 @@ root.render(
         <Route path="/table_page" element={<Table_page />} />
         <Route path="/dashboard" element={<Dashboard_page />} />
         <Route path="/aparts" element={<ApartPage />} />
+        <Route path="/balance" element={<BalancePage />} />
       </Routes>
     </BrowserRouter>,
   document.getElementById('root')

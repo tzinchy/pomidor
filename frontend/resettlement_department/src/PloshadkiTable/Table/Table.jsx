@@ -4,6 +4,12 @@ import axios from "axios";
 import { HOSTLINK } from "../..";
 import HouseDetails from '../HouseDetails/HouseDetails' 
 
+
+const paramsSerializer = {
+  indexes: null,
+  encode: (value) => encodeURIComponent(value)
+};
+
 export default function Table({ filters, searchQuery }) {
   const headers = [
     "Район",
@@ -20,6 +26,7 @@ export default function Table({ filters, searchQuery }) {
   const [filteredData, setFilteredData] = useState([]); // Отфильтрованные данные
   const [displayData, setDisplayData] = useState([]); // Данные для отображения
   const [page, setPage] = useState(1); // Текущая страница
+  const [addressHouseDetails, setAddressHouseDetails] = useState([]);
   const [houseDetails, setHouseDetails] = useState([]);
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
   const [opendDetailsId, setOpendDetailsId] = useState(null);
@@ -37,51 +44,49 @@ export default function Table({ filters, searchQuery }) {
       });
   }, []);
 
+
+  const fetchHouseDetails = async (houseId) => {
+    try {
+      const response = await axios.get(
+        `${HOSTLINK}/dashboard/table/${houseId}`,
+        { 
+          params: { houseId: houseId },
+          paramsSerializer
+        }
+      );
+      setHouseDetails(response.data);
+    } catch (error) {
+      console.error("Error fetching apartment details:", error.response?.data);
+    }
+  };
+
   function houseDetailsHandler(index, data){
     if (index === opendDetailsId){
       setIsDetailsVisible(false);
       setOpendDetailsId(null);
-      setHouseDetails([]);
+      setAddressHouseDetails([]);
+      setHouseDetails([])
     }
     else {
       setIsDetailsVisible(true);
       setOpendDetailsId(index);
-      setHouseDetails(data);
+      setAddressHouseDetails(data);
+      fetchHouseDetails(index);
     }
     console.log('CLICKED', index, isDetailsVisible);
   }
-
-  /*const fetchHouseDetails = async (district) => {
-    try {
-      const response = await axios.get(`${HOSTLINK}/tables/municipal_district`, {
-        params: {
-          apart_type: apartType,
-          district: [district] // Исправленное имя параметра
-        },
-        paramsSerializer
-      });
-      setHouseDetails(prev => ({
-        ...prev,
-        [district]: response.data
-      }));
-    } catch (error) {
-      console.error("Error fetching municipal districts:", error.response?.data);
-    }
-  };*/
 
   // Фильтрация данных
   useEffect(() => {
     if (data.length > 0) {
       const filterByQuery = (item) => {
-        // Проверка на item[3]
         const matchesItem3 = !searchQuery || item[3].toLowerCase().includes(searchQuery.toLowerCase());
 
-        // Проверка на item[4] и поле 'f1' в его под-объектах
         const matchesItem4 = !searchQuery || Object.values(item[4]).some((subItem) => 
           subItem?.f1?.toLowerCase().includes(searchQuery.toLowerCase())
         );
 
-        return matchesItem3 || matchesItem4;  // Возвращаем true, если найдено совпадение в любом из полей
+        return matchesItem3 || matchesItem4;  
       };
 
       const filterByFilters = (item) => {
@@ -148,7 +153,7 @@ export default function Table({ filters, searchQuery }) {
           <div ref={loaderRef} className="loader text-center py-4"></div>
         </div>
       </div>
-      {isDetailsVisible ? <HouseDetails houseDetails={houseDetails} setIsDetailsVisible={setIsDetailsVisible} /> : <></>}
+      {isDetailsVisible ? <HouseDetails addressHouseDetails={addressHouseDetails} houseDetails={houseDetails} setIsDetailsVisible={setIsDetailsVisible} setOpendDetailsId={setOpendDetailsId}/> : <></>}
     </div>
   );
 }
