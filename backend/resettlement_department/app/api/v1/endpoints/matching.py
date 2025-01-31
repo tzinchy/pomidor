@@ -21,7 +21,7 @@ async def get_new_apartment_house_addresses():
 @router.post('/matching')
 async def start_matching(
     requirements: MatchingSchema 
-):
+): 
     match_new_apart_to_family_batch(new_selected_districts=requirements.new_apartment_district,
                                     old_selected_districts=requirements.family_structure_municipal_district,
                                     new_selected_areas=requirements.family_structure_municipal_district,

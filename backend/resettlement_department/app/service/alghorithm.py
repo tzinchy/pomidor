@@ -1228,17 +1228,6 @@ def match_new_apart_to_family_batch(
                         """,
                         (old_apart_id, new_apart_id),
                     )
-                    
-                if cannot_offer_to_insert:
-                    print('INSERTING INTO CANNOT_OFFER')
-                    cursor.executemany(
-                        """
-                        INSERT INTO public.offer (family_apartment_needs_id, status_id, created_at)
-                        VALUES (%s, 2, NOW())
-                        """,
-                        cannot_offer_to_insert,
-                    )
-
                 conn.commit()
                 
     except Exception as e:

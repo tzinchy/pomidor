@@ -1,9 +1,11 @@
 from fastapi import APIRouter
 from depends import history_service
+from schema.history import HistoryResponse
+from typing import List
 
 router = APIRouter(tags=['history'])
 
-@router.get('/history')
+@router.get('/history', response_model=List[HistoryResponse])
 async def get_history():
     return await history_service.get_history()
 
