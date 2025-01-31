@@ -5,5 +5,7 @@ class HistoryService:
         self.repository = repository
     
     async def get_history(self):
-        return await self.repository.get_history()
+        res = await self.repository.get_history()
+        print(res)
+        return res
     
