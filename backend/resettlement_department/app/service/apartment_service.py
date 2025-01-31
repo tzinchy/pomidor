@@ -48,5 +48,10 @@ class ApartmentService:
         return await self.apartment_repository.get_apartment_by_id(apartment_id, apart_type)
     
     async def get_house_address_with_room_count(self, apart_type):
-        return await self.apartment_repository.get_house_address_with_room_count(apart_type)
+        result = await self.apartment_repository.get_house_address_with_room_count(apart_type)
+        formatted_result = []
+        for address, room_counts in result:
+            room_details = ", ".join(f"{room} к. - {count}" for room, count in room_counts.items())
+            formatted_result.append((address, room_details))
+        return formatted_result
     

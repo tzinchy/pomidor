@@ -368,11 +368,6 @@ class ApartmentRepository:
             raise ValueError("ApartType not found")  # Исправлено исключение
             
         result = await self._execute_query(query, params=params)
-        formatted_result = []
-        for address, room_counts in result:
-            room_details = ", ".join(f"{room} к. - {count}" for room, count in room_counts.items())
-            formatted_result.append((address, room_details))
 
-        # Возвращаем итоговый список
-        return formatted_result
+        return result
 
