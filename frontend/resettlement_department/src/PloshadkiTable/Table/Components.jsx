@@ -18,16 +18,16 @@ export function TableHead({ headers }) {
     );
   }
   
-export function TableBody({ data }) {
+export function TableBody({ data, houseDetailsHandler }) {
     return (
       <tbody className="text-xs">
         {data.map((item, index) => (
           <React.Fragment key={index}>
-            <MainRow index={item} />
+            <MainRow index={item} houseDetailsHandler={houseDetailsHandler}/>
             {Object.keys(item[4])
               .slice(1)
               .map((key, subIndex) => (
-                <DopRow key={subIndex} details={item[4][key]} />
+                <DopRow indexkey={key} details={item[4][key]} houseDetailsHandler={houseDetailsHandler} />
               ))}
           </React.Fragment>
         ))}
@@ -35,11 +35,11 @@ export function TableBody({ data }) {
     );
   }
   
-function MainRow({ index }) {
+function MainRow({ index, houseDetailsHandler }) {
     const details = index[4][Object.keys(index[4])[0]];
   
     return (
-      <tr className="bg-white border-b transition-colors">
+      <tr className="bg-white border-b transition-colors" onClick={() => houseDetailsHandler(Object.keys(index[4])[0], details)}>
           <td className="p-2" rowSpan={Object.keys(index[4]).length}>
               <div>
               <div className="text-sm">{index[1]}</div>
@@ -73,9 +73,9 @@ function MainRow({ index }) {
     );
   }
   
-function DopRow({ details }) {
+function DopRow({ indexkey, details, houseDetailsHandler }) {
     return (
-      <tr className="bg-white border-b transition-colors">
+      <tr className="bg-white border-b transition-colors" onClick={() => houseDetailsHandler(indexkey, details)}>
         <RenderRowDetails details={details} />
       </tr>
     );

@@ -8,6 +8,7 @@ export default function Aside() {
         <LinkButton name="dashboard" />
         <LinkButton name="table_page" />
         <LinkButton name="aparts" />
+        <LinkButton name="balance" />
       </nav>
     </aside>
   );

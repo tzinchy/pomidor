@@ -4,7 +4,6 @@ export default function PloshCell( props ){
   const value = props['props']
 
   return (
-    <td className="p-2 font-normal" >
       <div className="flex w-full flex-row items-center justify-start gap-1 text-gray-400">
         <div className="flex flex-1 flex-col items-start justify-start truncate">
           <div className="line-clamp-2">{`${value['full_living_area']} м², ${value['total_living_area']} м², ${value['living_area']} м²`}</div>
@@ -13,6 +12,5 @@ export default function PloshCell( props ){
           </div>
         </div>
       </div>
-    </td>
   );
   }

@@ -7,15 +7,14 @@ import Table_page from './PloshadkiTable/Table_page';
 import Dashboard_page from './Dashboard/Dashboard_page';
 import ApartPage from './ApartTable/ApartPage';
 import Koren from './Koren';
+import BalancePage from './Balance/BalancePage';
+import Try from './try';
 
 
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement); 
 export const HOSTLINK = process.env.REACT_APP_HOST_LINK;
-// export const HOSTLINK = '';
 export const ASIDELINK = process.env.REACT_APP_REACT_LINK;
-console.log(ASIDELINK)
-//const ASIDELINK = 'http://10.9.96.160:3001';
 
 root.render(
     <BrowserRouter>
@@ -24,6 +23,8 @@ root.render(
         <Route path="/table_page" element={<Table_page />} />
         <Route path="/dashboard" element={<Dashboard_page />} />
         <Route path="/aparts" element={<ApartPage />} />
+        <Route path="/balance" element={<BalancePage />} />
+        <Route path="/try" element={<Try />} />
       </Routes>
     </BrowserRouter>,
   document.getElementById('root')

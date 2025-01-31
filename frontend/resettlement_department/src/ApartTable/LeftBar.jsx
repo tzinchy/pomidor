@@ -31,9 +31,9 @@ function LeftBar({
         collapsed={collapsed}
         className={`transition-all duration-300 ${
           collapsed ? "w-4" : "w-80"
-        } overflow-hidden h-[calc(100vh-1.5rem)]`} // Блок на всю высоту экрана
+        } h-[calc(100vh-1.5rem)]`} // Блок на всю высоту экрана
       >
-        <Menu>
+        <Menu className="scrollbar-custom">
           {/* Кнопки выбора типа */}
           {!collapsed && (
             <>
@@ -62,7 +62,7 @@ function LeftBar({
 
               {/* ======== Дерево район → муниципалитет → адрес ======== */}
               <div
-                className="overflow-y-auto overflow-x-hidden h-full pr-2" // Добавляем скролл и ограничиваем ширину
+                className="h-full pr-2" // Добавляем скролл и ограничиваем ширину
               >
                 <ul>
                   {districts.map((district) => {
@@ -118,10 +118,8 @@ function LeftBar({
                                   onClick={(e) => {
                                     e.preventDefault();
                                     toggleExpand(municipal);
-                                    // Ленивая загрузка адресов
-                                    if (!houseAddresses[municipal]) {
-                                      fetchHouseAddresses(municipal);
-                                    }
+                                    fetchHouseAddresses(municipal);
+                                    fetchApartments(null, municipal);
                                   }}
                                   className="flex items-center px-2 hover:bg-secondary-100 focus:text-primary active:text-primary"
                                 >
@@ -164,7 +162,7 @@ function LeftBar({
                                         onClick={(e) => {
                                           e.preventDefault();
                                           // По клику грузим квартиры этого адреса
-                                          fetchApartments([address]);
+                                          fetchApartments([address], municipal);
                                         }}
                                         className="flex items-center px-2 hover:bg-secondary-100 focus:text-primary active:text-primary"
                                       >

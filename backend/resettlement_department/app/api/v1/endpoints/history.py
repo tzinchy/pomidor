@@ -5,7 +5,7 @@ router = APIRouter(tags=['history'])
 
 @router.get('/history')
 async def get_history():
-    await history_service.get_history()
+    return await history_service.get_history()
 
 @router.patch('/approve/{history_id}')
 async def post_approve(history_id : int): 

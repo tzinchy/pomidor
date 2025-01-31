@@ -2,31 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Стили скролла */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px; /* Уменьшаем ширину скролла */
-    height: 6px; /* Уменьшаем высоту горизонтального скролла */
+/* custom-scrollbar.css */
+
+/* Отключаем глобальные стили для скроллбаров */
+* {
+  scrollbar-color: unset !important;
+  scrollbar-width: unset !important;
+}
+
+/* Применяем стили для скроллбаров */
+@layer utilities {
+  /* Скрыть скроллбар по умолчанию */
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 6px; /* Вертикальный скроллбар */
+    height: 6px; /* Горизонтальный скроллбар */
+    opacity: 0; /* Сделать скроллбар невидимым по умолчанию */
+    transition: opacity 0.3s ease; /* Плавное появление */
   }
-  
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent; /* Прозрачный фон трека */
+
+  /* Стиль для трека скроллбара */
+  .scrollbar-custom::-webkit-scrollbar-track {
+    opacity: 0; /* Скрыть трек по умолчанию */
+    border-radius: 9999px;
+    background-color: transparent; /* Прозрачный фон для трека */
   }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.5); /* Полупрозрачный цвет бегунка */
-    border-radius: 8px; /* Скругляем бегунок */
+
+  /* Стиль для самой полосы прокрутки */
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    opacity: 0; /* Скрыть полосу прокрутки по умолчанию */
+    background-color: transparent; /* Цвет полосы прокрутки */
   }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.7); /* Темнее при наведении */
+
+  /* Показывать скроллбар только при наведении на элемент */
+  .scrollbar-custom:hover::-webkit-scrollbar {
+    opacity: 1; /* Сделать скроллбар видимым при наведении */
   }
-  
-  .custom-scrollbar::-webkit-scrollbar-corner {
-    background: transparent; /* Убираем угловую стрелку */
+
+  /* Стили для полосы прокрутки при наведении */
+  .scrollbar-custom:hover::-webkit-scrollbar-thumb {
+    opacity: 1;
+    background-color: #d1d5db; /* Легкое изменение цвета полосы при наведении */
   }
-  
-  /* Убираем стандартные стрелки скролла */
-  .custom-scrollbar::-webkit-scrollbar-button {
-    display: none;
+
+  /* Уменьшение горизонтального скроллбара */
+  .scrollbar-custom::-webkit-scrollbar-horizontal {
+    height: 4px; /* Уменьшаем высоту горизонтального скроллбара */
   }
-  
+}
