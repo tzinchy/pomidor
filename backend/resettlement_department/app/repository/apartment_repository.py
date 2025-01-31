@@ -1,19 +1,22 @@
 from sqlalchemy import text
 from schema.apartment import ApartType
 import logging
+from utils.sql_reader import read_sql_query
+from core.config import RECOMMENDATION_FILE_PATH
 
 logger = logging.getLogger(__name__)
 
 
 class ApartmentRepository:
-    def __init__(self, db_manager):
-        self.db_manager = db_manager  # Это sessionmaker
+
+    def __init__(self, session_maker):
+        self.db = session_maker  # Это sessionmaker
 
     async def _execute_query(self, query: str, params: dict) -> list[tuple]:
         """
         Выполнение запроса и возврат результата.
         """
-        async with self.db_manager() as session:  # Создаем сессию
+        async with self.db() as session:  # Создаем сессию
             try:
                 logger.info(f"Executing query: {query}")
                 logger.info(f"Params: {params}")
@@ -354,4 +357,22 @@ class ApartmentRepository:
             raise ValueError(f"Apartment with ID {apartment_id} not found")
 
         return dict(result[0]._mapping)
+
+    async def get_house_address_with_room_count(self, apart_type):
+        params = None
+        if apart_type == "NewApartment":
+            query = read_sql_query(f'{RECOMMENDATION_FILE_PATH}/AvaliableNewApartHouseAddress.sql')
+        elif apart_type == "FamilyStructure":
+            query = read_sql_query(f'{RECOMMENDATION_FILE_PATH}/AvaliableFamilyHouseAddress.sql')  # Исправлена f-строка
+        else:
+            raise ValueError("ApartType not found")  # Исправлено исключение
+            
+        result = await self._execute_query(query, params=params)
+        formatted_result = []
+        for address, room_counts in result:
+            room_details = ", ".join(f"{room} к. - {count}" for room, count in room_counts.items())
+            formatted_result.append((address, room_details))
+
+        # Возвращаем итоговый список
+        return formatted_result
 

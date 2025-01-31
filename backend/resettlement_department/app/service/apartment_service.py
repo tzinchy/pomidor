@@ -46,3 +46,7 @@ class ApartmentService:
     async def get_apartment_by_id(self, apartment_id, apart_type):
         """Получить всю информацию по квартире."""
         return await self.apartment_repository.get_apartment_by_id(apartment_id, apart_type)
+    
+    async def get_house_address_with_room_count(self, apart_type):
+        return await self.apartment_repository.get_house_address_with_room_count(apart_type)
+    
