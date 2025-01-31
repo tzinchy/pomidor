@@ -3,6 +3,7 @@ import { DropdownProvider } from "./Components/DropdownContext";
 import DropdownButton from "./Components/DropdownButton";
 import SubmitButton from "./Components/SubmitButton";
 import Aside from "../Navigation/Aside";
+import Header from "./Components/Header";
 
 const ResponseDisplay = ({ data }) => {
   if (!data) return null;
@@ -47,12 +48,13 @@ export default function BalancePage() {
   return (
     <div className="bg-muted/60 flex min-h-screen w-full flex-col">
       <Aside />
+      <Header />
       <main className="relative flex flex-1 flex-col gap-2 p-2 sm:pl-16 bg-neutral-100 items-center">
         <DropdownProvider>
           <div className="p-4 justify-items-center bg-white w-2/3 h-[30vh] rounded-xl shadow-xl">
             <div className="flex justify-around w-full">
-              <DropdownButton id="family_structure_house_address" type={'family_structure'} />
-              <DropdownButton id="new_apartment_house_address" type={'new_apartment'} />
+              <DropdownButton id="family_structure_house_address" type={'family_structure'} placeholder={'Старый дом'} />
+              <DropdownButton id="new_apartment_house_address" type={'new_apartment'} placeholder={'Новый дом'} />
             </div>
             <div className="m-4 justify-items-center">
               <SubmitButton onResponse={handleResponse} />

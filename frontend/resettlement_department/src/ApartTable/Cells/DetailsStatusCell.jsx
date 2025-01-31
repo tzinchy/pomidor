@@ -5,7 +5,7 @@ export default function DetailsStatusCell( props ){
 
     const colors = {
         "Согласие": 'bg-green-100 text-emerald-600',
-        "Ждёт одобрения": 'bg-blue-100 text-amber-500', 
+        "Ждёт одобрения": 'bg-blue-100 text-blue-500', 
         "Отказ": 'bg-red-100  text-red-700 ',
         "Суд": 'bg-red-300 text-white',
         "Фонд компенсация": 'bg-violet-200 text-violet-500',
