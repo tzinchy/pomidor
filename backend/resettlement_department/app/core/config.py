@@ -55,6 +55,7 @@ class Settings:
     redis : RedisSetting = field(default_factory=RedisSetting)
 
 settings = Settings()
+print(settings.project_management_setting.DATABASE_URL)
 
 RENOVATION_FILE_PATH = './sql/renovation/'
 RECOMMENDATION_FILE_PATH = './sql/recommendation'

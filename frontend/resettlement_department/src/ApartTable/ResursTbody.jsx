@@ -10,7 +10,7 @@ export default function ResursTbody({ data, apartType, fetchApartmentDetails, is
     
     
     if (!data || data.length === 0) {
-        return <div></div>;
+        return <tbody></tbody>;
     }
 
     function handleClick(index, visibility, val) {
