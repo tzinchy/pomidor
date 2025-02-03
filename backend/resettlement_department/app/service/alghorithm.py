@@ -249,14 +249,7 @@ def match_new_apart_to_family_batch(
                 # Флаг для проверки наличия повторяющихся записей
                 record_exists = False
 
-                if not date and history_data is not None:
-                    # Распаковываем все колонки, чтобы избежать ошибки
-                    for record in history_data :
-                        (history_id, old_house_addresses, new_house_addresses) = record
-                        if (old_house_addresses == old_selected_addresses and new_house_addresses == new_selected_addresses):
-                            record_exists = True
-                            break
-                else:
+                if date or history_data is None:
                     cursor.execute(
                         "SELECT DISTINCT house_address FROM public.family_structure WHERE affair_id IN (SELECT affair_id FROM public.family_apartment_needs WHERE created_at = (SELECT MAX(created_at) FROM public.family_apartment_needs))"
                     )
@@ -265,6 +258,12 @@ def match_new_apart_to_family_batch(
                         "SELECT DISTINCT house_address FROM public.new_apart WHERE created_at = (SELECT MAX(created_at) FROM public.new_apart)"
                     )
                     new_selected_addresses = [r[0] for r in cursor.fetchall()]
+                else:
+                    for record in history_data :
+                        (history_id, old_house_addresses, new_house_addresses) = record
+                        if (old_house_addresses == old_selected_addresses and new_house_addresses == new_selected_addresses):
+                            record_exists = True
+                            break
 
                 # Если записи не существует, вставляем новую запись в таблицу history
                 if not record_exists:
@@ -813,7 +812,7 @@ def match_new_apart_to_family_batch(
                         (old_apart_id, new_apart_id),
                     )
                 conn.commit()
-                
+                return 'ok'
     except Exception as e:
         print(f"Error: {e}")
         raise

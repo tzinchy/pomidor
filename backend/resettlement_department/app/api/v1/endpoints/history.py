@@ -1,7 +1,10 @@
 from fastapi import APIRouter
+from fastapi.responses import FileResponse
 from depends import history_service
 from schema.history import HistoryResponse
 from typing import List
+from service.balance_alghorithm import save_views_to_excel
+from schema.apartment import MatchingSchema
 
 router = APIRouter(tags=['history'])
 
@@ -10,14 +13,19 @@ async def get_history():
     return await history_service.get_history()
 
 @router.patch('/approve/{history_id}')
-async def post_approve(history_id : int): 
-    return 
-'''
+async def approve_history(history_id : int): 
+    return await history_service.approve_history(history_id)
+
+@router.delete('/delete/{history_id}')
+async def cancell_history(history_id : int):
+    return await history_service.cancell_history(history_id)
+
 @router.post('/download/{history_id}')
 async def balance(
-    history_id : int
+    requirements : MatchingSchema
 ):
     try:
+        import os
         # Формируем путь для сохранения файла
         output_path = os.path.join(os.getcwd(), 'uploads', 'matching_result.xlsx')
 
@@ -39,4 +47,3 @@ async def balance(
         )
     except Exception as e:
         return {"error": str(e)}
-'''
