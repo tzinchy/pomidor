@@ -1,10 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 from fastapi.responses import FileResponse
 from depends import history_service
 from schema.history import HistoryResponse
 from typing import List
 from service.balance_alghorithm import save_views_to_excel
 from schema.apartment import MatchingSchema
+import os 
 
 router = APIRouter(tags=['history'])
 
@@ -20,12 +21,11 @@ async def approve_history(history_id : int):
 async def cancell_history(history_id : int):
     return await history_service.cancell_history(history_id)
 
-@router.post('/download/{history_id}')
+@router.post('/balance')
 async def balance(
-    requirements : MatchingSchema
+    requirements: MatchingSchema = Body(...)
 ):
     try:
-        import os
         # Формируем путь для сохранения файла
         output_path = os.path.join(os.getcwd(), 'uploads', 'matching_result.xlsx')
 
@@ -37,7 +37,8 @@ async def balance(
             new_selected_areas=requirements.family_structure_municipal_district,
             old_selected_areas=requirements.family_structure_municipal_district,
             new_selected_addresses=requirements.new_apartment_house_address,
-            old_selected_addresses=requirements.family_structure_house_address)
+            old_selected_addresses=requirements.family_structure_house_address,
+            date=requirements.is_date)
 
         # Возвращаем файл клиенту
         return FileResponse(
