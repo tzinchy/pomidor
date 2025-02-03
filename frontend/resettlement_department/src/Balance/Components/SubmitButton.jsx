@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDropdown } from './DropdownContext';
 
-const SubmitButton = ({ onResponse }) => {
+const SubmitButton = ({ onResponse, type }) => {
   const { selectedItems } = useDropdown();
   const [loading, setLoading] = useState(false);
 
@@ -15,7 +15,8 @@ const SubmitButton = ({ onResponse }) => {
         "family_structure_house_address": [],
         "new_apartment_district": [],
         "new_apartment_municipal_district": [],
-        "new_apartment_house_address": []
+        "new_apartment_house_address": [],
+        "is_date": type == 'last' ? true : false
       };
       
       // Проходим по выбранным элементам и добавляем только адреса в соответствующие массивы
@@ -62,7 +63,7 @@ const SubmitButton = ({ onResponse }) => {
   };
 
   return (
-    <div className="mt-4">
+    <div className="m-4">
       <button
         onClick={handleSubmit}
         disabled={loading}
@@ -72,7 +73,7 @@ const SubmitButton = ({ onResponse }) => {
             : 'hover:bg-gray-50 bg-white'
         }`}
       >
-        {loading ? 'Отправка данных...' : 'Подобрать данные'}
+        {loading ? 'Отправка данных...' : (type == 'last' ? 'Подобрать последнее' : 'Подобрать данные')}
       </button>
     </div>
   );

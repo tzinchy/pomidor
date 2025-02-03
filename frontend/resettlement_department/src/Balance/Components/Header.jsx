@@ -5,7 +5,7 @@ export default function Header(){
     return (
         <header className="flex justify-end bg-neutral-100">
             <HeaderNutton name={'Баланс'} link={'/balance'}/>
-            <HeaderNutton name={'История подбора'} link={'/try'}/>
+            <HeaderNutton name={'История подбора'} link={'/history'}/>
         </header>
     )
 }
