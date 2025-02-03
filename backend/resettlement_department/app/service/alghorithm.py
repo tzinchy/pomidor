@@ -340,545 +340,219 @@ def match_new_apart_to_family_batch(
 
                             if (old_apart["is_queue"] == 1) and (ochered):
                                 suitable_aparts = df_new_apart[
-                                    (
-                                        df_new_apart["full_living_area"]
-                                        >= old_apart["queue_square"]
-                                    )
-                                    & (
-                                        df_new_apart["full_living_area"]
-                                        <= old_apart["queue_square"] + 9
-                                    )
-                                    & (
-                                        df_new_apart["full_living_area"]
-                                        >= old_apart["full_living_area"]
-                                    )
-                                    & (
-                                        df_new_apart["total_living_area"]
-                                        >= old_apart["total_living_area"]
-                                    )
-                                    & (
-                                        df_new_apart["living_area"]
-                                        >= old_apart["living_area"]
-                                    )
-                                    & (
-                                        df_new_apart["for_special_needs_marker"]
-                                        == old_apart["is_special_needs_marker"]
-                                    )
-                                    & (
-                                        df_new_apart["floor"]
-                                        >= (old_apart["min_floor"])
-                                    )
-                                    & (
-                                        df_new_apart["floor"]
-                                        <= (old_apart["max_floor"])
-                                    )
+                                    (df_new_apart["full_living_area"]>= old_apart["queue_square"])& 
+                                    (df_new_apart["full_living_area"]<= old_apart["queue_square"] + 9)& 
+                                    (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
+                                    (df_new_apart["total_living_area"]>= old_apart["total_living_area"])& 
+                                    (df_new_apart["living_area"]>= old_apart["living_area"])& 
+                                    (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"])& 
+                                    (df_new_apart["floor"] >= (old_apart["min_floor"]))&
+                                    (df_new_apart["floor"]<= (old_apart["max_floor"]))
                                 ]
 
                                 # Проверка наличия подходящих квартир
                                 if suitable_aparts.empty:
                                     suitable_aparts = df_new_apart[
-                                        (
-                                            df_new_apart["full_living_area"]
-                                            >= old_apart["queue_square"]
-                                        )
-                                        & (
-                                            df_new_apart["full_living_area"]
-                                            <= old_apart["queue_square"] + 9
-                                        )
-                                        & (
-                                            df_new_apart["full_living_area"]
-                                            >= old_apart["full_living_area"]
-                                        )
-                                        & (
-                                            df_new_apart["total_living_area"]
-                                            >= old_apart["total_living_area"]
-                                        )
-                                        & (
-                                            df_new_apart["living_area"]
-                                            >= old_apart["living_area"]
-                                        )
-                                        & (
-                                            df_new_apart["for_special_needs_marker"]
-                                            == old_apart["is_special_needs_marker"]
-                                        )
+                                        (df_new_apart["full_living_area"] >= old_apart["queue_square"])&
+                                        (df_new_apart["full_living_area"]<= old_apart["queue_square"] + 9)&
+                                        (df_new_apart["full_living_area"]>= old_apart["full_living_area"])& 
+                                        (df_new_apart["total_living_area"]>= old_apart["total_living_area"])& 
+                                        (df_new_apart["living_area"]>= old_apart["living_area"])& 
+                                        (df_new_apart["for_special_needs_marker"]== old_apart["is_special_needs_marker"])
                                         & floor_condition
                                     ]
 
                                     if suitable_aparts.empty:
                                         suitable_aparts = df_new_apart[
-                                            (
-                                                df_new_apart["full_living_area"]
-                                                >= old_apart["queue_square"]
-                                            )
-                                            & (
-                                                df_new_apart["full_living_area"]
-                                                <= old_apart["queue_square"] + 9
-                                            )
-                                            & (
-                                                df_new_apart["full_living_area"]
-                                                >= old_apart["full_living_area"]
-                                            )
-                                            & (
-                                                df_new_apart["total_living_area"]
-                                                >= old_apart["total_living_area"]
-                                            )
-                                            & (
-                                                df_new_apart["living_area"]
-                                                >= old_apart["living_area"]
-                                            )
-                                            & (
-                                                df_new_apart["for_special_needs_marker"]
-                                                == old_apart["is_special_needs_marker"]
-                                            )
+                                            (df_new_apart["full_living_area"]>= old_apart["queue_square"])&
+                                            (df_new_apart["full_living_area"]<= old_apart["queue_square"] + 9)& 
+                                            (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
+                                            (df_new_apart["total_living_area"]>= old_apart["total_living_area"])&
+                                            (df_new_apart["living_area"]>= old_apart["living_area"])&
+                                            (df_new_apart["for_special_needs_marker"]== old_apart["is_special_needs_marker"])
                                         ]
                                         if suitable_aparts.empty:
-                                            cannot_offer_to_insert.append(
-                                                (old_apart_id,)
-                                            )
-
+                                            cannot_offer_to_insert.append((old_apart_id,))
                                         else:
                                             suitable_apart = suitable_aparts.iloc[0]
-                                            new_apart_id = int(
-                                                suitable_apart["new_apart_id"]
-                                            )
+                                            new_apart_id = int(suitable_apart["new_apart_id"])
                                             old_apart_list.append(old_apart_id)
-                                            df_new_apart = df_new_apart[
-                                                df_new_apart["new_apart_id"]
-                                                != new_apart_id
-                                            ]
-
+                                            df_new_apart = df_new_apart[df_new_apart["new_apart_id"]!= new_apart_id]
                                     else:
                                         suitable_apart = suitable_aparts.iloc[0]
-                                        new_apart_id = int(
-                                            suitable_apart["new_apart_id"]
-                                        )
+                                        new_apart_id = int(suitable_apart["new_apart_id"])
                                         old_apart_list.append(old_apart_id)
-                                        df_new_apart = df_new_apart[
-                                            df_new_apart["new_apart_id"] != new_apart_id
-                                        ]
+                                        df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
                                 else:
                                     suitable_apart = suitable_aparts.iloc[0]
                                     new_apart_id = int(suitable_apart["new_apart_id"])
                                     old_apart_list.append(old_apart_id)
-                                    df_new_apart = df_new_apart[
-                                        df_new_apart["new_apart_id"] != new_apart_id
-                                    ]
+                                    df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
                                 continue
 
                             # Условие для даты "Дата покупки"
                             if (
-                                old_apart["buying_date"] is not None
-                                and old_apart["buying_date"]
-                                > datetime.strptime("2017-08-01", "%Y-%m-%d").date()
-                                and not (
-                                    old_apart["min_floor"] or old_apart["max_floor"]
-                                )
+                                old_apart["buying_date"] is not None and old_apart["buying_date"] > datetime.strptime("2017-08-01", "%Y-%m-%d").date()
+                                and not (old_apart["min_floor"] or old_apart["max_floor"])
                             ):
                                 s = df_new_apart[
-                                    (
-                                        df_new_apart["full_living_area"]
-                                        >= old_apart["queue_square"]
-                                    )
-                                    & (
-                                        df_new_apart["room_count"]
-                                        == old_apart["room_count"]
-                                    )
-                                    & (
-                                        df_new_apart["full_living_area"]
-                                        >= old_apart["full_living_area"]
-                                    )
-                                    & (
-                                        df_new_apart["total_living_area"]
-                                        >= old_apart["total_living_area"]
-                                    )
-                                    & (
-                                        df_new_apart["living_area"]
-                                        >= old_apart["living_area"]
-                                    )
-                                    & (
-                                        df_new_apart["for_special_needs_marker"]
-                                        == old_apart["is_special_needs_marker"]
-                                    )
+                                    (df_new_apart["full_living_area"]>= old_apart["queue_square"])&
+                                    (df_new_apart["room_count"]== old_apart["room_count"])&
+                                    (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
+                                    (df_new_apart["total_living_area"]>= old_apart["total_living_area"])&
+                                    (df_new_apart["living_area"]>= old_apart["living_area"])&
+                                    (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"])
                                 ]
 
                                 if not s.empty:
                                     sap = s.iloc[0]
 
                                     suitable_aparts = df_new_apart[
-                                        (
-                                            df_new_apart["full_living_area"]
-                                            >= old_apart["queue_square"]
-                                        )
-                                        & (
-                                            df_new_apart["room_count"]
-                                            == old_apart["room_count"]
-                                        )
-                                        & (
-                                            df_new_apart["full_living_area"]
-                                            >= old_apart["full_living_area"]
-                                        )
-                                        & (
-                                            df_new_apart["total_living_area"]
-                                            >= old_apart["total_living_area"]
-                                        )
-                                        & (
-                                            df_new_apart["living_area"]
-                                            >= old_apart["living_area"]
-                                        )
-                                        & (
-                                            df_new_apart["for_special_needs_marker"]
-                                            == old_apart["is_special_needs_marker"]
-                                        )
-                                        & (
-                                            (
-                                                df_new_apart["full_living_area"]
-                                                - sap["full_living_area"]
-                                            )
-                                            <= delta[i]
-                                        )
+                                        (df_new_apart["full_living_area"] >= old_apart["queue_square"])&
+                                        (df_new_apart["room_count"]== old_apart["room_count"])& 
+                                        (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
+                                        (df_new_apart["total_living_area"]>= old_apart["total_living_area"])& 
+                                        (df_new_apart["living_area"]>= old_apart["living_area"])&
+                                        (df_new_apart["for_special_needs_marker"]== old_apart["is_special_needs_marker"])&
+                                        ((df_new_apart["full_living_area"] - sap["full_living_area"])<= delta[i])
                                     ].sort_values(by="floor", ascending=True)
 
                                     # Если подходящих квартир нет, проверяем с условием floor_condition
                                     if suitable_aparts.empty:
                                         suitable_aparts = df_new_apart[
-                                            (
-                                                df_new_apart["full_living_area"]
-                                                >= old_apart["queue_square"]
-                                            )
-                                            & (
-                                                df_new_apart["room_count"]
-                                                == old_apart["room_count"]
-                                            )
-                                            & (
-                                                df_new_apart["full_living_area"]
-                                                >= old_apart["full_living_area"]
-                                            )
-                                            & (
-                                                df_new_apart["total_living_area"]
-                                                >= old_apart["total_living_area"]
-                                            )
-                                            & (
-                                                df_new_apart["living_area"]
-                                                >= old_apart["living_area"]
-                                            )
-                                            & (
-                                                df_new_apart["for_special_needs_marker"]
-                                                == old_apart["is_special_needs_marker"]
-                                            )
+                                            (df_new_apart["full_living_area"]>= old_apart["queue_square"])& 
+                                            (df_new_apart["room_count"]== old_apart["room_count"])& 
+                                            (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
+                                            (df_new_apart["total_living_area"]>= old_apart["total_living_area"])&
+                                            (df_new_apart["living_area"]>= old_apart["living_area"])&
+                                            (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"])
                                         ]
 
                                         if suitable_aparts.empty:
-                                            cannot_offer_to_insert.append(
-                                                (old_apart_id,)
-                                            )
+                                            cannot_offer_to_insert.append((old_apart_id,))
                                         else:
                                             suitable_apart = suitable_aparts.iloc[0]
-                                            new_apart_id = int(
-                                                suitable_apart["new_apart_id"]
-                                            )
-                                            df_new_apart = df_new_apart[
-                                                df_new_apart["new_apart_id"]
-                                                != new_apart_id
-                                            ]
-                                            offers_to_insert.append(
-                                                (
-                                                    old_apart_id,
-                                                    new_apart_id,
-                                                    
-                                                )
-                                            )
+                                            new_apart_id = int(suitable_apart["new_apart_id"])
+                                            df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
+                                            offers_to_insert.append((old_apart_id, new_apart_id))
                                     else:
                                         suitable_apart = suitable_aparts.iloc[0]
-                                        new_apart_id = int(
-                                            suitable_apart["new_apart_id"]
-                                        )
-                                        df_new_apart = df_new_apart[
-                                            df_new_apart["new_apart_id"] != new_apart_id
-                                        ]
-                                        offers_to_insert.append(
-                                            (old_apart_id, new_apart_id,)
-                                        )
+                                        new_apart_id = int(suitable_apart["new_apart_id"])
+                                        df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
+                                        offers_to_insert.append((old_apart_id, new_apart_id,))
                                 else:
-                                    cannot_offer_to_insert.append(
-                                        (old_apart_id, )
-                                    )
+                                    cannot_offer_to_insert.append((old_apart_id, ))
 
                             else:
                                 # Если "Дата покупки" <= 2017-08-01 или пустая, используем floor_condition
                                 suitable_aparts = df_new_apart[
-                                    (
-                                        df_new_apart["full_living_area"]
-                                        >= old_apart["queue_square"]
-                                    )
-                                    & (
-                                        df_new_apart["room_count"]
-                                        == old_apart["room_count"]
-                                    )
-                                    & (
-                                        df_new_apart["full_living_area"]
-                                        >= old_apart["full_living_area"]
-                                    )
-                                    & (
-                                        df_new_apart["total_living_area"]
-                                        >= old_apart["total_living_area"]
-                                    )
-                                    & (
-                                        df_new_apart["living_area"]
-                                        >= old_apart["living_area"]
-                                    )
-                                    & (
-                                        df_new_apart["for_special_needs_marker"]
-                                        == old_apart["is_special_needs_marker"]
-                                    )
-                                    & (
-                                        df_new_apart["floor"]
-                                        >= (old_apart["min_floor"])
-                                    )
-                                    & (
-                                        df_new_apart["floor"]
-                                        <= (old_apart["max_floor"])
-                                    )
+                                    (df_new_apart["full_living_area"] >= old_apart["queue_square"])&
+                                    (df_new_apart["room_count"]== old_apart["room_count"])&
+                                    (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
+                                    (df_new_apart["total_living_area"] >= old_apart["total_living_area"])&
+                                    (df_new_apart["living_area"]>= old_apart["living_area"])&
+                                    (df_new_apart["for_special_needs_marker"]== old_apart["is_special_needs_marker"])&
+                                    (df_new_apart["floor"]>= (old_apart["min_floor"]))& 
+                                    (df_new_apart["floor"] <= (old_apart["max_floor"]))
                                 ]
-
                                 # Проверка наличия подходящих квартир
                                 if suitable_aparts.empty:
                                     suitable_aparts = df_new_apart[
-                                        (
-                                            df_new_apart["full_living_area"]
-                                            >= old_apart["queue_square"]
-                                        )
-                                        & (
-                                            df_new_apart["room_count"]
-                                            == old_apart["room_count"]
-                                        )
-                                        & (
-                                            df_new_apart["full_living_area"]
-                                            >= old_apart["full_living_area"]
-                                        )
-                                        & (
-                                            df_new_apart["total_living_area"]
-                                            >= old_apart["total_living_area"]
-                                        )
-                                        & (
-                                            df_new_apart["living_area"]
-                                            >= old_apart["living_area"]
-                                        )
-                                        & (
-                                            df_new_apart["for_special_needs_marker"]
-                                            == old_apart["is_special_needs_marker"]
-                                        )
-                                        & floor_condition
+                                        (df_new_apart["full_living_area"] >= old_apart["queue_square"])& 
+                                        (df_new_apart["room_count"] == old_apart["room_count"])&
+                                        (df_new_apart["full_living_area"] >= old_apart["full_living_area"])&
+                                        (df_new_apart["total_living_area"] >= old_apart["total_living_area"])&
+                                        (df_new_apart["living_area"]>= old_apart["living_area"])&
+                                        (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"])&
+                                        floor_condition
                                     ]
 
                                     if suitable_aparts.empty:
                                         suitable_aparts = df_new_apart[
-                                            (
-                                                df_new_apart["full_living_area"]
-                                                >= old_apart["queue_square"]
-                                            )
-                                            & (
-                                                df_new_apart["room_count"]
-                                                == old_apart["room_count"]
-                                            )
-                                            & (
-                                                df_new_apart["full_living_area"]
-                                                >= old_apart["full_living_area"]
-                                            )
-                                            & (
-                                                df_new_apart["total_living_area"]
-                                                >= old_apart["total_living_area"]
-                                            )
-                                            & (
-                                                df_new_apart["living_area"]
-                                                >= old_apart["living_area"]
-                                            )
-                                            & (
-                                                df_new_apart["for_special_needs_marker"]
-                                                == old_apart["is_special_needs_marker"]
-                                            )
+                                            (df_new_apart["full_living_area"] >= old_apart["queue_square"])& 
+                                            (df_new_apart["room_count"] == old_apart["room_count"])&
+                                            (df_new_apart["full_living_area"] >= old_apart["full_living_area"])& 
+                                            (df_new_apart["total_living_area"] >= old_apart["total_living_area"])&
+                                            (df_new_apart["living_area"] >= old_apart["living_area"])& 
+                                            (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"])
                                         ]
                                         if suitable_aparts.empty:
-                                            cannot_offer_to_insert.append(
-                                                (old_apart_id, )
-                                            )
-
+                                            cannot_offer_to_insert.append((old_apart_id, ))
                                         else:
                                             suitable_apart = suitable_aparts.iloc[0]
-                                            new_apart_id = int(
-                                                suitable_apart["new_apart_id"]
-                                            )
+                                            new_apart_id = int(suitable_apart["new_apart_id"])
                                             old_apart_list.append(old_apart_id)
-                                            df_new_apart = df_new_apart[
-                                                df_new_apart["new_apart_id"]
-                                                != new_apart_id
-                                            ]
-
+                                            df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
                                     else:
                                         suitable_apart = suitable_aparts.iloc[0]
-                                        new_apart_id = int(
-                                            suitable_apart["new_apart_id"]
-                                        )
+                                        new_apart_id = int(suitable_apart["new_apart_id"])
                                         old_apart_list.append(old_apart_id)
-                                        df_new_apart = df_new_apart[
-                                            df_new_apart["new_apart_id"] != new_apart_id
-                                        ]
+                                        df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
                                 else:
                                     suitable_apart = suitable_aparts.iloc[0]
                                     new_apart_id = int(suitable_apart["new_apart_id"])
                                     old_apart_list.append(old_apart_id)
-                                    df_new_apart = df_new_apart[
-                                        df_new_apart["new_apart_id"] != new_apart_id
-                                    ]
+                                    df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
 
                         df_new_apart_second
 
-                        for _, old_apart in df_old_apart[
-                            df_old_apart["room_count"] == i
-                        ].iterrows():
+                        for _, old_apart in df_old_apart[df_old_apart["room_count"] == i].iterrows():
                             old_apart_id = int(old_apart["family_apartment_needs_id"])
                             if old_apart_id not in old_apart_list:
                                 continue
                             # Определяем условие по этажу
                             floor_condition = (
-                                (
-                                    (
-                                        df_new_apart_second["floor"]
-                                        >= (old_apart["min_floor"] - 2)
-                                    )
-                                    & (
-                                        df_new_apart_second["floor"]
-                                        <= (old_apart["max_floor"] + 2)
-                                    )
-                                )
+                                ((df_new_apart_second["floor"]>= (old_apart["min_floor"] - 2))&
+                                (df_new_apart_second["floor"] <= (old_apart["max_floor"] + 2)))
                                 if old_apart["min_floor"] or old_apart["max_floor"]
                                 else True
                             )
 
                             # Условие для даты "Дата покупки"
-                            if (
-                                old_apart["buying_date"] is not None
-                                and old_apart["buying_date"]
-                                > datetime.strptime("2017-08-01", "%Y-%m-%d").date()
-                                and not (
-                                    old_apart["min_floor"] or old_apart["max_floor"]
-                                )
+                            if (old_apart["buying_date"] is not None and old_apart["buying_date"] > datetime.strptime("2017-08-01", "%Y-%m-%d").date()
+                                and not (old_apart["min_floor"] or old_apart["max_floor"])
                             ):
                                 s = df_new_apart_second[
-                                    (
-                                        df_new_apart_second["full_living_area"]
-                                        >= old_apart["queue_square"]
-                                    )
-                                    & (
-                                        df_new_apart_second["room_count"]
-                                        == old_apart["room_count"]
-                                    )
-                                    & (
-                                        df_new_apart_second["full_living_area"]
-                                        >= old_apart["full_living_area"]
-                                    )
-                                    & (
-                                        df_new_apart_second["total_living_area"]
-                                        >= old_apart["total_living_area"]
-                                    )
-                                    & (
-                                        df_new_apart_second["living_area"]
-                                        >= old_apart["living_area"]
-                                    )
-                                    & (
-                                        df_new_apart_second["for_special_needs_marker"]
-                                        == old_apart["is_special_needs_marker"]
-                                    )
+                                    (df_new_apart_second["full_living_area"]>= old_apart["queue_square"])& 
+                                    (df_new_apart_second["room_count"]== old_apart["room_count"])&
+                                    (df_new_apart_second["full_living_area"]>= old_apart["full_living_area"])& 
+                                    (df_new_apart_second["total_living_area"]>= old_apart["total_living_area"])& 
+                                    (df_new_apart_second["living_area"]>= old_apart["living_area"])& 
+                                    (df_new_apart_second["for_special_needs_marker"]== old_apart["is_special_needs_marker"])
                                 ]
 
                                 if not s.empty:
                                     sap = s.iloc[0]
 
                                     suitable_aparts = df_new_apart_second[
-                                        (
-                                            df_new_apart_second["full_living_area"]
-                                            >= old_apart["queue_square"]
-                                        )
-                                        & (
-                                            df_new_apart_second["room_count"]
-                                            == old_apart["room_count"]
-                                        )
-                                        & (
-                                            df_new_apart_second["full_living_area"]
-                                            >= old_apart["full_living_area"]
-                                        )
-                                        & (
-                                            df_new_apart_second["total_living_area"]
-                                            >= old_apart["total_living_area"]
-                                        )
-                                        & (
-                                            df_new_apart_second["living_area"]
-                                            >= old_apart["living_area"]
-                                        )
-                                        & (
-                                            df_new_apart_second[
-                                                "for_special_needs_marker"
-                                            ]
-                                            == old_apart["is_special_needs_marker"]
-                                        )
-                                        & (
-                                            (
-                                                df_new_apart_second["full_living_area"]
-                                                - sap["full_living_area"]
-                                            )
-                                            <= delta[i]
-                                        )
+                                        (df_new_apart_second["full_living_area"] >= old_apart["queue_square"])& 
+                                        (df_new_apart_second["room_count"] == old_apart["room_count"])& 
+                                        (df_new_apart_second["full_living_area"]>= old_apart["full_living_area"])& 
+                                        (df_new_apart_second["total_living_area"]>= old_apart["total_living_area"])&
+                                        (df_new_apart_second["living_area"]>= old_apart["living_area"])& 
+                                        (df_new_apart_second["for_special_needs_marker"]== old_apart["is_special_needs_marker"])& 
+                                        ((df_new_apart_second["full_living_area"]- sap["full_living_area"] ) <= delta[i])
                                     ].sort_values(by="floor", ascending=True)
 
                                     # Если подходящих квартир нет, проверяем с условием floor_condition
                                     if suitable_aparts.empty:
                                         suitable_aparts = df_new_apart_second[
-                                            (
-                                                df_new_apart_second["full_living_area"]
-                                                >= old_apart["queue_square"]
-                                            )
-                                            & (
-                                                df_new_apart_second["room_count"]
-                                                == old_apart["room_count"]
-                                            )
-                                            & (
-                                                df_new_apart_second["full_living_area"]
-                                                >= old_apart["full_living_area"]
-                                            )
-                                            & (
-                                                df_new_apart_second["total_living_area"]
-                                                >= old_apart["total_living_area"]
-                                            )
-                                            & (
-                                                df_new_apart_second["living_area"]
-                                                >= old_apart["living_area"]
-                                            )
-                                            & (
-                                                df_new_apart_second[
-                                                    "for_special_needs_marker"
-                                                ]
-                                                == old_apart["is_special_needs_marker"]
-                                            )
+                                            (df_new_apart_second["full_living_area"] >= old_apart["queue_square"])& 
+                                            (df_new_apart_second["room_count"]  == old_apart["room_count"])& 
+                                            (df_new_apart_second["full_living_area"]>= old_apart["full_living_area"])& 
+                                            (df_new_apart_second["total_living_area"]>= old_apart["total_living_area"])& 
+                                            (df_new_apart_second["living_area"] >= old_apart["living_area"])& 
+                                            (df_new_apart_second[ "for_special_needs_marker"]== old_apart["is_special_needs_marker"])
                                         ]
 
                                         if suitable_aparts.empty:
-                                            cannot_offer_to_insert.append(
-                                                (old_apart_id,)
-                                            )
+                                            cannot_offer_to_insert.append((old_apart_id,))
                                         else:
                                             suitable_apart = suitable_aparts.iloc[0]
-                                            new_apart_id = int(
-                                                suitable_apart["new_apart_id"]
-                                            )
-                                            df_new_apart_second = df_new_apart_second[
-                                                df_new_apart_second["new_apart_id"]
-                                                != new_apart_id
-                                            ]
+                                            new_apart_id = int(suitable_apart["new_apart_id"])
+                                            df_new_apart_second = df_new_apart_second[df_new_apart_second["new_apart_id"]!= new_apart_id]
                                             offers_to_insert.append(
-                                                (
-                                                    old_apart_id,
-                                                    new_apart_id,
-                                                    
-                                                )
+                                                (old_apart_id,new_apart_id,)
                                             )
                                     else:
                                         suitable_apart = suitable_aparts.iloc[0]
@@ -889,152 +563,62 @@ def match_new_apart_to_family_batch(
                                             df_new_apart_second["new_apart_id"]
                                             != new_apart_id
                                         ]
-                                        offers_to_insert.append(
-                                            (old_apart_id, new_apart_id,)
-                                        )
+                                        offers_to_insert.append((old_apart_id, new_apart_id,))
                                 else:
-                                    cannot_offer_to_insert.append(
-                                        (old_apart_id, )
-                                    )
+                                    cannot_offer_to_insert.append((old_apart_id, ))
                             else:
                                 # Если "Дата покупки" <= 2017-08-01 или пустая, используем floor_condition
                                 suitable_aparts = df_new_apart_second[
-                                    (
-                                        df_new_apart_second["full_living_area"]
-                                        >= old_apart["queue_square"]
-                                    )
-                                    & (
-                                        df_new_apart_second["room_count"]
-                                        == old_apart["room_count"]
-                                    )
-                                    & (
-                                        df_new_apart_second["full_living_area"]
-                                        >= old_apart["full_living_area"]
-                                    )
-                                    & (
-                                        df_new_apart_second["total_living_area"]
-                                        >= old_apart["total_living_area"]
-                                    )
-                                    & (
-                                        df_new_apart_second["living_area"]
-                                        >= old_apart["living_area"]
-                                    )
-                                    & (
-                                        df_new_apart_second["for_special_needs_marker"]
-                                        == old_apart["is_special_needs_marker"]
-                                    )
-                                    & (
-                                        df_new_apart_second["floor"]
-                                        >= (old_apart["min_floor"])
-                                    )
-                                    & (
-                                        df_new_apart_second["floor"]
-                                        <= (old_apart["max_floor"])
-                                    )
+                                    (df_new_apart_second["full_living_area"]>= old_apart["queue_square"])& 
+                                    (df_new_apart_second["room_count"]  == old_apart["room_count"])& 
+                                    (df_new_apart_second["full_living_area"] >= old_apart["full_living_area"])& 
+                                    (df_new_apart_second["total_living_area"]>= old_apart["total_living_area"])& 
+                                    (df_new_apart_second["living_area"]>= old_apart["living_area"])& 
+                                    ( df_new_apart_second["for_special_needs_marker"] == old_apart["is_special_needs_marker"])& 
+                                    (df_new_apart_second["floor"] >= (old_apart["min_floor"]))& 
+                                    (df_new_apart_second["floor"]<= (old_apart["max_floor"]))
                                 ]
 
                                 # Проверка наличия подходящих квартир
                                 if suitable_aparts.empty:
                                     suitable_aparts = df_new_apart_second[
-                                        (
-                                            df_new_apart_second["full_living_area"]
-                                            >= old_apart["queue_square"]
-                                        )
-                                        & (
-                                            df_new_apart_second["room_count"]
-                                            == old_apart["room_count"]
-                                        )
-                                        & (
-                                            df_new_apart_second["full_living_area"]
-                                            >= old_apart["full_living_area"]
-                                        )
-                                        & (
-                                            df_new_apart_second["total_living_area"]
-                                            >= old_apart["total_living_area"]
-                                        )
-                                        & (
-                                            df_new_apart_second["living_area"]
-                                            >= old_apart["living_area"]
-                                        )
-                                        & (
-                                            df_new_apart_second[
-                                                "for_special_needs_marker"
-                                            ]
-                                            == old_apart["is_special_needs_marker"]
-                                        )
+                                        (df_new_apart_second["full_living_area"]>= old_apart["queue_square"])& 
+                                        (df_new_apart_second["room_count"] == old_apart["room_count"])& 
+                                        (df_new_apart_second["full_living_area"]>= old_apart["full_living_area"])& 
+                                        (df_new_apart_second["total_living_area"]>= old_apart["total_living_area"])& 
+                                        (df_new_apart_second["living_area"]>= old_apart["living_area"])& 
+                                        (df_new_apart_second["for_special_needs_marker"]== old_apart["is_special_needs_marker"])
                                         & floor_condition
                                     ]
                                     if suitable_aparts.empty:
-                                        suitable_aparts = df_new_apart_second[(
-                                                df_new_apart_second["full_living_area"] >= old_apart["queue_square"]
-                                            )
-                                            & (
-                                                df_new_apart_second["room_count"]
-                                                == old_apart["room_count"]
-                                            )
-                                            & (
-                                                df_new_apart_second["full_living_area"]
-                                                >= old_apart["full_living_area"]
-                                            )
-                                            & (
-                                                df_new_apart_second["total_living_area"]
-                                                >= old_apart["total_living_area"]
-                                            )
-                                            & (
-                                                df_new_apart_second["living_area"]
-                                                >= old_apart["living_area"]
-                                            )
-                                            & (
-                                                df_new_apart_second[
-                                                    "for_special_needs_marker"
-                                                ]
-                                                == old_apart["is_special_needs_marker"]
-                                            )
+                                        suitable_aparts = df_new_apart_second[
+                                            (df_new_apart_second["full_living_area"] >= old_apart["queue_square"])& 
+                                            (df_new_apart_second["room_count"] == old_apart["room_count"])& 
+                                            (df_new_apart_second["full_living_area"] >= old_apart["full_living_area"])& 
+                                            (df_new_apart_second["total_living_area"] >= old_apart["total_living_area"])&
+                                            (df_new_apart_second["living_area"]>= old_apart["living_area"])& 
+                                            (df_new_apart_second["for_special_needs_marker"] == old_apart["is_special_needs_marker"])
                                         ]
                                         if suitable_aparts.empty:
-                                            cannot_offer_to_insert.append(
-                                                (old_apart_id,)
-                                            )
+                                            cannot_offer_to_insert.append((old_apart_id,))
 
                                         else:
                                             suitable_apart = suitable_aparts.iloc[0]
-                                            new_apart_id = int(
-                                                suitable_apart["new_apart_id"]
-                                            )
-                                            df_new_apart_second = df_new_apart_second[
-                                                df_new_apart_second["new_apart_id"]
-                                                != new_apart_id
-                                            ]
-                                            offers_to_insert.append(
-                                                (
-                                                    old_apart_id,
-                                                    new_apart_id,
-                                    
-                                                )
-                                            )
+                                            new_apart_id = int(suitable_apart["new_apart_id"])
+                                            df_new_apart_second = df_new_apart_second[df_new_apart_second["new_apart_id"]!= new_apart_id]
+                                            offers_to_insert.append((old_apart_id,new_apart_id,))
 
                                     else:
                                         suitable_apart = suitable_aparts.iloc[0]
-                                        new_apart_id = int(
-                                            suitable_apart["new_apart_id"]
-                                        )
-                                        df_new_apart_second = df_new_apart_second[
-                                            df_new_apart_second["new_apart_id"]
-                                            != new_apart_id
-                                        ]
-                                        offers_to_insert.append(
-                                            (old_apart_id, new_apart_id, )
-                                        )
+                                        new_apart_id = int(suitable_apart["new_apart_id"])
+                                        df_new_apart_second = df_new_apart_second[df_new_apart_second["new_apart_id"] != new_apart_id]
+                                        offers_to_insert.append((old_apart_id, new_apart_id, ))
                                 else:
                                     suitable_apart = suitable_aparts.iloc[0]
                                     new_apart_id = int(suitable_apart["new_apart_id"])
                                     df_new_apart_second = df_new_apart_second[
-                                        df_new_apart_second["new_apart_id"]
-                                        != new_apart_id
-                                    ]
-                                    offers_to_insert.append(
-                                        (old_apart_id, new_apart_id,)
-                                    )
+                                        df_new_apart_second["new_apart_id"] != new_apart_id]
+                                    offers_to_insert.append((old_apart_id, new_apart_id,))
                     else:
                         a[i] = 1
                         print("PROFICIT")

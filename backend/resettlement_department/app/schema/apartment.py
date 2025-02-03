@@ -32,6 +32,8 @@ class MatchingSchema(BaseModel):
     new_apartment_district: List[str] = None
     new_apartment_municipal_district: List[str] = None
     new_apartment_house_address: List[str] = None 
+    is_date : bool = None
+
 
 
 
