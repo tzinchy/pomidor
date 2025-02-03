@@ -56,8 +56,9 @@ export default function BalancePage() {
               <DropdownButton id="family_structure_house_address" type={'family_structure'} placeholder={'Старый дом'} />
               <DropdownButton id="new_apartment_house_address" type={'new_apartment'} placeholder={'Новый дом'} />
             </div>
-            <div className="m-4 justify-items-center">
-              <SubmitButton onResponse={handleResponse} />
+            <div className="m-4 justify-items-center flex">
+              <SubmitButton onResponse={handleResponse} type={''} />
+              <SubmitButton onResponse={handleResponse} type={'last'} />
             </div>
           </div>
         </DropdownProvider>

@@ -29,7 +29,8 @@ async def start_matching(
                                     new_selected_areas=requirements.family_structure_municipal_district,
                                     old_selected_areas=requirements.family_structure_municipal_district,
                                     new_selected_addresses=requirements.new_apartment_house_address,
-                                    old_selected_addresses=requirements.family_structure_house_address, date=requirements.is_date)
+                                    old_selected_addresses=requirements.family_structure_house_address, 
+                                    date=requirements.is_date)
     if matching_result == 'ok':
         return {'response' : 'Подбор успешно произведен'}
     else:
