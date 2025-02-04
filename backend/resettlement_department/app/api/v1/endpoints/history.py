@@ -27,15 +27,11 @@ async def balance(
 ):
     try:
         # Формируем путь для сохранения файла
-        output_path = os.path.join(os.getcwd(), 'uploads', 'matching_result.xlsx')
-
+        output_path = os.path.join(os.getcwd(), '././uploads', 'matching_result.xlsx')
+        print('in balance router')
         # Сохраняем файл (здесь вызывается ваша функция)
         save_views_to_excel(
             output_path=output_path,
-            new_selected_districts=requirements.new_apartment_district,
-            old_selected_districts=requirements.family_structure_municipal_district,
-            new_selected_areas=requirements.family_structure_municipal_district,
-            old_selected_areas=requirements.family_structure_municipal_district,
             new_selected_addresses=requirements.new_apartment_house_address,
             old_selected_addresses=requirements.family_structure_house_address,
             date=requirements.is_date)

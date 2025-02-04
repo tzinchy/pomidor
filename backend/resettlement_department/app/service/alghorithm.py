@@ -106,13 +106,11 @@ def match_new_apart_to_family_batch(
                         fs.full_living_area ASC, 
                         fs.total_living_area ASC;
                 """
-                print(family_query, old_apart_query_params)
 
                 # Выполнение запроса
                 cursor.execute(family_query, old_apart_query_params)
                 old_aparts = cursor.fetchall()
-                print(old_aparts)
-                print('\n\n\n')
+                print('FAMILY QUERY', len(old_aparts), family_query, old_apart_query_params)
                 if not old_aparts:
                     return ("No old apartments found.")
                     
@@ -148,9 +146,7 @@ def match_new_apart_to_family_batch(
                 print(new_apart_query, new_apart_query_params)
                 if not new_aparts:
                     return("No new apartments found.")
-                    
-                print(new_aparts)
-                print('/n/n/n/n/n')
+                
                 # --- Создание DataFrame и расчет рангов ---
                 df_old_apart = pd.DataFrame(old_aparts,columns=[
                         "family_apartment_needs_id", "kpu_number", "district", "municipal_district", "room_count", "full_living_area",
@@ -158,19 +154,16 @@ def match_new_apart_to_family_batch(
                         "ages", "members_amount", "oldest", "is_queue", "queue_square",
                     ],
                 )
-                print(2)
                 df_new_apart = pd.DataFrame(new_aparts, columns=[
                         "new_apart_id", "district", "municipal_district", "house_address", "apart_number", "floor",
                         "room_count", "full_living_area", "total_living_area", "living_area", "for_special_needs_marker",
                     ],
                 )
-                print(3)
                 df_new_apart_second = pd.DataFrame(new_aparts, columns=[
                         "new_apart_id", "district", "municipal_district", "house_address", "apart_number", "floor",
                         "room_count", "full_living_area", "total_living_area", "living_area", "for_special_needs_marker",
                     ],
                 )
-                print(4)
                 # Создаем комбинированный столбец для старых и новых квартир
                 df_old_apart["combined_area"] = (df_old_apart["living_area"] + df_old_apart["full_living_area"])
                 df_new_apart["combined_area"] = (df_new_apart["living_area"] + df_new_apart["full_living_area"])
@@ -209,8 +202,6 @@ def match_new_apart_to_family_batch(
                             max_rank = filtered_old["rank"].max()
                             df_new_apart.at[idx, "rank"] = max_rank
 
-                print(5)
-
                 # Объединяем данные старых и новых квартир
                 df_combined = pd.concat([df_old_apart.assign(status="old"), df_new_apart.assign(status="new")], ignore_index=True)
 
@@ -244,8 +235,6 @@ def match_new_apart_to_family_batch(
                 # Выполнение запроса для получения всех данных из таблицы history
                 cursor.execute("SELECT history_id, old_house_addresses, new_house_addresses FROM public.history")
                 history_data = cursor.fetchall()
-                print(history_data)
-                print('/n/n/n/n/n')
                 # Флаг для проверки наличия повторяющихся записей
                 record_exists = False
 
@@ -317,8 +306,6 @@ def match_new_apart_to_family_batch(
                 df_old_apart_reversed = df_old_apart.loc[::-1]
                 a = {}
                 delta = {1: 1.5, 2: 3, 3: 5, 4: 6.5, 5: 8, 6: 9.5, 7: 11, 8: 12.5}
-
-                print(7)
 
                 for i in range(1, (df_old_apart['room_count'].max() if df_old_apart['room_count'].max() > df_new_apart['room_count'].max() else df_new_apart['room_count'].max()) + 1):
                     if (((old_apart_ranks[i] if old_apart_ranks.get(i) is not None else  0) > (max_rank_by_room_count[i] if max_rank_by_room_count.get(i) is not None else  0)) 

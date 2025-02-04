@@ -16,6 +16,7 @@ def save_views_to_excel(
     old_selected_addresses=None,
 ):
     """РАБОЧИЙ ВАРИАНТ"""
+    print('in func')
     try:
         views = (
             ["new_apart_all_last", "res_of_rec_last", "ranked_last", "where_not_last"]
