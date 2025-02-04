@@ -4,6 +4,7 @@ import DropdownButton from "./Components/DropdownButton";
 import SubmitButton from "./Components/SubmitButton";
 import Aside from "../Navigation/Aside";
 import Header from "./Components/Header";
+import FileUploader from "./Components/FileUploader";
 
 const ResponseDisplay = ({ data }) => {
   if (!data) return null;
@@ -51,7 +52,7 @@ export default function BalancePage() {
       <Header />
       <main className="relative flex flex-1 flex-col gap-2 p-2 sm:pl-16 bg-neutral-100 items-center">
         <DropdownProvider>
-          <div className="p-4 justify-items-center bg-white w-2/3 h-[30vh] rounded-xl shadow-xl">
+          <div className="p-4 justify-items-center bg-white w-2/3 h-[50vh] rounded-xl shadow-xl">
             <div className="flex justify-around w-full">
               <DropdownButton id="family_structure_house_address" type={'family_structure'} placeholder={'Старый дом'} />
               <DropdownButton id="new_apartment_house_address" type={'new_apartment'} placeholder={'Новый дом'} />
@@ -60,6 +61,8 @@ export default function BalancePage() {
               <SubmitButton onResponse={handleResponse} type={''} />
               <SubmitButton onResponse={handleResponse} type={'last'} />
             </div>
+
+            <FileUploader />
           </div>
         </DropdownProvider>
 
@@ -76,3 +79,6 @@ export default function BalancePage() {
     </div>
   );
 }
+
+
+
