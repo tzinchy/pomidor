@@ -5,8 +5,8 @@ from schema.apartment import ApartType, MatchingSchema
 from service.alghorithm import match_new_apart_to_family_batch
 from service.balance_alghorithm import save_views_to_excel
 import os 
-from fastapi import HTTPException
-from fastapi import status
+from fastapi import File, HTTPException, UploadFile, status 
+from io import BytesIO
 
 router = APIRouter(prefix="/fisrt_matching", tags=["Первичный подбор"])
 
@@ -35,3 +35,8 @@ async def start_matching(
         return {'response' : 'Подбор успешно произведен'}
     else:
         raise HTTPException(detail=matching_result, status_code=status.HTTP_409_CONFLICT)
+
+
+@router.post("/upload-file/")
+async def upload_file(file: UploadFile = File(...)):
+    pass 

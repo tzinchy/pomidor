@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from core.config import settings
-
+from repository.database import project_managment_session
 
 def insert_data_to_needs_first(family_apartments_needs_df):
     """dataframe income data!"""
@@ -518,72 +518,21 @@ def insert_offer(offer_df: pd.DataFrame):
 
     return ds
 
-def insert_data_to_needs(family_apartments_needs_df):
-    """dataframe income data!"""
-    connection = None
-    cursor = None
-    try:
-        family_apartments_needs_df = family_apartments_needs_df.dropna(
-            subset=["Сл.инф_APART_ID"]
-        )
-
-        # Rename columns to match database fields
+async def insert_data_to_needs(family_apartments_needs_df):
+    async with project_managment_session() as session:
+        family_apartments_needs_df['К_Инв/к'] = family_apartments_needs_df['К_Инв/к'].apply(lambda x: x.lower())
+        family_apartments_needs_df['К_Инв/к'] = family_apartments_needs_df['К_Инв/к'].apply(lambda x: 1 if 'да' else 0)
         family_apartments_needs_df.rename(
-            columns={"Сл.инф_APART_ID": "affair_id"}, inplace=True
+            {
+            'Адрес_Округ' : 'district', 
+            'Адрес_Мун.округ' : 'municipal_district',
+            'Адрес_Короткий': 'house_address',
+            'Адрес_№ кв' : 'house_number',
+            'К_Комн' : 'room_count',
+            'К_Этаж' : 'floor',
+            'К_Ресурс' : 'type_of_settlement',
+            'Площадь общая' : 'full_living_area',
+            'Площадь общая(б/л)' : 'total_living_area', 
+            'Площадь жилая' : 'living_area',
+            }
         )
-        family_apartments_needs_df = family_apartments_needs_df[
-            ["affair_id"]
-        ]
-
-        # Replace NaN with None
-        family_apartments_needs_df = family_apartments_needs_df.replace({np.nan: None})
-
-        # Convert DataFrame rows into a list of tuples for bulk insert
-        args = list(family_apartments_needs_df.itertuples(index=False, name=None))
-
-        # Connect to the PostgreSQL database
-        connection  =  psycopg2.connect(
-            host=settings.project_management_setting.DB_HOST,
-            user=settings.project_management_setting.DB_USER,
-            password=settings.project_management_setting.DB_PASSWORD,
-            port=settings.project_management_setting.DB_PORT,
-            database=settings.project_management_setting.DB_NAME
-        )
-        cursor = connection.cursor()
-
-        args_str = ",".join(
-            "({})".format(
-                ", ".join(
-                    "'{}'".format(x.replace("'", "''"))
-                    if isinstance(x, str)
-                    else "NULL"
-                    if x is None
-                    else str(x)
-                    for x in arg
-                )
-            )
-            for arg in args
-        )
-
-        # Execute the SQL query
-        cursor.execute(f"""
-        INSERT INTO public.family_apartment_needs (affair_id)
-        VALUES
-        {args_str}
-        """)
-
-        connection.commit()
-        ds = 1
-
-    except Exception as e:
-        ds = e
-
-    finally:
-        if cursor:
-            cursor.close()
-        if connection:
-            connection.close()
-        return ds
-
-
-    
