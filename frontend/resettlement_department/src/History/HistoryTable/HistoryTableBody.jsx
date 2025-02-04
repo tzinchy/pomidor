@@ -3,7 +3,7 @@ import IdCell from "./Cells/IdCell";
 import AddressCell from "./Cells/AddressCell";
 import ActionsCell from "./Cells/ActionsCell";
 
-export default function HistoryTableBody({ data }){
+export default function HistoryTableBody({ data, setData }){
     return (
         <tbody>
             {data.map((val, index) => (
@@ -11,7 +11,7 @@ export default function HistoryTableBody({ data }){
                     <IdCell props={val} />
                     <AddressCell address={val.old_house_addresses} />
                     <AddressCell address={val.new_house_addresses} />
-                    <ActionsCell props={val}/>
+                    <ActionsCell props={val} setData={setData} />
                 </tr>
             ))}
         </tbody>
