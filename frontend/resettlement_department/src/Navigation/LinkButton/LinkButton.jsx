@@ -7,7 +7,7 @@ import { ASIDELINK } from "../..";
 
 export default function LinkButton({ name }) {
     const location = useLocation();
-    const isActive = location.pathname === `/${name}`;
+    const isActive = (location.pathname === '/history' ? '/balance' : location.pathname) === `/${name}`;
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0 });
     const [timeoutId, setTimeoutId] = useState(null);
 

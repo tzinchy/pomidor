@@ -52,7 +52,7 @@ export default function BalancePage() {
       <Header />
       <main className="relative flex flex-1 flex-col gap-2 p-2 sm:pl-16 bg-neutral-100 items-center">
         <DropdownProvider>
-          <div className="p-4 justify-items-center bg-white w-2/3 h-[50vh] rounded-xl shadow-xl">
+          <div className="p-4 justify-items-center bg-white w-2/3 h-[60vh] rounded-xl shadow-xl">
             <div className="flex justify-around w-full">
               <DropdownButton id="family_structure_house_address" type={'family_structure'} placeholder={'Старый дом'} />
               <DropdownButton id="new_apartment_house_address" type={'new_apartment'} placeholder={'Новый дом'} />
