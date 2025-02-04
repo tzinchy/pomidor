@@ -21,7 +21,7 @@ export default function HistoryTable(){
                 <div className="overflow-auto rounded-md border absolute left-0 h-full transition-all ease-in-out w-[calc(100%)] scrollbar-custom">
                     <table className="text-sm caption-bottom w-full border-collapse bg-white transition-all duration-300">
                         <TableHead headers={headers} />
-                        <HistoryTableBody data={data} />
+                        <HistoryTableBody data={data} setData={setData} />
                     </table>
                 </div>
             </div>
