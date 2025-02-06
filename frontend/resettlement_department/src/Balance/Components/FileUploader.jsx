@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { HOSTLINK } from '../..';
 
 const FileUploader = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
+    setUploadSuccess(false);
+    setError(null);
 
     if (!selectedFile) return;
 
@@ -22,32 +26,35 @@ const FileUploader = () => {
     }
 
     setFile(selectedFile);
-    setError(null);
-    
-    // Загружаем файл сразу после выбора
     await handleUpload(selectedFile);
   };
 
   const handleUpload = async (selectedFile) => {
     setUploading(true);
     setError(null);
+    setUploadSuccess(false);
 
     const formData = new FormData();
     formData.append('file', selectedFile);
 
     try {
-      const response = await fetch(`${HOSTLINK}/upload`, {
+      const response = await fetch(`${HOSTLINK}/fisrt_matching/upload-file/`, {
         method: 'POST',
         body: formData,
       });
 
+      const result = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Ошибка при загрузке файла');
+        throw new Error(result.message || 'Ошибка при загрузке файла');
       }
 
-      const result = await response.json();
       console.log('Файл успешно загружен:', result);
-      setFile(null); // Очищаем файл после успешной загрузки
+      setUploadSuccess(true);
+      setFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Сбрасываем значение input
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -67,6 +74,7 @@ const FileUploader = () => {
     <div className="max-w-md mx-auto p-6">
       <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors">
         <input
+          ref={fileInputRef}
           type="file"
           onChange={handleFileChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -99,7 +107,11 @@ const FileUploader = () => {
           <div className="flex justify-between items-center">
             <h3 className="font-medium">Выбранный файл:</h3>
             <button
-              onClick={() => setFile(null)}
+              onClick={() => {
+                setFile(null);
+                setUploadSuccess(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
               className="text-red-600 hover:text-red-700 text-sm"
             >
               Удалить
@@ -116,14 +128,30 @@ const FileUploader = () => {
       )}
 
       {uploading && (
-        <div className="mt-4 text-blue-600 text-sm">
+        <div className="mt-4 text-blue-600 text-sm flex items-center">
+          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
           Загрузка...
         </div>
       )}
 
       {error && (
-        <div className="mt-4 text-red-600 text-sm">
+        <div className="mt-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          </svg>
           {error}
+        </div>
+      )}
+
+      {uploadSuccess && (
+        <div className="mt-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          Файл успешно загружен!
         </div>
       )}
     </div>
