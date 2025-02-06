@@ -5,7 +5,7 @@ from service.apartment_insert import insert_data_to_needs, insert_offer, insert_
 from service.validation_service import ValidationService
 
 router = APIRouter(prefix="/load", tags=["Загрузка файлов"])
-
+'''
 @router.post("/upload-file/")
 async def upload_file(file: UploadFile = File(...)):
     """
@@ -31,4 +31,4 @@ async def upload_file(file: UploadFile = File(...)):
         return {"status": "success"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")'''
