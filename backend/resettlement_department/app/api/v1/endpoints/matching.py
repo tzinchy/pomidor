@@ -7,6 +7,8 @@ from service.balance_alghorithm import save_views_to_excel
 import os 
 from fastapi import File, HTTPException, UploadFile, status 
 from io import BytesIO
+import pandas as pd 
+from service.apartment_insert import insert_to_db
 
 router = APIRouter(prefix="/fisrt_matching", tags=["Первичный подбор"])
 
@@ -38,5 +40,22 @@ async def start_matching(
 
 
 @router.post("/upload-file/")
-async def upload_file(file: UploadFile = File(...)):
-    pass 
+def upload_file(file: UploadFile = File(...)):
+    try:
+        # Чтение содержимого файла
+        content = file.file.read()
+        
+        # Чтение Excel-файла в DataFrame
+        new_apart = pd.read_excel(BytesIO(content), sheet_name='new_apart')
+        old_apart = pd.read_excel(BytesIO(content), sheet_name='old_apart')   
+        # Вставка данных
+        insert_to_db(new_apart, old_apart)
+        
+        return {"message": "Файл успешно загружен и обработан"}
+    
+    except Exception as e:
+        return {"error": str(e)}
+    
+    finally:
+        # Закрытие файла после обработки
+        file.file.close()
