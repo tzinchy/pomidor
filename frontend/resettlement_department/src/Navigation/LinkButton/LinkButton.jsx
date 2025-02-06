@@ -84,7 +84,8 @@ function TooltipDesc({ name }){
     const descriptions = {
         'table_page': 'Площадки',
         'dashboard': 'Дашборд',
-        'aparts': 'Ресурс / Отселяемые дома'
+        'aparts': 'Ресурс / Отселяемые дома',
+        'balance': 'Баланс'
     } 
 
     return descriptions[name]

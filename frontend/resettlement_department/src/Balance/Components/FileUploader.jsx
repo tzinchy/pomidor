@@ -2,48 +2,38 @@ import React, { useState } from 'react';
 import { HOSTLINK } from '../..';
 
 const FileUploader = () => {
-  const [files, setFiles] = useState(null);
+  const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
+  const handleFileChange = async (e) => {
+    const selectedFile = e.target.files[0];
 
-    // Проверяем, что все файлы имеют допустимый тип
-    const isValid = selectedFiles.every((file) => {
-      return (
-        file.type === 'application/vnd.ms-excel' ||
-        file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      );
-    });
+    if (!selectedFile) return;
+
+    // Проверяем, что файл имеет допустимый тип
+    const isValid = selectedFile.type === 'application/vnd.ms-excel' ||
+                    selectedFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
     if (!isValid) {
       setError('Можно загружать только Excel-файлы (.xls, .xlsx).');
-      setFiles(null);
+      setFile(null);
       return;
     }
 
-    setFiles(selectedFiles);
+    setFile(selectedFile);
     setError(null);
+    
+    // Загружаем файл сразу после выбора
+    await handleUpload(selectedFile);
   };
 
-  const handleRemoveFiles = () => {
-    setFiles(null);
-  };
-
-  const handleUpload = async () => {
-    if (!files || files.length === 0) {
-      setError('Пожалуйста, выберите файлы для загрузки.');
-      return;
-    }
-
+  const handleUpload = async (selectedFile) => {
     setUploading(true);
     setError(null);
 
     const formData = new FormData();
-    files.forEach((file) => {
-      formData.append('files', file);
-    });
+    formData.append('file', selectedFile);
 
     try {
       const response = await fetch(`${HOSTLINK}/upload`, {
@@ -52,12 +42,12 @@ const FileUploader = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Ошибка при загрузке файлов');
+        throw new Error('Ошибка при загрузке файла');
       }
 
       const result = await response.json();
-      console.log('Файлы успешно загружены:', result);
-      setFiles(null); // Очищаем выбранные файлы после успешной загрузки
+      console.log('Файл успешно загружен:', result);
+      setFile(null); // Очищаем файл после успешной загрузки
     } catch (err) {
       setError(err.message);
     } finally {
@@ -78,7 +68,6 @@ const FileUploader = () => {
       <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors">
         <input
           type="file"
-          multiple
           onChange={handleFileChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -99,43 +88,36 @@ const FileUploader = () => {
             />
           </svg>
           <p className="text-gray-600">
-            <span className="font-medium text-blue-600">Нажмите чтобы загрузить</span> или перетащите файлы
+            <span className="font-medium text-blue-600">Нажмите чтобы загрузить</span> или перетащите файл
           </p>
           <p className="text-xs text-gray-500">Поддерживаются только Excel-файлы (.xls, .xlsx)</p>
         </div>
       </div>
 
-      {files && (
+      {file && (
         <div className="mt-4 space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="font-medium">Выбранные файлы:</h3>
+            <h3 className="font-medium">Выбранный файл:</h3>
             <button
-              onClick={handleRemoveFiles}
+              onClick={() => setFile(null)}
               className="text-red-600 hover:text-red-700 text-sm"
             >
-              Удалить все
+              Удалить
             </button>
           </div>
           
-          {files.map((file, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <span className="truncate mr-2">{file.name}</span>
-              <span className="text-xs text-gray-500">
-                {formatFileSize(file.size)}
-              </span>
-            </div>
-          ))}
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <span className="truncate mr-2">{file.name}</span>
+            <span className="text-xs text-gray-500">
+              {formatFileSize(file.size)}
+            </span>
+          </div>
+        </div>
+      )}
 
-          <button
-            onClick={handleUpload}
-            disabled={uploading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
-          >
-            {uploading ? 'Загрузка...' : 'Загрузить файлы'}
-          </button>
+      {uploading && (
+        <div className="mt-4 text-blue-600 text-sm">
+          Загрузка...
         </div>
       )}
 
