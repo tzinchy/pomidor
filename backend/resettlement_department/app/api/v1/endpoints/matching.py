@@ -5,8 +5,10 @@ from schema.apartment import ApartType, MatchingSchema
 from service.alghorithm import match_new_apart_to_family_batch
 from service.balance_alghorithm import save_views_to_excel
 import os 
-from fastapi import HTTPException
-from fastapi import status
+from fastapi import File, HTTPException, UploadFile, status 
+from io import BytesIO
+import pandas as pd 
+from service.apartment_insert import insert_to_db
 
 router = APIRouter(prefix="/fisrt_matching", tags=["Первичный подбор"])
 
@@ -35,3 +37,25 @@ async def start_matching(
         return {'response' : 'Подбор успешно произведен'}
     else:
         raise HTTPException(detail=matching_result, status_code=status.HTTP_409_CONFLICT)
+
+
+@router.post("/upload-file/")
+def upload_file(file: UploadFile = File(...)):
+    try:
+        # Чтение содержимого файла
+        content = file.file.read()
+        
+        # Чтение Excel-файла в DataFrame
+        new_apart = pd.read_excel(BytesIO(content), sheet_name='new_apart')
+        old_apart = pd.read_excel(BytesIO(content), sheet_name='old_apart')   
+        # Вставка данных
+        insert_to_db(new_apart, old_apart)
+        
+        return {"message": "Файл успешно загружен и обработан"}
+    
+    except Exception as e:
+        return {"error": str(e)}
+    
+    finally:
+        # Закрытие файла после обработки
+        file.file.close()

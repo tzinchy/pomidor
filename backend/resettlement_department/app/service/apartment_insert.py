@@ -3,9 +3,9 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from core.config import settings
+from repository.database import project_managment_session
 
-
-def insert_data_to_needs_first(family_apartments_needs_df):
+def insert_data_to_needs(family_apartments_needs_df):
     """dataframe income data!"""
     connection = None
     cursor = None
@@ -518,72 +518,152 @@ def insert_offer(offer_df: pd.DataFrame):
 
     return ds
 
-def insert_data_to_needs(family_apartments_needs_df):
-    """dataframe income data!"""
-    connection = None
-    cursor = None
+from psycopg2.extras import execute_values
+
+def insert_to_db(new_apart_df, old_apart_df):
+    print('''======================================================
+    1. Обработка и вставка для таблицы new_apart
+    ======================================================
+    Приведение столбца 'К_Инв/к' к нижнему регистру и замена значений на 1 или 0''')
+    new_apart_df['К_Инв/к'] = new_apart_df['К_Инв/к'].astype(str).str.lower()
+    new_apart_df['К_Инв/к'] = new_apart_df['К_Инв/к'].apply(lambda x: 1 if 'да' in x else 0)
+    
+    # Словарь для переименования колонок
+    rename_new = {
+        'Адрес_Округ': 'district', 
+        'Адрес_Мун.округ': 'municipal_district',
+        'Адрес_Короткий': 'house_address',
+        'Адрес_№ кв': 'house_number',
+        'К_Комн': 'room_count',
+        'К_Этаж': 'floor',
+        'К_Ресурс': 'type_of_settlement',
+        'Площадь общая': 'full_living_area',
+        'Площадь общая(б/л)': 'total_living_area', 
+        'Площадь жилая': 'living_area',
+        'Сл.инф_APART_ID': 'up_id',
+        'Кадастровый номер': 'cad_num',
+        'К_Инв/к': 'for_special_needs_marker'
+    }
+    new_apart_df = new_apart_df[list(rename_new.keys())].rename(columns=rename_new)
+
+    # Набор колонок для вставки в таблицу new_apart
+    new_apart_required = [
+        "district", "municipal_district", "house_address", "apart_number", "floor",
+        "full_living_area", "total_living_area", "living_area", "room_count",
+        "type_of_settlement", "for_special_needs_marker", "cad_num", "house_number", "up_id"
+    ]
+
+    # Если каких-либо колонок нет, добавляем их со значением None
+    for col in new_apart_required:
+        if col not in new_apart_df.columns:
+            new_apart_df[col] = None
+
+    # Если нет колонки 'apart_number', а требуется – можно использовать 'house_number'
+    if 'apart_number' not in new_apart_df.columns and 'house_number' in new_apart_df.columns:
+        new_apart_df['apart_number'] = new_apart_df['house_number']
+
+    # Упорядочиваем DataFrame согласно требуемым колонкам
+    new_apart_df = new_apart_df[new_apart_required]
+
+    # Преобразуем DataFrame в список кортежей для вставки
+    new_apart_values = [tuple(row) for row in new_apart_df.to_numpy()]
+
+    new_apart_query = f"""
+    INSERT INTO public.new_apart ({", ".join(new_apart_required)})
+    VALUES %s
+    ON CONFLICT (up_id)
+    DO UPDATE SET updated_at = NOW();
+    """
+
+    print('''======================================================
+    2. Обработка и вставка для таблицы family_structure
+    ======================================================
+    Словарь для переименования колонок старых данных (семейная структура)''')
+    rename_old = {
+        'Округ' : 'district',
+        'район' : 'municipal_district',
+        'ФИО' : 'fio',
+        'адрес дома' : 'house_address',
+        '№ кв-ры' : 'apart_number',
+        'Вид засел.' : 'type_of_settlement',
+        'тип кв-ры' : 'apart_type',
+        'кол-во комнат' : 'room_count',
+        'площ. жил. пом.' : 'full_living_area',
+        'общ. пл.' : 'total_living_area',
+        'жил. пл.' : 'living_area',
+        'Кол-во членов семьи' : 'people_v_dele',
+        'Потребность' : 'is_special_needs_marker',
+        'мин этаж': 'min_floor',
+        'макс этаж' : 'max_floor',
+        'Дата покупки' : 'buying_date',
+        'ID' : 'affair_id'
+    }
+    old_apart_df = old_apart_df.rename(columns=rename_old)
+    
+    # Обработка столбца даты: преобразуем в datetime, а затем заменяем NaT на None
+    if 'buying_date' in old_apart_df.columns:
+        old_apart_df['buying_date'] = pd.to_datetime(old_apart_df['buying_date'], errors='coerce')
+        old_apart_df['buying_date'] = old_apart_df['buying_date'].apply(lambda x: None if pd.isnull(x) else x)
+    
+    # Если для остальных столбцов не нужно заменять NaN, то не применяем fillna ко всему DataFrame!
+    # old_apart_df = old_apart_df.fillna(0)  # этот шаг закомментирован, чтобы не заменять даты
+
+    family_structure_required = [
+        'district', 'municipal_district', 'fio', 'house_address', 'apart_number',
+        'type_of_settlement', 'apart_type', 'room_count', 'full_living_area',
+        'total_living_area', 'living_area', 'people_v_dele', 'is_special_needs_marker',
+        'min_floor', 'max_floor', 'buying_date', 'affair_id'
+    ]
+    for col in family_structure_required:
+        if col not in old_apart_df.columns:
+            old_apart_df[col] = None
+    old_apart_df = old_apart_df[family_structure_required]
+
+    family_structure_values = [tuple(row) for row in old_apart_df.to_numpy()]
+
+    family_structure_query = f"""
+    INSERT INTO family_structure ({", ".join(family_structure_required)})
+    VALUES %s
+    ON CONFLICT (affair_id)
+    DO UPDATE SET updated_at = NOW();
+    """
+
+    print('''======================================================
+    3. Обработка и вставка для таблицы family_apartmnet_needs
+    ======================================================
+    Предполагаем, что в этой таблице требуется только affair_id.
+    Из DataFrame с семейной структурой получаем список идентификаторов.''')
+    family_apartment_needs_values = [(row,) for row in old_apart_df['affair_id'].tolist()]
+
+    family_apartment_needs_query = """
+    INSERT INTO family_apartment_needs (affair_id)
+    VALUES %s
+    """
+
+    print('''======================================================
+    Выполнение всех операций в рамках одного подключения
+    ======================================================''')
+    connection = psycopg2.connect(
+        host=settings.project_management_setting.DB_HOST,
+        user=settings.project_management_setting.DB_USER,
+        password=settings.project_management_setting.DB_PASSWORD,
+        port=settings.project_management_setting.DB_PORT,
+        database=settings.project_management_setting.DB_NAME
+    )
+    cursor = connection.cursor()
+
     try:
-        family_apartments_needs_df = family_apartments_needs_df.dropna(
-            subset=["Сл.инф_APART_ID"]
-        )
-
-        # Rename columns to match database fields
-        family_apartments_needs_df.rename(
-            columns={"Сл.инф_APART_ID": "affair_id"}, inplace=True
-        )
-        family_apartments_needs_df = family_apartments_needs_df[
-            ["affair_id"]
-        ]
-
-        # Replace NaN with None
-        family_apartments_needs_df = family_apartments_needs_df.replace({np.nan: None})
-
-        # Convert DataFrame rows into a list of tuples for bulk insert
-        args = list(family_apartments_needs_df.itertuples(index=False, name=None))
-
-        # Connect to the PostgreSQL database
-        connection  =  psycopg2.connect(
-            host=settings.project_management_setting.DB_HOST,
-            user=settings.project_management_setting.DB_USER,
-            password=settings.project_management_setting.DB_PASSWORD,
-            port=settings.project_management_setting.DB_PORT,
-            database=settings.project_management_setting.DB_NAME
-        )
-        cursor = connection.cursor()
-
-        args_str = ",".join(
-            "({})".format(
-                ", ".join(
-                    "'{}'".format(x.replace("'", "''"))
-                    if isinstance(x, str)
-                    else "NULL"
-                    if x is None
-                    else str(x)
-                    for x in arg
-                )
-            )
-            for arg in args
-        )
-
-        # Execute the SQL query
-        cursor.execute(f"""
-        INSERT INTO public.family_apartment_needs (affair_id)
-        VALUES
-        {args_str}
-        """)
+        # Вставка в new_apart
+        execute_values(cursor, new_apart_query, new_apart_values)
+        # Вставка в family_structure
+        execute_values(cursor, family_structure_query, family_structure_values)
+        # Вставка в family_apartmnet_needs
+        execute_values(cursor, family_apartment_needs_query, family_apartment_needs_values)
 
         connection.commit()
-        ds = 1
-
     except Exception as e:
-        ds = e
-
+        connection.rollback()
+        raise e
     finally:
-        if cursor:
-            cursor.close()
-        if connection:
-            connection.close()
-        return ds
-
-
-    
+        cursor.close()
+        connection.close()
