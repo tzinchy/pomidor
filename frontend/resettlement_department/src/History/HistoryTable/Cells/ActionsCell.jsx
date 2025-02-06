@@ -15,7 +15,7 @@ export default function ActionsCell( {props, setData}) {
     
     try {
       // Делаем запрос с responseType: 'arraybuffer' для скачивания файла
-      const response = await fetch('/balance', {
+      const response = await fetch(`${HOSTLINK}/balance`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

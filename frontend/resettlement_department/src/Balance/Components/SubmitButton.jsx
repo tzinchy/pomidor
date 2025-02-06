@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useDropdown } from './DropdownContext';
+import { HOSTLINK } from '../..';
 
 const SubmitButton = ({ onResponse, type }) => {
   const { selectedItems } = useDropdown();
@@ -40,7 +41,7 @@ const SubmitButton = ({ onResponse, type }) => {
       
       console.log(requestBody);
       
-      const response = await fetch('/fisrt_matching/matching', {
+      const response = await fetch(`${HOSTLINK}/fisrt_matching/matching`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
