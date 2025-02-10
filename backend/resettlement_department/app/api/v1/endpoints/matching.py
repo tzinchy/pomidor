@@ -41,21 +41,14 @@ async def start_matching(
 
 @router.post("/upload-file/")
 def upload_file(file: UploadFile = File(...)):
-    try:
-        # Чтение содержимого файла
-        content = file.file.read()
-        
-        # Чтение Excel-файла в DataFrame
-        new_apart = pd.read_excel(BytesIO(content), sheet_name='new_apart')
-        old_apart = pd.read_excel(BytesIO(content), sheet_name='old_apart')   
-        # Вставка данных
-        insert_to_db(new_apart, old_apart)
-        
-        return {"message": "Файл успешно загружен и обработан"}
     
-    except Exception as e:
-        return {"error": str(e)}
+    content = file.file.read()
     
-    finally:
-        # Закрытие файла после обработки
-        file.file.close()
+    # Чтение Excel-файла в DataFrame
+    new_apart = pd.read_excel(BytesIO(content), sheet_name='new_apart')
+    old_apart = pd.read_excel(BytesIO(content), sheet_name='old_apart')   
+    # Вставка данных
+    insert_to_db(new_apart, old_apart)
+    
+    return {"message": "Файл успешно загружен и обработан"}
+

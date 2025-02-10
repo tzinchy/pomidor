@@ -533,7 +533,7 @@ def insert_to_db(new_apart_df, old_apart_df):
         'Адрес_Округ': 'district', 
         'Адрес_Мун.округ': 'municipal_district',
         'Адрес_Короткий': 'house_address',
-        'Адрес_№ кв': 'house_number',
+        'Адрес_№ кв': 'apart_number',
         'К_Комн': 'room_count',
         'К_Этаж': 'floor',
         'К_Ресурс': 'type_of_settlement',
@@ -545,10 +545,10 @@ def insert_to_db(new_apart_df, old_apart_df):
         'К_Инв/к': 'for_special_needs_marker'
     }
     new_apart_df = new_apart_df[list(rename_new.keys())].rename(columns=rename_new)
-
+    print(new_apart_df['apart_number'])
     # Набор колонок для вставки в таблицу new_apart
     new_apart_required = [
-        "district", "municipal_district", "house_address", "apart_number", "floor",
+        "district", "municipal_district", "house_address", "floor", "apart_number",
         "full_living_area", "total_living_area", "living_area", "room_count",
         "type_of_settlement", "for_special_needs_marker", "cad_num", "house_number", "up_id"
     ]
@@ -557,14 +557,10 @@ def insert_to_db(new_apart_df, old_apart_df):
     for col in new_apart_required:
         if col not in new_apart_df.columns:
             new_apart_df[col] = None
-
-    # Если нет колонки 'apart_number', а требуется – можно использовать 'house_number'
-    if 'apart_number' not in new_apart_df.columns and 'house_number' in new_apart_df.columns:
-        new_apart_df['apart_number'] = new_apart_df['house_number']
-
+    print(new_apart_df['apart_number'])
     # Упорядочиваем DataFrame согласно требуемым колонкам
     new_apart_df = new_apart_df[new_apart_required]
-
+    print(new_apart_df['apart_number'])
     # Преобразуем DataFrame в список кортежей для вставки
     new_apart_values = [tuple(row) for row in new_apart_df.to_numpy()]
 
@@ -574,7 +570,7 @@ def insert_to_db(new_apart_df, old_apart_df):
     ON CONFLICT (up_id)
     DO UPDATE SET updated_at = NOW();
     """
-
+    print(new_apart_query)
     print('''======================================================
     2. Обработка и вставка для таблицы family_structure
     ======================================================
