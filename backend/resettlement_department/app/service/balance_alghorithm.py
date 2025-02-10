@@ -15,15 +15,16 @@ def save_views_to_excel(
     new_selected_addresses=None,
     old_selected_addresses=None,
 ):
+    """РАБОЧИЙ ВАРИАНТ"""
+    print('in func')
     try:
-        views = ["Новые_квартиры", "Результат_подбора", "Ранг", "Не_найдено"]
-
+        views = ["new_apart_all", "res_of_rec", "rank","where_not"]
         with get_db_connection() as conn:
             with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
                 for view in views:
                     print(f"Обработка представления: {view}")
 
-                    if view == "Ранг":
+                    if view == "rank":
                         # Запросы для извлечения данных из базы данных
                         query_old_ranked = """
                             SELECT
@@ -98,10 +99,10 @@ def save_views_to_excel(
                         )
 
                         # Присваиваем ранги и группируем данные
-                        df_combined["rank_group"] = df_combined["rank"].astype(int)
+                        df_combined["Ранг"] = df_combined["rank"].astype(int)
 
                         df = (
-                            df_combined.groupby(["room_count", "rank_group"])
+                            df_combined.groupby(["room_count", "Ранг"])
                             .agg(
                                 Пот_ть=("old_apart_id", "count"),
                                 Ресурс=("new_apart_id", "count"),
@@ -125,21 +126,21 @@ def save_views_to_excel(
 
                             for i in range(len(df)):
                                 row = df.iloc[i].to_dict()
-                                current_rank = row["rank_group"]
+                                current_rank = row["Ранг"]
                                 room_count = row["room_count"]
                                 max_rank = max_rank_by_room_count.get(room_count, 0) + 1
 
                                 if previous_row is not None:
                                     # Проверяем, является ли previous_row['rank_group'] строкой с диапазоном или целым числом
                                     if (
-                                        isinstance(previous_row["rank_group"], str)
-                                        and "-" in previous_row["rank_group"]
+                                        isinstance(previous_row["Ранг"], str)
+                                        and "-" in previous_row["Ранг"]
                                     ):
                                         previous_rank = int(
-                                            previous_row["rank_group"].split("-")[-1]
+                                            previous_row["Ранг"].split("-")[-1]
                                         )
                                     else:
-                                        previous_rank = previous_row["rank_group"]
+                                        previous_rank = previous_row["Ранг"]
 
                                     # Проверяем, можно ли объединять строки
                                     if (
@@ -152,7 +153,7 @@ def save_views_to_excel(
                                         previous_row["Ресурс"] += row["Ресурс"]
                                         previous_row["Баланс"] += row["Баланс"]
                                         # Обновляем диапазон рангов
-                                        previous_row["rank_group"] = (
+                                        previous_row["Ранг"] = (
                                             f"{start_rank}-{current_rank}"
                                         )
                                     else:
@@ -186,7 +187,7 @@ def save_views_to_excel(
                             totals = pd.DataFrame(
                                 [
                                     {
-                                        "rank_group": "Итог",
+                                        "Ранг": "Итог",
                                         "Пот_ть": total_potency,
                                         "Ресурс": total_resource,
                                         "Баланс": total_balance,
@@ -232,7 +233,7 @@ def save_views_to_excel(
                             # Перебор всех типов комнат и запись данных в Excel
                             for room in df_grouped["room_count"].unique():
                                 room_df = df_grouped[df_grouped["room_count"] == room][
-                                    ["rank_group", "Пот_ть", "Ресурс", "Баланс"]
+                                    ["Ранг", "Пот_ть", "Ресурс", "Баланс"]
                                 ]
 
                                 # Заголовок типа квартир
@@ -279,48 +280,49 @@ def save_views_to_excel(
                                 current_row = 1
                                 current_col += len(room_df.columns) + 1
 
-                    elif view == "Не_найдено":
-                        # Кастомный запрос для "Не_найдено" с фильтром по старой таблице
-                        query = """
-                            SELECT * 
-                            FROM public."Не_найдено" nf
-                            WHERE 1=1
-                        """
-                        params = []
-                        
-                        if old_selected_addresses:
-                            query += ' AND "Улица" IN %s'
-                            params.append(tuple(old_selected_addresses))
-                            
-                        df = pd.read_sql(query, conn, params=params if params else None)
-                    
-                    elif view == "Новые_квартиры":
-                        # Кастомный запрос для "Новые_квартиры" с фильтром по новой таблице
-                        query = '''
-                            SELECT * 
-                            FROM public."Новые_квартиры" nk
-                            WHERE 1=1
-                        '''
-                        params = []
-                        
-                        if new_selected_addresses:
-                            query += ' AND "Улица" IN %s'
-                            params.append(tuple(new_selected_addresses))
-                            
-                        df = pd.read_sql(query, conn, params=params if params else None)
-                    
                     else:
-                        # Стандартная обработка для других представлений
+                        query_params = []
                         query = f"SELECT * FROM public.{view}"
-                        df = pd.read_sql(query, conn)
-                        df = df.dropna(how="all")
 
-                    # Общая часть для всех представлений
-                    if df.empty:
-                        print(f"Представление {view} не вернуло данных.")
-                    else:
-                        df.to_excel(writer, sheet_name=view, index=False)
+                        query += " WHERE 1=1 "
+                        if view == "new_apart_all":
+                            if new_selected_addresses:
+                                placeholders = ", ".join(
+                                    ["%s"] * len(new_selected_addresses)
+                                )
+                                query += f" AND Новый_адрес IN ({placeholders})"
+                                query_params.extend(new_selected_addresses)
+                        elif view == 'where_not':
+                            if old_selected_addresses:
+                                placeholders = ", ".join(
+                                    ["%s"] * len(old_selected_addresses)
+                                )
+                                query += f' AND Старый_адрес IN ({placeholders})'
+                                query_params.extend(old_selected_addresses)
+                        else:
+                            if new_selected_addresses :
+                                placeholders = ", ".join(
+                                    ["%s"] * len(new_selected_addresses)
+                                )
+                                query += f" AND Новый_адрес IN ({placeholders})"
+                                query_params.extend(new_selected_addresses)
 
+                            if old_selected_addresses:
+                                placeholders = ", ".join(
+                                    ["%s"] * len(old_selected_addresses)
+                                )
+                                query += f' AND Старый_адрес IN ({placeholders})'
+                                query_params.extend(old_selected_addresses)
+
+                        print(f"Выполнение запроса для представления {view}")
+
+                        try:
+                            df = pd.read_sql(query, conn, params=query_params)
+                            df = df.dropna(how="all")
+                            df.to_excel(writer, sheet_name=view, index=False)
+                        except Exception as e:
+                            print(
+                                f"Ошибка выполнения запроса для представления {view}: {e}"
+                            )
     except Exception as e:
         print(f"Ошибка: {e}")
-
