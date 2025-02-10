@@ -31,4 +31,5 @@ async def upload_file(file: UploadFile = File(...)):
         return {"status": "success"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")'''
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+'''
