@@ -16,7 +16,7 @@ def save_views_to_excel(
     old_selected_addresses=None,
 ):
     try:
-        views = ["Новые_квартиры", "Результат_подбора", "Ранг", "Не_найдено"]
+        views = (["Новые_квартиры", "Результат_подбора", "Ранг", "Не_найдено"])
 
         with get_db_connection() as conn:
             with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
@@ -98,10 +98,10 @@ def save_views_to_excel(
                         )
 
                         # Присваиваем ранги и группируем данные
-                        df_combined["rank_group"] = df_combined["rank"].astype(int)
+                        df_combined["Ранг"] = df_combined["rank"].astype(int)
 
                         df = (
-                            df_combined.groupby(["room_count", "rank_group"])
+                            df_combined.groupby(["room_count", "Ранг"])
                             .agg(
                                 Пот_ть=("old_apart_id", "count"),
                                 Ресурс=("new_apart_id", "count"),
@@ -125,21 +125,21 @@ def save_views_to_excel(
 
                             for i in range(len(df)):
                                 row = df.iloc[i].to_dict()
-                                current_rank = row["rank_group"]
+                                current_rank = row["Ранг"]
                                 room_count = row["room_count"]
                                 max_rank = max_rank_by_room_count.get(room_count, 0) + 1
 
                                 if previous_row is not None:
-                                    # Проверяем, является ли previous_row['rank_group'] строкой с диапазоном или целым числом
+                                    # Проверяем, является ли previous_row['Ранг'] строкой с диапазоном или целым числом
                                     if (
-                                        isinstance(previous_row["rank_group"], str)
-                                        and "-" in previous_row["rank_group"]
+                                        isinstance(previous_row["Ранг"], str)
+                                        and "-" in previous_row["Ранг"]
                                     ):
                                         previous_rank = int(
-                                            previous_row["rank_group"].split("-")[-1]
+                                            previous_row["Ранг"].split("-")[-1]
                                         )
                                     else:
-                                        previous_rank = previous_row["rank_group"]
+                                        previous_rank = previous_row["Ранг"]
 
                                     # Проверяем, можно ли объединять строки
                                     if (
@@ -152,7 +152,7 @@ def save_views_to_excel(
                                         previous_row["Ресурс"] += row["Ресурс"]
                                         previous_row["Баланс"] += row["Баланс"]
                                         # Обновляем диапазон рангов
-                                        previous_row["rank_group"] = (
+                                        previous_row["Ранг"] = (
                                             f"{start_rank}-{current_rank}"
                                         )
                                     else:
@@ -186,7 +186,7 @@ def save_views_to_excel(
                             totals = pd.DataFrame(
                                 [
                                     {
-                                        "rank_group": "Итог",
+                                        "Ранг": "Итог",
                                         "Пот_ть": total_potency,
                                         "Ресурс": total_resource,
                                         "Баланс": total_balance,
@@ -232,9 +232,8 @@ def save_views_to_excel(
                             # Перебор всех типов комнат и запись данных в Excel
                             for room in df_grouped["room_count"].unique():
                                 room_df = df_grouped[df_grouped["room_count"] == room][
-                                    ["rank_group", "Пот_ть", "Ресурс", "Баланс"]
+                                    ["Ранг", "Пот_ть", "Ресурс", "Баланс"]
                                 ]
-
                                 # Заголовок типа квартир
                                 ws.cell(
                                     row=current_row, column=current_col
