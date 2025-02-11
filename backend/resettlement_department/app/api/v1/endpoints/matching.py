@@ -47,8 +47,9 @@ def upload_file(file: UploadFile = File(...)):
     # Чтение Excel-файла в DataFrame
     new_apart = pd.read_excel(BytesIO(content), sheet_name='new_apart')
     old_apart = pd.read_excel(BytesIO(content), sheet_name='old_apart')   
+    cin = pd.read_excel(BytesIO(content), sheet_name='cin')
     # Вставка данных
-    insert_to_db(new_apart, old_apart)
+    insert_to_db(new_apart, old_apart, cin)
     
     return {"message": "Файл успешно загружен и обработан"}
 

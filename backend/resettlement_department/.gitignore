@@ -3,3 +3,6 @@
 __pycache__
 /__pycache__
 uploads/
+app/uploads/
+./uploads
+
