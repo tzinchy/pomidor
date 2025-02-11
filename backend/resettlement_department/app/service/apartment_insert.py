@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime
 from core.config import settings
 from repository.database import project_managment_session
-
+'''
 def insert_data_to_needs(family_apartments_needs_df):
     """dataframe income data!"""
     connection = None
@@ -517,10 +517,10 @@ def insert_offer(offer_df: pd.DataFrame):
     connection.close()
 
     return ds
-
+'''
 from psycopg2.extras import execute_values
 
-def insert_to_db(new_apart_df, old_apart_df):
+def insert_to_db(new_apart_df, old_apart_df, cin_df):
     print('''======================================================
     1. Обработка и вставка для таблицы new_apart
     ======================================================
@@ -545,7 +545,7 @@ def insert_to_db(new_apart_df, old_apart_df):
         'К_Инв/к': 'for_special_needs_marker'
     }
     new_apart_df = new_apart_df[list(rename_new.keys())].rename(columns=rename_new)
-    print(new_apart_df['apart_number'])
+
     # Набор колонок для вставки в таблицу new_apart
     new_apart_required = [
         "district", "municipal_district", "house_address", "floor", "apart_number",
@@ -557,10 +557,10 @@ def insert_to_db(new_apart_df, old_apart_df):
     for col in new_apart_required:
         if col not in new_apart_df.columns:
             new_apart_df[col] = None
-    print(new_apart_df['apart_number'])
+
     # Упорядочиваем DataFrame согласно требуемым колонкам
     new_apart_df = new_apart_df[new_apart_required]
-    print(new_apart_df['apart_number'])
+
     # Преобразуем DataFrame в список кортежей для вставки
     new_apart_values = [tuple(row) for row in new_apart_df.to_numpy()]
 
@@ -646,16 +646,66 @@ def insert_to_db(new_apart_df, old_apart_df):
         port=settings.project_management_setting.DB_PORT,
         database=settings.project_management_setting.DB_NAME
     )
+
+    # Преобразование типов данных
+    cin_df["УНОМ"] = cin_df["УНОМ"].astype(str)
+    cin_df["Адрес отселения"] = cin_df["Адрес отселения"].astype(str)
+    cin_df["Адрес ЦИНа"] = cin_df["Адрес ЦИНа"].astype(str)
+    cin_df["График работы ЦИН"] = cin_df["График работы ЦИН"].astype(str)
+    cin_df["График работы Департамента в ЦИНе"] = cin_df[
+        "График работы Департамента в ЦИНе"
+    ].astype(str)
+    cin_df["Телефон для осмота"] = cin_df["Телефон для осмота"].astype(str)
+    cin_df["Телефон для ответа"] = cin_df["Телефон для ответа"].astype(str)
+    cin_df["Адрес Отдела"] = cin_df["Адрес Отдела"].astype(str)
+    cin_df["Дата начала работы"] = pd.to_datetime(cin_df["Дата начала работы"], errors="coerce").dt.date
+
+    data_to_insert = []
+    for _, row in cin_df.iterrows():
+        data_to_insert.append(
+            {
+                "unom": row["УНОМ"],
+                "old_address": row["Адрес отселения"],
+                "cin_address": row["Адрес ЦИНа"],
+                "cin_schedule": row["График работы ЦИН"],
+                "dep_schedule": row["График работы Департамента в ЦИНе"],
+                "phone_osmotr": row["Телефон для осмота"]
+                if pd.notna(row["Телефон для осмота"])
+                else None,
+                "phone_otvet": row["Телефон для ответа"]
+                if pd.notna(row["Телефон для ответа"])
+                else None,
+                "start_date": row["Дата начала работы"]
+                if pd.notna(row["Дата начала работы"])
+                else None,
+                "otdel": row["Адрес Отдела"],
+            }
+        )
+
     cursor = connection.cursor()
+    print(cin_df)
 
     try:
         # Вставка в new_apart
         execute_values(cursor, new_apart_query, new_apart_values)
         # Вставка в family_structure
         execute_values(cursor, family_structure_query, family_structure_values)
-        # Вставка в family_apartmnet_needs
+        #Вставка в family_apartmnet_needs
         execute_values(cursor, family_apartment_needs_query, family_apartment_needs_values)
-
+        for data in data_to_insert:
+            cursor.execute(
+                """
+                INSERT INTO public.cin (
+                    unom, old_address, cin_address, cin_schedule, dep_schedule, phone_osmotr, phone_otvet, start_date, otdel
+                ) VALUES (
+                    %(unom)s, %(old_address)s, %(cin_address)s, %(cin_schedule)s, %(dep_schedule)s, %(phone_osmotr)s, %(phone_otvet)s, %(start_date)s,  %(otdel)s
+                )
+                ON CONFLICT (unom) DO UPDATE SET 
+                    old_address = EXCLUDED.old_address, cin_address = EXCLUDED.cin_address, cin_schedule = EXCLUDED.cin_schedule, dep_schedule = EXCLUDED.dep_schedule, phone_osmotr = EXCLUDED.phone_osmotr, 
+                    phone_otvet = EXCLUDED.phone_otvet, start_date = EXCLUDED.start_date, otdel = EXCLUDED.otdel 
+            """,
+                data,
+            )
         connection.commit()
     except Exception as e:
         connection.rollback()

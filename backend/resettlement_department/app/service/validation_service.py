@@ -1,4 +1,4 @@
-from service.apartment_insert import insert_data_to_needs, insert_offer, insert_data_to_structure, new_apart_insert
+'''from service.apartment_insert import insert_data_to_needs, insert_offer, insert_data_to_structure, new_apart_insert
 import pandas as pd
 
 class ValidationService:
@@ -44,4 +44,4 @@ class ValidationService:
             except Exception as e:
                 errors.append(f"Unhandled exception in {function.__name__}: {str(e)}")
 
-        return errors
+        return errors'''
