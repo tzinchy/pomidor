@@ -4,6 +4,12 @@ import LeftBar from "./LeftBar";
 import Aside from "../Navigation/Aside";
 import ApartTable from "./ApartTable";
 import { HOSTLINK } from "..";
+import Table from "../try";
+import FamilyCell from "./Cells/Fio";
+import AdressCell from "./Cells/AdressCell";
+import PloshCell from "./Cells/PloshCell";
+import StatusCell from "./Cells/StatusCell";
+import Notes from './Cells/Notes'
 
 const APART_TYPES = {
   NEW: "NewApartment",
@@ -28,6 +34,8 @@ export default function ApartPage() {
   const detailsRef = useRef(null);
   const [selectedRow, setSelectedRow] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     resetFilters();
@@ -113,6 +121,8 @@ export default function ApartPage() {
         paramsSerializer
       });
       setApartments(response.data);
+      setLoading(false);
+      console.log(response.data);
     } catch (error) {
       console.error("Error fetching apartments:", error.response?.data);
     }
@@ -139,6 +149,44 @@ export default function ApartPage() {
 
   const handleToggleSidebar = () => setCollapsed(!collapsed);
 
+  const columns = React.useMemo(
+      () => [
+        {
+          header: 'Адрес дома',
+          accessorKey: 'house_address',
+          enableSorting: true,
+          cell: ({ row }) => <AdressCell props={row.original} />,
+          size: 170,
+        },
+        {
+          header: 'ФИО',
+          accessorKey: 'fio',
+          enableSorting: true,
+          cell: ({ row }) => <FamilyCell props={row.original} />,
+          size: 100,
+        },
+        {
+          header: 'Площадь, тип, этаж',
+          accessorKey: 'full_living_area',
+          cell: ({ row }) => <PloshCell props={row.original} />,
+          size: 100,
+        },
+        {
+          header: 'Статус',
+          accessorKey: 'status',
+          cell: ({ row }) => <StatusCell props={row.original} />,
+          size: 100,
+        },
+        {
+          header: 'Примечания',
+          accessorKey: 'notes',
+          cell: ({ row }) => <Notes props={row.original} />,
+          size: 350,
+        },
+      ],
+      []
+    );
+
   return (
     <div className="bg-muted/60 flex min-h-screen w-full flex-col">
       <Aside />
@@ -163,17 +211,8 @@ export default function ApartPage() {
           />
 
           <div className="flex-1 overflow-auto">
-            <ApartTable
-              apartType={apartType}
-              data={filteredApartments}
-              fetchApartmentDetails={fetchApartmentDetails}
-              apartmentDetails={apartmentDetails}
-              detailsRef={detailsRef}
-              selectedRow={selectedRow}
-              setSelectedRow={setSelectedRow}
-              isDetailsVisible={isDetailsVisible}
-              setIsDetailsVisible={setIsDetailsVisible}
-            />
+          
+            <Table columns={columns} data={filteredApartments} loading={loading} />
           </div>
         </div>
       </main>

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef  } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import {
   useReactTable,
   getCoreRowModel,
@@ -6,31 +7,74 @@ import {
   getFilteredRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import { useVirtualizer  } from '@tanstack/react-virtual';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { HOSTLINK } from '.';
+import AdressCell from './ApartTable/Cells/AdressCell';
+import FamilyCell from './ApartTable/Cells/Fio';
+import PloshCell from './ApartTable/Cells/PloshCell';
+import StatusCell from './ApartTable/Cells/StatusCell';
+import Notes from './ApartTable/Cells/Notes';
+
+const paramsSerializer = {
+  indexes: null,
+  encode: (value) => encodeURIComponent(value),
+};
+
+const fetchApartments = async (municipal_districts) => {
+  try {
+    const response = await axios.get(`${HOSTLINK}/tables/apartments`, {
+      params: {
+        apart_type: 'FamilyStructure',
+        house_addresses: [],
+        districts: [],
+        municipal_districts: municipal_districts,
+      },
+      paramsSerializer,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching apartments:', error.response?.data);
+    throw error;
+  }
+};
 
 const Try = () => {
-  // Состояние для данных, загрузки и фильтра
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const columns = React.useMemo(
     () => [
       {
-        header: 'Name',
-        accessorKey: 'name',
+        header: 'Адрес дома',
+        accessorKey: 'house_address',
         enableSorting: true,
-        size: 200, // Устанавливаем фиксированную ширину для столбца
+        cell: ({ row }) => <AdressCell props={row.original} />,
+        size: 200,
       },
       {
-        header: 'Age',
-        accessorKey: 'age',
+        header: 'ФИО',
+        accessorKey: 'fio',
         enableSorting: true,
-        size: 100, // Устанавливаем фиксированную ширину для столбца
+        cell: ({ row }) => <FamilyCell props={row.original} />,
+        size: 100,
       },
       {
-        header: 'Address',
-        accessorKey: 'address',
-        size: 300, // Устанавливаем фиксированную ширину для столбца
+        header: 'Площадь, тип, этаж',
+        accessorKey: 'full_living_area',
+        cell: ({ row }) => <PloshCell props={row.original} />,
+        size: 150,
+      },
+      {
+        header: 'Статус',
+        accessorKey: 'status',
+        cell: ({ row }) => <StatusCell props={row.original} />,
+        size: 100,
+      },
+      {
+        header: 'Примечания',
+        accessorKey: 'notes',
+        cell: ({ row }) => <Notes props={row.original} />,
+        size: 400,
       },
     ],
     []
@@ -38,26 +82,16 @@ const Try = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true); // Начинаем загрузку данных
+      setLoading(true);
       try {
-        // Здесь имитируем запрос на сервер (вы можете заменить это на реальный запрос)
-        const fetchedData = await new Promise((resolve) =>
-          setTimeout(() => resolve([
-            { name: 'John Doe', age: 28, address: '123 Main St' },
-            { name: 'Jane Doe', age: 32, address: '456 Elm St' },
-            { name: 'Sam Smith', age: 25, address: '789 Oak St' },
-            { name: 'Alice Johnson', age: 30, address: '321 Pine St' },
-            { name: 'Bob Lee', age: 22, address: '567 Birch St' },
-            { name: 'Charlie Brown', age: 35, address: '234 Cedar St' },
-            { name: 'David White', age: 40, address: '890 Maple St' },
-            { name: 'Eve Adams', age: 27, address: '678 Oak Ave' },
-          ]), 200) // Задержка в 2 секунды
-        );
+        const municipal_districts = ['Восточное Измайлово'];
+        const fetchedData = await fetchApartments(municipal_districts);
         setData(fetchedData);
+        console.log(fetchedData);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setLoading(false); // Заканчиваем загрузку данных
+        setLoading(false);
       }
     };
 
@@ -66,7 +100,7 @@ const Try = () => {
 
   return (
     <div className="App">
-      <h1 className="text-2xl font-bold text-center my-4">User Table</h1>
+      <h1 className="text-2xl font-bold text-center my-4">Таблица квартир</h1>
       <Table columns={columns} data={data} loading={loading} />
     </div>
   );
@@ -75,6 +109,7 @@ const Try = () => {
 const Table = ({ columns, data, loading }) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
+  const tableContainerRef = useRef(null);
 
   const table = useReactTable({
     data,
@@ -90,63 +125,54 @@ const Table = ({ columns, data, loading }) => {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  const tableContainerRef = useRef(null);
-
-  // Виртуализация строк
   const rowVirtualizer = useVirtualizer({
     count: table.getRowModel().rows.length,
-    estimateSize: () => 48, // Высота строки в пикселях
+    estimateSize: () => 65,
     getScrollElement: () => tableContainerRef.current,
-    overscan: 10, // Количество дополнительных строк для рендеринга
+    overscan: 10,
   });
 
-  // Рассчитываем одинаковую ширину для всех столбцов
-  const columnWidth = `${100 / columns.length}%`;
-
   return (
-    <div className="p-4">
-      <input
-        type="text"
-        value={globalFilter}
-        onChange={(e) => setGlobalFilter(e.target.value)}
-        placeholder="Search..."
-        className="mb-4 p-2 border rounded"
-      />
-      
+    <div className="relative flex flex-col lg:flex-row h-[calc(100vh-1rem)] gap-2 bg-neutral-100 w-full transition-all duration-300">
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-[#01c5ad] border-solid"></div>
         </div>
       ) : (
-        <div
-          ref={tableContainerRef}
-          className="min-w-full bg-white border overflow-auto"
-          style={{ height: '600px' }} // Фиксированная высота контейнера
-        >
-          <table className="w-full table-fixed"> {/* Добавлен table-fixed */}
-            <thead className="sticky top-0 bg-white z-10">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      onClick={header.column.getToggleSortingHandler()}
-                      className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-50"
-                      style={{ width: columnWidth }} // Одинаковая ширина для всех столбцов
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      <span className="ml-2">
-                        {header.column.getIsSorted() === 'asc' ? '🔼' : header.column.getIsSorted() === 'desc' ? '🔽' : null}
-                      </span>
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody
+        <div className={`overflow-auto rounded-md border h-full w-full transition-all duration-300 ease-in-out`}>
+          <div
+            ref={tableContainerRef}
+            className="overflow-auto rounded-md border absolute left-0 h-[calc(100vh-1.5rem)] w-full transition-all ease-in-out scrollbar-custom"
+          >
+            <table className="text-base caption-bottom w-full border-collapse bg-white">
+              <thead className="sticky top-0 bg-white z-10 backdrop-blur-md">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id} className='hover:bg-muted/50 transition-colors'>
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        onClick={header.column.getToggleSortingHandler()}
+                        className="py-3 border-b-2 border-gray-300 text-left text-base font-semibold text-gray-600 tracking-wider cursor-pointer hover:bg-gray-50"
+                        style={{ width: `${header.column.columnDef.size}px` }}
+                      >
+                        {console.log(header.column.columnDef.size)}
+                        <div className="flex">
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          {header.column.getIsSorted() === 'asc' ? (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-up h-4 w-4 -translate-x-[-25%] transition-transform scale-100"><path d="m18 15-6-6-6 6"></path></svg>) : 
+                          header.column.getIsSorted() === 'desc' ? (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-up h-4 w-4 -translate-x-[-25%] transition-transform rotate-180 scale-100"><path d="m18 15-6-6-6 6"></path></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-up-down text-muted-foreground/40 group-hover:text-muted-foreground ml-1 h-4 w-4 transition-transform scale-100"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>)}
+                        </div>
+                        
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+            </table>
+
+            <div
               style={{
                 height: `${rowVirtualizer.getTotalSize()}px`,
                 position: 'relative',
@@ -155,7 +181,7 @@ const Table = ({ columns, data, loading }) => {
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const row = table.getRowModel().rows[virtualRow.index];
                 return (
-                  <tr
+                  <div
                     key={row.id}
                     style={{
                       position: 'absolute',
@@ -165,30 +191,34 @@ const Table = ({ columns, data, loading }) => {
                       height: `${virtualRow.size}px`,
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
-                    className="hover:bg-gray-100"
                   >
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className="px-6 py-4 border-b border-gray-200 text-sm text-gray-700 truncate w-full" // Добавлен truncate
-                         // Одинаковая ширина для всех ячеек
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    ))}
-                  </tr>
+                    <table className="w-full h-full table-fixed border-collapse">
+                      <tbody>
+                        <tr className="">
+                          {row.getVisibleCells().map((cell) => (
+                            <td
+                              key={cell.id}
+                              className=" border-b border-gray-200 text-base text-gray-700 truncate"
+                              style={{ width: `${cell.column.columnDef.size}px` }}
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 };
 
-
-export default Try;
+export default Table;

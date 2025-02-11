@@ -15,15 +15,16 @@ def save_views_to_excel(
     new_selected_addresses=None,
     old_selected_addresses=None,
 ):
+    """РАБОЧИЙ ВАРИАНТ"""
+    print('in func')
     try:
-        views = (["Новые_квартиры", "Результат_подбора", "Ранг", "Не_найдено"])
-
+        views = ["new_apart_all", "res_of_rec", "rank","where_not"]
         with get_db_connection() as conn:
             with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
                 for view in views:
                     print(f"Обработка представления: {view}")
 
-                    if view == "Ранг":
+                    if view == "rank":
                         # Запросы для извлечения данных из базы данных
                         query_old_ranked = """
                             SELECT
@@ -278,48 +279,49 @@ def save_views_to_excel(
                                 current_row = 1
                                 current_col += len(room_df.columns) + 1
 
-                    elif view == "Не_найдено":
-                        # Кастомный запрос для "Не_найдено" с фильтром по старой таблице
-                        query = """
-                            SELECT * 
-                            FROM public."Не_найдено" nf
-                            WHERE 1=1
-                        """
-                        params = []
-                        
-                        if old_selected_addresses:
-                            query += ' AND "Улица" IN %s'
-                            params.append(tuple(old_selected_addresses))
-                            
-                        df = pd.read_sql(query, conn, params=params if params else None)
-                    
-                    elif view == "Новые_квартиры":
-                        # Кастомный запрос для "Новые_квартиры" с фильтром по новой таблице
-                        query = '''
-                            SELECT * 
-                            FROM public."Новые_квартиры" nk
-                            WHERE 1=1
-                        '''
-                        params = []
-                        
-                        if new_selected_addresses:
-                            query += ' AND "Улица" IN %s'
-                            params.append(tuple(new_selected_addresses))
-                            
-                        df = pd.read_sql(query, conn, params=params if params else None)
-                    
                     else:
-                        # Стандартная обработка для других представлений
+                        query_params = []
                         query = f"SELECT * FROM public.{view}"
-                        df = pd.read_sql(query, conn)
-                        df = df.dropna(how="all")
 
-                    # Общая часть для всех представлений
-                    if df.empty:
-                        print(f"Представление {view} не вернуло данных.")
-                    else:
-                        df.to_excel(writer, sheet_name=view, index=False)
+                        query += " WHERE 1=1 "
+                        if view == "new_apart_all":
+                            if new_selected_addresses:
+                                placeholders = ", ".join(
+                                    ["%s"] * len(new_selected_addresses)
+                                )
+                                query += f" AND Новый_адрес IN ({placeholders})"
+                                query_params.extend(new_selected_addresses)
+                        elif view == 'where_not':
+                            if old_selected_addresses:
+                                placeholders = ", ".join(
+                                    ["%s"] * len(old_selected_addresses)
+                                )
+                                query += f' AND Старый_адрес IN ({placeholders})'
+                                query_params.extend(old_selected_addresses)
+                        else:
+                            if new_selected_addresses :
+                                placeholders = ", ".join(
+                                    ["%s"] * len(new_selected_addresses)
+                                )
+                                query += f" AND Новый_адрес IN ({placeholders})"
+                                query_params.extend(new_selected_addresses)
 
+                            if old_selected_addresses:
+                                placeholders = ", ".join(
+                                    ["%s"] * len(old_selected_addresses)
+                                )
+                                query += f' AND Старый_адрес IN ({placeholders})'
+                                query_params.extend(old_selected_addresses)
+
+                        print(f"Выполнение запроса для представления {view}")
+
+                        try:
+                            df = pd.read_sql(query, conn, params=query_params)
+                            df = df.dropna(how="all")
+                            df.to_excel(writer, sheet_name=view, index=False)
+                        except Exception as e:
+                            print(
+                                f"Ошибка выполнения запроса для представления {view}: {e}"
+                            )
     except Exception as e:
         print(f"Ошибка: {e}")
-
