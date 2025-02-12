@@ -45,7 +45,7 @@ class ApartmentRepository:
         if apart_type not in ApartType:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
-        table = "family_structure" if apart_type == "FamilyStructure" else "new_apart"
+        table = "old_apart" if apart_type == "OldApart" else "new_apart"
         query = f"""
             SELECT DISTINCT district 
             FROM {table}
@@ -61,7 +61,7 @@ class ApartmentRepository:
         if apart_type not in ApartType:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
-        table = "family_structure" if apart_type == "FamilyStructure" else "new_apart"
+        table = "old_apart" if apart_type == "OldApart" else "new_apart"
         placeholders, params = self._build_placeholders(districts, "district")
         query = f"""
             SELECT DISTINCT municipal_district
@@ -79,7 +79,7 @@ class ApartmentRepository:
         if apart_type not in ApartType:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
-        table = "family_structure" if apart_type == "FamilyStructure" else "new_apart"
+        table = "old_apart" if apart_type == "OldApart" else "new_apart"
         placeholders, params = self._build_placeholders(municipal_districts, "municipal_districts")
         query = f"""
             SELECT DISTINCT house_address
@@ -156,7 +156,7 @@ class ApartmentRepository:
         where_clause = " AND ".join(conditions) if conditions else "rn = 1"
 
         # Формируем запрос в зависимости от типа квартир
-        if apart_type == "FamilyStructure":
+        if apart_type == "OldApart":
             query = f"""
                 WITH ranked_apartments AS (
                     SELECT
@@ -172,17 +172,15 @@ class ApartmentRepository:
                         room_count,
                         type_of_settlement,
                         status.status,
-                        family_structure.notes,
-                        family_apartment_needs_id,
-                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
+                        o.notes,
+                        affair_id,
+                        ROW_NUMBER() OVER (PARTITION BY o.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC) AS rn
                     FROM
-                        family_structure
+                        old_apart oa
                     LEFT JOIN
-                        family_apartment_needs USING (affair_id)
+                        offer o USING (affair_id)
                     LEFT JOIN
-                        offer USING (family_apartment_needs_id)
-                    LEFT JOIN
-                        status ON offer.status_id = status.status_id
+                        status ON o.status_id = status.status_id
                 )
                 SELECT *
                 FROM ranked_apartments

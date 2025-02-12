@@ -7,7 +7,7 @@ import { HOSTLINK } from "..";
 
 const APART_TYPES = {
   NEW: "NewApartment",
-  OLD: "FamilyStructure"
+  OLD: "OldApart"
 };
 
 const paramsSerializer = {

@@ -88,3 +88,166 @@ ORDER BY house_address;
 2025-02-11 14:23:46,092 - INFO - Excel С„Р°Р№Р» './uploads/container_46.xlsx' СЃРѕР·РґР°РЅ.
 2025-02-11 14:24:10,693 - INFO - Excel С„Р°Р№Р» './uploads/container_46.xlsx' СЃРѕР·РґР°РЅ.
 2025-02-11 14:27:00,721 - INFO - Excel С„Р°Р№Р» './uploads/container_46.xlsx' СЃРѕР·РґР°РЅ.
+2025-02-12 19:09:13,935 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-02-12 19:09:13,935 - INFO - Params: {}
+2025-02-12 19:09:14,326 - ERROR - Error executing query: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedTableError'>: отношение "old_apart" не существует
+[SQL: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        ]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-02-12 19:09:50,907 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-02-12 19:09:50,907 - INFO - Params: {}
+2025-02-12 19:09:59,722 - INFO - Executing query: 
+            SELECT DISTINCT municipal_district
+            FROM new_apart
+            WHERE district IN (:district_0)
+            ORDER BY municipal_district
+        
+2025-02-12 19:09:59,722 - INFO - Params: {'district_0': 'Восточный АО'}
+2025-02-12 19:10:05,789 - INFO - Executing query: 
+            SELECT DISTINCT house_address
+            FROM new_apart
+            WHERE municipal_district IN (:municipal_districts_0)
+            ORDER BY house_address
+        
+2025-02-12 19:10:05,789 - INFO - Params: {'municipal_districts_0': 'Богородское'}
+2025-02-12 19:10:16,511 - INFO - Executing query: 
+                WITH ranked_apartments AS (
+                    SELECT 
+                        house_address, 
+                        apart_number, 
+                        district, 
+                        municipal_district,
+                        floor,
+                        full_living_area,
+                        total_living_area, 
+                        living_area, 
+                        room_count, 
+                        type_of_settlement, 
+                        status.status AS status, 
+                        new_apart.notes, 
+                        new_apart.new_apart_id,
+                        ROW_NUMBER() OVER (PARTITION BY new_apart.new_apart_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
+                    FROM 
+                        new_apart
+                    LEFT JOIN 
+                        offer USING (new_apart_id)
+                    LEFT JOIN 
+                        status ON offer.status_id = status.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE house_address IN (:house_address_0) AND room_count IN (:room_0) AND rn = 1
+                ORDER BY full_living_area
+            
+2025-02-12 19:10:16,512 - INFO - Params: {'house_address_0': 'Гражданская 3-я ул., д.21', 'room_0': 1}
+2025-02-12 19:10:16,534 - ERROR - Error executing query: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedColumnError'>: в таблице справа нет столбца "new_apart_id", указанного в предложении USING
+[SQL: 
+                WITH ranked_apartments AS (
+                    SELECT 
+                        house_address, 
+                        apart_number, 
+                        district, 
+                        municipal_district,
+                        floor,
+                        full_living_area,
+                        total_living_area, 
+                        living_area, 
+                        room_count, 
+                        type_of_settlement, 
+                        status.status AS status, 
+                        new_apart.notes, 
+                        new_apart.new_apart_id,
+                        ROW_NUMBER() OVER (PARTITION BY new_apart.new_apart_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
+                    FROM 
+                        new_apart
+                    LEFT JOIN 
+                        offer USING (new_apart_id)
+                    LEFT JOIN 
+                        status ON offer.status_id = status.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE house_address IN ($1) AND room_count IN ($2) AND rn = 1
+                ORDER BY full_living_area
+            ]
+[parameters: ('Гражданская 3-я ул., д.21', 1)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-02-12 19:14:09,386 - INFO - Executing query: 
+                WITH ranked_apartments AS (
+                    SELECT
+                        house_address,
+                        apart_number,
+                        district,
+                        municipal_district,
+                        floor,
+                        fio,
+                        full_living_area,
+                        total_living_area,
+                        living_area,
+                        room_count,
+                        type_of_settlement,
+                        status.status,
+                        family_structure.notes,
+                        family_apartment_needs_id,
+                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
+                    FROM
+                        family_structure
+                    LEFT JOIN
+                        family_apartment_needs USING (affair_id)
+                    LEFT JOIN
+                        offer USING (family_apartment_needs_id)
+                    LEFT JOIN
+                        status ON offer.status_id = status.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE house_address IN (:house_address_0) AND room_count IN (:room_0) AND rn = 1
+                ORDER BY full_living_area
+            
+2025-02-12 19:14:09,386 - INFO - Params: {'house_address_0': 'Гражданская 3-я ул., д.21', 'room_0': 1}
+2025-02-12 19:14:09,420 - ERROR - Error executing query: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedTableError'>: отношение "family_structure" не существует
+[SQL: 
+                WITH ranked_apartments AS (
+                    SELECT
+                        house_address,
+                        apart_number,
+                        district,
+                        municipal_district,
+                        floor,
+                        fio,
+                        full_living_area,
+                        total_living_area,
+                        living_area,
+                        room_count,
+                        type_of_settlement,
+                        status.status,
+                        family_structure.notes,
+                        family_apartment_needs_id,
+                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
+                    FROM
+                        family_structure
+                    LEFT JOIN
+                        family_apartment_needs USING (affair_id)
+                    LEFT JOIN
+                        offer USING (family_apartment_needs_id)
+                    LEFT JOIN
+                        status ON offer.status_id = status.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE house_address IN ($1) AND room_count IN ($2) AND rn = 1
+                ORDER BY full_living_area
+            ]
+[parameters: ('Гражданская 3-я ул., д.21', 1)]
+(Background on this error at: https://sqlalche.me/e/20/f405)

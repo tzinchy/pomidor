@@ -80,15 +80,14 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
 
     # Основной запрос
     query = """
-        SELECT ol.house_address, ol.apart_number, ol.type_of_settlement, ol.kpu_number, new_apart_id, 
+        SELECT o.house_address, o.apart_number, o.type_of_settlement, o.kpu_number, new_apart_id, 
                n.house_address, n.apart_number, n.full_living_area, n.total_living_area, n.room_count, 
                n.living_area, n.floor, cin_address, cin_schedule, dep_schedule, phone_osmotr, phone_otvet,  nd.unom, start_date, cin.otdel
         FROM offer o
-        JOIN family_apartment_needs nd USING (family_apartment_needs_id)
-        JOIN family_structure ol USING (affair_id)
+        JOIN old_apart
         JOIN new_apart n USING (new_apart_id)
-        JOIN cin ON cin.old_address = ol.house_address
-        WHERE ol.is_queue <> 1
+        JOIN cin ON cin.old_address = o.house_address
+        WHERE o.is_queue <> 1
     """
     params = []
 

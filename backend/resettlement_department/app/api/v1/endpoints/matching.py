@@ -26,12 +26,13 @@ async def get_new_apartment_house_addresses():
 async def start_matching(
     requirements: MatchingSchema 
 ): 
-    matching_result = match_new_apart_to_family_batch(new_selected_districts=requirements.new_apartment_district,
-                                    old_selected_districts=requirements.family_structure_municipal_district,
-                                    new_selected_areas=requirements.family_structure_municipal_district,
-                                    old_selected_areas=requirements.family_structure_municipal_district,
+    matching_result = match_new_apart_to_family_batch(
+                                    new_selected_districts=requirements.new_apartment_district,
+                                    old_selected_districts=requirements.old_apartment_district,
+                                    new_selected_areas=requirements.new_apartment_municipal_district,
+                                    old_selected_areas=requirements.old_apartment_district,
                                     new_selected_addresses=requirements.new_apartment_house_address,
-                                    old_selected_addresses=requirements.family_structure_house_address, 
+                                    old_selected_addresses=requirements.old_apartment_house_address, 
                                     date=requirements.is_date)
     if matching_result == 'ok':
         return {'response' : 'Подбор успешно произведен'}

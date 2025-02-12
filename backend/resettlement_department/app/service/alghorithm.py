@@ -2,7 +2,7 @@ import psycopg2
 import pandas as pd
 from core.config import settings
 from datetime import datetime
-
+import json
 
 def get_db_connection():
     return psycopg2.connect(
@@ -32,34 +32,32 @@ def match_new_apart_to_family_batch(
                 # Запрос для "старых квартир" (потребностей семей)
                 print(old_selected_addresses, new_selected_addresses)
                 family_query = """
-                    SELECT 
-                        fam.family_apartment_needs_id, 
-                        fs.kpu_number,
-                        fs.district, 
-                        fs.municipal_district, 
-                        fs.room_count, 
-                        fs.full_living_area, 
-                        fs.total_living_area, 
-                        fs.living_area, 
-                        fs.is_special_needs_marker, 
-                        fs.min_floor, 
-                        fs.max_floor, 
-                        fs.buying_date,
+                        SELECT 
+                        o.affair_id, 
+                        o.kpu_number,
+                        o.district, 
+                        o.municipal_district, 
+                        o.room_count, 
+                        o.full_living_area, 
+                        o.total_living_area, 
+                        o.living_area, 
+                        o.is_special_needs_marker, 
+                        o.min_floor, 
+                        o.max_floor, 
+                        o.buying_date,
                         ARRAY_AGG(EXTRACT(YEAR FROM AGE(fm.date_of_birth))) AS ages,
-                        count(fam.family_apartment_needs_id) AS members_amount,
+                        count(o.affair_id) AS members_amount,
                         MAX(EXTRACT(YEAR FROM AGE(fm.date_of_birth::timestamp with time zone))) AS oldest,
-                        fs.is_queue,
-                        fs.queue_square
+                        o.is_queue,
+                        o.queue_square
                     FROM 
-                        public.family_apartment_needs fam
+						old_apart o 
                     LEFT JOIN 
-                        public.family_structure fs ON fam.affair_id = fs.affair_id
-                    LEFT JOIN 
-                        public.family_member fm ON fs.kpu_number = fm.kpu_number 
+                        family_member fm ON o.kpu_number = fm.kpu_number 
                     WHERE 
-                        fam.family_apartment_needs_id NOT IN (
-                            SELECT family_apartment_needs_id  
-                            FROM  public.offer
+                        o.affair_id NOT IN (
+                            SELECT affair_id
+                            FROM  offer
                         ) 
                 """
 
@@ -67,44 +65,44 @@ def match_new_apart_to_family_batch(
 
                 # Дополнительные фильтры
                 if old_selected_addresses:
-                    family_query += " AND fs.house_address IN %s"
+                    family_query += " AND o.house_address IN %s"
                     old_apart_query_params.append(tuple(old_selected_addresses))
 
                 if old_selected_districts:
-                    family_query += " AND fs.district IN %s"
+                    family_query += " AND o.district IN %s"
                     old_apart_query_params.append(tuple(old_selected_districts))
 
                 if old_selected_areas:
-                    family_query += " AND fs.municipal_district IN %s"
+                    family_query += " AND o.municipal_district IN %s"
                     old_apart_query_params.append(tuple(old_selected_areas))
 
                 if date:
-                    family_query += " AND fam.created_at = (SELECT MAX(created_at) FROM public.family_apartment_needs)"
+                    family_query += " AND o.created_at = (SELECT MAX(created_at) FROM public.old_apart)"
                 
                 # Добавляем секцию GROUP BY
                 family_query += """
-                    GROUP BY 
-                        fam.family_apartment_needs_id, 
-                        fs.kpu_number, 
-                        fs.district, 
-                        fs.municipal_district, 
-                        fs.room_count, 
-                        fs.full_living_area, 
-                        fs.total_living_area, 
-                        fs.living_area, 
-                        fs.is_special_needs_marker, 
-                        fs.min_floor, 
-                        fs.max_floor, 
-                        fs.buying_date, 
-                        fs.is_queue, 
-                        fs.queue_square
+						GROUP BY 
+                        o.affair_id, 
+                        o.kpu_number, 
+                        o.district, 
+                        o.municipal_district, 
+                        o.room_count, 
+                        o.full_living_area, 
+                        o.total_living_area, 
+                        o.living_area, 
+                        o.is_special_needs_marker, 
+                        o.min_floor, 
+                        o.max_floor, 
+                        o.buying_date, 
+                        o.is_queue, 
+                        o.queue_square
                     ORDER BY 
-                        fs.room_count ASC, 
-                        (fs.full_living_area + fs.living_area + (COUNT(fm.family_member_id) / 3.9)) ASC, 
+                        o.room_count ASC, 
+                        (o.full_living_area + o.living_area + (COUNT(fm.family_member_id) / 3.9)) ASC, 
                         MAX(EXTRACT(YEAR FROM AGE(fm.date_of_birth::timestamp with time zone))) DESC,
-                        fs.living_area ASC,  
-                        fs.full_living_area ASC, 
-                        fs.total_living_area ASC;
+                       	o.living_area ASC,  
+                        o.full_living_area ASC, 
+                        o.total_living_area ASC;
                 """
 
                 # Выполнение запроса
@@ -117,9 +115,30 @@ def match_new_apart_to_family_batch(
 
                 # Запрос для новых квартир
                 new_apart_query = """
-                    SELECT new_apart_id, district, municipal_district, house_address, apart_number, floor, room_count, full_living_area, total_living_area, living_area, for_special_needs_marker                
-                    FROM public.new_apart
-                    WHERE NOT EXISTS (SELECT 1 FROM offer WHERE offer.new_apart_id = new_apart.new_apart_id)
+                SELECT 
+                    new_apart_id, 
+                    district, 
+                    municipal_district, 
+                    house_address, 
+                    apart_number, 
+                    floor, 
+                    room_count, 
+                    full_living_area, 
+                    total_living_area, 
+                    living_area, 
+                    for_special_needs_marker                
+                FROM 
+                    public.new_apart
+                WHERE 
+                    NOT EXISTS (
+                        SELECT 1 
+                        FROM offer 
+                        WHERE EXISTS (
+                            SELECT 1
+                            FROM jsonb_each(offer.new_aparts::jsonb) AS each_entry
+                            WHERE (each_entry.value->>'new_apart_id')::int = new_apart.new_apart_id
+                        )
+                    )
                 """
 
                 new_apart_query_params = []
@@ -149,7 +168,7 @@ def match_new_apart_to_family_batch(
                 
                 # --- Создание DataFrame и расчет рангов ---
                 df_old_apart = pd.DataFrame(old_aparts,columns=[
-                        "family_apartment_needs_id", "kpu_number", "district", "municipal_district", "room_count", "full_living_area",
+                        "affair_id", "kpu_number", "district", "municipal_district", "room_count", "full_living_area",
                         "total_living_area", "living_area", "is_special_needs_marker", "min_floor", "max_floor", "buying_date", 
                         "ages", "members_amount", "oldest", "is_queue", "queue_square",
                     ],
@@ -209,16 +228,15 @@ def match_new_apart_to_family_batch(
                 df_combined["rank_group"] = df_combined["rank"].astype(int)
 
                 # Обновляем ранги в базе данных для старых и новых квартир
-                old_apart_rank_update = list(zip(df_old_apart["rank"], df_old_apart["family_apartment_needs_id"]))
+                old_apart_rank_update = list(zip(df_old_apart["rank"], df_old_apart["affair_id"]))
                 new_apart_rank_update = list(zip(df_new_apart["rank"], df_new_apart["new_apart_id"]))
 
                 cursor.executemany(
-                    """UPDATE public.family_apartment_needs
+                    """UPDATE public.old_apart
                                     SET rank = %s
-                                    WHERE family_apartment_needs_id = %s""",
+                                    WHERE affair_id = %s""",
                     old_apart_rank_update,
                 )
-                conn.commit()
                 cursor.executemany(
                     """UPDATE public.new_apart
                                     SET rank = %s
@@ -226,13 +244,11 @@ def match_new_apart_to_family_batch(
                                 """,
                     new_apart_rank_update,
                 )
-                conn.commit()
 
                 # Prepare lists of IDs directly from the result sets
                 old_apart_ids_for_history = [row[0] for row in old_aparts]
                 new_apart_ids_for_history = [row[0] for row in new_aparts]
 
-                # Выполнение запроса для получения всех данных из таблицы history
                 cursor.execute("SELECT history_id, old_house_addresses, new_house_addresses FROM public.history")
                 history_data = cursor.fetchall()
                 # Флаг для проверки наличия повторяющихся записей
@@ -240,7 +256,7 @@ def match_new_apart_to_family_batch(
 
                 if date or history_data is None:
                     cursor.execute(
-                        "SELECT DISTINCT house_address FROM public.family_structure WHERE affair_id IN (SELECT affair_id FROM public.family_apartment_needs WHERE created_at = (SELECT MAX(created_at) FROM public.family_apartment_needs))"
+                        "SELECT DISTINCT house_address FROM public.old_apart WHERE affair_id IN (SELECT affair_id FROM public.old_apart WHERE created_at = (SELECT MAX(created_at) FROM public.old_apart))"
                     )
                     old_selected_addresses = [r[0] for r in cursor.fetchall()]
                     cursor.execute(
@@ -274,9 +290,9 @@ def match_new_apart_to_family_batch(
                     if old_apart_ids_for_history:
                         cursor.execute(
                             """
-                            UPDATE public.family_apartment_needs
+                            UPDATE public.old_apart
                             SET history_id = %s
-                            WHERE family_apartment_needs_id IN %s
+                            WHERE affair_id IN %s
                         """,
                             (last_history_id, tuple(old_apart_ids_for_history)),
                         )
@@ -299,7 +315,7 @@ def match_new_apart_to_family_batch(
                 cannot_offer_to_insert = []
 
                 old_apart_ranks = df_old_apart.groupby("room_count")["rank"].max().to_dict()
-                old_apart_count = df_old_apart.groupby("room_count")["family_apartment_needs_id"].count().to_dict()
+                old_apart_count = df_old_apart.groupby("room_count")["affair_id"].count().to_dict()
                 new_apart_count = df_new_apart.groupby("room_count")["new_apart_id"].count().to_dict()
                 
 
@@ -316,7 +332,7 @@ def match_new_apart_to_family_batch(
 
                         print("DEFICIT")
                         for _, old_apart in df_old_apart_reversed[df_old_apart_reversed["room_count"] == i].iterrows():
-                            old_apart_id = int(old_apart["family_apartment_needs_id"])
+                            old_apart_id = int(old_apart["affair_id"])
                             # Определяем условие по этажу
                             floor_condition = (
                                 ((df_new_apart["floor"] >= (old_apart["min_floor"] - 2)) & 
@@ -483,7 +499,7 @@ def match_new_apart_to_family_batch(
                         df_new_apart_second
 
                         for _, old_apart in df_old_apart[df_old_apart["room_count"] == i].iterrows():
-                            old_apart_id = int(old_apart["family_apartment_needs_id"])
+                            old_apart_id = int(old_apart["affair_id"])
                             if old_apart_id not in old_apart_list:
                                 continue
                             # Определяем условие по этажу
@@ -612,7 +628,7 @@ def match_new_apart_to_family_batch(
                         for _, old_apart in df_old_apart[
                             df_old_apart["room_count"] == i
                         ].iterrows():
-                            old_apart_id = int(old_apart["family_apartment_needs_id"])
+                            old_apart_id = int(old_apart["affair_id"])
                             # Определяем условие по этажу
                             floor_condition = ((
                                     (df_new_apart["floor"]>= (old_apart["min_floor"] - 2))& 
@@ -790,14 +806,62 @@ def match_new_apart_to_family_batch(
                 print(offers_to_insert)
 
                 # --- Обновление базы данных ---
+                # Для каждой пары old_apart_id и new_apart_id
                 for old_apart_id, new_apart_id in offers_to_insert:
+                    # Проверяем существование записи для данного old_apart_id
                     cursor.execute(
-                        """
-                        INSERT INTO public.offer (family_apartment_needs_id, new_apart_id, status_id) 
-                        VALUES (%s, %s, 7)
-                        """,
-                        (old_apart_id, new_apart_id),
+                        "SELECT new_aparts FROM public.offer WHERE affair_id = %s",
+                        (old_apart_id,)
                     )
+                    result = cursor.fetchone()
+                    
+                    current_new_aparts = {}
+                    if result and result[0]:
+                        # Десериализуем существующий JSON, если он есть
+                        current_new_aparts = json.loads(result[0])
+                        # Определяем следующий ключ
+                        keys = [int(k) for k in current_new_aparts.keys()]
+                        next_key = max(keys) + 1 if keys else 1
+                    else:
+                        next_key = 1  # Начинаем с 1, если запись новая
+                    
+                    # Текущее время для временных меток
+                    current_time = datetime.now().isoformat()
+                    
+                    # Формируем новый элемент
+                    new_entry = {
+                        "new_apart_id": new_apart_id,
+                        "status": 7,  # Укажите нужный статус
+                        "created_at": current_time,
+                        "updated_at": current_time
+                    }
+                    
+                    # Добавляем элемент в new_aparts
+                    current_new_aparts[str(next_key)] = new_entry
+                    
+                    # Сериализуем обратно в JSON
+                    new_aparts_json = json.dumps(current_new_aparts, ensure_ascii=False)
+                    
+                    if result:
+                        # Обновляем существующую запись
+                        cursor.execute(
+                            """
+                            UPDATE public.offer
+                            SET new_aparts = %s
+                            WHERE affair_id = %s
+                            """,
+                            (new_aparts_json, old_apart_id)
+                        )
+                    else:
+                        # Вставляем новую запись
+                        cursor.execute(
+                            """
+                            INSERT INTO public.offer (affair_id, new_aparts, status_id)
+                            VALUES (%s, %s, 7)
+                            """,
+                            (old_apart_id, new_aparts_json)
+                        )
+
                 conn.commit()
                 return 'ok'
     except Exception as e:
