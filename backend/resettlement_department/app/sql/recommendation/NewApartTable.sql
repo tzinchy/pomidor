@@ -1,27 +1,30 @@
 WITH ranked_apartments AS (
     SELECT 
-        house_address, 
-        apart_number, 
-        district, 
-        municipal_district,
-        floor,
-        full_living_area,
-        total_living_area, 
-        living_area, 
-        room_count, 
-        type_of_settlement, 
-        status.status AS status, 
-        new_apart.notes, 
-        new_apart.new_apart_id,
-        ROW_NUMBER() OVER (PARTITION BY new_apart.new_apart_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
+        na.house_address, 
+        na.apart_number, 
+        na.district, 
+        na.municipal_district,
+        na.floor,
+        na.full_living_area,
+        na.total_living_area, 
+        na.living_area, 
+        na.room_count, 
+        na.type_of_settlement, 
+        na.notes, 
+        na.new_apart_id,
+        s.status AS status,
+        ROW_NUMBER() OVER (
+            PARTITION BY na.new_apart_id 
+            ORDER BY o.sentence_date DESC NULLS LAST, o.answer_date DESC NULLS LAST
+        ) AS rn
     FROM 
-        new_apart
+        new_apart na
     LEFT JOIN 
-        offer USING (new_apart_id)
+        offer o ON na.new_apart_id = (o.new_aparts::jsonb ->> 'new_apart_id')::int
     LEFT JOIN 
-        status ON offer.status_id = status.status_id
+        status s ON o.status_id = s.status_id
 )
 SELECT *
 FROM ranked_apartments
-WHERE {where_clause}
-ORDER BY full_living_area
+WHERE 1=1 and rn = 1 and {where_clause}
+ORDER BY full_living_area;

@@ -112,33 +112,29 @@ def match_new_apart_to_family_batch(
                 if not old_aparts:
                     return ("No old apartments found.")
                     
-
                 # Запрос для новых квартир
                 new_apart_query = """
                 SELECT 
-                    new_apart_id, 
-                    district, 
-                    municipal_district, 
-                    house_address, 
-                    apart_number, 
-                    floor, 
-                    room_count, 
-                    full_living_area, 
-                    total_living_area, 
-                    living_area, 
-                    for_special_needs_marker                
+                    na.new_apart_id, 
+                    na.district, 
+                    na.municipal_district, 
+                    na.house_address, 
+                    na.apart_number, 
+                    na.floor, 
+                    na.room_count, 
+                    na.full_living_area, 
+                    na.total_living_area, 
+                    na.living_area, 
+                    na.for_special_needs_marker                
                 FROM 
-                    public.new_apart
+                    public.new_apart na
                 WHERE 
                     NOT EXISTS (
                         SELECT 1 
-                        FROM offer 
-                        WHERE EXISTS (
-                            SELECT 1
-                            FROM jsonb_each(offer.new_aparts::jsonb) AS each_entry
-                            WHERE (each_entry.value->>'new_apart_id')::int = new_apart.new_apart_id
-                        )
-                    )
+                        FROM offer o
+                        WHERE 
+                            o.new_aparts::jsonb ? (na.new_apart_id::text) -- Проверяем существование ключа
+                    );
                 """
 
                 new_apart_query_params = []
@@ -817,27 +813,13 @@ def match_new_apart_to_family_batch(
                     
                     current_new_aparts = {}
                     if result and result[0]:
-                        # Десериализуем существующий JSON, если он есть
+                        # Десериализуем существующий JSON
                         current_new_aparts = json.loads(result[0])
-                        # Определяем следующий ключ
-                        keys = [int(k) for k in current_new_aparts.keys()]
-                        next_key = max(keys) + 1 if keys else 1
-                    else:
-                        next_key = 1  # Начинаем с 1, если запись новая
                     
-                    # Текущее время для временных меток
-                    current_time = datetime.now().isoformat()
-                    
-                    # Формируем новый элемент
-                    new_entry = {
-                        "new_apart_id": new_apart_id,
-                        "status": 7,  # Укажите нужный статус
-                        "created_at": current_time,
-                        "updated_at": current_time
+                    # Добавляем/обновляем запись с ключом new_apart_id
+                    current_new_aparts[str(new_apart_id)] = {
+                        "status_id": 7  # Укажите нужный статус
                     }
-                    
-                    # Добавляем элемент в new_aparts
-                    current_new_aparts[str(next_key)] = new_entry
                     
                     # Сериализуем обратно в JSON
                     new_aparts_json = json.dumps(current_new_aparts, ensure_ascii=False)
@@ -845,20 +827,13 @@ def match_new_apart_to_family_batch(
                     if result:
                         # Обновляем существующую запись
                         cursor.execute(
-                            """
-                            UPDATE public.offer
-                            SET new_aparts = %s
-                            WHERE affair_id = %s
-                            """,
+                            "UPDATE public.offer SET new_aparts = %s WHERE affair_id = %s",
                             (new_aparts_json, old_apart_id)
                         )
                     else:
                         # Вставляем новую запись
                         cursor.execute(
-                            """
-                            INSERT INTO public.offer (affair_id, new_aparts, status_id)
-                            VALUES (%s, %s, 7)
-                            """,
+                            "INSERT INTO public.offer (affair_id, new_aparts, status_id) VALUES (%s, %s, 7)",
                             (old_apart_id, new_aparts_json)
                         )
 

@@ -153,7 +153,7 @@ class ApartmentRepository:
         conditions.append("rn = 1")
 
         # Собираем полное условие WHERE
-        where_clause = " AND ".join(conditions) if conditions else "rn = 1"
+        where_clause = " AND ".join(conditions)
 
         # Формируем запрос в зависимости от типа квартир
         if apart_type == "OldApart":
@@ -174,7 +174,7 @@ class ApartmentRepository:
                         status.status,
                         o.notes,
                         affair_id,
-                        ROW_NUMBER() OVER (PARTITION BY o.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC) AS rn
+                        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC) AS rn
                     FROM
                         old_apart oa
                     LEFT JOIN
@@ -184,40 +184,53 @@ class ApartmentRepository:
                 )
                 SELECT *
                 FROM ranked_apartments
-                WHERE {where_clause}
+                WHERE 1=1 and {where_clause}
                 ORDER BY full_living_area
             """
         else:
             query = f"""
-                WITH ranked_apartments AS (
-                    SELECT 
-                        house_address, 
-                        apart_number, 
-                        district, 
-                        municipal_district,
-                        floor,
-                        full_living_area,
-                        total_living_area, 
-                        living_area, 
-                        room_count, 
-                        type_of_settlement, 
-                        status.status AS status, 
-                        new_apart.notes, 
-                        new_apart.new_apart_id,
-                        ROW_NUMBER() OVER (PARTITION BY new_apart.new_apart_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
-                    FROM 
-                        new_apart
-                    LEFT JOIN 
-                        offer USING (new_apart_id)
-                    LEFT JOIN 
-                        status ON offer.status_id = status.status_id
-                )
-                SELECT *
-                FROM ranked_apartments
-                WHERE {where_clause}
-                ORDER BY full_living_area
-            """
 
+				WITH clr_dt AS (SELECT 
+                        affair_id, 
+                        (KEY)::int AS new_apart_id, 
+                        sentence_date, 
+                        answer_date, 
+                        (VALUE->'status_id')::int AS status_id 
+                    FROM 
+                        offer, 
+                        jsonb_each(new_aparts)),
+		 ranked_apartments AS (
+                SELECT 
+                    na.house_address, 
+                    na.apart_number, 
+                    na.district, 
+                    na.municipal_district,
+                    na.floor,
+                    na.full_living_area,
+                    na.total_living_area, 
+                    na.living_area, 
+                    na.room_count, 
+                    na.type_of_settlement, 
+                    na.notes, 
+                    na.new_apart_id,
+                    s.status AS status,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY na.new_apart_id 
+                        ORDER BY o.sentence_date DESC, o.answer_date DESC 
+                    ) AS rn
+                FROM 
+                    new_apart na
+                LEFT JOIN 
+					clr_dt as o on o.new_apart_id = na.new_apart_id
+                LEFT JOIN 
+                    status s ON o.status_id = s.status_id
+            )
+            SELECT *
+            FROM ranked_apartments
+            WHERE 1=1 and {where_clause}
+            ORDER BY status;
+            """
+        print(query, params)
         result = await self._execute_query(query, params)
         print(len(result))
         return [dict(row._mapping) for row in result]
@@ -230,125 +243,198 @@ class ApartmentRepository:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
         if apart_type == "NewApartment":
-            query = f"""
-                WITH old_apartment_list AS (
+            query = f'''WITH unnset_offer AS (
                     SELECT 
-                        na.new_apart_id,
-                        JSON_AGG(
-                            JSON_BUILD_OBJECT(
-                                'house_address', fs.house_address,
-                                'apart_number', fs.apart_number,
-                                'district', fs.district,
-                                'municipal_district', fs.municipal_district,
-                                'full_living_area', fs.full_living_area,
-                                'total_living_area', fs.total_living_area,
-                                'living_area', fs.living_area,
-                                'room_count', fs.room_count,
-                                'type_of_settlement', fs.type_of_settlement,
-                                'notes', o.notes,
-                                'status', s.status,
-                                'sentence_date', o.sentence_date :: DATE,
-                                'answer_date', o.answer_date :: DATE
-                            )
-                        ) FILTER (WHERE fs.house_address IS NOT NULL OR fs.apart_number IS NOT NULL OR fs.district IS NOT NULL OR fs.municipal_district IS NOT NULL 
-                        OR fs.full_living_area IS NOT NULL OR fs.total_living_area IS NOT NULL OR fs.living_area IS NOT NULL 
-                        OR fs.room_count IS NOT NULL OR fs.type_of_settlement IS NOT NULL OR o.notes IS NOT NULL 
-                        OR s.status IS NOT NULL OR o.sentence_date IS NOT NULL OR o.answer_date IS NOT NULL) AS old_apartments
+                        affair_id, 
+                        (KEY)::int AS new_apart_id, 
+                        sentence_date, 
+                        answer_date, 
+                        (VALUE->'status_id')::int AS status_id 
                     FROM 
-                        new_apart na
-                    LEFT JOIN 
-                        offer o USING (new_apart_id)
-                    LEFT JOIN 
-                        family_apartment_needs fan USING (family_apartment_needs_id)
-                    LEFT JOIN 
-                        family_structure fs USING (affair_id)
-                    LEFT JOIN 
-                        status s ON o.status_id = s.status_id
-                    GROUP BY 
-                        na.new_apart_id
+                        offer, 
+                        jsonb_each(new_aparts)
+                ),
+                lft AS (
+                    SELECT 
+                        o.affair_id,
+                        o.new_apart_id,
+                        na.house_address,
+                        na.apart_number,
+                        na.district,
+                        na.municipal_district,
+                        na.full_living_area,
+                        na.total_living_area,
+                        na.living_area,
+                        na.room_count,
+                        na.type_of_settlement,
+                        na.notes,
+                        s.status,
+                        o.sentence_date,
+                        o.answer_date
+                    FROM 
+                        unnset_offer o 
+                        LEFT JOIN new_apart na USING (new_apart_id)
+                        LEFT JOIN status s ON o.status_id = s.status_id
+                ),
+                old_apart_data AS (
+                    SELECT 
+                        oa.affair_id,
+                        oa.house_address,
+                        oa.apart_number,
+                        oa.district,
+                        oa.municipal_district,
+                        oa.full_living_area,
+                        oa.total_living_area,
+                        oa.living_area,
+                        oa.room_count,
+                        oa.type_of_settlement,
+                        o.sentence_date,
+                        o.answer_date
+                    FROM 
+                        old_apart oa
+                        LEFT JOIN unnset_offer o ON oa.affair_id = o.affair_id
                 )
                 SELECT 
-                    na.new_apart_id,
+                                    na.new_apart_id,
+                                            na.house_address,
+                                            na.apart_number,
+                                            na.district,
+                                            na.municipal_district,
+                                            na.full_living_area,
+                                            na.total_living_area,
+                                            na.living_area,
+                                            na.room_count,
+                        jsonb_agg(
+                            jsonb_build_object(
+                                'house_address', oa.house_address,
+                                'apart_number', oa.apart_number,
+                                'district', oa.district,
+                                'municipal_district', oa.municipal_district,
+                                'full_living_area', oa.full_living_area,
+                                'total_living_area', oa.total_living_area,
+                                'living_area', oa.living_area,
+                                'room_count', oa.room_count,
+                                'type_of_settlement', oa.type_of_settlement,
+                                'sentence_date', oa.sentence_date,
+                                'answer_date', oa.answer_date
+                            ) ORDER BY 
+                                oa.sentence_date DESC NULLS LAST, 
+                                oa.answer_date DESC NULLS LAST
+                        )
+                    AS old_apartments
+                FROM 
+                    lft na
+                    LEFT JOIN old_apart_data oa ON na.affair_id = oa.affair_id
+                    where new_apart_id = {apartment_id} 
+                GROUP BY 
+                                        na.new_apart_id,
+                                            na.house_address,
+                                            na.apart_number,
+                                            na.district,
+                                            na.municipal_district,
+                                            na.full_living_area,
+                                            na.total_living_area,
+                                            na.living_area,
+                                            na.room_count
+                ORDER BY 
+                    na.new_apart_id;'''
+        elif apart_type == "OldApart":
+            query = f'''WITH unnset_offer AS (
+                SELECT 
+                    affair_id, 
+                    (KEY)::int AS new_apart_id, 
+                    sentence_date, 
+                    answer_date, 
+                    (VALUE->'status_id')::int AS status_id 
+                FROM 
+                    offer, 
+                    jsonb_each(new_aparts)
+            ),
+            lft AS (
+                SELECT 
+                    o.affair_id,
                     na.house_address,
-                    na.apart_number ,
-                    na.district ,
-                    na.municipal_district ,
-                    na.full_living_area  ,
-                    na.total_living_area ,
-                    na.living_area ,
-                    na.room_count ,
+                    na.apart_number,
+                    na.district,
+                    na.municipal_district,
+                    na.full_living_area,
+                    na.total_living_area,
+                    na.living_area,
+                    na.room_count,
                     na.type_of_settlement,
-                    na.notes ,
-                    oal.old_apartments
+                    na.notes,
+                    s.status,
+                    o.sentence_date,
+                    o.answer_date
                 FROM 
-                    new_apart na
-                LEFT JOIN 
-                    old_apartment_list oal ON na.new_apart_id = oal.new_apart_id
-                WHERE
-                    na.new_apart_id = {apartment_id}
-                ORDER BY 
-                    na.new_apart_id;
-            """
-        elif apart_type == "FamilyStructure":
-            query = f"""
-                WITH new_apartment_list AS (
-                    SELECT 
-                        o.family_apartment_needs_id,
-                        JSON_AGG(
-                            JSON_BUILD_OBJECT(
-                                'house_address', na.house_address,
-                                'apart_number', na.apart_number,
-                                'district', na.district,
-                                'municipal_district', na.municipal_district,
-                                'full_living_area', na.full_living_area,
-                                'total_living_area', na.total_living_area,
-                                'living_area', na.living_area,
-                                'room_count', na.room_count,
-                                'type_of_settlement', na.type_of_settlement,
-                                'notes', na.notes,
-                                'status', COALESCE(s.status, '?'),
-                                'sentence_date', o.sentence_date :: DATE,
-                                'answer_date', o.answer_date :: DATE
-                            )
-                        ) FILTER (WHERE na.house_address IS NOT NULL OR na.apart_number IS NOT NULL OR na.district IS NOT NULL OR na.municipal_district IS NOT NULL 
-                        OR na.full_living_area IS NOT NULL OR na.total_living_area IS NOT NULL OR na.living_area IS NOT NULL 
-                        OR na.room_count IS NOT NULL OR na.type_of_settlement IS NOT NULL OR na.notes IS NOT NULL 
-                        OR s.status IS NOT NULL OR o.sentence_date IS NOT NULL OR o.answer_date IS NOT NULL) AS new_apartments
-                    FROM 
-                        offer o
-                    LEFT JOIN 
-                        new_apart na ON o.new_apart_id = na.new_apart_id
-                    LEFT JOIN 
-                        status s ON o.status_id = s.status_id
-                    GROUP BY 
-                        o.family_apartment_needs_id
-                )
+                    unnset_offer o 
+                    LEFT JOIN new_apart na USING (new_apart_id)
+                    LEFT JOIN status s ON o.status_id = s.status_id
+            ),
+            old_apart_data AS (
                 SELECT 
-                    fan.family_apartment_needs_id,
-                    fs.house_address,
-                    fs.apart_number,
-                    fs.district,
-                    fs.municipal_district,
-                    fs.full_living_area,
-                    fs.total_living_area,
-                    fs.living_area,
-                    fs.room_count,
-                    fs.type_of_settlement,
-                    nal.new_apartments
+                    oa.affair_id,
+                    oa.house_address,
+                    oa.apart_number,
+                    oa.district,
+                    oa.municipal_district,
+                    oa.full_living_area,
+                    oa.total_living_area,
+                    oa.living_area,
+                    oa.room_count,
+                    oa.type_of_settlement
                 FROM 
-                    family_apartment_needs fan
-                LEFT JOIN 
-                    family_structure fs ON fan.affair_id = fs.affair_id
-                LEFT JOIN 
-                    new_apartment_list nal ON fan.family_apartment_needs_id = nal.family_apartment_needs_id
-                WHERE
-                    fan.family_apartment_needs_id = {apartment_id}
-                ORDER BY 
-                    fs.affair_id;
-            """
+                    old_apart oa
+            )
+            SELECT 
+                oa.affair_id,
+                oa.house_address,
+                oa.apart_number,
+                oa.district,
+                oa.municipal_district,
+                oa.full_living_area,
+                oa.total_living_area,
+                oa.living_area,
+                oa.room_count,
+                oa.type_of_settlement,
+                jsonb_agg(
+                    jsonb_build_object(
+                        'house_address', lft.house_address,
+                        'apart_number', lft.apart_number,
+                        'district', lft.district,
+                        'municipal_district', lft.municipal_district,
+                        'full_living_area', lft.full_living_area,
+                        'total_living_area', lft.total_living_area,
+                        'living_area', lft.living_area,
+                        'room_count', lft.room_count,
+                        'type_of_settlement', lft.type_of_settlement,
+                        'notes', lft.notes,
+                        'status', lft.status,
+                        'sentence_date', lft.sentence_date,
+                        'answer_date', lft.answer_date
+                    )
+                    ORDER BY lft.sentence_date DESC, lft.answer_date DESC
+                ) AS new_apartments
+            FROM 
+                old_apart_data oa
+                LEFT JOIN lft ON oa.affair_id = lft.affair_id
+                where oa.affair_id = {apartment_id}
+            GROUP BY 
+                oa.affair_id,
+                oa.house_address,
+                oa.apart_number,
+                oa.district,
+                oa.municipal_district,
+                oa.full_living_area,
+                oa.total_living_area,
+                oa.living_area,
+                oa.room_count,
+                oa.type_of_settlement
+            ORDER BY 
+                new_apartments;'''
         else:
             raise ValueError(f"Unsupported apartment type: {apart_type}")
-
+        print(query)
         result = await self._execute_query(query, {"apart_id": apartment_id})
 
         if not result:
@@ -359,9 +445,9 @@ class ApartmentRepository:
     async def get_house_address_with_room_count(self, apart_type):
         params = None
         if apart_type == "NewApartment":
-            query = read_sql_query(f'{RECOMMENDATION_FILE_PATH}/AvaliableNewApartHouseAddress.sql')
-        elif apart_type == "FamilyStructure":
-            query = read_sql_query(f'{RECOMMENDATION_FILE_PATH}/AvaliableFamilyHouseAddress.sql')  # Исправлена f-строка
+            query = read_sql_query(f'{RECOMMENDATION_FILE_PATH}/AvaliableNewApartAddress.sql')
+        elif apart_type == "OldApart":
+            query = read_sql_query(f'{RECOMMENDATION_FILE_PATH}/AvaliableOldApartAddress.sql')  # Исправлена f-строка
         else:
             raise ValueError("ApartType not found")  # Исправлено исключение
             

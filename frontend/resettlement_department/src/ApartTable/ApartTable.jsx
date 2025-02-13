@@ -16,7 +16,7 @@ export default function ApartTable({
   
 
   const headers =
-    apartType === "FamilyStructure"
+    apartType === "OldApart"
       ? ["Адрес", "ФИО", "Площадь, тип, этаж", "Статус", "Примечания"]
       : ["Адрес", "Площадь, тип, этаж", "Статус", "Примечания"];
 

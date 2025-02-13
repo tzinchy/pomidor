@@ -39,9 +39,9 @@ function LeftBar({
             <>
               <div className="flex justify-around mb-4">
                 <button
-                  onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("FamilyStructure")}}
+                  onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("OldApart")}}
                   className={`p-8 py-4 rounded-md ${
-                    apartType === "FamilyStructure"
+                    apartType === "OldApart"
                       ? "bg-gray-200"
                       : "bg-white"
                   }`}
