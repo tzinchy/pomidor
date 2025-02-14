@@ -4,12 +4,6 @@ import LeftBar from "./LeftBar";
 import Aside from "../Navigation/Aside";
 import ApartTable from "./ApartTable";
 import { HOSTLINK } from "..";
-import Table from "../try";
-import FamilyCell from "./Cells/Fio";
-import AdressCell from "./Cells/AdressCell";
-import PloshCell from "./Cells/PloshCell";
-import StatusCell from "./Cells/StatusCell";
-import Notes from './Cells/Notes'
 
 const APART_TYPES = {
   NEW: "NewApartment",
@@ -35,7 +29,7 @@ export default function ApartPage() {
   const [selectedRow, setSelectedRow] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     resetFilters();
@@ -68,6 +62,7 @@ export default function ApartPage() {
         paramsSerializer
       });
       setDistricts(response.data);
+      setIsDetailsVisible(false);
     } catch (error) {
       console.error("Error fetching districts:", error.response?.data);
     }
@@ -86,6 +81,7 @@ export default function ApartPage() {
         ...prev,
         [district]: response.data
       }));
+      setIsDetailsVisible(false);
     } catch (error) {
       console.error("Error fetching municipal districts:", error.response?.data);
     }
@@ -104,6 +100,7 @@ export default function ApartPage() {
         ...prev,
         [municipal]: response.data
       }));
+      setIsDetailsVisible(false);
     } catch (error) {
       console.error("Error fetching house addresses:", error.response?.data);
     }
@@ -122,6 +119,7 @@ export default function ApartPage() {
       });
       setApartments(response.data);
       setLoading(false);
+      setIsDetailsVisible(false);
       console.log(response.data);
     } catch (error) {
       console.error("Error fetching apartments:", error.response?.data);
@@ -138,6 +136,7 @@ export default function ApartPage() {
         }
       );
       setApartmentDetails(response.data);
+      console.log(response.data);
     } catch (error) {
       console.error("Error fetching apartment details:", error.response?.data);
     }
@@ -148,44 +147,6 @@ export default function ApartPage() {
   );
 
   const handleToggleSidebar = () => setCollapsed(!collapsed);
-
-  const columns = React.useMemo(
-      () => [
-        {
-          header: 'Адрес дома',
-          accessorKey: 'house_address',
-          enableSorting: true,
-          cell: ({ row }) => <AdressCell props={row.original} />,
-          size: 170,
-        },
-        {
-          header: 'ФИО',
-          accessorKey: 'fio',
-          enableSorting: true,
-          cell: ({ row }) => <FamilyCell props={row.original} />,
-          size: 100,
-        },
-        {
-          header: 'Площадь, тип, этаж',
-          accessorKey: 'full_living_area',
-          cell: ({ row }) => <PloshCell props={row.original} />,
-          size: 100,
-        },
-        {
-          header: 'Статус',
-          accessorKey: 'status',
-          cell: ({ row }) => <StatusCell props={row.original} />,
-          size: 100,
-        },
-        {
-          header: 'Примечания',
-          accessorKey: 'notes',
-          cell: ({ row }) => <Notes props={row.original} />,
-          size: 350,
-        },
-      ],
-      []
-    );
 
   return (
     <div className="bg-muted/60 flex min-h-screen w-full flex-col">
@@ -208,11 +169,22 @@ export default function ApartPage() {
             fetchApartments={fetchApartments}
             setSelectedRow={setSelectedRow}
             setIsDetailsVisible={setIsDetailsVisible}
+            setLoading={setLoading}
           />
 
           <div className="flex-1 overflow-auto">
-          
-            <Table columns={columns} data={filteredApartments} loading={loading} />
+            <ApartTable 
+              data={filteredApartments} 
+              loading={loading} 
+              selectedRow={selectedRow}
+              setSelectedRow={setSelectedRow}
+              isDetailsVisible={isDetailsVisible}
+              setIsDetailsVisible={setIsDetailsVisible}
+              apartType={apartType}
+              fetchApartmentDetails={fetchApartmentDetails}
+              apartmentDetails={apartmentDetails}
+              collapsed={collapsed}
+            />
           </div>
         </div>
       </main>

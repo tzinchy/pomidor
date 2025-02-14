@@ -97,17 +97,16 @@ export default function ActionsCell( {props, setData}) {
     }
   };
 
-  const download_container = async (new_apartment_house_address, family_structure_house_address) => {
+  const download_container = async (history_id) => {
     // Реализация скачивания контейнера аналогична download_balance
     try {
-      const response = await fetch(`${HOSTLINK}/container`, {
+      const response = await fetch(`${HOSTLINK}/container/${history_id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          new_apartment_house_address,
-          family_structure_house_address
+          history_id
         }),
       });
 
@@ -137,7 +136,7 @@ export default function ActionsCell( {props, setData}) {
             onClick={() => setShowDownloadOptions(false)}
             className="mb-4 text-gray-500 hover:text-gray-700"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x stroke-muted-foreground opacity-50 group-hover:opacity-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x stroke-muted-foreground opacity-50 group-hover:opacity-100">
               <path d="M18 6 6 18"></path>
               <path d="m6 6 12 12"></path>
             </svg>
@@ -155,7 +154,7 @@ export default function ActionsCell( {props, setData}) {
           </button>
           <button
             onClick={() => {
-              download_container(value.new_house_addresses, value.old_house_addresses);
+              download_container(value.history_id);
               setShowDownloadOptions(false);
             }}
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"

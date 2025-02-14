@@ -4,7 +4,7 @@ import PloshCell from "./Cells/PloshCell";
 import DetailsStatusCell from "./Cells/DetailsStatusCell";
 import DatesCell from "./Cells/DatesCell";
 
-export default function ApartDetails({ apartmentDetails, setIsDetailsVisible, apartType, setSelectedRow }) {
+export default function ApartDetails({ className, apartmentDetails, setIsDetailsVisible, apartType, setSelectedRow }) {
   function handleClose() {
     setIsDetailsVisible(false);
     setSelectedRow(false);
@@ -14,9 +14,12 @@ export default function ApartDetails({ apartmentDetails, setIsDetailsVisible, ap
 
   return (
     <div
-      className={`relative z-20 flex flex-col bg-white rounded transition-all duration-300 shadow-lg
-      w-full sm:w-full md:w-3/4 lg:max-w-[50%]`}
-      style={{minWidth:700+'px'}}
+      className={`relative z-20 flex flex-col bg-white rounded transition-all duration-300 shadow-lg ${className}`}
+      style={{ 
+        minWidth: 650+'px', // Минимальная ширина для читаемости
+        maxWidth: 'calc(100vw - 32px)', // Отступы по краям экрана
+        maxHeight: 'calc(100vh)', // Отступ сверху и снизу
+      }}
     >
       {/* Заголовок и кнопка закрытия */}
       <div className="flex justify-between items-center p-4 border-b">
@@ -51,8 +54,8 @@ export default function ApartDetails({ apartmentDetails, setIsDetailsVisible, ap
                     key={index}
                     className={`bg-white border-b transition-colors hover:bg-gray-100`}
                   >
-                    <AdressCell props={value} />
-                    <PloshCell props={value} />
+                    <td><AdressCell props={value} /></td>
+                    <td><PloshCell props={value} /></td>
                     <DatesCell props={value} />
                     <DetailsStatusCell props={value} />
                   </tr>
