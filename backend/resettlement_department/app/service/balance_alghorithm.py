@@ -28,18 +28,17 @@ def save_views_to_excel(
                         # Запросы для извлечения данных из базы данных
                         query_old_ranked = """
                             SELECT
-                                family_apartment_needs.family_apartment_needs_id as old_apart_id,
-                                family_structure.room_count,
-                                family_structure.living_area,
-                                family_structure.is_special_needs_marker,
-                                family_structure.full_living_area,
-                                family_structure.total_living_area,
-                                family_structure.district,
-                                family_structure.municipal_district,
-                                family_structure.house_address,
-                                family_apartment_needs.rank
-                            FROM family_apartment_needs
-							LEFT JOIN family_structure ON family_apartment_needs.affair_id = family_structure.affair_id 
+                                old_apart.old_apart_id as old_apart_id,
+                                old_apart.room_count,
+                                old_apart.living_area,
+                                old_apart.is_special_needs_marker,
+                                old_apart.full_living_area,
+                                old_apart.total_living_area,
+                                old_apart.district,
+                                old_apart.municipal_district,
+                                old_apart.house_address,
+                                old_apart.rank
+                            FROM old_apart
                             WHERE 1=1
                         """
 
@@ -63,7 +62,7 @@ def save_views_to_excel(
                         params_old, params_new = [], []
 
                         if old_selected_addresses:
-                            query_old_ranked += " AND family_structure.house_address IN %s"
+                            query_old_ranked += " AND old_apart.house_address IN %s"
                             params_old.append(tuple(old_selected_addresses))
                         if new_selected_addresses:
                             query_new_ranked += " AND new_apart.house_address IN %s"
@@ -71,7 +70,7 @@ def save_views_to_excel(
 
                         # Добавляем фильтрацию по дате, если указана
                         if date:
-                            query_old_ranked += " AND family_apartment_needs.created_at = (SELECT MAX(created_at) FROM family_apartment_needs)"
+                            query_old_ranked += " AND old_apart.created_at = (SELECT MAX(created_at) FROM old_apart)"
                             query_new_ranked += " AND new_apart.created_at = (SELECT MAX(created_at) FROM new_apart)"
 
 
@@ -131,7 +130,7 @@ def save_views_to_excel(
                                 max_rank = max_rank_by_room_count.get(room_count, 0) + 1
 
                                 if previous_row is not None:
-                                    # Проверяем, является ли previous_row['rank_group'] строкой с диапазоном или целым числом
+                                    # Проверяем, является ли previous_row['Ранг'] строкой с диапазоном или целым числом
                                     if (
                                         isinstance(previous_row["Ранг"], str)
                                         and "-" in previous_row["Ранг"]
@@ -235,7 +234,6 @@ def save_views_to_excel(
                                 room_df = df_grouped[df_grouped["room_count"] == room][
                                     ["Ранг", "Пот_ть", "Ресурс", "Баланс"]
                                 ]
-
                                 # Заголовок типа квартир
                                 ws.cell(
                                     row=current_row, column=current_col
