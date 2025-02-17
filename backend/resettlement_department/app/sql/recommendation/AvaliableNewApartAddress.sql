@@ -1,4 +1,12 @@
-WITH needs_with_row AS (
+WITH unnst AS (
+	SELECT 
+	(key)::integer as new_apart_id, 
+	(value->'status_id')::integer as status_id,
+	sentence_date, 
+	answer_date
+	FROM offer, jsonb_each(new_aparts)
+),
+needs_with_row AS (
     SELECT 
         new_apart_id,
         status_id,
@@ -6,7 +14,7 @@ WITH needs_with_row AS (
             PARTITION BY new_apart_id 
             ORDER BY offer.sentence_date DESC, offer.answer_date DESC
         ) AS rn
-    FROM offer
+    FROM unnst as offer
 ),
 clear_data AS (
     SELECT new_apart_id 

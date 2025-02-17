@@ -11,9 +11,9 @@ const SubmitButton = ({ onResponse, type }) => {
       setLoading(true);
       
       const requestBody = {
-        "family_structure_district": [],
-        "family_structure_municipal_district": [],
-        "family_structure_house_address": [],
+        "old_apartment_district": [],
+        "old_apartment_municipal_district": [],
+        "old_apartment_house_address": [],
         "new_apartment_district": [],
         "new_apartment_municipal_district": [],
         "new_apartment_house_address": [],

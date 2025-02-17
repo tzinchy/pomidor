@@ -3,17 +3,13 @@ WITH params AS (
 ),
 delete_offers AS (
     DELETE FROM offer
-    WHERE family_apartment_needs_id IN (
-        SELECT family_apartment_needs_id FROM family_apartment_needs 
-        WHERE history_id = (SELECT history_id_param FROM params)
-    ) 
-    AND new_apart_id IN (
-        SELECT new_apart_id FROM new_apart 
+    WHERE affair_id IN (
+        SELECT affair_id FROM old_apart 
         WHERE history_id = (SELECT history_id_param FROM params)
     )
 ),
 update_old_aparts AS (
-    UPDATE family_apartment_needs  
+    UPDATE old_apart  
     SET history_id = NULL,
         rank = NULL
     WHERE history_id = (SELECT history_id_param FROM params)

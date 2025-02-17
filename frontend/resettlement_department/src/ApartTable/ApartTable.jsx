@@ -88,7 +88,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     if (visibility) {
         if (index !== selectedRow) {
             setSelectedRow(index); // Обновляем выбранную строку
-            apartType === "FamilyStructure" ? fetchApartmentDetails(val["family_apartment_needs_id"]) : fetchApartmentDetails(val["new_apart_id"]);
+            apartType === "OldApart" ? fetchApartmentDetails(val["affair_id"]) : fetchApartmentDetails(val["new_apart_id"]);
         } else {
             setSelectedRow(false)
             setIsDetailsVisible(false); // Закрываем панель
@@ -96,7 +96,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     } else {
         setSelectedRow(index); // Устанавливаем выбранную строку
         setIsDetailsVisible(true); // Открываем панел
-        apartType === "FamilyStructure" ? fetchApartmentDetails(val["family_apartment_needs_id"]) : fetchApartmentDetails(val["new_apart_id"]);
+        apartType === "OldApart" ? fetchApartmentDetails(val["affair_id"]) : fetchApartmentDetails(val["new_apart_id"]);
     }
 }
 
