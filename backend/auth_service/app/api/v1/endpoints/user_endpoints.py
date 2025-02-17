@@ -4,7 +4,7 @@ import logging
 from JWTs import DecodeJWT
 from models.user import UserJWTData
 
-get_user = DecodeJWT(UserJWTData)
+# get_user = DecodeJWT(UserJWTData)
 
 router = APIRouter(prefix="/user", tags=["User"])
 
@@ -36,5 +36,5 @@ async def change_password(
         raise HTTPException(status_code=500, detail="An unexpected error occurred. Please try again later.")
     
 @router.get('/test')
-async def test(user = Depends(get_user)):
+async def test(user = Depends(DecodeJWT(UserJWTData))):
     return user
