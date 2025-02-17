@@ -29,6 +29,8 @@ export default function ApartPage() {
   const [selectedRow, setSelectedRow] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     resetFilters();
     fetchDistricts();
@@ -60,6 +62,7 @@ export default function ApartPage() {
         paramsSerializer
       });
       setDistricts(response.data);
+      setIsDetailsVisible(false);
     } catch (error) {
       console.error("Error fetching districts:", error.response?.data);
     }
@@ -78,6 +81,7 @@ export default function ApartPage() {
         ...prev,
         [district]: response.data
       }));
+      setIsDetailsVisible(false);
     } catch (error) {
       console.error("Error fetching municipal districts:", error.response?.data);
     }
@@ -96,6 +100,7 @@ export default function ApartPage() {
         ...prev,
         [municipal]: response.data
       }));
+      setIsDetailsVisible(false);
     } catch (error) {
       console.error("Error fetching house addresses:", error.response?.data);
     }
@@ -113,6 +118,9 @@ export default function ApartPage() {
         paramsSerializer
       });
       setApartments(response.data);
+      setLoading(false);
+      setIsDetailsVisible(false);
+      console.log(response.data);
     } catch (error) {
       console.error("Error fetching apartments:", error.response?.data);
     }
@@ -128,6 +136,7 @@ export default function ApartPage() {
         }
       );
       setApartmentDetails(response.data);
+      console.log(response.data);
     } catch (error) {
       console.error("Error fetching apartment details:", error.response?.data);
     }
@@ -160,19 +169,21 @@ export default function ApartPage() {
             fetchApartments={fetchApartments}
             setSelectedRow={setSelectedRow}
             setIsDetailsVisible={setIsDetailsVisible}
+            setLoading={setLoading}
           />
 
           <div className="flex-1 overflow-auto">
-            <ApartTable
-              apartType={apartType}
-              data={filteredApartments}
-              fetchApartmentDetails={fetchApartmentDetails}
-              apartmentDetails={apartmentDetails}
-              detailsRef={detailsRef}
+            <ApartTable 
+              data={filteredApartments} 
+              loading={loading} 
               selectedRow={selectedRow}
               setSelectedRow={setSelectedRow}
               isDetailsVisible={isDetailsVisible}
               setIsDetailsVisible={setIsDetailsVisible}
+              apartType={apartType}
+              fetchApartmentDetails={fetchApartmentDetails}
+              apartmentDetails={apartmentDetails}
+              collapsed={collapsed}
             />
           </div>
         </div>

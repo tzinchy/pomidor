@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* custom-scrollbar.css */
-
 /* Отключаем глобальные стили для скроллбаров */
 * {
   scrollbar-color: unset !important;
@@ -14,39 +12,88 @@
 @layer utilities {
   /* Скрыть скроллбар по умолчанию */
   .scrollbar-custom::-webkit-scrollbar {
-    width: 6px; /* Вертикальный скроллбар */
-    height: 6px; /* Горизонтальный скроллбар */
-    opacity: 0; /* Сделать скроллбар невидимым по умолчанию */
-    transition: opacity 0.3s ease; /* Плавное появление */
+    width: 6px !important; /* Вертикальный скроллбар */
+    height: 6px !important; /* Горизонтальный скроллбар */
+    opacity: 0 !important; /* Сделать скроллбар невидимым по умолчанию */
+    transition: opacity 0.3s ease !important; /* Плавное появление */
   }
 
   /* Стиль для трека скроллбара */
   .scrollbar-custom::-webkit-scrollbar-track {
-    opacity: 0; /* Скрыть трек по умолчанию */
-    border-radius: 9999px;
-    background-color: transparent; /* Прозрачный фон для трека */
+    opacity: 0 !important; /* Скрыть трек по умолчанию */
+    border-radius: 9999px !important;
+    background-color: transparent !important; /* Прозрачный фон для трека */
   }
 
   /* Стиль для самой полосы прокрутки */
   .scrollbar-custom::-webkit-scrollbar-thumb {
-    border-radius: 9999px;
-    opacity: 0; /* Скрыть полосу прокрутки по умолчанию */
-    background-color: transparent; /* Цвет полосы прокрутки */
+    border-radius: 9999px !important;
+    opacity: 0 !important; /* Скрыть полосу прокрутки по умолчанию */
+    background-color: transparent !important; /* Цвет полосы прокрутки */
   }
 
   /* Показывать скроллбар только при наведении на элемент */
   .scrollbar-custom:hover::-webkit-scrollbar {
-    opacity: 1; /* Сделать скроллбар видимым при наведении */
+    opacity: 1 !important; /* Сделать скроллбар видимым при наведении */
   }
 
   /* Стили для полосы прокрутки при наведении */
   .scrollbar-custom:hover::-webkit-scrollbar-thumb {
-    opacity: 1;
-    background-color: #d1d5db; /* Легкое изменение цвета полосы при наведении */
+    opacity: 1 !important;
+    background-color: #d1d5db !important; /* Легкое изменение цвета полосы при наведении */
   }
 
   /* Уменьшение горизонтального скроллбара */
   .scrollbar-custom::-webkit-scrollbar-horizontal {
-    height: 4px; /* Уменьшаем высоту горизонтального скроллбара */
+    height: 4px !important; /* Уменьшаем высоту горизонтального скроллбара */
   }
+}
+
+
+.ps-sidebar-root::-webkit-scrollbar {
+  width: 6px !important; /* Вертикальный скроллбар */
+  height: 6px !important; /* Горизонтальный скроллбар */
+}
+
+.ps-sidebar-root::-webkit-scrollbar-track {
+  background-color: transparent !important;
+  border-radius: 9999px !important; /* Прозрачный трек */
+}
+
+.ps-sidebar-root::-webkit-scrollbar-thumb {
+  background-color: #d1d5db !important; /* Цвет полосы */
+  border-radius: 9999px !important; /* Округляем полосу прокрутки */
+}
+
+
+/* Переопределяем стили для контейнера с меню */
+.ps-sidebar-container::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.ps-sidebar-container::-webkit-scrollbar-track {
+  background-color: transparent !important;
+  border-radius: 9999px !important;
+}
+
+.ps-sidebar-container::-webkit-scrollbar-thumb {
+  background-color: #d1d5db !important;
+  border-radius: 9999px !important;
+}
+
+/* Переопределяем стили для самого меню */
+.ps-menu-root::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.ps-menu-root::-webkit-scrollbar-track {
+  background-color: transparent !important;
+  border-radius: 9999px !important;
+}
+
+.ps-menu-root::-webkit-scrollbar-thumb {
+  background-color: #d1d5db !important;
+  border-radius: 9999px !important;
 }

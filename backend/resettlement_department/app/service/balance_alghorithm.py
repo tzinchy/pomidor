@@ -131,7 +131,7 @@ def save_views_to_excel(
                                 max_rank = max_rank_by_room_count.get(room_count, 0) + 1
 
                                 if previous_row is not None:
-                                    # Проверяем, является ли previous_row['rank_group'] строкой с диапазоном или целым числом
+                                    # Проверяем, является ли previous_row['Ранг'] строкой с диапазоном или целым числом
                                     if (
                                         isinstance(previous_row["Ранг"], str)
                                         and "-" in previous_row["Ранг"]
@@ -235,7 +235,6 @@ def save_views_to_excel(
                                 room_df = df_grouped[df_grouped["room_count"] == room][
                                     ["Ранг", "Пот_ть", "Ресурс", "Баланс"]
                                 ]
-
                                 # Заголовок типа квартир
                                 ws.cell(
                                     row=current_row, column=current_col

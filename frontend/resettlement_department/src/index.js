@@ -8,7 +8,6 @@ import Dashboard_page from './Dashboard/Dashboard_page';
 import ApartPage from './ApartTable/ApartPage';
 import Koren from './Koren';
 import BalancePage from './Balance/BalancePage';
-import Try from './try';
 import HistoryPage from './History/HistoryPage';
 
 
@@ -26,7 +25,6 @@ root.render(
         <Route path="/aparts" element={<ApartPage />} />
         <Route path="/balance" element={<BalancePage />} />
         <Route path="/history" element={<HistoryPage />} />
-        <Route path="/try" element={<Try />} />
       </Routes>
     </BrowserRouter>,
   document.getElementById('root')
