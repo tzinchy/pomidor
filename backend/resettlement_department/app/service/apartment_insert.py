@@ -4,14 +4,14 @@ import numpy as np
 from datetime import datetime
 from core.config import settings
 from repository.database import project_managment_session
-#test
+import re
 
 def insert_data_to_structure(df):
     try:
-        family_structure = family_structure.dropna(subset=["ID"])
+        old_apart = old_apart.dropna(subset=["ID"])
 
         # 2. Rename columns to match the database schema
-        family_structure.rename(
+        old_apart.rename(
             columns={
                 "ID": "affair_id",
                 "КПУ_Дело_№ полный(новый)": "kpu_number",
@@ -26,15 +26,17 @@ def insert_data_to_structure(df):
                 "К_Общ(б/л)": "total_living_area",
                 "К_Жил": "living_area",
                 "КПУ_ФИО": "fio",
-                "Notes": "notes",
+                "КПУ_Примечание": "notes",
                 "Адрес_Округ": "district",
+                "Адрес_Район": "municipal_district",
                 "Адрес_Короткий": "house_address",
                 "Адрес_№ кв": "apart_number",
                 "КПУ_Чел.в деле": "people_v_dele",
                 "КПУ_Чел.учете": "people_uchet",
                 "КПУ_Чел.в семье": "people_in_family",
                 "КПУ_Состояние": "status_id",
-                "КПУ_Направление": "category",
+                "КПУ_Направление_код": "category",
+                "КПУ_Др. напр. откр." : 'kpu_another'
             },
             inplace=True,
         )
@@ -48,28 +50,37 @@ def insert_data_to_structure(df):
         #     "снято": 6,
         # }
         # # Применение маппинга
-        # family_structure["status_id"] = family_structure["status_id"].apply(
+        # old_apart["status_id"] = old_apart["status_id"].apply(
         #     lambda x: status_mapping.get(x, x)
         # )
-        family_structure["floor"] = family_structure["floor"].astype("Int64")
-        family_structure["category"] = family_structure["category"].astype("Int64")
-        family_structure["full_living_area"] = family_structure[
+        old_apart["floor"] = old_apart["floor"].astype("Int64")
+        old_apart["category"] = old_apart["category"].astype("Int64")
+        old_apart["full_living_area"] = old_apart[
             "full_living_area"
         ].astype(float)
-        family_structure["total_living_area"] = family_structure[
+        old_apart["total_living_area"] = old_apart[
             "total_living_area"
         ].astype(float)
-        family_structure["living_area"] = family_structure["living_area"].astype(float)
-        family_structure["people_v_dele"] = family_structure["people_v_dele"].astype(
+        old_apart["living_area"] = old_apart["living_area"].astype(float)
+        old_apart["people_v_dele"] = old_apart["people_v_dele"].astype(
             "Int64"
         )
-        family_structure["people_uchet"] = family_structure["people_uchet"].astype(
+        old_apart["people_uchet"] = old_apart["people_uchet"].astype(
             "Int64"
         )
-        family_structure["people_in_family"] = family_structure[
+        old_apart["category"] = old_apart["category"].astype('Int64')
+        old_apart["people_in_family"] = old_apart[
             "people_in_family"
         ].astype("Int64")
-        family_structure = family_structure[
+        import re
+
+        old_apart["is_queue"] = old_apart["kpu_another"].apply(
+            lambda x: 1 if re.search(r"-01-", str(x)) else 0
+        )
+
+        old_apart['is_queue'] = old_apart['is_queu'].astype("Int64")
+
+        old_apart = old_apart[
             [
                 "affair_id",
                 "kpu_number",
@@ -81,6 +92,7 @@ def insert_data_to_structure(df):
                 "cad_num",
                 "notes",
                 "district",
+                "municipal_district,"
                 "house_address",
                 "apart_number",
                 "room_count",
@@ -92,13 +104,15 @@ def insert_data_to_structure(df):
                 "total_living_area",
                 "apart_type",
                 "category",
+                "kpu_another",
+                "is_queue"
             ]
         ]
         # Convert to list of dictionaries for batch insertion
-        family_structure = family_structure.replace({np.nan: None})
-        family_structure["status_id"] = family_structure["status_id"].astype("Int64")
+        old_apart = old_apart.replace({np.nan: None})
+        #old_apart["status_id"] = old_apart["status_id"].astype("Int64")
         # Convert DataFrame rows into a list of tuples for bulk insert
-        args = list(family_structure.itertuples(index=False, name=None))
+        args = list(old_apart.itertuples(index=False, name=None))
         # Prepare the arguments string for the SQL query
 
         # Connect to the PostgreSQL database
@@ -127,11 +141,11 @@ def insert_data_to_structure(df):
         )
 
         cursor.execute(f"""
-        INSERT INTO public.family_structure (
+        INSERT INTO public.old_apart (
             affair_id, kpu_number, fio, surname, firstname, lastname, 
-            people_in_family, cad_num, notes, district, house_address, 
+            people_in_family, cad_num, notes, district, municipal_district, house_address, 
             apart_number, room_count, floor, full_living_area, living_area, people_v_dele, 
-            people_uchet, total_living_area, apart_type, category
+            people_uchet, total_living_area, apart_type, category, kpu_another, is_queue
         )
         VALUES 
             {args_str}
@@ -146,6 +160,7 @@ def insert_data_to_structure(df):
         cad_num = EXCLUDED.cad_num,
         notes = EXCLUDED.notes,
         district = EXCLUDED.district,
+        municipal_district = EXCLUDED.municipal_district,
         house_address = EXCLUDED.house_address,
         apart_number = EXCLUDED.apart_number,
         room_count = EXCLUDED.room_count,
@@ -158,6 +173,8 @@ def insert_data_to_structure(df):
         apart_type = EXCLUDED.apart_type,
         status_id = EXCLUDED.status_id,
         category = EXCLUDED.category,
+        kpu_another = EXCLUDED.kpu_another,
+        is_queue = EXCLUDED.is_queue,
         updated_at = NOW()
     """)
         connection.commit()
@@ -495,10 +512,10 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
     DO UPDATE SET updated_at = NOW();
     """
     print(new_apart_query)
+    
     print('''======================================================
-    2. Обработка и вставка для таблицы family_structure
-    ======================================================
-    Словарь для переименования колонок старых данных (семейная структура)''')
+    2. Обработка и вставка для таблицы old_apart
+    ======================================================''')
     rename_old = {
         'Округ' : 'district',
         'район' : 'municipal_district',
@@ -520,46 +537,46 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
     }
     old_apart_df = old_apart_df.rename(columns=rename_old)
     
-    # Обработка столбца даты: преобразуем в datetime, а затем заменяем NaT на None
+    # Список всех колонок таблицы old_apart (исключая created_at и updated_at)
+    old_apart_required = [
+        "affair_id", "kpu_number", "fio", "surname", "firstname", "lastname",
+        "people_in_family", "category", "cad_num", "notes", "documents", "district",
+        "house_address", "apart_number", "room_count", "floor", "full_living_area",
+        "living_area", "people_v_dele", "people_uchet", "total_living_area", "apart_type",
+        "manipulation_notes", "municipal_district", "is_special_needs_marker", "min_floor",
+        "max_floor", "buying_date", "is_queue", "queue_square", "type_of_settlement",
+        "history_id", "status_id", "rank", "kpu_another"
+    ]
+    
+    # Добавляем отсутствующие колонки со значением None
+    for col in old_apart_required:
+        if col not in old_apart_df.columns:
+            old_apart_df[col] = None
+    
+    # Упорядочиваем колонки
+    old_apart_df = old_apart_df[old_apart_required]
+    
+    # Обработка даты
     if 'buying_date' in old_apart_df.columns:
         old_apart_df['buying_date'] = pd.to_datetime(old_apart_df['buying_date'], errors='coerce')
         old_apart_df['buying_date'] = old_apart_df['buying_date'].apply(lambda x: None if pd.isnull(x) else x)
     
-    # Если для остальных столбцов не нужно заменять NaN, то не применяем fillna ко всему DataFrame!
-    # old_apart_df = old_apart_df.fillna(0)  # этот шаг закомментирован, чтобы не заменять даты
+    # Преобразование в кортежи
+    old_apart_values = [tuple(row) for row in old_apart_df.to_numpy()]
 
-    family_structure_required = [
-        'district', 'municipal_district', 'fio', 'house_address', 'apart_number',
-        'type_of_settlement', 'apart_type', 'room_count', 'full_living_area',
-        'total_living_area', 'living_area', 'people_v_dele', 'is_special_needs_marker',
-        'min_floor', 'max_floor', 'buying_date', 'affair_id'
-    ]
-    for col in family_structure_required:
-        if col not in old_apart_df.columns:
-            old_apart_df[col] = None
-    old_apart_df = old_apart_df[family_structure_required]
-
-    family_structure_values = [tuple(row) for row in old_apart_df.to_numpy()]
-
-    family_structure_query = f"""
-    INSERT INTO family_structure ({", ".join(family_structure_required)})
+    # Динамическое формирование SET для ON CONFLICT
+    update_columns = [col for col in old_apart_required if col != 'affair_id']
+    set_clause = ', '.join([f"{col} = EXCLUDED.{col}" for col in update_columns])
+    
+    old_apart_query = f"""
+    INSERT INTO old_apart ({", ".join(old_apart_required)})
     VALUES %s
     ON CONFLICT (affair_id)
-    DO UPDATE SET updated_at = NOW();
+    DO UPDATE SET 
+        updated_at = NOW(),
+        {set_clause};
     """
-
-    print('''======================================================
-    3. Обработка и вставка для таблицы family_apartmnet_needs
-    ======================================================
-    Предполагаем, что в этой таблице требуется только affair_id.
-    Из DataFrame с семейной структурой получаем список идентификаторов.''')
-    family_apartment_needs_values = [(row,) for row in old_apart_df['affair_id'].tolist()]
-
-    family_apartment_needs_query = """
-    INSERT INTO family_apartment_needs (affair_id)
-    VALUES %s
-    """
-
+    
     print('''======================================================
     Выполнение всех операций в рамках одного подключения
     ======================================================''')
@@ -571,7 +588,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
         database=settings.project_management_setting.DB_NAME
     )
 
-    # Преобразование типов данных
+    # Обработка cin_df
     cin_df["УНОМ"] = cin_df["УНОМ"].astype(str)
     cin_df["Адрес отселения"] = cin_df["Адрес отселения"].astype(str)
     cin_df["Адрес ЦИНа"] = cin_df["Адрес ЦИНа"].astype(str)
@@ -593,15 +610,9 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
                 "cin_address": row["Адрес ЦИНа"],
                 "cin_schedule": row["График работы ЦИН"],
                 "dep_schedule": row["График работы Департамента в ЦИНе"],
-                "phone_osmotr": row["Телефон для осмота"]
-                if pd.notna(row["Телефон для осмота"])
-                else None,
-                "phone_otvet": row["Телефон для ответа"]
-                if pd.notna(row["Телефон для ответа"])
-                else None,
-                "start_date": row["Дата начала работы"]
-                if pd.notna(row["Дата начала работы"])
-                else None,
+                "phone_osmotr": row["Телефон для осмота"] if pd.notna(row["Телефон для осмота"]) else None,
+                "phone_otvet": row["Телефон для ответа"] if pd.notna(row["Телефон для ответа"]) else None,
+                "start_date": row["Дата начала работы"] if pd.notna(row["Дата начала работы"]) else None,
                 "otdel": row["Адрес Отдела"],
             }
         )
@@ -612,10 +623,9 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
     try:
         # Вставка в new_apart
         execute_values(cursor, new_apart_query, new_apart_values)
-        # Вставка в family_structure
-        execute_values(cursor, family_structure_query, family_structure_values)
-        #Вставка в family_apartmnet_needs
-        execute_values(cursor, family_apartment_needs_query, family_apartment_needs_values)
+        # Вставка в old_apart
+        execute_values(cursor, old_apart_query, old_apart_values)
+        # Вставка в cin
         for data in data_to_insert:
             cursor.execute(
                 """
@@ -625,8 +635,14 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
                     %(unom)s, %(old_address)s, %(cin_address)s, %(cin_schedule)s, %(dep_schedule)s, %(phone_osmotr)s, %(phone_otvet)s, %(start_date)s,  %(otdel)s
                 )
                 ON CONFLICT (unom) DO UPDATE SET 
-                    old_address = EXCLUDED.old_address, cin_address = EXCLUDED.cin_address, cin_schedule = EXCLUDED.cin_schedule, dep_schedule = EXCLUDED.dep_schedule, phone_osmotr = EXCLUDED.phone_osmotr, 
-                    phone_otvet = EXCLUDED.phone_otvet, start_date = EXCLUDED.start_date, otdel = EXCLUDED.otdel 
+                    old_address = EXCLUDED.old_address, 
+                    cin_address = EXCLUDED.cin_address, 
+                    cin_schedule = EXCLUDED.cin_schedule, 
+                    dep_schedule = EXCLUDED.dep_schedule, 
+                    phone_osmotr = EXCLUDED.phone_osmotr, 
+                    phone_otvet = EXCLUDED.phone_otvet, 
+                    start_date = EXCLUDED.start_date, 
+                    otdel = EXCLUDED.otdel 
             """,
                 data,
             )
