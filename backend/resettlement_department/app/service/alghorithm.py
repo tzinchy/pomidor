@@ -54,7 +54,7 @@ def match_new_apart_to_family_batch(
 						old_apart o 
                     LEFT JOIN 
                         family_member fm ON o.kpu_number = fm.kpu_number 
-                    WHERE 
+                    WHERE 1=1 and
                         o.affair_id NOT IN (
                             SELECT affair_id
                             FROM  offer
@@ -128,13 +128,7 @@ def match_new_apart_to_family_batch(
                     na.for_special_needs_marker                
                 FROM 
                     public.new_apart na
-                WHERE 
-                    NOT EXISTS (
-                        SELECT 1 
-                        FROM offer o
-                        WHERE 
-                            o.new_aparts::jsonb ? (na.new_apart_id::text) -- Проверяем существование ключа
-                    );
+                WHERE 1=1
                 """
 
                 new_apart_query_params = []
@@ -155,6 +149,8 @@ def match_new_apart_to_family_batch(
                     new_apart_query += " AND created_at = (SELECT MAX(created_at) FROM public.new_apart)"
 
                 new_apart_query += " ORDER BY room_count ASC, (full_living_area + living_area), floor, living_area ASC, full_living_area ASC, total_living_area ASC"
+
+                cursor.execute(new_apart_query, new_apart_query_params)
 
                 cursor.execute(new_apart_query, new_apart_query_params)
                 new_aparts = cursor.fetchall()

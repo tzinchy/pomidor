@@ -292,3 +292,9 @@
 					where new_apart_id = 8006871
                     
 2025-02-17 11:42:04,775 - INFO - Params: {'apart_id': 8006871}
+2025-02-17 12:01:37,588 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-02-17 12:01:37,588 - INFO - Params: {}
