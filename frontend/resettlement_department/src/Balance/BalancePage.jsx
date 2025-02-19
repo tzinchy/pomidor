@@ -54,7 +54,7 @@ export default function BalancePage() {
         <DropdownProvider>
           <div className="p-4 justify-items-center bg-white w-2/3 h-[60vh] rounded-xl shadow-xl">
             <div className="flex justify-around w-full">
-              <DropdownButton id="family_structure_house_address" type={'family_structure'} placeholder={'Старый дом'} />
+              <DropdownButton id="old_apartment_house_address" type={'old_apartment'} placeholder={'Старый дом'} />
               <DropdownButton id="new_apartment_house_address" type={'new_apartment'} placeholder={'Новый дом'} />
             </div>
             <div className="m-4 justify-items-center flex">

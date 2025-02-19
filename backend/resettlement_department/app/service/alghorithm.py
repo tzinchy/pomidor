@@ -152,7 +152,6 @@ def match_new_apart_to_family_batch(
 
                 cursor.execute(new_apart_query, new_apart_query_params)
 
-                cursor.execute(new_apart_query, new_apart_query_params)
                 new_aparts = cursor.fetchall()
                 print(new_apart_query, new_apart_query_params)
                 if not new_aparts:

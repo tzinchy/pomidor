@@ -37,7 +37,8 @@ async def balance(
     try:
 
         output_path = os.path.join(os.getcwd(), '././uploads', 'matching_result.xlsx')
-
+        print(requirements.old_apartment_house_address)
+        print('ТО ЧТО ВЫШЕ ЭТО ПАРАМЕТР')
         save_views_to_excel(
             output_path=output_path,
             new_selected_addresses=requirements.new_apartment_house_address,
