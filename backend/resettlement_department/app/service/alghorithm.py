@@ -152,7 +152,6 @@ def match_new_apart_to_family_batch(
 
                 cursor.execute(new_apart_query, new_apart_query_params)
 
-                cursor.execute(new_apart_query, new_apart_query_params)
                 new_aparts = cursor.fetchall()
                 print(new_apart_query, new_apart_query_params)
                 if not new_aparts:
@@ -385,7 +384,7 @@ def match_new_apart_to_family_batch(
                                 continue
 
                             # Условие для даты "Дата покупки"
-                            if (
+                            elif (
                                 old_apart["buying_date"] is not None and old_apart["buying_date"] > datetime.strptime("2017-08-01", "%Y-%m-%d").date()
                                 and not (old_apart["min_floor"] or old_apart["max_floor"])
                             ):

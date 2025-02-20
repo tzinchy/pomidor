@@ -9,7 +9,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from config import DB, RSM
+from core.config import settings, RSM
 import time
 import uuid
 import random
@@ -125,11 +125,11 @@ def check_token():
     :return:
     """
     conn_params = {
-        "dbname": DB.NAME,
-        "user": DB.LOGIN,
-        "password": DB.PASS,
-        "host": DB.HOST,
-        "port": DB.PORT
+        "dbname": settings.project_management_setting.DB_NAME,
+        "user": settings.project_management_setting.DB_USER,
+        "password": settings.project_management_setting.DB_PASSWORD,
+        "host": settings.project_management_setting.DB_HOST,
+        "port": settings.project_management_setting.DB_PORT
     }
 
     query = "SELECT value FROM env.env WHERE name = 'rsm_token' LIMIT 1;"
@@ -232,7 +232,7 @@ def get_row_count(dates, dates_type, category, session_key, layout_id, cookie, r
     p = multiprocessing.Process(target=send_request, args=(search_link, cookie,))
     p.daemon = True  # Позволяет процессу завершаться вместе с родителем
     p.start()
-    time.sleep(0.75)
+    time.sleep(2)
     print("____40__")
     c = requests.get(count_link,
                      cookies={'Rsm.Cookie': cookie})
@@ -829,18 +829,17 @@ if __name__ == '__main__':
     # result = split_interval_ids([999, 99999999], 4, token)
     # print(merge_intervals_ids(result, 4, token, 21744))
 
-    df = get_kurs_living_space([999, 99999999], 21744)
-    df.to_excel("/Users/viktor/Downloads/resurs_test.xlsx")
-    print(datetime.now() - start)
+    # df = get_kurs_living_space([999, 99999999], 21744)
+    # df.to_excel("/Users/macbook/Downloads/resurs_test.xlsx")
+    # print(datetime.now() - start)
 
     # print(split_interval_ids([999, 99999999], 4, check_token()))
     # print(search_kurs_living_space([999, 99999999], 21744, generate_key()))
     # print(check_token())
-    # category = [70]
-    # layout_id = 22024 # usually use 21705
-    # start_date = datetime(2017, 1, 1, 0, 0, 0)
-    # end_date = datetime(2024, 12, 31, 23, 59, 59)
-    #
-    # df = get_kpu(start_date, end_date, 1, category, layout_id)
-    # df.to_excel('/Users/viktor/Downloads/export_districts.xlsx')
+    category = [70, 91]
+    layout_id = 22223 # usually use 21705
+    start_date = datetime(2017, 1, 1, 0, 0, 0)
+    end_date = datetime(2024, 12, 31, 23, 59, 59)
+    df = get_kpu(start_date, end_date, 1, category, layout_id)
     # search_kpu(generate_key(), 21703, registered=True, kpu_direction=[1], decl_date=['01.01.2020', '31.12.2020'])
+

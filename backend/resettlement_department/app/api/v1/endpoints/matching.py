@@ -13,7 +13,7 @@ from service.apartment_insert import insert_to_db
 router = APIRouter(prefix="/fisrt_matching", tags=["Первичный подбор"])
 
 # Получение списка адресов домов
-@router.get("/family_structure/house_addresses")
+@router.get("/old_apartment/house_addresses")
 async def get_family_structure_house_addresses():
     return await apartment_service.get_house_address_with_room_count(apart_type=ApartType.OLD)
 
@@ -26,6 +26,9 @@ async def get_new_apartment_house_addresses():
 async def start_matching(
     requirements: MatchingSchema 
 ): 
+    print(requirements.old_apartment_house_address)
+    print('--------------------------------------')
+    print(requirements.new_apartment_house_address)
     matching_result = match_new_apart_to_family_batch(
                                     new_selected_districts=requirements.new_apartment_district,
                                     old_selected_districts=requirements.old_apartment_district,

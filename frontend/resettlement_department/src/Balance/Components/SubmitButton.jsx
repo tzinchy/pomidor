@@ -24,12 +24,12 @@ const SubmitButton = ({ onResponse, type }) => {
       Object.keys(selectedItems).forEach(dropdownId => {
         const addresses = selectedItems[dropdownId].map(item => item.address); // Получаем только адреса
       
-        if (dropdownId.includes('family_structure_district')) {
-          requestBody["family_structure_district"] = [];
-        } else if (dropdownId.includes('family_structure_municipal_district')) {
-          requestBody["family_structure_municipal_district"] = [];
-        } else if (dropdownId.includes('family_structure_house_address')) {
-          requestBody["family_structure_house_address"] = [...requestBody["family_structure_house_address"], ...addresses];
+        if (dropdownId.includes('old_apartment_district')) {
+          requestBody["old_apartment_district"] = [];
+        } else if (dropdownId.includes('old_apartment_district')) {
+          requestBody["old_apartment_municipal_district"] = [];
+        } else if (dropdownId.includes('old_apartment_house_address')) {
+          requestBody["old_apartment_house_address"] = [...requestBody["old_apartment_house_address"], ...addresses];
         } else if (dropdownId.includes('new_apartment_district')) {
           requestBody["new_apartment_district"] = [];
         } else if (dropdownId.includes('new_apartment_municipal_district')) {

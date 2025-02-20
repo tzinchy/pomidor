@@ -11,3 +11,7 @@ EMAIL_LOGIN=your_login
 EMAIL_PASSWORD=super_password 
 EMAIL_SERVER=server.gmail
 EMAIL_PORT=587
+RSM_LOGIN=
+RSM_PASS=
+RSM_PING_LINK='http://webrsm.mlc.gov:5222/Dashboard'
+
