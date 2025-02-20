@@ -41,7 +41,7 @@ async def balance(
         save_views_to_excel(
             output_path=output_path,
             new_selected_addresses=requirements.new_apartment_house_address,
-            old_selected_addresses=requirements.family_structure_house_address,
+            old_selected_addresses=requirements.old_apartment_house_address,
             date=requirements.is_date)
 
         return FileResponse(

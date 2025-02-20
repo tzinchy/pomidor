@@ -14,21 +14,21 @@ class FamilyStructure(BaseModel):
 
 
 class NewApartment(BaseModel):
-    up_id: int = Field(..., description="Идентификатор уникального пользователя")
+    new_apart_id: int = Field(..., description="Id квартиры")
     district: str = Field(..., description="Район")
-    area: float = Field(..., description="Площадь")
+    municipal_district: float = Field(..., description="Площадь")
     house_address: str = Field(..., description="Адрес дома")
 
 
 class ApartType(str, Enum):
     NEW = "NewApartment"
-    OLD = "FamilyStructure"
+    OLD = "OldApart"
 
 
 class MatchingSchema(BaseModel):
-    family_structure_district: List[str] = None
-    family_structure_municipal_district: List[str] = None
-    family_structure_house_address: List[str] = None
+    old_apartment_district: List[str] = None
+    old_apartment_municipal_district: List[str] = None
+    old_apartment_house_address: List[str] = None
     new_apartment_district: List[str] = None
     new_apartment_municipal_district: List[str] = None
     new_apartment_house_address: List[str] = None 

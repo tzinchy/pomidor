@@ -1,16 +1,16 @@
 WITH needs_with_row AS (
     SELECT 
-        family_apartment_needs_id,
-        status_id,
+        affair_id,
+        offer.status_id,
         ROW_NUMBER() OVER (
-            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            PARTITION BY old_apart.affair_id 
             ORDER BY offer.sentence_date DESC, offer.answer_date DESC
         ) AS rn
-    FROM family_apartment_needs
-    JOIN offer USING (family_apartment_needs_id)
+    FROM old_apart
+    JOIN offer USING (affair_id)
 ),
 clear_data AS (
-    SELECT family_apartment_needs_id 
+    SELECT affair_id 
     FROM needs_with_row 
     WHERE rn = 1 AND status_id != 2
 )
@@ -22,12 +22,11 @@ FROM (
         house_address, 
         room_count, 
         COUNT(room_count) AS count
-    FROM family_apartment_needs 
-    JOIN family_structure USING (affair_id)
+    FROM old_apart 
     WHERE NOT EXISTS (
         SELECT 1
         FROM clear_data
-        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+        WHERE clear_data.affair_id = old_apart.affair_id
     )
     GROUP BY house_address, room_count
     ORDER BY room_count
