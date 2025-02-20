@@ -203,36 +203,28 @@ def insert_data_to_old(df):
             cursor.close()
         if connection is not None:
             connection.close()
-'''
+
 def new_apart_insert(new_apart_df: pd.DataFrame):
     try:
         # Define the column renaming mapping
         column_mapping = {
             "Сл.инф_APART_ID": "new_apart_id",
-            "Сл.инф_UNOM": "building_id",
             "Адрес_Округ": "district",
             "Адрес_Мун.округ": "municipal_district",
             "Адрес_Короткий": "house_address",
             "Адрес_№ кв": "apart_number",
             "К_Этаж": "floor",
+            "К_Комн": "room_count",
             "Площадь общая": "full_living_area",
             "Площадь общая(б/л)": "total_living_area",
             "Площадь жилая": "living_area",
-            "К_Комн": "room_count",
-            "К_Тип.пл": "apart_type_of_settlement",
-            "К_Ресурс": "apart_resource",
+            "Сл.инф_UNOM": "building_id",
             "Сл.инф_UNKV": "un_kv",
+            "К_Тип.пл": "apart_type",
             "Распорядитель_Название": "owner",
-            "К_Состояние": "status",
-            "К_Инв/к": "for_special_needs_marker",
             "РСМ_Кад номер, квартира": "apart_kad_number",
             "РСМ, Кад номер, комната": "room_kad_number",
-            "Адрес_улица": "street_address",
-            "Адрес_дом_№": "house_number",
-            "Адрес_дом_индекс": "house_index",
-            "Адрес_корпус_№": "bulding_body_number",
-            "id_up": "up_id",
-            "notes": "notes",
+            "К_Инв/к": "for_special_needs_marker",
         }
 
         # Rename columns in the DataFrame
@@ -249,15 +241,6 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
 
         # Replace NaN values with None for SQL compatibility
         new_apart_df = new_apart_df.replace({np.nan: None})
-
-        # Check for duplicates in 'new_apart_id' and print them if any
-        duplicates = new_apart_df[new_apart_df.duplicated(subset=["up_id"], keep=False)]
-        if not duplicates.empty:
-            print("Duplicate rows found for 'new_apart_id':")
-            print(duplicates)
-            new_apart_df = new_apart_df.drop_duplicates(subset=["up_id"])
-        else:
-            print("No duplicates found for 'new_apart_id'.")
 
         # Convert DataFrame rows into a list of tuples for bulk insert
         args = list(new_apart_df.itertuples(index=False, name=None))
@@ -342,7 +325,7 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         cursor.close()
         connection.close()
         return ds
-'''
+
 
 # Функция для преобразования строк в datetime с нужным форматом
 def format_datetime_columns(df, columns):
@@ -561,7 +544,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
         "house_address", "apart_number", "room_count", "floor", "full_living_area",
         "living_area", "people_v_dele", "people_uchet", "total_living_area", "apart_type",
         "manipulation_notes", "municipal_district", "is_special_needs_marker", "min_floor",
-        "max_floor", "buying_date", "is_queue", "queue_square", "type_of_settlement",
+        "max_floor", "buying_date", "type_of_settlement",
         "history_id", "rank", "kpu_another"
     ]
     
@@ -572,7 +555,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
     
     # Упорядочиваем колонки
     old_apart_df = old_apart_df[old_apart_required]
-    
+    old_apart_df = old_apart_df['is_queue'].apply(lambda x: 0 if pd.isnull(x) else 1)
     # Обработка даты
     if 'buying_date' in old_apart_df.columns:
         old_apart_df['buying_date'] = pd.to_datetime(old_apart_df['buying_date'], errors='coerce')
