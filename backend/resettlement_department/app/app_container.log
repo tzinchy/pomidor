@@ -23995,3 +23995,2656 @@ ORDER BY house_address;
             ORDER BY municipal_district
         
 2025-02-13 16:31:43,105 - INFO - Params: {'district_0': 'Троицкий АО'}
+2025-02-14 08:02:53,670 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM family_structure
+            ORDER BY district
+        
+2025-02-14 08:02:53,670 - INFO - Params: {}
+2025-02-14 08:58:34,558 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM family_structure
+            ORDER BY district
+        
+2025-02-14 08:58:34,558 - INFO - Params: {}
+2025-02-14 08:58:39,509 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 08:58:39,510 - INFO - Params: None
+2025-02-14 08:58:39,820 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 08:58:39,821 - INFO - Params: None
+2025-02-14 08:58:56,127 - ERROR - Error executing query: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: 
+            SELECT DISTINCT district 
+            FROM family_structure
+            ORDER BY district
+        ]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-02-14 08:59:50,955 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM family_structure
+            ORDER BY district
+        
+2025-02-14 08:59:50,955 - INFO - Params: {}
+2025-02-14 08:59:52,805 - INFO - Executing query: 
+            SELECT DISTINCT municipal_district
+            FROM family_structure
+            WHERE district IN (:district_0)
+            ORDER BY municipal_district
+        
+2025-02-14 08:59:52,805 - INFO - Params: {'district_0': 'СВАО'}
+2025-02-14 08:59:53,676 - INFO - Executing query: 
+            SELECT DISTINCT house_address
+            FROM family_structure
+            WHERE municipal_district IN (:municipal_districts_0)
+            ORDER BY house_address
+        
+2025-02-14 08:59:53,676 - INFO - Params: {'municipal_districts_0': 'Алтуфьевский'}
+2025-02-14 08:59:53,677 - INFO - Executing query: 
+                WITH ranked_apartments AS (
+                    SELECT
+                        house_address,
+                        apart_number,
+                        district,
+                        municipal_district,
+                        floor,
+                        fio,
+                        full_living_area,
+                        total_living_area,
+                        living_area,
+                        room_count,
+                        type_of_settlement,
+                        status.status,
+                        family_structure.notes,
+                        family_apartment_needs_id,
+                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
+                    FROM
+                        family_structure
+                    LEFT JOIN
+                        family_apartment_needs USING (affair_id)
+                    LEFT JOIN
+                        offer USING (family_apartment_needs_id)
+                    LEFT JOIN
+                        status ON offer.status_id = status.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE municipal_district IN (:municipal_0) AND rn = 1
+                ORDER BY full_living_area
+            
+2025-02-14 08:59:53,678 - INFO - Params: {'municipal_0': 'Алтуфьевский'}
+2025-02-14 09:37:22,387 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 09:37:22,387 - INFO - Params: None
+2025-02-14 09:37:22,387 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 09:37:22,387 - INFO - Params: None
+2025-02-14 09:37:41,337 - ERROR - Error executing query: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-02-14 09:37:41,337 - ERROR - Error executing query: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-02-14 09:59:36,950 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 09:59:36,950 - INFO - Params: None
+2025-02-14 09:59:36,960 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 09:59:36,960 - INFO - Params: None
+2025-02-14 10:04:11,144 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:04:11,144 - INFO - Params: None
+2025-02-14 10:04:11,147 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:04:11,147 - INFO - Params: None
+2025-02-14 10:12:39,160 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:12:39,160 - INFO - Params: None
+2025-02-14 10:12:39,177 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:12:39,177 - INFO - Params: None
+2025-02-14 10:12:41,443 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM family_structure
+            ORDER BY district
+        
+2025-02-14 10:12:41,443 - INFO - Params: {}
+2025-02-14 10:12:42,877 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM family_structure
+            ORDER BY district
+        
+2025-02-14 10:12:42,877 - INFO - Params: {}
+2025-02-14 10:12:43,522 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM new_apart
+            ORDER BY district
+        
+2025-02-14 10:12:43,522 - INFO - Params: {}
+2025-02-14 10:12:43,969 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM family_structure
+            ORDER BY district
+        
+2025-02-14 10:12:43,970 - INFO - Params: {}
+2025-02-14 10:12:45,872 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:12:45,872 - INFO - Params: None
+2025-02-14 10:12:45,885 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:12:45,885 - INFO - Params: None
+2025-02-14 10:12:57,081 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:12:57,081 - INFO - Params: None
+2025-02-14 10:12:57,149 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:12:57,149 - INFO - Params: None
+2025-02-14 10:16:37,453 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM family_structure
+            ORDER BY district
+        
+2025-02-14 10:16:37,453 - INFO - Params: {}
+2025-02-14 10:16:38,451 - INFO - Executing query: 
+            SELECT DISTINCT municipal_district
+            FROM family_structure
+            WHERE district IN (:district_0)
+            ORDER BY municipal_district
+        
+2025-02-14 10:16:38,451 - INFO - Params: {'district_0': 'Цен'}
+2025-02-14 10:16:39,129 - INFO - Executing query: 
+            SELECT DISTINCT house_address
+            FROM family_structure
+            WHERE municipal_district IN (:municipal_districts_0)
+            ORDER BY house_address
+        
+2025-02-14 10:16:39,129 - INFO - Params: {'municipal_districts_0': 'Мещанский'}
+2025-02-14 10:16:39,131 - INFO - Executing query: 
+                WITH ranked_apartments AS (
+                    SELECT
+                        house_address,
+                        apart_number,
+                        district,
+                        municipal_district,
+                        floor,
+                        fio,
+                        full_living_area,
+                        total_living_area,
+                        living_area,
+                        room_count,
+                        type_of_settlement,
+                        status.status,
+                        family_structure.notes,
+                        family_apartment_needs_id,
+                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
+                    FROM
+                        family_structure
+                    LEFT JOIN
+                        family_apartment_needs USING (affair_id)
+                    LEFT JOIN
+                        offer USING (family_apartment_needs_id)
+                    LEFT JOIN
+                        status ON offer.status_id = status.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE municipal_district IN (:municipal_0) AND rn = 1
+                ORDER BY full_living_area
+            
+2025-02-14 10:16:39,131 - INFO - Params: {'municipal_0': 'Мещанский'}
+2025-02-14 10:16:42,780 - INFO - Executing query: 
+                WITH new_apartment_list AS (
+                    SELECT 
+                        o.family_apartment_needs_id,
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'house_address', na.house_address,
+                                'apart_number', na.apart_number,
+                                'district', na.district,
+                                'municipal_district', na.municipal_district,
+                                'full_living_area', na.full_living_area,
+                                'total_living_area', na.total_living_area,
+                                'living_area', na.living_area,
+                                'room_count', na.room_count,
+                                'type_of_settlement', na.type_of_settlement,
+                                'notes', na.notes,
+                                'status', COALESCE(s.status, '?'),
+                                'sentence_date', o.sentence_date :: DATE,
+                                'answer_date', o.answer_date :: DATE
+                            )
+                        ) FILTER (WHERE na.house_address IS NOT NULL OR na.apart_number IS NOT NULL OR na.district IS NOT NULL OR na.municipal_district IS NOT NULL 
+                        OR na.full_living_area IS NOT NULL OR na.total_living_area IS NOT NULL OR na.living_area IS NOT NULL 
+                        OR na.room_count IS NOT NULL OR na.type_of_settlement IS NOT NULL OR na.notes IS NOT NULL 
+                        OR s.status IS NOT NULL OR o.sentence_date IS NOT NULL OR o.answer_date IS NOT NULL) AS new_apartments
+                    FROM 
+                        offer o
+                    LEFT JOIN 
+                        new_apart na ON o.new_apart_id = na.new_apart_id
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                    GROUP BY 
+                        o.family_apartment_needs_id
+                )
+                SELECT 
+                    fan.family_apartment_needs_id,
+                    fs.house_address,
+                    fs.apart_number,
+                    fs.district,
+                    fs.municipal_district,
+                    fs.full_living_area,
+                    fs.total_living_area,
+                    fs.living_area,
+                    fs.room_count,
+                    fs.type_of_settlement,
+                    nal.new_apartments
+                FROM 
+                    family_apartment_needs fan
+                LEFT JOIN 
+                    family_structure fs ON fan.affair_id = fs.affair_id
+                LEFT JOIN 
+                    new_apartment_list nal ON fan.family_apartment_needs_id = nal.family_apartment_needs_id
+                WHERE
+                    fan.family_apartment_needs_id = 866591
+                ORDER BY 
+                    fs.affair_id;
+            
+2025-02-14 10:16:42,780 - INFO - Params: {'apart_id': 866591}
+2025-02-14 10:16:44,463 - INFO - Executing query: 
+                WITH new_apartment_list AS (
+                    SELECT 
+                        o.family_apartment_needs_id,
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'house_address', na.house_address,
+                                'apart_number', na.apart_number,
+                                'district', na.district,
+                                'municipal_district', na.municipal_district,
+                                'full_living_area', na.full_living_area,
+                                'total_living_area', na.total_living_area,
+                                'living_area', na.living_area,
+                                'room_count', na.room_count,
+                                'type_of_settlement', na.type_of_settlement,
+                                'notes', na.notes,
+                                'status', COALESCE(s.status, '?'),
+                                'sentence_date', o.sentence_date :: DATE,
+                                'answer_date', o.answer_date :: DATE
+                            )
+                        ) FILTER (WHERE na.house_address IS NOT NULL OR na.apart_number IS NOT NULL OR na.district IS NOT NULL OR na.municipal_district IS NOT NULL 
+                        OR na.full_living_area IS NOT NULL OR na.total_living_area IS NOT NULL OR na.living_area IS NOT NULL 
+                        OR na.room_count IS NOT NULL OR na.type_of_settlement IS NOT NULL OR na.notes IS NOT NULL 
+                        OR s.status IS NOT NULL OR o.sentence_date IS NOT NULL OR o.answer_date IS NOT NULL) AS new_apartments
+                    FROM 
+                        offer o
+                    LEFT JOIN 
+                        new_apart na ON o.new_apart_id = na.new_apart_id
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                    GROUP BY 
+                        o.family_apartment_needs_id
+                )
+                SELECT 
+                    fan.family_apartment_needs_id,
+                    fs.house_address,
+                    fs.apart_number,
+                    fs.district,
+                    fs.municipal_district,
+                    fs.full_living_area,
+                    fs.total_living_area,
+                    fs.living_area,
+                    fs.room_count,
+                    fs.type_of_settlement,
+                    nal.new_apartments
+                FROM 
+                    family_apartment_needs fan
+                LEFT JOIN 
+                    family_structure fs ON fan.affair_id = fs.affair_id
+                LEFT JOIN 
+                    new_apartment_list nal ON fan.family_apartment_needs_id = nal.family_apartment_needs_id
+                WHERE
+                    fan.family_apartment_needs_id = 866593
+                ORDER BY 
+                    fs.affair_id;
+            
+2025-02-14 10:16:44,463 - INFO - Params: {'apart_id': 866593}
+2025-02-14 10:16:44,897 - INFO - Executing query: 
+                WITH new_apartment_list AS (
+                    SELECT 
+                        o.family_apartment_needs_id,
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'house_address', na.house_address,
+                                'apart_number', na.apart_number,
+                                'district', na.district,
+                                'municipal_district', na.municipal_district,
+                                'full_living_area', na.full_living_area,
+                                'total_living_area', na.total_living_area,
+                                'living_area', na.living_area,
+                                'room_count', na.room_count,
+                                'type_of_settlement', na.type_of_settlement,
+                                'notes', na.notes,
+                                'status', COALESCE(s.status, '?'),
+                                'sentence_date', o.sentence_date :: DATE,
+                                'answer_date', o.answer_date :: DATE
+                            )
+                        ) FILTER (WHERE na.house_address IS NOT NULL OR na.apart_number IS NOT NULL OR na.district IS NOT NULL OR na.municipal_district IS NOT NULL 
+                        OR na.full_living_area IS NOT NULL OR na.total_living_area IS NOT NULL OR na.living_area IS NOT NULL 
+                        OR na.room_count IS NOT NULL OR na.type_of_settlement IS NOT NULL OR na.notes IS NOT NULL 
+                        OR s.status IS NOT NULL OR o.sentence_date IS NOT NULL OR o.answer_date IS NOT NULL) AS new_apartments
+                    FROM 
+                        offer o
+                    LEFT JOIN 
+                        new_apart na ON o.new_apart_id = na.new_apart_id
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                    GROUP BY 
+                        o.family_apartment_needs_id
+                )
+                SELECT 
+                    fan.family_apartment_needs_id,
+                    fs.house_address,
+                    fs.apart_number,
+                    fs.district,
+                    fs.municipal_district,
+                    fs.full_living_area,
+                    fs.total_living_area,
+                    fs.living_area,
+                    fs.room_count,
+                    fs.type_of_settlement,
+                    nal.new_apartments
+                FROM 
+                    family_apartment_needs fan
+                LEFT JOIN 
+                    family_structure fs ON fan.affair_id = fs.affair_id
+                LEFT JOIN 
+                    new_apartment_list nal ON fan.family_apartment_needs_id = nal.family_apartment_needs_id
+                WHERE
+                    fan.family_apartment_needs_id = 866598
+                ORDER BY 
+                    fs.affair_id;
+            
+2025-02-14 10:16:44,897 - INFO - Params: {'apart_id': 866598}
+2025-02-14 10:16:45,365 - INFO - Executing query: 
+                WITH new_apartment_list AS (
+                    SELECT 
+                        o.family_apartment_needs_id,
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'house_address', na.house_address,
+                                'apart_number', na.apart_number,
+                                'district', na.district,
+                                'municipal_district', na.municipal_district,
+                                'full_living_area', na.full_living_area,
+                                'total_living_area', na.total_living_area,
+                                'living_area', na.living_area,
+                                'room_count', na.room_count,
+                                'type_of_settlement', na.type_of_settlement,
+                                'notes', na.notes,
+                                'status', COALESCE(s.status, '?'),
+                                'sentence_date', o.sentence_date :: DATE,
+                                'answer_date', o.answer_date :: DATE
+                            )
+                        ) FILTER (WHERE na.house_address IS NOT NULL OR na.apart_number IS NOT NULL OR na.district IS NOT NULL OR na.municipal_district IS NOT NULL 
+                        OR na.full_living_area IS NOT NULL OR na.total_living_area IS NOT NULL OR na.living_area IS NOT NULL 
+                        OR na.room_count IS NOT NULL OR na.type_of_settlement IS NOT NULL OR na.notes IS NOT NULL 
+                        OR s.status IS NOT NULL OR o.sentence_date IS NOT NULL OR o.answer_date IS NOT NULL) AS new_apartments
+                    FROM 
+                        offer o
+                    LEFT JOIN 
+                        new_apart na ON o.new_apart_id = na.new_apart_id
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                    GROUP BY 
+                        o.family_apartment_needs_id
+                )
+                SELECT 
+                    fan.family_apartment_needs_id,
+                    fs.house_address,
+                    fs.apart_number,
+                    fs.district,
+                    fs.municipal_district,
+                    fs.full_living_area,
+                    fs.total_living_area,
+                    fs.living_area,
+                    fs.room_count,
+                    fs.type_of_settlement,
+                    nal.new_apartments
+                FROM 
+                    family_apartment_needs fan
+                LEFT JOIN 
+                    family_structure fs ON fan.affair_id = fs.affair_id
+                LEFT JOIN 
+                    new_apartment_list nal ON fan.family_apartment_needs_id = nal.family_apartment_needs_id
+                WHERE
+                    fan.family_apartment_needs_id = 866593
+                ORDER BY 
+                    fs.affair_id;
+            
+2025-02-14 10:16:45,365 - INFO - Params: {'apart_id': 866593}
+2025-02-14 10:16:46,997 - INFO - Executing query: 
+            SELECT DISTINCT house_address
+            FROM family_structure
+            WHERE municipal_district IN (:municipal_districts_0)
+            ORDER BY house_address
+        
+2025-02-14 10:16:46,997 - INFO - Params: {'municipal_districts_0': 'Пресненский'}
+2025-02-14 10:16:46,997 - INFO - Executing query: 
+                WITH ranked_apartments AS (
+                    SELECT
+                        house_address,
+                        apart_number,
+                        district,
+                        municipal_district,
+                        floor,
+                        fio,
+                        full_living_area,
+                        total_living_area,
+                        living_area,
+                        room_count,
+                        type_of_settlement,
+                        status.status,
+                        family_structure.notes,
+                        family_apartment_needs_id,
+                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
+                    FROM
+                        family_structure
+                    LEFT JOIN
+                        family_apartment_needs USING (affair_id)
+                    LEFT JOIN
+                        offer USING (family_apartment_needs_id)
+                    LEFT JOIN
+                        status ON offer.status_id = status.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE municipal_district IN (:municipal_0) AND rn = 1
+                ORDER BY full_living_area
+            
+2025-02-14 10:16:46,997 - INFO - Params: {'municipal_0': 'Пресненский'}
+2025-02-14 10:16:51,440 - INFO - Executing query: 
+                WITH new_apartment_list AS (
+                    SELECT 
+                        o.family_apartment_needs_id,
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'house_address', na.house_address,
+                                'apart_number', na.apart_number,
+                                'district', na.district,
+                                'municipal_district', na.municipal_district,
+                                'full_living_area', na.full_living_area,
+                                'total_living_area', na.total_living_area,
+                                'living_area', na.living_area,
+                                'room_count', na.room_count,
+                                'type_of_settlement', na.type_of_settlement,
+                                'notes', na.notes,
+                                'status', COALESCE(s.status, '?'),
+                                'sentence_date', o.sentence_date :: DATE,
+                                'answer_date', o.answer_date :: DATE
+                            )
+                        ) FILTER (WHERE na.house_address IS NOT NULL OR na.apart_number IS NOT NULL OR na.district IS NOT NULL OR na.municipal_district IS NOT NULL 
+                        OR na.full_living_area IS NOT NULL OR na.total_living_area IS NOT NULL OR na.living_area IS NOT NULL 
+                        OR na.room_count IS NOT NULL OR na.type_of_settlement IS NOT NULL OR na.notes IS NOT NULL 
+                        OR s.status IS NOT NULL OR o.sentence_date IS NOT NULL OR o.answer_date IS NOT NULL) AS new_apartments
+                    FROM 
+                        offer o
+                    LEFT JOIN 
+                        new_apart na ON o.new_apart_id = na.new_apart_id
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                    GROUP BY 
+                        o.family_apartment_needs_id
+                )
+                SELECT 
+                    fan.family_apartment_needs_id,
+                    fs.house_address,
+                    fs.apart_number,
+                    fs.district,
+                    fs.municipal_district,
+                    fs.full_living_area,
+                    fs.total_living_area,
+                    fs.living_area,
+                    fs.room_count,
+                    fs.type_of_settlement,
+                    nal.new_apartments
+                FROM 
+                    family_apartment_needs fan
+                LEFT JOIN 
+                    family_structure fs ON fan.affair_id = fs.affair_id
+                LEFT JOIN 
+                    new_apartment_list nal ON fan.family_apartment_needs_id = nal.family_apartment_needs_id
+                WHERE
+                    fan.family_apartment_needs_id = 866444
+                ORDER BY 
+                    fs.affair_id;
+            
+2025-02-14 10:16:51,440 - INFO - Params: {'apart_id': 866444}
+2025-02-14 10:16:53,381 - INFO - Executing query: 
+                WITH new_apartment_list AS (
+                    SELECT 
+                        o.family_apartment_needs_id,
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'house_address', na.house_address,
+                                'apart_number', na.apart_number,
+                                'district', na.district,
+                                'municipal_district', na.municipal_district,
+                                'full_living_area', na.full_living_area,
+                                'total_living_area', na.total_living_area,
+                                'living_area', na.living_area,
+                                'room_count', na.room_count,
+                                'type_of_settlement', na.type_of_settlement,
+                                'notes', na.notes,
+                                'status', COALESCE(s.status, '?'),
+                                'sentence_date', o.sentence_date :: DATE,
+                                'answer_date', o.answer_date :: DATE
+                            )
+                        ) FILTER (WHERE na.house_address IS NOT NULL OR na.apart_number IS NOT NULL OR na.district IS NOT NULL OR na.municipal_district IS NOT NULL 
+                        OR na.full_living_area IS NOT NULL OR na.total_living_area IS NOT NULL OR na.living_area IS NOT NULL 
+                        OR na.room_count IS NOT NULL OR na.type_of_settlement IS NOT NULL OR na.notes IS NOT NULL 
+                        OR s.status IS NOT NULL OR o.sentence_date IS NOT NULL OR o.answer_date IS NOT NULL) AS new_apartments
+                    FROM 
+                        offer o
+                    LEFT JOIN 
+                        new_apart na ON o.new_apart_id = na.new_apart_id
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                    GROUP BY 
+                        o.family_apartment_needs_id
+                )
+                SELECT 
+                    fan.family_apartment_needs_id,
+                    fs.house_address,
+                    fs.apart_number,
+                    fs.district,
+                    fs.municipal_district,
+                    fs.full_living_area,
+                    fs.total_living_area,
+                    fs.living_area,
+                    fs.room_count,
+                    fs.type_of_settlement,
+                    nal.new_apartments
+                FROM 
+                    family_apartment_needs fan
+                LEFT JOIN 
+                    family_structure fs ON fan.affair_id = fs.affair_id
+                LEFT JOIN 
+                    new_apartment_list nal ON fan.family_apartment_needs_id = nal.family_apartment_needs_id
+                WHERE
+                    fan.family_apartment_needs_id = 866558
+                ORDER BY 
+                    fs.affair_id;
+            
+2025-02-14 10:16:53,381 - INFO - Params: {'apart_id': 866558}
+2025-02-14 10:17:41,677 - INFO - Executing query: 
+            SELECT DISTINCT house_address
+            FROM family_structure
+            WHERE municipal_district IN (:municipal_districts_0)
+            ORDER BY house_address
+        
+2025-02-14 10:17:41,677 - INFO - Params: {'municipal_districts_0': 'Пресненский'}
+2025-02-14 10:17:41,677 - INFO - Executing query: 
+                WITH ranked_apartments AS (
+                    SELECT
+                        house_address,
+                        apart_number,
+                        district,
+                        municipal_district,
+                        floor,
+                        fio,
+                        full_living_area,
+                        total_living_area,
+                        living_area,
+                        room_count,
+                        type_of_settlement,
+                        status.status,
+                        family_structure.notes,
+                        family_apartment_needs_id,
+                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
+                    FROM
+                        family_structure
+                    LEFT JOIN
+                        family_apartment_needs USING (affair_id)
+                    LEFT JOIN
+                        offer USING (family_apartment_needs_id)
+                    LEFT JOIN
+                        status ON offer.status_id = status.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE municipal_district IN (:municipal_0) AND rn = 1
+                ORDER BY full_living_area
+            
+2025-02-14 10:17:41,677 - INFO - Params: {'municipal_0': 'Пресненский'}
+2025-02-14 10:17:42,457 - INFO - Executing query: 
+            SELECT DISTINCT house_address
+            FROM family_structure
+            WHERE municipal_district IN (:municipal_districts_0)
+            ORDER BY house_address
+        
+2025-02-14 10:17:42,457 - INFO - Params: {'municipal_districts_0': 'Мещанский'}
+2025-02-14 10:17:42,458 - INFO - Executing query: 
+                WITH ranked_apartments AS (
+                    SELECT
+                        house_address,
+                        apart_number,
+                        district,
+                        municipal_district,
+                        floor,
+                        fio,
+                        full_living_area,
+                        total_living_area,
+                        living_area,
+                        room_count,
+                        type_of_settlement,
+                        status.status,
+                        family_structure.notes,
+                        family_apartment_needs_id,
+                        ROW_NUMBER() OVER (PARTITION BY family_apartment_needs_id ORDER BY offer.sentence_date DESC, offer.answer_date DESC) AS rn
+                    FROM
+                        family_structure
+                    LEFT JOIN
+                        family_apartment_needs USING (affair_id)
+                    LEFT JOIN
+                        offer USING (family_apartment_needs_id)
+                    LEFT JOIN
+                        status ON offer.status_id = status.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE municipal_district IN (:municipal_0) AND rn = 1
+                ORDER BY full_living_area
+            
+2025-02-14 10:17:42,459 - INFO - Params: {'municipal_0': 'Мещанский'}
+2025-02-14 10:26:29,026 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:26:29,027 - INFO - Params: None
+2025-02-14 10:26:29,029 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:26:29,029 - INFO - Params: None
+2025-02-14 10:37:54,499 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:37:54,499 - INFO - Params: None
+2025-02-14 10:37:54,501 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:37:54,501 - INFO - Params: None
+2025-02-14 10:55:17,945 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:55:17,945 - INFO - Params: None
+2025-02-14 10:55:17,947 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:55:17,947 - INFO - Params: None
+2025-02-14 10:59:12,959 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:59:12,959 - INFO - Params: None
+2025-02-14 10:59:12,962 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 10:59:12,962 - INFO - Params: None
+2025-02-14 11:02:09,509 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:02:09,509 - INFO - Params: None
+2025-02-14 11:02:09,516 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:02:09,516 - INFO - Params: None
+2025-02-14 11:02:17,914 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:02:17,915 - INFO - Params: None
+2025-02-14 11:02:17,929 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:02:17,930 - INFO - Params: None
+2025-02-14 11:03:09,885 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:03:09,885 - INFO - Params: None
+2025-02-14 11:03:09,888 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:03:09,888 - INFO - Params: None
+2025-02-14 11:10:01,019 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:10:01,020 - INFO - Params: None
+2025-02-14 11:10:01,032 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:10:01,032 - INFO - Params: None
+2025-02-14 11:30:20,415 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:30:20,416 - INFO - Params: None
+2025-02-14 11:30:20,420 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:30:20,420 - INFO - Params: None
+2025-02-14 11:30:39,399 - ERROR - Error executing query: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-02-14 11:30:55,641 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM family_structure
+            ORDER BY district
+        
+2025-02-14 11:30:55,641 - INFO - Params: {}
+2025-02-14 11:30:56,777 - INFO - Executing query: 
+            SELECT DISTINCT municipal_district
+            FROM family_structure
+            WHERE district IN (:district_0)
+            ORDER BY municipal_district
+        
+2025-02-14 11:30:56,778 - INFO - Params: {'district_0': 'Цен'}
+2025-02-14 11:30:57,195 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM new_apart
+            ORDER BY district
+        
+2025-02-14 11:30:57,195 - INFO - Params: {}
+2025-02-14 11:31:03,623 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM family_structure
+            ORDER BY district
+        
+2025-02-14 11:31:03,623 - INFO - Params: {}
+2025-02-14 11:31:04,354 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM new_apart
+            ORDER BY district
+        
+2025-02-14 11:31:04,354 - INFO - Params: {}
+2025-02-14 11:31:04,793 - INFO - Executing query: 
+            SELECT DISTINCT municipal_district
+            FROM new_apart
+            WHERE district IN (:district_0)
+            ORDER BY municipal_district
+        
+2025-02-14 11:31:04,793 - INFO - Params: {'district_0': 'Зап'}
+2025-02-14 11:31:05,842 - INFO - Executing query: 
+            SELECT DISTINCT municipal_district
+            FROM new_apart
+            WHERE district IN (:district_0)
+            ORDER BY municipal_district
+        
+2025-02-14 11:31:05,842 - INFO - Params: {'district_0': 'Сев'}
+2025-02-14 11:31:06,499 - INFO - Executing query: 
+            SELECT DISTINCT municipal_district
+            FROM new_apart
+            WHERE district IN (:district_0)
+            ORDER BY municipal_district
+        
+2025-02-14 11:31:06,499 - INFO - Params: {'district_0': 'Цен'}
+2025-02-14 11:31:08,715 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM family_structure
+            ORDER BY district
+        
+2025-02-14 11:31:08,715 - INFO - Params: {}
+2025-02-14 11:31:19,231 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:31:19,231 - INFO - Params: None
+2025-02-14 11:31:19,255 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:31:19,255 - INFO - Params: None
+2025-02-14 11:31:26,142 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:31:26,142 - INFO - Params: None
+2025-02-14 11:31:26,154 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:31:26,154 - INFO - Params: None
+2025-02-14 11:31:38,911 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:31:38,911 - INFO - Params: None
+2025-02-14 11:31:38,929 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:31:38,929 - INFO - Params: None
+2025-02-14 11:31:40,726 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:31:40,727 - INFO - Params: None
+2025-02-14 11:31:40,729 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:31:40,729 - INFO - Params: None
+2025-02-14 11:34:56,409 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:34:56,410 - INFO - Params: None
+2025-02-14 11:34:56,425 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:34:56,426 - INFO - Params: None
+2025-02-14 11:35:20,960 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:35:20,960 - INFO - Params: None
+2025-02-14 11:35:20,976 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:35:20,976 - INFO - Params: None
+2025-02-14 11:41:04,744 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:41:04,744 - INFO - Params: None
+2025-02-14 11:41:04,746 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:41:04,746 - INFO - Params: None
+2025-02-14 11:43:46,818 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:43:46,818 - INFO - Params: None
+2025-02-14 11:43:46,820 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:43:46,820 - INFO - Params: None
+2025-02-14 11:44:05,364 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:44:05,364 - INFO - Params: None
+2025-02-14 11:44:05,378 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:44:05,379 - INFO - Params: None
+2025-02-14 11:44:13,390 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        family_apartment_needs_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY family_apartment_needs.family_apartment_needs_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM family_apartment_needs
+    JOIN offer USING (family_apartment_needs_id)
+),
+clear_data AS (
+    SELECT family_apartment_needs_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(room_count) AS count
+    FROM family_apartment_needs 
+    JOIN family_structure USING (affair_id)
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clear_data
+        WHERE clear_data.family_apartment_needs_id = family_apartment_needs.family_apartment_needs_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:44:13,390 - INFO - Params: None
+2025-02-14 11:44:13,403 - INFO - Executing query: WITH needs_with_row AS (
+    SELECT 
+        new_apart_id,
+        status_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY new_apart_id 
+            ORDER BY offer.sentence_date DESC, offer.answer_date DESC
+        ) AS rn
+    FROM offer
+),
+clear_data AS (
+    SELECT new_apart_id 
+    FROM needs_with_row 
+    WHERE rn = 1 AND status_id != 2
+)
+SELECT 
+    house_address, 
+    jsonb_object_agg(room_count, count) AS rooms
+FROM (
+    SELECT 
+        house_address, 
+        room_count, 
+        COUNT(*) AS count
+    FROM new_apart 
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM clear_data 
+        WHERE clear_data.new_apart_id = new_apart.new_apart_id
+    )
+    GROUP BY house_address, room_count
+    ORDER BY room_count
+) AS subquery
+GROUP BY house_address
+ORDER BY house_address;
+2025-02-14 11:44:13,403 - INFO - Params: None

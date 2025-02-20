@@ -432,7 +432,6 @@ def match_new_apart_to_family_batch(
                             else:
                                 # Если "Дата покупки" <= 2017-08-01 или пустая, используем floor_condition
                                 suitable_aparts = df_new_apart[
-                                    (df_new_apart["full_living_area"] >= old_apart["queue_square"])&
                                     (df_new_apart["room_count"]== old_apart["room_count"])&
                                     (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
                                     (df_new_apart["total_living_area"] >= old_apart["total_living_area"])&
@@ -444,7 +443,6 @@ def match_new_apart_to_family_batch(
                                 # Проверка наличия подходящих квартир
                                 if suitable_aparts.empty:
                                     suitable_aparts = df_new_apart[
-                                        (df_new_apart["full_living_area"] >= old_apart["queue_square"])& 
                                         (df_new_apart["room_count"] == old_apart["room_count"])&
                                         (df_new_apart["full_living_area"] >= old_apart["full_living_area"])&
                                         (df_new_apart["total_living_area"] >= old_apart["total_living_area"])&
@@ -455,7 +453,6 @@ def match_new_apart_to_family_batch(
 
                                     if suitable_aparts.empty:
                                         suitable_aparts = df_new_apart[
-                                            (df_new_apart["full_living_area"] >= old_apart["queue_square"])& 
                                             (df_new_apart["room_count"] == old_apart["room_count"])&
                                             (df_new_apart["full_living_area"] >= old_apart["full_living_area"])& 
                                             (df_new_apart["total_living_area"] >= old_apart["total_living_area"])&
@@ -480,9 +477,9 @@ def match_new_apart_to_family_batch(
                                     old_apart_list.append(old_apart_id)
                                     df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
 
-                        df_new_apart_second
+                        print(df_new_apart_second[df_new_apart_second['room_count'] == 3])
 
-                        for _, old_apart in df_old_apart[df_old_apart["room_count"] == i].iterrows():
+                        for _, old_apart in df_old_apart_reversed[df_old_apart_reversed["room_count"] == i].iterrows():
                             old_apart_id = int(old_apart["family_apartment_needs_id"])
                             if old_apart_id not in old_apart_list:
                                 continue
@@ -586,6 +583,7 @@ def match_new_apart_to_family_batch(
                                             (df_new_apart_second["for_special_needs_marker"] == old_apart["is_special_needs_marker"])
                                         ]
                                         if suitable_aparts.empty:
+                                            print('PROBLEM --- ',old_apart_id)
                                             cannot_offer_to_insert.append((old_apart_id,))
 
                                         else:

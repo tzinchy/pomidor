@@ -687,11 +687,15 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
 
     try:
         # Вставка в new_apart
+        print(new_apart_values)
         execute_values(cursor, new_apart_query, new_apart_values)
+        print(1)
         # Вставка в family_structure
         execute_values(cursor, family_structure_query, family_structure_values)
+        print(2)
         #Вставка в family_apartmnet_needs
         execute_values(cursor, family_apartment_needs_query, family_apartment_needs_values)
+        print(3)
         for data in data_to_insert:
             cursor.execute(
                 """
