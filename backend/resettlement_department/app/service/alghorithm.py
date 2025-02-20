@@ -30,7 +30,6 @@ def match_new_apart_to_family_batch(
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
                 # Запрос для "старых квартир" (потребностей семей)
-                print(old_selected_addresses, new_selected_addresses)
                 family_query = """
                         SELECT 
                         o.affair_id, 
@@ -108,10 +107,10 @@ def match_new_apart_to_family_batch(
                 # Выполнение запроса
                 cursor.execute(family_query, old_apart_query_params)
                 old_aparts = cursor.fetchall()
-                print('FAMILY QUERY', len(old_aparts), family_query, old_apart_query_params)
+                #print('FAMILY QUERY', len(old_aparts), family_query, old_apart_query_params)
                 if not old_aparts:
                     return ("No old apartments found.")
-                    
+                print(old_aparts)
                 # Запрос для новых квартир
                 new_apart_query = """
                 SELECT 
@@ -149,11 +148,14 @@ def match_new_apart_to_family_batch(
                     new_apart_query += " AND created_at = (SELECT MAX(created_at) FROM public.new_apart)"
 
                 new_apart_query += " ORDER BY room_count ASC, (full_living_area + living_area), floor, living_area ASC, full_living_area ASC, total_living_area ASC"
-
+                
                 cursor.execute(new_apart_query, new_apart_query_params)
 
                 new_aparts = cursor.fetchall()
-                print(new_apart_query, new_apart_query_params)
+                #print(new_aparts)
+                #print('FAMILY QUERY', len(new_aparts), new_apart_query, new_apart_query_params)
+                #print(new_apart_query, new_apart_query_params)
+
                 if not new_aparts:
                     return("No new apartments found.")
                 
@@ -164,6 +166,7 @@ def match_new_apart_to_family_batch(
                         "ages", "members_amount", "oldest", "is_queue", "queue_square",
                     ],
                 )
+                print(df_old_apart)
                 df_new_apart = pd.DataFrame(new_aparts, columns=[
                         "new_apart_id", "district", "municipal_district", "house_address", "apart_number", "floor",
                         "room_count", "full_living_area", "total_living_area", "living_area", "for_special_needs_marker",
@@ -542,7 +545,7 @@ def match_new_apart_to_family_batch(
                                             new_apart_id = int(suitable_apart["new_apart_id"])
                                             df_new_apart_second = df_new_apart_second[df_new_apart_second["new_apart_id"]!= new_apart_id]
                                             offers_to_insert.append(
-                                                (old_apart_id,new_apart_id,)
+                                                (old_apart_id, new_apart_id,)
                                             )
                                     else:
                                         suitable_apart = suitable_aparts.iloc[0]
@@ -597,7 +600,7 @@ def match_new_apart_to_family_batch(
                                             suitable_apart = suitable_aparts.iloc[0]
                                             new_apart_id = int(suitable_apart["new_apart_id"])
                                             df_new_apart_second = df_new_apart_second[df_new_apart_second["new_apart_id"]!= new_apart_id]
-                                            offers_to_insert.append((old_apart_id,new_apart_id,))
+                                            offers_to_insert.append((old_apart_id, new_apart_id,))
 
                                     else:
                                         suitable_apart = suitable_aparts.iloc[0]
@@ -793,7 +796,7 @@ def match_new_apart_to_family_batch(
                 # Удаление дубликатов из cannot_offer_to_insert
                 cannot_offer_to_insert = list(set(cannot_offer_to_insert))
                 print(offers_to_insert)
-
+                print('cannot offer to insert', cannot_offer_to_insert)
                 # --- Обновление базы данных ---
                 # Для каждой пары old_apart_id и new_apart_id
                 for old_apart_id, new_apart_id in offers_to_insert:
