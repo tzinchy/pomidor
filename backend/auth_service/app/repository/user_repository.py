@@ -42,7 +42,7 @@ class UserRepository:
         """Get password hash by email."""
         async with async_session_maker() as session:
             query = text(f"""
-                SELECT hashedPassword 
+                SELECT "hashedPassword" 
                 FROM {Settings.DB_SCHEMA}.user 
                 WHERE email = :email
             """)
@@ -56,7 +56,7 @@ class UserRepository:
         """Get password hash by email."""
         async with async_session_maker() as session:
             query = text(f"""
-                SELECT hashedPassword 
+                SELECT "hashedPassword" 
                 FROM {Settings.DB_SCHEMA}.user 
                 WHERE name = :name
             """)
