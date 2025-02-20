@@ -562,7 +562,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
         "living_area", "people_v_dele", "people_uchet", "total_living_area", "apart_type",
         "manipulation_notes", "municipal_district", "is_special_needs_marker", "min_floor",
         "max_floor", "buying_date", "is_queue", "queue_square", "type_of_settlement",
-        "history_id", "status_id", "rank", "kpu_another"
+        "history_id", "rank", "kpu_another"
     ]
     
     # Добавляем отсутствующие колонки со значением None
