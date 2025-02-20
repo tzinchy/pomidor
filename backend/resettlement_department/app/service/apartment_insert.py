@@ -45,6 +45,7 @@ def insert_data_to_old(df):
             inplace=True,
         )
         print('replacing done')
+
         # Приведение типов данных
         old_apart["floor"] = old_apart["floor"].replace(np.nan, 0).astype("Int64")
         old_apart["category"] = old_apart["category"].replace(np.nan, 0).astype("Int64")
@@ -55,11 +56,13 @@ def insert_data_to_old(df):
         old_apart["people_uchet"] = old_apart["people_uchet"].replace(np.nan, 0).astype("Int64")
         old_apart["people_in_family"] = old_apart["people_in_family"].replace(np.nan, 0).astype("Int64")
         print('astype done')
+
         # Добавляем колонку is_queue на основе регулярного выражения
         old_apart["is_queue"] = old_apart["kpu_another"].apply(
-             lambda x: 1 if re.search(r"-01-", str(x)) else 0
+              lambda x: 1 if re.search(r"-01-", str(x)) else 0
         ).astype("Int64")
         print('ochered is done')
+
         # Выбираем нужные колонки
         old_apart = old_apart[
             [
@@ -95,6 +98,7 @@ def insert_data_to_old(df):
         # Заменяем NaN на None для корректной вставки в базу данных
         old_apart = old_apart.replace({np.nan: None})
         print('replace none done')
+
         # Преобразуем DataFrame в список кортежей для массовой вставки
         args = list(old_apart.itertuples(index=False, name=None))
 
@@ -123,7 +127,7 @@ def insert_data_to_old(df):
             for arg in args
         )
 
-        # Выполняем SQL-запрос
+        # Выполняем SQL-запрос для вставки данных
         cursor.execute(f"""
             INSERT INTO public.old_apart (
                 affair_id, kpu_number, fio, surname, firstname, lastname, 
@@ -162,11 +166,35 @@ def insert_data_to_old(df):
                 rsm_status = EXCLUDED.rsm_status,
                 updated_at = NOW()
         """)
+
+        # Фиксируем изменения в основной транзакции
+        connection.commit()
+
+        # Обновляем статус успешного выполнения в отдельной транзакции
+        cursor.execute(
+            """UPDATE env.data_updates
+                SET success = True,
+                updated_at = NOW()
+                WHERE name = 'old_aparts_kpu'
+            """
+        )
         connection.commit()
         return 1  # Успешное выполнение
 
     except Exception as e:
         print('ERROR', e)
+        # Обновляем статус ошибки в отдельной транзакции
+        if connection:
+            try:
+                cursor.execute(
+                    """UPDATE env.data_updates
+                        SET success = False
+                        WHERE name = 'old_aparts_kpu'
+                    """
+                )
+                connection.commit()
+            except Exception as update_error:
+                print('ERROR updating status:', update_error)
         return e  # Возвращаем ошибку
 
     finally:
@@ -191,7 +219,7 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
             "Площадь общая(б/л)": "total_living_area",
             "Площадь жилая": "living_area",
             "К_Комн": "room_count",
-            "К_Тип.пл": "type_of_settlement",
+            "К_Тип.пл": "apart_type_of_settlement",
             "К_Ресурс": "apart_resource",
             "Сл.инф_UNKV": "un_kv",
             "Распорядитель_Название": "owner",
