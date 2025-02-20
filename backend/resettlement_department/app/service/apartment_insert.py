@@ -555,7 +555,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
     
     # Упорядочиваем колонки
     old_apart_df = old_apart_df[old_apart_required]
-    old_apart_df = old_apart_df['is_queue'].apply(lambda x: 0 if pd.isnull(x) else 1)
+
     # Обработка даты
     if 'buying_date' in old_apart_df.columns:
         old_apart_df['buying_date'] = pd.to_datetime(old_apart_df['buying_date'], errors='coerce')
