@@ -6,80 +6,61 @@ from core.config import settings
 from repository.database import project_managment_session
 import re
 
-def insert_data_to_structure(df):
+def insert_data_to_old(df):
+    connection = None  # Инициализация соединения
+    cursor = None      # Инициализация курсора
     try:
-        old_apart = old_apart.dropna(subset=["ID"])
+        # Удаляем строки с пустыми ID
+        old_apart = df.dropna(subset=["ID"])
 
-        # 2. Rename columns to match the database schema
+        # Переименовываем колонки в соответствии с базой данных
         old_apart.rename(
             columns={
                 "ID": "affair_id",
-                "КПУ_Дело_№ полный(новый)": "kpu_number",
-                "КПУ_Заявитель_Фамилия": "surname",
-                "КПУ_Заявитель_Имя": "firstname",
-                "КПУ_Заявитель_Отчество": "lastname",
-                "КПУ_кадастровый_номер_адреса": "cad_num",
-                "К_Тип_Кв": "apart_type",
-                "К_Комн": "room_count",
-                "К_Этаж": "floor",
-                "К_Общ": "full_living_area",
-                "К_Общ(б/л)": "total_living_area",
-                "К_Жил": "living_area",
-                "КПУ_ФИО": "fio",
-                "КПУ_Примечание": "notes",
-                "Адрес_Округ": "district",
-                "Адрес_Район": "municipal_district",
-                "Адрес_Короткий": "house_address",
-                "Адрес_№ кв": "apart_number",
-                "КПУ_Чел.в деле": "people_v_dele",
-                "КПУ_Чел.учете": "people_uchet",
-                "КПУ_Чел.в семье": "people_in_family",
-                "КПУ_Состояние": "status_id",
-                "КПУ_Направление_код": "category",
-                "КПУ_Др. напр. откр." : 'kpu_another'
+                "409858": "kpu_number",
+                "409859": "fio",  # Исправлено: убрали дубликат
+                "409860": "surname",
+                "409861": "firstname",
+                "409862": "lastname",
+                "409863": "people_in_family",
+                "409864": "category",
+                "409865": "cad_num",
+                "409866": "notes",
+                "409867": "district",
+                "409868": "municipal_district",
+                "409869": "house_address",
+                "409870": "apart_number",
+                "409871": "room_count",
+                "409872": "floor",
+                "409873": "full_living_area",
+                "409874": "living_area",
+                "409875": "people_v_dele",
+                "409876": "people_uchet",
+                "409877": "total_living_area",
+                "409878": "apart_type",
+                "409879": "kpu_another",
+                "410210": "type_of_settlement",
+                "410229": 'rsm_status'
             },
             inplace=True,
         )
-
-        # status_mapping = {
-        #     "в орд.гр": 1,
-        #     "в плане": 2,
-        #     "на учете": 3,
-        #     "перед.в др.АО": 4,
-        #     "пред.пл.": 5,
-        #     "снято": 6,
-        # }
-        # # Применение маппинга
-        # old_apart["status_id"] = old_apart["status_id"].apply(
-        #     lambda x: status_mapping.get(x, x)
-        # )
-        old_apart["floor"] = old_apart["floor"].astype("Int64")
-        old_apart["category"] = old_apart["category"].astype("Int64")
-        old_apart["full_living_area"] = old_apart[
-            "full_living_area"
-        ].astype(float)
-        old_apart["total_living_area"] = old_apart[
-            "total_living_area"
-        ].astype(float)
-        old_apart["living_area"] = old_apart["living_area"].astype(float)
-        old_apart["people_v_dele"] = old_apart["people_v_dele"].astype(
-            "Int64"
-        )
-        old_apart["people_uchet"] = old_apart["people_uchet"].astype(
-            "Int64"
-        )
-        old_apart["category"] = old_apart["category"].astype('Int64')
-        old_apart["people_in_family"] = old_apart[
-            "people_in_family"
-        ].astype("Int64")
-        import re
-
+        print('replacing done')
+        # Приведение типов данных
+        old_apart["floor"] = old_apart["floor"].replace(np.nan, 0).astype("Int64")
+        old_apart["category"] = old_apart["category"].replace(np.nan, 0).astype("Int64")
+        old_apart["full_living_area"] = old_apart["full_living_area"].replace(np.nan, 0).astype(float)
+        old_apart["total_living_area"] = old_apart["total_living_area"].replace(np.nan, 0).astype(float)
+        old_apart["living_area"] = old_apart["living_area"].replace(np.nan, 0).astype(float)
+        old_apart["people_v_dele"] = old_apart["people_v_dele"].replace(np.nan, 0).astype("Int64")
+        old_apart["people_uchet"] = old_apart["people_uchet"].replace(np.nan, 0).astype("Int64")
+        old_apart["people_in_family"] = old_apart["people_in_family"].replace(np.nan, 0).astype("Int64")
+        print('astype done')
+        # Добавляем колонку is_queue на основе регулярного выражения
         old_apart["is_queue"] = old_apart["kpu_another"].apply(
-            lambda x: 1 if re.search(r"-01-", str(x)) else 0
-        )
-
-        old_apart['is_queue'] = old_apart['is_queu'].astype("Int64")
-
+             lambda x: 1 if re.search(r"-01-", str(x)) else 0
+        ).astype("Int64")
+        print('ochered is done')
+        # Выбираем нужные колонки
         old_apart = old_apart[
             [
                 "affair_id",
@@ -92,7 +73,7 @@ def insert_data_to_structure(df):
                 "cad_num",
                 "notes",
                 "district",
-                "municipal_district,"
+                "municipal_district",
                 "house_address",
                 "apart_number",
                 "room_count",
@@ -105,18 +86,20 @@ def insert_data_to_structure(df):
                 "apart_type",
                 "category",
                 "kpu_another",
-                "is_queue"
+                "is_queue",
+                "type_of_settlement",
+                "rsm_status"
             ]
         ]
-        # Convert to list of dictionaries for batch insertion
-        old_apart = old_apart.replace({np.nan: None})
-        #old_apart["status_id"] = old_apart["status_id"].astype("Int64")
-        # Convert DataFrame rows into a list of tuples for bulk insert
-        args = list(old_apart.itertuples(index=False, name=None))
-        # Prepare the arguments string for the SQL query
 
-        # Connect to the PostgreSQL database
-        connection  =  psycopg2.connect(
+        # Заменяем NaN на None для корректной вставки в базу данных
+        old_apart = old_apart.replace({np.nan: None})
+        print('replace none done')
+        # Преобразуем DataFrame в список кортежей для массовой вставки
+        args = list(old_apart.itertuples(index=False, name=None))
+
+        # Подключаемся к базе данных PostgreSQL
+        connection = psycopg2.connect(
             host=settings.project_management_setting.DB_HOST,
             user=settings.project_management_setting.DB_USER,
             password=settings.project_management_setting.DB_PASSWORD,
@@ -125,7 +108,7 @@ def insert_data_to_structure(df):
         )
         cursor = connection.cursor()
 
-        # Prepare the arguments string for the SQL query
+        # Формируем строку аргументов для SQL-запроса
         args_str = ",".join(
             "({})".format(
                 ", ".join(
@@ -140,52 +123,58 @@ def insert_data_to_structure(df):
             for arg in args
         )
 
+        # Выполняем SQL-запрос
         cursor.execute(f"""
-        INSERT INTO public.old_apart (
-            affair_id, kpu_number, fio, surname, firstname, lastname, 
-            people_in_family, cad_num, notes, district, municipal_district, house_address, 
-            apart_number, room_count, floor, full_living_area, living_area, people_v_dele, 
-            people_uchet, total_living_area, apart_type, category, kpu_another, is_queue
-        )
-        VALUES 
-            {args_str}
-                    ON CONFLICT (affair_id) 
-        DO UPDATE SET 
-        kpu_number = EXCLUDED.kpu_number,
-        fio = EXCLUDED.fio,
-        surname = EXCLUDED.surname,
-        firstname = EXCLUDED.firstname,
-        lastname = EXCLUDED.lastname,
-        people_in_family = EXCLUDED.people_in_family,
-        cad_num = EXCLUDED.cad_num,
-        notes = EXCLUDED.notes,
-        district = EXCLUDED.district,
-        municipal_district = EXCLUDED.municipal_district,
-        house_address = EXCLUDED.house_address,
-        apart_number = EXCLUDED.apart_number,
-        room_count = EXCLUDED.room_count,
-        floor = EXCLUDED.floor,
-        full_living_area = EXCLUDED.full_living_area,
-        living_area = EXCLUDED.living_area,
-        people_v_dele = EXCLUDED.people_v_dele,
-        people_uchet = EXCLUDED.people_uchet,
-        total_living_area = EXCLUDED.total_living_area,
-        apart_type = EXCLUDED.apart_type,
-        status_id = EXCLUDED.status_id,
-        category = EXCLUDED.category,
-        kpu_another = EXCLUDED.kpu_another,
-        is_queue = EXCLUDED.is_queue,
-        updated_at = NOW()
-    """)
+            INSERT INTO public.old_apart (
+                affair_id, kpu_number, fio, surname, firstname, lastname, 
+                people_in_family, cad_num, notes, district, municipal_district, house_address, 
+                apart_number, room_count, floor, full_living_area, living_area, people_v_dele, 
+                people_uchet, total_living_area, apart_type, category, kpu_another, is_queue, type_of_settlement, rsm_status
+            )
+            VALUES 
+                {args_str}
+            ON CONFLICT (affair_id) 
+            DO UPDATE SET 
+                kpu_number = EXCLUDED.kpu_number,
+                fio = EXCLUDED.fio,
+                surname = EXCLUDED.surname,
+                firstname = EXCLUDED.firstname,
+                lastname = EXCLUDED.lastname,
+                people_in_family = EXCLUDED.people_in_family,
+                cad_num = EXCLUDED.cad_num,
+                notes = EXCLUDED.notes,
+                district = EXCLUDED.district,
+                municipal_district = EXCLUDED.municipal_district,
+                house_address = EXCLUDED.house_address,
+                apart_number = EXCLUDED.apart_number,
+                room_count = EXCLUDED.room_count,
+                floor = EXCLUDED.floor,
+                full_living_area = EXCLUDED.full_living_area,
+                living_area = EXCLUDED.living_area,
+                people_v_dele = EXCLUDED.people_v_dele,
+                people_uchet = EXCLUDED.people_uchet,
+                total_living_area = EXCLUDED.total_living_area,
+                apart_type = EXCLUDED.apart_type,
+                category = EXCLUDED.category,
+                kpu_another = EXCLUDED.kpu_another,
+                is_queue = EXCLUDED.is_queue,
+                type_of_settlement = EXCLUDED.type_of_settlement,
+                rsm_status = EXCLUDED.rsm_status,
+                updated_at = NOW()
+        """)
         connection.commit()
-        ds = 1
-    except Exception as e:
-        ds = e
-    finally:
-        cursor.close()
-        connection.close()
-        return ds
+        return 1  # Успешное выполнение
 
+    except Exception as e:
+        print('ERROR', e)
+        return e  # Возвращаем ошибку
+
+    finally:
+        # Закрываем соединение и курсор
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
 '''
 def new_apart_insert(new_apart_df: pd.DataFrame):
     try:
