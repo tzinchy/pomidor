@@ -29,5 +29,11 @@ class HistoryRepository:
             result = await session.execute(text(query), {'history_id' : history_id})
             await session.commit()
             return 'succes'
+        
+    async def get_env_history(self):
+        async with self.db() as session:
+            result = await session.execute(text('SELECT id, name, updated_at, success FROM env.data_updates'))
+            return result.fetchall()
+        
             
     

@@ -15,3 +15,7 @@ class HistoryService:
     async def approve_history(self, history_id):
         res = await self.repository.approve_history(history_id)
         return res
+    
+    async def get_env_history(self):
+        res = await self.repository.get_env_history()
+        return res
