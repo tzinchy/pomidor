@@ -4,7 +4,7 @@ import Card from "./Card";
 import BarChart from "./RiskChart";
 import { HOSTLINK } from "..";
 
-export default function Dashboard_page() {
+export default function DashboardPage() {
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 

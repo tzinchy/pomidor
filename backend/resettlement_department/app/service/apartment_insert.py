@@ -659,6 +659,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
 
     try:
         # Вставка в new_apart
+        print(new_apart_values)
         execute_values(cursor, new_apart_query, new_apart_values)
         # Вставка в old_apart
         execute_values(cursor, old_apart_query, old_apart_values)
