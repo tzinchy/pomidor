@@ -7,3 +7,4 @@ app/uploads/
 ./uploads
 .log 
 /.log
+app/app_container.log

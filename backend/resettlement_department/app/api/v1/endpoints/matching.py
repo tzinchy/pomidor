@@ -37,10 +37,9 @@ async def start_matching(
                                     new_selected_addresses=requirements.new_apartment_house_address,
                                     old_selected_addresses=requirements.old_apartment_house_address, 
                                     date=requirements.is_date)
-    if matching_result == 'ok':
-        return {'response' : 'Подбор успешно произведен'}
-    else:
-        raise HTTPException(detail=matching_result, status_code=status.HTTP_409_CONFLICT)
+    print(matching_result)
+    
+    return matching_result
 
 
 @router.post("/upload-file/")
