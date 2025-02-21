@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime
 
 class HistoryResponse(BaseModel):
     history_id: int
@@ -10,3 +11,9 @@ class HistoryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class EnvStatResponse(BaseModel):
+    id: int
+    name: str
+    timestamp: datetime
+    is_active: bool
