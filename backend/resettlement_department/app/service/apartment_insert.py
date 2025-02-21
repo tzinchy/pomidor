@@ -205,48 +205,50 @@ def insert_data_to_old(df):
             connection.close()
 
 def new_apart_insert(new_apart_df: pd.DataFrame):
+    connection = None
+    cursor = None
     try:
-        # Define the column renaming mapping
         column_mapping = {
-            "Сл.инф_APART_ID": "new_apart_id",
-            "Адрес_Округ": "district",
-            "Адрес_Мун.округ": "municipal_district",
-            "Адрес_Короткий": "house_address",
-            "Адрес_№ кв": "apart_number",
-            "К_Этаж": "floor",
-            "К_Комн": "room_count",
-            "Площадь общая": "full_living_area",
-            "Площадь общая(б/л)": "total_living_area",
-            "Площадь жилая": "living_area",
-            "Сл.инф_UNOM": "building_id",
-            "Сл.инф_UNKV": "un_kv",
-            "К_Тип.пл": "apart_type",
-            "Распорядитель_Название": "owner",
-            "РСМ_Кад номер, квартира": "apart_kad_number",
-            "РСМ, Кад номер, комната": "room_kad_number",
-            "К_Инв/к": "for_special_needs_marker",
+            "ID": "new_apart_id",
+            "375193": 'rsm_id',
+            "410610": "district",
+            "410611": "municipal_district",
+            "410612": "house_address",
+            "410613": "apart_number",
+            "410614": "floor",
+            "410615": "room_count",
+            "410616": "full_living_area",
+            "410617": "total_living_area",
+            "410618": "living_area",
+            "410619": "building_id",
+            "410620": "un_kv",
+            "410621": "apart_type",
+            "410622": "owner",
+            "410623": "apart_kad_number",
+            "410624": "room_kad_number",
+            "411011": "for_special_needs_marker",
         }
 
-        # Rename columns in the DataFrame
         new_apart_df = new_apart_df.rename(columns=column_mapping)
         print("Column mapping applied successfully.")
 
-        # Apply mapping for 'for_special_needs_marker'
+        # Исправлено: добавлена закрывающая скобка
         special_needs_mapping = {"да": 1, "нет": 0}
         new_apart_df["for_special_needs_marker"] = (
             new_apart_df["for_special_needs_marker"]
             .map(special_needs_mapping)
             .fillna(0)
         )
-
-        # Replace NaN values with None for SQL compatibility
         new_apart_df = new_apart_df.replace({np.nan: None})
 
-        # Convert DataFrame rows into a list of tuples for bulk insert
-        args = list(new_apart_df.itertuples(index=False, name=None))
-        print("Data converted to list of tuples for insertion.")
+        print("Columns after renaming and processing:")
+        print(new_apart_df.columns.tolist())
+        print(f"Number of columns: {len(new_apart_df.columns)}")
 
-        connection  =  psycopg2.connect(
+        args = list(new_apart_df.itertuples(index=False, name=None))
+        print(f"Number of rows to insert: {len(args)}")
+
+        connection = psycopg2.connect(
             host=settings.project_management_setting.DB_HOST,
             user=settings.project_management_setting.DB_USER,
             password=settings.project_management_setting.DB_PASSWORD,
@@ -255,33 +257,21 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         )
         cursor = connection.cursor()
 
-        # Prepare the arguments string for the SQL query
-        args_str = ",".join(
-            "({})".format(
-                ", ".join(
-                    "'{}'".format(x.replace("'", "''"))
-                    if isinstance(x, str)
-                    else "NULL"
-                    if x is None
-                    else str(x)
-                    for x in arg
-                )
-            )
-            for arg in args
-        )
-
-        # Define the columns to insert or update
         insert_columns = (
             "new_apart_id, building_id, district, municipal_district, house_address, apart_number, "
-            "floor, full_living_area, total_living_area, living_area, room_count, type_of_settlement, "
-            "apart_resource, un_kv, owner, status, for_special_needs_marker, apart_kad_number, "
-            "room_kad_number, street_address, house_number, house_index, bulding_body_number, up_id, notes"
+            "floor, full_living_area, total_living_area, living_area, room_count, rsm_id, "
+            "un_kv, apart_type, owner, apart_kad_number, room_kad_number, for_special_needs_marker"
         )
 
-        # Execute the insert query with conflict handling
-        cursor.execute(f"""
+        # Проверка соответствия количества столбцов
+        num_columns_df = len(new_apart_df.columns)
+        num_columns_sql = len(insert_columns.split(', '))
+        if num_columns_df != num_columns_sql:
+            raise ValueError(f"Columns mismatch: DataFrame has {num_columns_df} columns, SQL expects {num_columns_sql}")
+
+        query = f"""
         INSERT INTO public.new_apart ({insert_columns})
-            VALUES {args_str}
+            VALUES %s
             ON CONFLICT (new_apart_id) 
             DO UPDATE SET 
                 building_id = EXCLUDED.building_id,
@@ -294,37 +284,28 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
                 total_living_area = EXCLUDED.total_living_area,
                 living_area = EXCLUDED.living_area,
                 room_count = EXCLUDED.room_count,
-                type_of_settlement = EXCLUDED.type_of_settlement,
-                apart_resource = EXCLUDED.apart_resource,
                 un_kv = EXCLUDED.un_kv,
+                apart_type = EXCLUDED.apart_type,
                 owner = EXCLUDED.owner,
-                status = EXCLUDED.status,
-                for_special_needs_marker = EXCLUDED.for_special_needs_marker,
                 apart_kad_number = EXCLUDED.apart_kad_number,
                 room_kad_number = EXCLUDED.room_kad_number,
-                street_address = EXCLUDED.street_address,
-                house_number = EXCLUDED.house_number,
-                house_index = EXCLUDED.house_index,
-                bulding_body_number = EXCLUDED.bulding_body_number,
-                up_id = EXCLUDED.up_id,
-                notes = EXCLUDED.notes,
+                for_special_needs_marker = EXCLUDED.for_special_needs_marker,
                 updated_at = NOW()
-        """)
+        """
 
-        # Commit the transaction
+        execute_values(cursor, query, args)
         connection.commit()
         print("Insertion successful.")
-        ds = 1
+        return 1
     except Exception as e:
-        print(
-            "An error occurred:", e
-        )  # Capture the exception for logging or troubleshooting
-        ds = e
+        print(f"An error occurred: {e}")
+        connection.rollback()  # Откат при ошибке
+        return str(e)
     finally:
-        # Close cursor and connection
-        cursor.close()
-        connection.close()
-        return ds
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 # Функция для преобразования строк в datetime с нужным форматом
@@ -491,7 +472,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
     new_apart_required = [
         "district", "municipal_district", "house_address", "floor", "apart_number",
         "full_living_area", "total_living_area", "living_area", "room_count",
-        "type_of_settlement", "for_special_needs_marker", "cad_num", "house_number", "up_id"
+        "type_of_settlement", "for_special_needs_marker", "cad_num", "up_id"
     ]
 
     # Если каких-либо колонок нет, добавляем их со значением None
