@@ -23,7 +23,6 @@ import pandas as pd
 def from_rsm_get_new_apart() -> dict:
     layout_id = 21744
     df = get_kurs_living_space([999, 99999999], layout_id)
-
     if df.empty:
         return {"status": "error", "message": "Нет данных для вставки"}
 

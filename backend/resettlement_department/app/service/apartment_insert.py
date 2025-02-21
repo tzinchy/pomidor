@@ -183,34 +183,63 @@ def insert_data_to_old(df):
 
     except Exception as e:
         print('ERROR', e)
-        # Обновляем статус ошибки в отдельной транзакции
-        if connection:
+        # Обновляем статус ошибки с отдельной обработкой
+        status_updated = False
+        try:
+            if connection:
+                connection.rollback()  # Сброс состояния транзакции
+                # Создаем новый курсор для обновления статуса
+                with connection.cursor() as status_cursor:
+                    status_cursor.execute(
+                        """UPDATE env.data_updates
+                            SET success = False,
+                            updated_at = NOW()
+                            WHERE name = 'old_aparts_kpu'
+                        """
+                    )
+                    connection.commit()
+                    status_updated = True
+        except Exception as status_error:
+            print('ERROR updating status:', status_error)
+        if not status_updated:
+            # Попытка переподключиться, если соединение было потеряно
             try:
-                cursor.execute(
-                    """UPDATE env.data_updates
-                        SET success = False
-                        WHERE name = 'old_aparts_kpu'
-                    """
+                new_conn = psycopg2.connect(
+                    host=settings.project_management_setting.DB_HOST,
+                    user=settings.project_management_setting.DB_USER,
+                    password=settings.project_management_setting.DB_PASSWORD,
+                    port=settings.project_management_setting.DB_PORT,
+                    database=settings.project_management_setting.DB_NAME
                 )
-                connection.commit()
-            except Exception as update_error:
-                print('ERROR updating status:', update_error)
-        return e  # Возвращаем ошибку
+                with new_conn.cursor() as new_cursor:
+                    new_cursor.execute(
+                        """UPDATE env.data_updates
+                            SET success = False,
+                            updated_at = NOW()
+                            WHERE name = 'old_aparts_kpu'
+                        """
+                    )
+                    new_conn.commit()
+                new_conn.close()
+            except Exception as fallback_error:
+                print('Fallback update failed:', fallback_error)
+        return e
 
     finally:
-        # Закрываем соединение и курсор
-        if cursor is not None:
+        if cursor:
             cursor.close()
-        if connection is not None:
+        if connection:
             connection.close()
+
 
 def new_apart_insert(new_apart_df: pd.DataFrame):
     connection = None
     cursor = None
     try:
+        # Соответствие колонок DataFrame колонкам таблицы в БД
         column_mapping = {
             "ID": "new_apart_id",
-            "375193": 'rsm_id',
+            "375193": "rsm_id",
             "410610": "district",
             "410611": "municipal_district",
             "410612": "house_address",
@@ -229,25 +258,38 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
             "411011": "for_special_needs_marker",
         }
 
+        # Переименование колонок
         new_apart_df = new_apart_df.rename(columns=column_mapping)
-        print("Column mapping applied successfully.")
 
-        # Исправлено: добавлена закрывающая скобка
+        # Упорядочивание колонок
+        expected_columns = [
+            "new_apart_id", "building_id", "district", "municipal_district", "house_address", "apart_number",
+            "floor", "full_living_area", "total_living_area", "living_area", "room_count", "rsm_id",
+            "un_kv", "apart_type", "owner", "apart_kad_number", "room_kad_number", "for_special_needs_marker"
+        ]
+        new_apart_df = new_apart_df[expected_columns]
+
+        # Преобразование типов
+        new_apart_df["apart_number"] = new_apart_df["apart_number"].astype("Int64")
         special_needs_mapping = {"да": 1, "нет": 0}
         new_apart_df["for_special_needs_marker"] = (
-            new_apart_df["for_special_needs_marker"]
-            .map(special_needs_mapping)
-            .fillna(0)
+            new_apart_df["for_special_needs_marker"].map(special_needs_mapping).fillna(0)
         )
+        new_apart_df['full_living_area'] = new_apart_df['full_living_area'].fillna(0)
+        new_apart_df['total_living_area'] = new_apart_df['total_living_area'].fillna(0)
+        new_apart_df['living_area'] = new_apart_df['living_area'].fillna(0)
+        # Заменяем NaN на None (для PostgreSQL)
         new_apart_df = new_apart_df.replace({np.nan: None})
 
-        print("Columns after renaming and processing:")
-        print(new_apart_df.columns.tolist())
-        print(f"Number of columns: {len(new_apart_df.columns)}")
-
+        # Преобразуем в список кортежей для вставки
         args = list(new_apart_df.itertuples(index=False, name=None))
-        print(f"Number of rows to insert: {len(args)}")
 
+        print("Пример данных для вставки (первые 5 строк):")
+        print(args[:5])
+        print(f"Количество строк: {len(args)}")
+        print(f"Количество колонок в DataFrame: {len(new_apart_df.columns)}")
+
+        # Подключение к базе данных
         connection = psycopg2.connect(
             host=settings.project_management_setting.DB_HOST,
             user=settings.project_management_setting.DB_USER,
@@ -257,50 +299,64 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         )
         cursor = connection.cursor()
 
-        insert_columns = (
-            "new_apart_id, building_id, district, municipal_district, house_address, apart_number, "
-            "floor, full_living_area, total_living_area, living_area, room_count, rsm_id, "
-            "un_kv, apart_type, owner, apart_kad_number, room_kad_number, for_special_needs_marker"
-        )
-
-        # Проверка соответствия количества столбцов
-        num_columns_df = len(new_apart_df.columns)
-        num_columns_sql = len(insert_columns.split(', '))
-        if num_columns_df != num_columns_sql:
-            raise ValueError(f"Columns mismatch: DataFrame has {num_columns_df} columns, SQL expects {num_columns_sql}")
-
+        # SQL-запрос с ON CONFLICT для обновления дублирующихся записей
         query = f"""
-        INSERT INTO public.new_apart ({insert_columns})
-            VALUES %s
-            ON CONFLICT (new_apart_id) 
-            DO UPDATE SET 
-                building_id = EXCLUDED.building_id,
-                district = EXCLUDED.district,
-                municipal_district = EXCLUDED.municipal_district,
-                house_address = EXCLUDED.house_address,
-                apart_number = EXCLUDED.apart_number,
-                floor = EXCLUDED.floor,
-                full_living_area = EXCLUDED.full_living_area,
-                total_living_area = EXCLUDED.total_living_area,
-                living_area = EXCLUDED.living_area,
-                room_count = EXCLUDED.room_count,
-                un_kv = EXCLUDED.un_kv,
-                apart_type = EXCLUDED.apart_type,
-                owner = EXCLUDED.owner,
-                apart_kad_number = EXCLUDED.apart_kad_number,
-                room_kad_number = EXCLUDED.room_kad_number,
-                for_special_needs_marker = EXCLUDED.for_special_needs_marker,
-                updated_at = NOW()
+        INSERT INTO public.new_apart ({', '.join(expected_columns)})
+        VALUES ({', '.join(['%s'] * len(expected_columns))})
+        ON CONFLICT (new_apart_id) 
+        DO UPDATE SET
+            building_id = EXCLUDED.building_id,
+            district = EXCLUDED.district,
+            municipal_district = EXCLUDED.municipal_district,
+            house_address = EXCLUDED.house_address,
+            apart_number = EXCLUDED.apart_number,
+            floor = EXCLUDED.floor,
+            full_living_area = EXCLUDED.full_living_area,
+            total_living_area = EXCLUDED.total_living_area,
+            living_area = EXCLUDED.living_area,
+            room_count = EXCLUDED.room_count,
+            rsm_id = EXCLUDED.rsm_id,
+            un_kv = EXCLUDED.un_kv,
+            apart_type = EXCLUDED.apart_type,
+            owner = EXCLUDED.owner,
+            apart_kad_number = EXCLUDED.apart_kad_number,
+            room_kad_number = EXCLUDED.room_kad_number,
+            for_special_needs_marker = EXCLUDED.for_special_needs_marker,
+            updated_at = NOW()
         """
 
-        execute_values(cursor, query, args)
+        # Выполняем вставку с обновлением
+        cursor.executemany(query, args)
         connection.commit()
-        print("Insertion successful.")
+        print("Вставка выполнена успешно!")
+
+        # Обновление статуса в env.data_updates
+        cursor.execute("""
+            UPDATE env.data_updates
+            SET success = TRUE, updated_at = NOW()
+            WHERE name = 'new_aparts_resource'
+        """)
+        connection.commit()
+        print("Статус обновлен.")
+
         return 1
+
     except Exception as e:
-        print(f"An error occurred: {e}")
-        connection.rollback()  # Откат при ошибке
+        print(f"Ошибка: {e}")
+        if connection:
+            connection.rollback()
+            try:
+                # Обновляем статус ошибки
+                cursor.execute("""
+                    UPDATE env.data_updates
+                    SET success = FALSE, updated_at = NOW()
+                    WHERE name = 'new_aparts_resource'
+                """)
+                connection.commit()
+            except Exception as status_error:
+                print(f"Не удалось обновить статус: {status_error}")
         return str(e)
+
     finally:
         if cursor:
             cursor.close()
