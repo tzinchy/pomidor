@@ -95,6 +95,9 @@ def get_cookie():
     chrome_options.add_experimental_option('prefs', prefs)
     chrome_options.add_argument("--allow-running-insecure-content")
     chrome_options.add_argument("--disable_web_security")
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--headless') 
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     # driver = webdriver.Chrome()
