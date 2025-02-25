@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { RefreshCcw } from "lucide-react";
+import { HOSTLINK } from "../..";
 
 export default function UpdateDataButton() {
     const [isModalOpen, setModalOpen] = useState(false);
@@ -7,13 +8,14 @@ export default function UpdateDataButton() {
 
     const handleUpdate = async (type, url) => {
         try {
-            const response = await fetch(url, { method: "POST" });
+            const response = await fetch(url, { method: "PATCH" });
             if (!response.ok) throw new Error("Ошибка обновления");
             
             setUpdateHistory(prev => [
                 { type, timestamp: new Date().toLocaleString() },
                 ...prev,
             ]);
+            console.log(updateHistory);
         } catch (error) {
             console.error("Ошибка запроса:", error);
         }
@@ -36,15 +38,15 @@ export default function UpdateDataButton() {
                         <div className="grid grid-cols-2 gap-4 items-center justify-items-center mb-4">
                             <button
                                 className="px-4 py-2 border items-center rounded-md justify-self-center hover:bg-gray-50 bg-white"
-                                onClick={() => handleUpdate("Обновление A", "/api/updateA")}
+                                onClick={() => handleUpdate("Обновить старые дома", HOSTLINK+'/rsm/get_old_apart')}
                             >
-                                Обновить A
+                                Обновить старые дома
                             </button>
                             <button
                                 className="px-4 py-2 border items-center rounded-md justify-self-center hover:bg-gray-50 bg-white"
-                                onClick={() => handleUpdate("Обновление B", "/api/updateB")}
+                                onClick={() => handleUpdate("Обновить новые дома", "/rsm/get_new_apart")}
                             >
-                                Обновить B
+                                Обновить новые дома
                             </button>
                         </div>
                         

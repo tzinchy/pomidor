@@ -46,5 +46,3 @@ async def get_update_info():
         for item in result
     ]
     return response
-
-

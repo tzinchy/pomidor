@@ -23,7 +23,7 @@ root.render(
     <Routes>
       {/* <Route path="/" element={<PrivateRoute><Koren /></PrivateRoute>} />
       <Route path="/table_page" element={<PrivateRoute><Table_page /></PrivateRoute>} />
-      <Route path="/dashboard" element={<PrivateRoute><Dashboard_page /></PrivateRoute>} />
+      <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
       <Route path="/aparts" element={<PrivateRoute><ApartPage /></PrivateRoute>} />
       <Route path="/balance" element={<PrivateRoute><BalancePage /></PrivateRoute>} />
       <Route path="/history" element={<PrivateRoute><HistoryPage/></PrivateRoute>} /> */}
