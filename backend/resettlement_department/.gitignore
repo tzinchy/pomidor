@@ -7,9 +7,4 @@ app/uploads/
 ./uploads
 .log 
 /.log
-<<<<<<< HEAD
 app/app_container.log
-=======
-/.json
-/app_container.log
->>>>>>> b52263e (update main)
