@@ -8,3 +8,4 @@ app/uploads/
 .log 
 /.log
 app/app_container.log
+.DS_Store
