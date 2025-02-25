@@ -5,4 +5,4 @@ DB_LOGIN=
 DB_PASS=
 RSM_LOGIN=
 RSM_PASS=
-RSM_PING_LINK='http://webrsm.mlc.gov:5222/Dashboard'
+RSM_PING_LINK=

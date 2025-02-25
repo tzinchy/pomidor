@@ -376,4 +376,7 @@ class ApartmentRepository:
         result = await self._execute_query(query, params=params)
 
         return result
-
+    '''
+    async def switch_apartment(self, first_apartment_id, second_aprtment_id):
+        first_apartment_id, second_aprtment_id = text(sele)
+    '''
