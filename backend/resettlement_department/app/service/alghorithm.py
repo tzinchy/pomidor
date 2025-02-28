@@ -107,7 +107,7 @@ def match_new_apart_to_family_batch(
                 # Выполнение запроса
                 cursor.execute(family_query, old_apart_query_params)
                 old_aparts = cursor.fetchall()
-                #print('FAMILY QUERY', len(old_aparts), family_query, old_apart_query_params)
+                print('FAMILY QUERY', len(old_aparts), family_query, old_apart_query_params)
                 if not old_aparts:
                     return ("No old apartments found.")
                 # Запрос для новых квартир
