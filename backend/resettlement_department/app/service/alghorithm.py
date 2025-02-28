@@ -76,7 +76,7 @@ def match_new_apart_to_family_batch(
                     old_apart_query_params.append(tuple(old_selected_areas))
 
                 if date:
-                    family_query += " AND o.created_at = (SELECT MAX(created_at) FROM public.old_apart)"
+                    family_query += " AND o.updated_at = (SELECT MAX(created_at) FROM public.old_apart)"
                 
                 # Добавляем секцию GROUP BY
                 family_query += """
