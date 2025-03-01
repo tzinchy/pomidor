@@ -9,6 +9,8 @@ from fastapi import File, HTTPException, UploadFile, status
 from io import BytesIO
 import pandas as pd 
 from service.apartment_insert import insert_to_db
+from pathlib import Path
+
 
 router = APIRouter(prefix="/fisrt_matching", tags=["Первичный подбор"])
 
@@ -43,16 +45,53 @@ async def start_matching(
 
 
 @router.post("/upload-file/")
-def upload_file(file: UploadFile = File(...)):
-    
-    content = file.file.read()
-    
-    # Чтение Excel-файла в DataFrame
-    new_apart = pd.read_excel(BytesIO(content), sheet_name='new_apart')
-    old_apart = pd.read_excel(BytesIO(content), sheet_name='old_apart')   
-    cin = pd.read_excel(BytesIO(content), sheet_name='cin')
-    # Вставка данных
-    insert_to_db(new_apart, old_apart, cin)
-    
-    return {"message": "Файл успешно загружен и обработан"}
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        # Создаем папки если их нет
+        folders = [
+            Path("../../../current"), 
+            Path("manual_download")
+        ]
+        
+        for folder in folders:
+            folder.mkdir(parents=True, exist_ok=True)
+
+        # Читаем содержимое файла
+        content = await file.read()
+
+        # Сохраняем в current
+        current_path = Path("../../../current") / file.filename
+        with open(current_path, "wb") as f:
+            f.write(content)
+
+        # Сохраняем в manual_download
+        manual_path = Path("manual_download") / file.filename
+        with open(manual_path, "wb") as f:
+            f.write(content)
+
+        # Обработка данных
+        new_apart = pd.read_excel(BytesIO(content), sheet_name='new_apart')
+        old_apart = pd.read_excel(BytesIO(content), sheet_name='old_apart')   
+        cin = pd.read_excel(BytesIO(content), sheet_name='cin')
+        try:
+        # Вызов функции с нужными параметрами
+            insert_to_db(
+                new_apart_df=new_apart,
+                old_apart_df=old_apart,
+                cin_df=cin,
+                file_name=file.filename,          # Имя файла
+                file_path=str(manual_path)        # Полный путь к файлу
+            )
+        except Exception as e:
+            print(e)
+
+        return {"message": "Файл успешно загружен и обработан"}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Ошибка при обработке файла: {str(e)}"
+        )
+    finally:
+        await file.close()
 

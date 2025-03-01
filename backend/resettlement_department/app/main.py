@@ -2,10 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.v1.router import router
 
-# Инициализация FastAPI приложения
 app = FastAPI()
 
-# Настройка CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,5 +12,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Подключение роутера
 app.include_router(router)

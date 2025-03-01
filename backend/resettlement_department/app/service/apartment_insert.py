@@ -5,6 +5,7 @@ from datetime import datetime
 from core.config import settings
 from repository.database import project_managment_session
 import re
+from psycopg2.extras import execute_values
 
 def insert_data_to_old(df):
     connection = None  # Инициализация соединения
@@ -496,127 +497,9 @@ def insert_offer(offer_df: pd.DataFrame):
 
     return ds
 '''
-from psycopg2.extras import execute_values
 
-def insert_to_db(new_apart_df, old_apart_df, cin_df):
-    print('''======================================================
-    1. Обработка и вставка для таблицы new_apart
-    ======================================================
-    Приведение столбца 'К_Инв/к' к нижнему регистру и замена значений на 1 или 0''')
-    new_apart_df['К_Инв/к'] = new_apart_df['К_Инв/к'].astype(str).str.lower()
-    new_apart_df['К_Инв/к'] = new_apart_df['К_Инв/к'].apply(lambda x: 1 if 'да' in x else 0)
-    
-    # Словарь для переименования колонок
-    rename_new = {
-        'Адрес_Округ': 'district', 
-        'Адрес_Мун.округ': 'municipal_district',
-        'Адрес_Короткий': 'house_address',
-        'Адрес_№ кв': 'apart_number',
-        'К_Комн': 'room_count',
-        'К_Этаж': 'floor',
-        'К_Ресурс': 'type_of_settlement',
-        'Площадь общая': 'full_living_area',
-        'Площадь общая(б/л)': 'total_living_area', 
-        'Площадь жилая': 'living_area',
-        'Сл.инф_APART_ID': 'up_id',
-        'Кадастровый номер': 'cad_num',
-        'К_Инв/к': 'for_special_needs_marker'
-    }
-    new_apart_df = new_apart_df[list(rename_new.keys())].rename(columns=rename_new)
 
-    # Набор колонок для вставки в таблицу new_apart
-    new_apart_required = [
-        "district", "municipal_district", "house_address", "floor", "apart_number",
-        "full_living_area", "total_living_area", "living_area", "room_count",
-        "type_of_settlement", "for_special_needs_marker", "cad_num", "up_id"
-    ]
-
-    # Если каких-либо колонок нет, добавляем их со значением None
-    for col in new_apart_required:
-        if col not in new_apart_df.columns:
-            new_apart_df[col] = None
-
-    # Упорядочиваем DataFrame согласно требуемым колонкам
-    new_apart_df = new_apart_df[new_apart_required]
-
-    # Преобразуем DataFrame в список кортежей для вставки
-    new_apart_values = [tuple(row) for row in new_apart_df.to_numpy()]
-
-    new_apart_query = f"""
-    INSERT INTO public.new_apart ({", ".join(new_apart_required)})
-    VALUES %s
-    ON CONFLICT (up_id)
-    DO UPDATE SET updated_at = NOW();
-    """
-    print(new_apart_query)
-    
-    print('''======================================================
-    2. Обработка и вставка для таблицы old_apart
-    ======================================================''')
-    rename_old = {
-        'Округ' : 'district',
-        'район' : 'municipal_district',
-        'ФИО' : 'fio',
-        'адрес дома' : 'house_address',
-        '№ кв-ры' : 'apart_number',
-        'Вид засел.' : 'type_of_settlement',
-        'тип кв-ры' : 'apart_type',
-        'кол-во комнат' : 'room_count',
-        'площ. жил. пом.' : 'full_living_area',
-        'общ. пл.' : 'total_living_area',
-        'жил. пл.' : 'living_area',
-        'Кол-во членов семьи' : 'people_v_dele',
-        'Потребность' : 'is_special_needs_marker',
-        'мин этаж': 'min_floor',
-        'макс этаж' : 'max_floor',
-        'Дата покупки' : 'buying_date',
-        'ID' : 'affair_id'
-    }
-    old_apart_df = old_apart_df.rename(columns=rename_old)
-    
-    # Список всех колонок таблицы old_apart (исключая created_at и updated_at)
-    old_apart_required = [
-        "affair_id", "kpu_number", "fio", "surname", "firstname", "lastname",
-        "people_in_family", "category", "cad_num", "notes", "documents", "district",
-        "house_address", "apart_number", "room_count", "floor", "full_living_area",
-        "living_area", "people_v_dele", "people_uchet", "total_living_area", "apart_type",
-        "manipulation_notes", "municipal_district", "is_special_needs_marker", "min_floor",
-        "max_floor", "buying_date", "type_of_settlement",
-        "history_id", "rank", "kpu_another"
-    ]
-    
-    # Добавляем отсутствующие колонки со значением None
-    for col in old_apart_required:
-        if col not in old_apart_df.columns:
-            old_apart_df[col] = None
-    
-    # Упорядочиваем колонки
-    old_apart_df = old_apart_df[old_apart_required]
-
-    # Обработка даты
-    if 'buying_date' in old_apart_df.columns:
-        old_apart_df['buying_date'] = pd.to_datetime(old_apart_df['buying_date'], errors='coerce')
-        old_apart_df['buying_date'] = old_apart_df['buying_date'].apply(lambda x: None if pd.isnull(x) else x)
-    
-    # Преобразование в кортежи
-    old_apart_values = [tuple(row) for row in old_apart_df.to_numpy()]
-
-    # Динамическое формирование SET для ON CONFLICT
-    update_columns = [col for col in old_apart_required if col != 'affair_id']
-    set_clause = ', '.join([f"{col} = EXCLUDED.{col}" for col in update_columns])
-    
-    old_apart_query = f"""
-    INSERT INTO old_apart ({", ".join(old_apart_required)})
-    VALUES %s
-    ON CONFLICT (affair_id)
-    DO UPDATE SET 
-        updated_at = NOW(),
-        {set_clause};
-    """
-    
-    print('''======================================================
-    Выполнение всех операций в рамках одного подключения
-    ======================================================''')
+def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
     connection = psycopg2.connect(
         host=settings.project_management_setting.DB_HOST,
         user=settings.project_management_setting.DB_USER,
@@ -624,67 +507,185 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df):
         port=settings.project_management_setting.DB_PORT,
         database=settings.project_management_setting.DB_NAME
     )
-
-    # Обработка cin_df
-    cin_df["УНОМ"] = cin_df["УНОМ"].astype(str)
-    cin_df["Адрес отселения"] = cin_df["Адрес отселения"].astype(str)
-    cin_df["Адрес ЦИНа"] = cin_df["Адрес ЦИНа"].astype(str)
-    cin_df["График работы ЦИН"] = cin_df["График работы ЦИН"].astype(str)
-    cin_df["График работы Департамента в ЦИНе"] = cin_df[
-        "График работы Департамента в ЦИНе"
-    ].astype(str)
-    cin_df["Телефон для осмота"] = cin_df["Телефон для осмота"].astype(str)
-    cin_df["Телефон для ответа"] = cin_df["Телефон для ответа"].astype(str)
-    cin_df["Адрес Отдела"] = cin_df["Адрес Отдела"].astype(str)
-    cin_df["Дата начала работы"] = pd.to_datetime(cin_df["Дата начала работы"], errors="coerce").dt.date
-
-    data_to_insert = []
-    for _, row in cin_df.iterrows():
-        data_to_insert.append(
-            {
-                "unom": row["УНОМ"],
-                "old_address": row["Адрес отселения"],
-                "cin_address": row["Адрес ЦИНа"],
-                "cin_schedule": row["График работы ЦИН"],
-                "dep_schedule": row["График работы Департамента в ЦИНе"],
-                "phone_osmotr": row["Телефон для осмота"] if pd.notna(row["Телефон для осмота"]) else None,
-                "phone_otvet": row["Телефон для ответа"] if pd.notna(row["Телефон для ответа"]) else None,
-                "start_date": row["Дата начала работы"] if pd.notna(row["Дата начала работы"]) else None,
-                "otdel": row["Адрес Отдела"],
-            }
-        )
-
     cursor = connection.cursor()
-    print(cin_df)
 
     try:
-        # Вставка в new_apart
-        print(new_apart_values)
-        execute_values(cursor, new_apart_query, new_apart_values)
-        # Вставка в old_apart
-        execute_values(cursor, old_apart_query, old_apart_values)
-        # Вставка в cin
-        for data in data_to_insert:
-            cursor.execute(
-                """
-                INSERT INTO public.cin (
-                    unom, old_address, cin_address, cin_schedule, dep_schedule, phone_osmotr, phone_otvet, start_date, otdel
-                ) VALUES (
-                    %(unom)s, %(old_address)s, %(cin_address)s, %(cin_schedule)s, %(dep_schedule)s, %(phone_osmotr)s, %(phone_otvet)s, %(start_date)s,  %(otdel)s
-                )
-                ON CONFLICT (unom) DO UPDATE SET 
-                    old_address = EXCLUDED.old_address, 
-                    cin_address = EXCLUDED.cin_address, 
-                    cin_schedule = EXCLUDED.cin_schedule, 
-                    dep_schedule = EXCLUDED.dep_schedule, 
-                    phone_osmotr = EXCLUDED.phone_osmotr, 
-                    phone_otvet = EXCLUDED.phone_otvet, 
-                    start_date = EXCLUDED.start_date, 
-                    otdel = EXCLUDED.otdel 
-            """,
-                data,
+        # 1. Вставка в manual_load с обработкой конфликтов
+        is_new_apart = not new_apart_df.empty
+        is_old_apart = not old_apart_df.empty
+        is_cin = not cin_df.empty
+
+        cursor.execute(
+            """INSERT INTO manual_load 
+                (filename, is_old_apart, is_new_apart, is_cin, file_path) 
+             VALUES (%s, %s, %s, %s, %s)
+             ON CONFLICT (filename) DO UPDATE SET
+                 is_old_apart = EXCLUDED.is_old_apart,
+                 is_new_apart = EXCLUDED.is_new_apart,
+                 is_cin = EXCLUDED.is_cin,
+                 file_path = EXCLUDED.file_path,
+                 updated_at = NOW()
+             RETURNING manual_load_id""",
+            (file_name, is_old_apart, is_new_apart, is_cin, file_path)
+        )
+        manual_load_id = cursor.fetchone()[0]
+
+        # 2. Обработка new_apart
+        if not new_apart_df.empty:
+            new_apart_df['К_Инв/к'] = new_apart_df['К_Инв/к'].astype(str).str.lower()
+            new_apart_df['К_Инв/к'] = new_apart_df['К_Инв/к'].apply(lambda x: 1 if 'да' in x else 0)
+            
+            rename_new = {
+                'Адрес_Округ': 'district', 
+                'Адрес_Мун.округ': 'municipal_district',
+                'Адрес_Короткий': 'house_address',
+                'Адрес_№ кв': 'apart_number',
+                'К_Комн': 'room_count',
+                'К_Этаж': 'floor',
+                'К_Ресурс': 'type_of_settlement',
+                'Площадь общая': 'full_living_area',
+                'Площадь общая(б/л)': 'total_living_area', 
+                'Площадь жилая': 'living_area',
+                'Сл.инф_APART_ID': 'up_id',
+                'Кадастровый номер': 'cad_num',
+                'К_Инв/к': 'for_special_needs_marker'
+            }
+            
+            new_apart_df = new_apart_df.rename(columns=rename_new)
+            new_apart_df['manual_load_id'] = manual_load_id
+            
+            # Фильтрация и добавление колонок
+            new_apart_required = [
+                "district", "municipal_district", "house_address", "floor", "apart_number",
+                "full_living_area", "total_living_area", "living_area", "room_count",
+                "type_of_settlement", "for_special_needs_marker", "cad_num", "up_id", 
+                "manual_load_id"
+            ]
+            
+            for col in new_apart_required:
+                if col not in new_apart_df.columns:
+                    new_apart_df[col] = None
+
+            new_apart_values = [tuple(row) for row in new_apart_df[new_apart_required].to_numpy()]
+            
+            execute_values(
+                cursor,
+                f"""INSERT INTO new_apart ({", ".join(new_apart_required)})
+                    VALUES %s
+                    ON CONFLICT (up_id)
+                    DO UPDATE SET 
+                        {", ".join([f"{col} = EXCLUDED.{col}" for col in new_apart_required if col != 'up_id'])},
+                        updated_at = NOW()""",
+                new_apart_values
             )
+
+        # 3. Обработка old_apart
+        if not old_apart_df.empty:
+            rename_old = {
+                'Округ': 'district',
+                'район': 'municipal_district',
+                'ФИО': 'fio',
+                'адрес дома': 'house_address',
+                '№ кв-ры': 'apart_number',
+                'Вид засел.': 'type_of_settlement',
+                'тип кв-ры': 'apart_type',
+                'кол-во комнат': 'room_count',
+                'площ. жил. пом.': 'full_living_area',
+                'общ. пл.': 'total_living_area',
+                'жил. пл.': 'living_area',
+                'Кол-во членов семьи': 'people_v_dele',
+                'Потребность': 'is_special_needs_marker',
+                'мин этаж': 'min_floor',
+                'макс этаж': 'max_floor',
+                'Дата покупки': 'buying_date',
+                'ID': 'affair_id'
+            }
+            
+            old_apart_df = old_apart_df.rename(columns=rename_old)
+            old_apart_df['manual_load_id'] = manual_load_id
+            
+            # Обработка даты
+            if 'buying_date' in old_apart_df.columns:
+                old_apart_df['buying_date'] = pd.to_datetime(old_apart_df['buying_date'], errors='coerce')
+                old_apart_df['buying_date'] = old_apart_df['buying_date'].apply(lambda x: x if pd.notnull(x) else None)
+
+            # Фильтрация колонок
+            old_apart_required = [
+                "affair_id", "kpu_number", "fio", "surname", "firstname", "lastname",
+                "people_in_family", "category", "cad_num", "notes", "documents", "district",
+                "house_address", "apart_number", "room_count", "floor", "full_living_area",
+                "living_area", "people_v_dele", "people_uchet", "total_living_area", "apart_type",
+                "manipulation_notes", "municipal_district", "is_special_needs_marker", "min_floor",
+                "max_floor", "buying_date", "type_of_settlement", "history_id", "rank", 
+                "kpu_another", "manual_load_id"
+            ]
+            
+            for col in old_apart_required:
+                if col not in old_apart_df.columns:
+                    old_apart_df[col] = None
+
+            old_apart_values = [tuple(row) for row in old_apart_df[old_apart_required].to_numpy()]
+            
+            execute_values(
+                cursor,
+                f"""INSERT INTO old_apart ({", ".join(old_apart_required)})
+                    VALUES %s
+                    ON CONFLICT (affair_id)
+                    DO UPDATE SET 
+                        {", ".join([f"{col} = EXCLUDED.{col}" for col in old_apart_required if col != 'affair_id'])},
+                        updated_at = NOW()""",
+                old_apart_values
+            )
+
+        # 4. Обработка CIN
+        if not cin_df.empty:
+            # Подготовка данных
+            data_to_insert = []
+            cin_df["Дата начала работы"] = pd.to_datetime(cin_df["Дата начала работы"], errors="coerce").dt.date
+            
+            for _, row in cin_df.iterrows():
+                data_to_insert.append({
+                    "unom": str(row["УНОМ"]),
+                    "old_address": str(row["Адрес отселения"]),
+                    "cin_address": str(row["Адрес ЦИНа"]),
+                    "cin_schedule": str(row["График работы ЦИН"]),
+                    "dep_schedule": str(row["График работы Департамента в ЦИНе"]),
+                    "phone_osmotr": str(row["Телефон для осмота"]) if pd.notna(row["Телефон для осмота"]) else None,
+                    "phone_otvet": str(row["Телефон для ответа"]) if pd.notna(row["Телефон для ответа"]) else None,
+                    "start_date": row["Дата начала работы"] if pd.notna(row["Дата начала работы"]) else None,
+                    "otdel": str(row["Адрес Отдела"]),
+                    "manual_load_id": manual_load_id
+                })
+
+            # Вставка данных
+            for data in data_to_insert:
+                cursor.execute(
+                    """INSERT INTO cin (
+                        unom, old_address, cin_address, cin_schedule, 
+                        dep_schedule, phone_osmotr, phone_otvet, 
+                        start_date, otdel, manual_load_id
+                    ) VALUES (
+                        %(unom)s, %(old_address)s, %(cin_address)s, 
+                        %(cin_schedule)s, %(dep_schedule)s, %(phone_osmotr)s, 
+                        %(phone_otvet)s, %(start_date)s, %(otdel)s, %(manual_load_id)s
+                    )
+                    ON CONFLICT (unom) DO UPDATE SET 
+                        old_address = EXCLUDED.old_address,
+                        cin_address = EXCLUDED.cin_address,
+                        cin_schedule = EXCLUDED.cin_schedule,
+                        dep_schedule = EXCLUDED.dep_schedule,
+                        phone_osmotr = EXCLUDED.phone_osmotr,
+                        phone_otvet = EXCLUDED.phone_otvet,
+                        start_date = EXCLUDED.start_date,
+                        otdel = EXCLUDED.otdel,
+                        manual_load_id = EXCLUDED.manual_load_id,
+                        updated_at = NOW()""",
+                    data
+                )
+
         connection.commit()
+        return manual_load_id
+
     except Exception as e:
         connection.rollback()
         raise e

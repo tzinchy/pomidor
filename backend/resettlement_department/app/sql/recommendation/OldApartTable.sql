@@ -14,7 +14,7 @@ WITH ranked_apartments AS (
         status.status,
         o.notes,
         affair_id,
-        ROW_NUMBER() OVER (PARTITION BY o.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC) AS rn
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC) AS rn
     FROM
         old_apart oa
     LEFT JOIN
@@ -24,4 +24,5 @@ WITH ranked_apartments AS (
 )
 SELECT *
 FROM ranked_apartments
-
+WHERE 1=1 and {where_clause}
+ORDER BY full_living_area
