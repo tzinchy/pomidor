@@ -19,3 +19,11 @@ class HistoryService:
     async def get_env_history(self):
         res = await self.repository.get_env_history()
         return res
+    
+    async def cancell_manual_load(self, manual_load_id):
+        res = await self.repository.cancell_manual_load(manual_load_id)
+        return res
+    
+    async def get_manual_load_history(self):
+        res = await self.repository.get_manual_load_history()
+        return res

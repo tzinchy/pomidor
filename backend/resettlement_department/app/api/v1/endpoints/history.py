@@ -77,3 +77,11 @@ def container(history_id: int):
     except Exception as e:
         logging.error(f"Ошибка: {e}")
         return {"error": str(e)}
+    
+@router.delete('/delete/manual_load/{manual_load_id}')
+async def cancell_history(manual_load_id : int):
+    return await history_service.cancell_history(manual_load_id)
+
+@router.get('/manual')
+async def get_manual_history():
+    return await history_service.get_manual_load_history()
