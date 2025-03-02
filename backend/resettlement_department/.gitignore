@@ -9,3 +9,4 @@ app/uploads/
 /.log
 app/app_container.log
 .DS_Store
+app/manual_download/
