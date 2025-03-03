@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime
+
 
 class HistoryResponse(BaseModel):
     history_id: int
@@ -15,5 +15,5 @@ class HistoryResponse(BaseModel):
 class EnvStatResponse(BaseModel):
     id: int
     name: str
-    timestamp: datetime
+    timestamp: str
     is_active: bool

@@ -232,7 +232,7 @@ def get_row_count(dates, dates_type, category, session_key, layout_id, cookie, r
     p = multiprocessing.Process(target=send_request, args=(search_link, cookie,))
     p.daemon = True  # Позволяет процессу завершаться вместе с родителем
     p.start()
-    time.sleep(2)
+    time.sleep(3)
     print("____40__")
     c = requests.get(count_link,
                      cookies={'Rsm.Cookie': cookie})

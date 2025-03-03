@@ -10,3 +10,4 @@ class UserJWTData(BaseModel):
     exp: int
 
     model_config = ConfigDict(from_attributes=True)
+
