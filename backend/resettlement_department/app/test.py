@@ -45,16 +45,17 @@ def rematch(apart_id):
                 order by rank, (new_apart.full_living_area + new_apart.living_area) limit 1
             '''
             cursor.execute(new_apart_query, new_apart_params)
-            new_aparts = cursor.fetchall()[0]
+            new_aparts = cursor.fetchall()
 
-            cursor.execute("""
-                UPDATE public.offer
-                SET new_aparts = (
-                    SELECT jsonb_object_agg(key, jsonb_set(value, '{status_id}', '2', false))
-                    FROM jsonb_each(new_aparts)
-                ) || '{"%s": {"status_id": 7}}'::jsonb
-                WHERE affair_id = %s;
-            """, (new_aparts[0], apart[0]))
+            if new_aparts:
+                cursor.execute("""
+                    UPDATE public.offer
+                    SET new_aparts = (
+                        SELECT jsonb_object_agg(key, jsonb_set(value, '{status_id}', '2', false))
+                        FROM jsonb_each(new_aparts)
+                    ) || '{"%s": {"status_id": 7}}'::jsonb
+                    WHERE affair_id = %s;
+                """, (new_aparts[0][0], apart[0]))
             
             print(new_aparts)
 
@@ -64,4 +65,4 @@ def rematch(apart_id):
 
     return None
 
-rematch((100108,))
+rematch((100107,))

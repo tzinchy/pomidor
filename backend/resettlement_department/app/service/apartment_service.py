@@ -55,6 +55,6 @@ class ApartmentService:
             formatted_result.append((address, room_details))
         return formatted_result
     
-    async def switch_apartment_needs(self, first_apartment_id, second_apartment_id):
-        return await self.apartment_repository.switch_apartment(self, first_apartment_id, second_apartment_id)
+    async def switch_apartment(self, first_apartment_id, second_apartment_id):
+        return await self.apartment_repository.switch_apartment(first_apartment_id, second_apartment_id)
     

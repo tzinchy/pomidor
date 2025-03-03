@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-
 class HistoryResponse(BaseModel):
     history_id: int
     old_house_addresses: Optional[List[str]]

@@ -76,7 +76,7 @@ def match_new_apart_to_family_batch(
                     old_apart_query_params.append(tuple(old_selected_areas))
 
                 if date:
-                    family_query += " AND o.created_at = (SELECT MAX(created_at) FROM public.old_apart)"
+                    family_query += " AND o.updated_at = (SELECT MAX(updated_at) FROM public.old_apart)"
                 
                 # Добавляем секцию GROUP BY
                 family_query += """
@@ -107,7 +107,7 @@ def match_new_apart_to_family_batch(
                 # Выполнение запроса
                 cursor.execute(family_query, old_apart_query_params)
                 old_aparts = cursor.fetchall()
-                #print('FAMILY QUERY', len(old_aparts), family_query, old_apart_query_params)
+                print('FAMILY QUERY', len(old_aparts), family_query, old_apart_query_params)
                 if not old_aparts:
                     return ("No old apartments found.")
                 # Запрос для новых квартир
@@ -144,7 +144,7 @@ def match_new_apart_to_family_batch(
                     new_apart_query_params.append(tuple(new_selected_areas))
 
                 if date:
-                    new_apart_query += " AND created_at = (SELECT MAX(created_at) FROM public.new_apart)"
+                    new_apart_query += " AND updated_at = (SELECT MAX(updated_at) FROM public.new_apart)"
 
                 new_apart_query += " ORDER BY room_count ASC, (full_living_area + living_area), floor, living_area ASC, full_living_area ASC, total_living_area ASC"
                 
@@ -249,11 +249,11 @@ def match_new_apart_to_family_batch(
 
                 if date or history_data is None:
                     cursor.execute(
-                        "SELECT DISTINCT house_address FROM public.old_apart WHERE affair_id IN (SELECT affair_id FROM public.old_apart WHERE created_at = (SELECT MAX(created_at) FROM public.old_apart))"
+                        "SELECT DISTINCT house_address FROM public.old_apart WHERE affair_id IN (SELECT affair_id FROM public.old_apart WHERE updated_at = (SELECT MAX(updated_at) FROM public.old_apart))"
                     )
                     old_selected_addresses = [r[0] for r in cursor.fetchall()]
                     cursor.execute(
-                        "SELECT DISTINCT house_address FROM public.new_apart WHERE created_at = (SELECT MAX(created_at) FROM public.new_apart)"
+                        "SELECT DISTINCT house_address FROM public.new_apart WHERE updated_at = (SELECT MAX(updated_at) FROM public.new_apart)"
                     )
                     new_selected_addresses = [r[0] for r in cursor.fetchall()]
                 else:

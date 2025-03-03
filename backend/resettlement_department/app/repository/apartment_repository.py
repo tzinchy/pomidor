@@ -12,32 +12,6 @@ class ApartmentRepository:
     def __init__(self, session_maker):
         self.db = session_maker  # Это sessionmaker
 
-    async def _execute_query(self, query: str, params: dict) -> list[tuple]:
-        """
-        Выполнение запроса и возврат результата.
-        """
-        async with self.db() as session:  # Создаем сессию
-            try:
-                logger.info(f"Executing query: {query}")
-                logger.info(f"Params: {params}")
-                result = await session.execute(text(query), params)  # Используем session.execute
-                return result.fetchall()
-            except Exception as e:
-                logger.error(f"Error executing query: {e}")
-                raise
-
-    def _build_placeholders(self, values: list, prefix: str) -> tuple[str, dict]:
-        """
-        Создать placeholders и параметры для подстановки.
-        Поддерживает строки и числа.
-        """
-        placeholders = ", ".join(f":{prefix}_{i}" for i in range(len(values)))
-        params = {
-            f"{prefix}_{i}": str(value).strip() if isinstance(value, str) else value
-            for i, value in enumerate(values)
-        }
-        return placeholders, params
-
     async def get_districts(self, apart_type: str) -> list[str]:
         """
         Получить уникальные районы.
@@ -51,8 +25,14 @@ class ApartmentRepository:
             FROM {table}
             ORDER BY district
         """
-        result = await self._execute_query(query, {})
-        return [row[0] for row in result if row[0] is not None]
+        async with self.db() as session:
+            try:
+                logger.info(f"Executing query: {query}")
+                result = await session.execute(text(query))
+                return [row[0] for row in result if row[0] is not None]
+            except Exception as e:
+                logger.error(f"Error executing query: {e}")
+                raise
 
     async def get_municipal_district(self, apart_type: str, districts: list[str]) -> list[str]:
         """
@@ -62,15 +42,28 @@ class ApartmentRepository:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
         table = "old_apart" if apart_type == "OldApart" else "new_apart"
-        placeholders, params = self._build_placeholders(districts, "district")
+        params = {}
+        placeholders = []
+        for i, district in enumerate(districts):
+            key = f"district_{i}"
+            placeholders.append(f":{key}")
+            params[key] = district
+        placeholders_str = ", ".join(placeholders)
         query = f"""
             SELECT DISTINCT municipal_district
             FROM {table}
-            WHERE district IN ({placeholders})
+            WHERE district IN ({placeholders_str})
             ORDER BY municipal_district
         """
-        result = await self._execute_query(query, params)
-        return [row[0] for row in result if row[0] is not None]
+        async with self.db() as session:
+            try:
+                logger.info(f"Executing query: {query}")
+                logger.info(f"Params: {params}")
+                result = await session.execute(text(query), params)
+                return [row[0] for row in result if row[0] is not None]
+            except Exception as e:
+                logger.error(f"Error executing query: {e}")
+                raise
 
     async def get_house_addresses(self, apart_type: str, municipal_districts: list[str]) -> list[str]:
         """
@@ -80,15 +73,28 @@ class ApartmentRepository:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
         table = "old_apart" if apart_type == "OldApart" else "new_apart"
-        placeholders, params = self._build_placeholders(municipal_districts, "municipal_districts")
+        params = {}
+        placeholders = []
+        for i, municipal in enumerate(municipal_districts):
+            key = f"municipal_{i}"
+            placeholders.append(f":{key}")
+            params[key] = municipal
+        placeholders_str = ", ".join(placeholders)
         query = f"""
             SELECT DISTINCT house_address
             FROM {table}
-            WHERE municipal_district IN ({placeholders})
+            WHERE municipal_district IN ({placeholders_str})
             ORDER BY house_address
         """
-        result = await self._execute_query(query, params)
-        return [row[0] for row in result if row[0] is not None]
+        async with self.db() as session:
+            try:
+                logger.info(f"Executing query: {query}")
+                logger.info(f"Params: {params}")
+                result = await session.execute(text(query), params)
+                return [row[0] for row in result if row[0] is not None]
+            except Exception as e:
+                logger.error(f"Error executing query: {e}")
+                raise
 
     async def get_apartments(
         self,
@@ -97,7 +103,7 @@ class ApartmentRepository:
         districts: list[str] = None,
         municipal_districts: list[str] = None,
         floor: int = None,
-        room_count: list[int] = None,  
+        room_count: list[int] = None,
         min_area: float = None,
         max_area: float = None,
         area_type: str = 'full_living_area',
@@ -110,33 +116,45 @@ class ApartmentRepository:
         if area_type not in ['full_living_area', 'total_living_area', 'living_area']:
             raise ValueError(f"Invalid area type: {area_type}")
 
-        conditions = []
+        conditions = ["rn = 1"]
         params = {}
 
         # Формируем условия для каждого переданного параметра
         if house_addresses:
-            placeholders, addr_params = self._build_placeholders(house_addresses, "house_address")
-            conditions.append(f"house_address IN ({placeholders})")
-            params.update(addr_params)
+            addr_placeholders = []
+            for i, addr in enumerate(house_addresses):
+                key = f"house_addr_{i}"
+                addr_placeholders.append(f":{key}")
+                params[key] = addr
+            conditions.append(f"house_address IN ({', '.join(addr_placeholders)})")
         
         if districts:
-            placeholders, district_params = self._build_placeholders(districts, "district")
-            conditions.append(f"district IN ({placeholders})")
-            params.update(district_params)
+            district_placeholders = []
+            for i, district in enumerate(districts):
+                key = f"district_{i}"
+                district_placeholders.append(f":{key}")
+                params[key] = district
+            conditions.append(f"district IN ({', '.join(district_placeholders)})")
         
         if municipal_districts:
-            placeholders, municipal_params = self._build_placeholders(municipal_districts, "municipal")
-            conditions.append(f"municipal_district IN ({placeholders})")
-            params.update(municipal_params)
+            municipal_placeholders = []
+            for i, municipal in enumerate(municipal_districts):
+                key = f"municipal_{i}"
+                municipal_placeholders.append(f":{key}")
+                params[key] = municipal
+            conditions.append(f"municipal_district IN ({', '.join(municipal_placeholders)})")
         
         if floor is not None:
             conditions.append("floor = :floor")
             params["floor"] = floor
 
         if room_count:
-            placeholders, room_params = self._build_placeholders(room_count, "room")
-            conditions.append(f"room_count IN ({placeholders})")
-            params.update(room_params)
+            room_placeholders = []
+            for i, room in enumerate(room_count):
+                key = f"room_{i}"
+                room_placeholders.append(f":{key}")
+                params[key] = room
+            conditions.append(f"room_count IN ({', '.join(room_placeholders)})")
 
         # Условия для площади
         area_conditions = []
@@ -149,10 +167,6 @@ class ApartmentRepository:
         if area_conditions:
             conditions.append(" AND ".join(area_conditions))
 
-        # Всегда фильтруем по последнему предложению
-        conditions.append("rn = 1")
-
-        # Собираем полное условие WHERE
         where_clause = " AND ".join(conditions)
 
         # Формируем запрос в зависимости от типа квартир
@@ -184,12 +198,13 @@ class ApartmentRepository:
                 )
                 SELECT *
                 FROM ranked_apartments
-                WHERE 1=1 and {where_clause}
+                WHERE {where_clause}
                 ORDER BY full_living_area
             """
         else:
             query = f"""
-				WITH clr_dt AS (SELECT 
+                WITH clr_dt AS (
+                    SELECT 
                         affair_id, 
                         (KEY)::int AS new_apart_id, 
                         sentence_date, 
@@ -197,42 +212,48 @@ class ApartmentRepository:
                         (VALUE->'status_id')::int AS status_id 
                     FROM 
                         offer, 
-                        jsonb_each(new_aparts)),
-		 ranked_apartments AS (
-                SELECT 
-                    na.house_address, 
-                    na.apart_number, 
-                    na.district, 
-                    na.municipal_district,
-                    na.floor,
-                    na.full_living_area,
-                    na.total_living_area, 
-                    na.living_area, 
-                    na.room_count, 
-                    na.type_of_settlement, 
-                    na.notes, 
-                    na.new_apart_id,
-                    s.status AS status,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY na.new_apart_id 
-                        ORDER BY o.sentence_date DESC, o.answer_date DESC 
-                    ) AS rn
-                FROM 
-                    new_apart na
-                LEFT JOIN 
-					clr_dt as o on o.new_apart_id = na.new_apart_id
-                LEFT JOIN 
-                    status s ON o.status_id = s.status_id
-            )
-            SELECT *
-            FROM ranked_apartments
-            WHERE 1=1 and {where_clause}
-            ORDER BY status;
+                        jsonb_each(new_aparts)
+                ),
+                ranked_apartments AS (
+                    SELECT 
+                        na.house_address, 
+                        na.apart_number, 
+                        na.district, 
+                        na.municipal_district,
+                        na.floor,
+                        na.full_living_area,
+                        na.total_living_area, 
+                        na.living_area, 
+                        na.room_count, 
+                        na.type_of_settlement, 
+                        na.notes, 
+                        na.new_apart_id,
+                        s.status AS status,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY na.new_apart_id 
+                            ORDER BY o.sentence_date DESC, o.answer_date DESC 
+                        ) AS rn
+                    FROM 
+                        new_apart na
+                    LEFT JOIN 
+                        clr_dt as o on o.new_apart_id = na.new_apart_id
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE {where_clause}
+                ORDER BY status;
             """
-        print(query, params)
-        result = await self._execute_query(query, params)
-        print(len(result))
-        return [dict(row._mapping) for row in result]
+        async with self.db() as session:
+            try:
+                logger.info(f"Executing query: {query}")
+                logger.info(f"Params: {params}")
+                result = await session.execute(text(query), params)
+                return [dict(row._mapping) for row in result]
+            except Exception as e:
+                logger.error(f"Error executing query: {e}")
+                raise
 
     async def get_apartment_by_id(self, apartment_id: int, apart_type: str) -> dict:
         """
@@ -241,47 +262,51 @@ class ApartmentRepository:
         if apart_type not in ApartType:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
+        query_params = {"apartment_id": apartment_id}
+        
         if apart_type == "NewApartment":
-            query = f'''WITH unnset_offer AS (
-                SELECT 
-                    affair_id,
-                    (KEY)::integer as new_apart_id,
-                    (VALUE->'status_id')::integer AS status_id,
-                    sentence_date, 
-                    answer_date
+            query = """
+                WITH unnset_offer AS (
+                    SELECT 
+                        affair_id,
+                        (KEY)::integer as new_apart_id,
+                        (VALUE->'status_id')::integer AS status_id,
+                        sentence_date, 
+                        answer_date
                     FROM offer, 
                     jsonb_each(new_aparts)
-            ),
+                ),
                 joined_aparts AS (
                     SELECT 
-                    o.new_apart_id,
-                    JSON_AGG(
-                        JSON_BUILD_OBJECT(
-                            'house_address', old_apart.house_address,
-                            'apart_number', old_apart.apart_number,
-                            'district', old_apart.district,
-                            'municipal_district', old_apart.municipal_district,
-                            'full_living_area', old_apart.full_living_area,
-                            'total_living_area', old_apart.total_living_area,
-                            'living_area', old_apart.living_area,
-                            'room_count', old_apart.room_count,
-                            'type_of_settlement', old_apart.type_of_settlement,
-                            'notes', old_apart.notes,
-                            'status', s.status,
-                            'sentence_date', o.sentence_date :: DATE,
-                            'answer_date', o.answer_date :: DATE
-                        ) ORDER BY sentence_date DESC, answer_date DESC
+                        o.new_apart_id,
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'house_address', old_apart.house_address,
+                                'apart_number', old_apart.apart_number,
+                                'district', old_apart.district,
+                                'municipal_district', old_apart.municipal_district,
+                                'full_living_area', old_apart.full_living_area,
+                                'total_living_area', old_apart.total_living_area,
+                                'living_area', old_apart.living_area,
+                                'room_count', old_apart.room_count,
+                                'type_of_settlement', old_apart.type_of_settlement,
+                                'notes', old_apart.notes,
+                                'status', s.status,
+                                'sentence_date', o.sentence_date :: DATE,
+                                'answer_date', o.answer_date :: DATE
+                            ) ORDER BY sentence_date DESC, answer_date DESC
                         ) AS old_apartments
-                                FROM 
-                                    unnset_offer o
-                                LEFT JOIN 
-                                    old_apart ON old_apart.affair_id = o.affair_id
-                                LEFT JOIN 
-                                    status s ON o.status_id = s.status_id
-                                GROUP BY 
-                                    o.new_apart_id
+                    FROM 
+                        unnset_offer o
+                    LEFT JOIN 
+                        old_apart ON old_apart.affair_id = o.affair_id
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                    GROUP BY 
+                        o.new_apart_id
                 )
-            SELECT new_apart.new_apart_id, 
+                SELECT 
+                    new_apart.new_apart_id, 
                     new_apart.house_address,
                     new_apart.apart_number,
                     new_apart.district,
@@ -292,53 +317,53 @@ class ApartmentRepository:
                     new_apart.room_count,
                     new_apart.type_of_settlement,
                     joined_aparts.old_apartments
-                    from new_apart  
-                    left join 
-                    joined_aparts using (new_apart_id) 
-					where new_apart_id = {apartment_id}
-                    '''
+                FROM new_apart  
+                LEFT JOIN joined_aparts USING (new_apart_id) 
+                WHERE new_apart_id = :apartment_id
+            """
         elif apart_type == "OldApart":
-            query = f'''
-                        WITH unnset_offer AS (
-                SELECT 
-                    affair_id,
-                    (KEY)::integer as new_apart_id,
-                    (VALUE->'status_id')::integer AS status_id,
-                    sentence_date, 
-                    answer_date
+            query = """
+                WITH unnset_offer AS (
+                    SELECT 
+                        affair_id,
+                        (KEY)::integer as new_apart_id,
+                        (VALUE->'status_id')::integer AS status_id,
+                        sentence_date, 
+                        answer_date
                     FROM offer, 
                     jsonb_each(new_aparts)
-            ),
+                ),
                 joined_aparts AS (
                     SELECT 
-                    affair_id,
-                    JSON_AGG(
-                        JSON_BUILD_OBJECT(
-                            'house_address', na.house_address,
-                            'apart_number', na.apart_number,
-                            'district', na.district,
-                            'municipal_district', na.municipal_district,
-                            'full_living_area', na.full_living_area,
-                            'total_living_area', na.total_living_area,
-                            'living_area', na.living_area,
-                            'room_count', na.room_count,
-                            'type_of_settlement', na.type_of_settlement,
-                            'notes', na.notes,
-                            'status', s.status,
-                            'sentence_date', o.sentence_date :: DATE,
-                            'answer_date', o.answer_date :: DATE
-                        ) ORDER BY sentence_date DESC, answer_date DESC
+                        affair_id,
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'house_address', na.house_address,
+                                'apart_number', na.apart_number,
+                                'district', na.district,
+                                'municipal_district', na.municipal_district,
+                                'full_living_area', na.full_living_area,
+                                'total_living_area', na.total_living_area,
+                                'living_area', na.living_area,
+                                'room_count', na.room_count,
+                                'type_of_settlement', na.type_of_settlement,
+                                'notes', na.notes,
+                                'status', s.status,
+                                'sentence_date', o.sentence_date :: DATE,
+                                'answer_date', o.answer_date :: DATE
+                            ) ORDER BY sentence_date DESC, answer_date DESC
                         ) AS new_apartments
-                                FROM 
-                                    unnset_offer o
-                                LEFT JOIN 
-                                    new_apart na ON o.new_apart_id = na.new_apart_id
-                                LEFT JOIN 
-                                    status s ON o.status_id = s.status_id
-                                GROUP BY 
-                                    o.affair_id
+                    FROM 
+                        unnset_offer o
+                    LEFT JOIN 
+                        new_apart na ON o.new_apart_id = na.new_apart_id
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                    GROUP BY 
+                        o.affair_id
                 )
-            SELECT old_apart.affair_id, 
+                SELECT 
+                    old_apart.affair_id, 
                     old_apart.house_address,
                     old_apart.apart_number,
                     old_apart.district,
@@ -349,34 +374,51 @@ class ApartmentRepository:
                     old_apart.room_count,
                     old_apart.type_of_settlement,
                     joined_aparts.new_apartments
-                    from old_apart  
-                    left join 
-                    joined_aparts using (affair_id) 
-                    WHERE affair_id = {apartment_id}         
-                    '''
+                FROM old_apart  
+                LEFT JOIN joined_aparts USING (affair_id) 
+                WHERE affair_id = :apartment_id         
+            """
         else:
             raise ValueError(f"Unsupported apartment type: {apart_type}")
-        print(query)
-        result = await self._execute_query(query, {"apart_id": apartment_id})
 
-        if not result:
-            raise ValueError(f"Apartment with ID {apartment_id} not found")
-
-        return dict(result[0]._mapping)
+        async with self.db() as session:
+            try:
+                logger.info(f"Executing query: {query}")
+                result = await session.execute(text(query), query_params)
+                data = result.fetchone()
+                if not data:
+                    raise ValueError(f"Apartment with ID {apartment_id} not found")
+                return dict(data._mapping)
+            except Exception as e:
+                logger.error(f"Error executing query: {e}")
+                raise
 
     async def get_house_address_with_room_count(self, apart_type):
-        params = None
         if apart_type == "NewApartment":
             query = read_sql_query(f'{RECOMMENDATION_FILE_PATH}/AvaliableNewApartAddress.sql')
         elif apart_type == "OldApart":
-            query = read_sql_query(f'{RECOMMENDATION_FILE_PATH}/AvaliableOldApartAddress.sql')  # Исправлена f-строка
+            query = read_sql_query(f'{RECOMMENDATION_FILE_PATH}/AvaliableOldApartAddress.sql')
         else:
-            raise ValueError("ApartType not found")  # Исправлено исключение
-            
-        result = await self._execute_query(query, params=params)
+            raise ValueError("Invalid apartment type")
 
-        return result
-    '''
-    async def switch_apartment(self, first_apartment_id, second_aprtment_id):
-        first_apartment_id, second_aprtment_id = text(sele)
-    '''
+        async with self.db() as session:
+            try:
+                result = await session.execute(text(query))
+                return [row[0] for row in result]
+            except Exception as e:
+                logger.error(f"Error executing query: {e}")
+                raise
+
+    async def switch_apartment(self, first_apartment_id, second_apartment_id):
+        query = "SELECT switch_apartments(:first_id, :second_id)"
+        params = {
+            "first_id": first_apartment_id,
+            "second_id": second_apartment_id
+        }
+        async with self.db() as session:
+            try:
+                await session.execute(text(query), params)
+                await session.commit()
+            except Exception as e:
+                logger.error(f"Error switching apartments: {e}")
+                raise
