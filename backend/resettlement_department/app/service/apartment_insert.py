@@ -688,6 +688,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
 
     except Exception as e:
         connection.rollback()
+        print(e)
         raise e
     finally:
         cursor.close()
