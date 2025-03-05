@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Query, HTTPException
 from depends import apartment_service
 from schema.apartment import ApartType, Rematch
-from typing import Optional, List, Literal
 from service.rematch_service import rematch
-
+from typing import Optional, List, Literal
 router = APIRouter(prefix="/tables", tags=["Дерево"])
 
 # Получение текущего типа апартаментов
@@ -111,4 +110,4 @@ async def switch_apartments(
     first_apart_id : int, 
     second_apart_id : int
 ):
-    return await apartment_service.switch_apartment(first_apart_id, second_apart_id)
+    await apartment_service.switch_apartment(first_apart_id, second_apart_id)
