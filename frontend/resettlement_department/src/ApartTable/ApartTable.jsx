@@ -28,23 +28,24 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   };
 
   const rematch = async () => {
-    console.log(Object.keys(rowSelection));
+    const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+    console.log("apartmentIds:", apartmentIds);
+
     try {
       const response = await axios.post(
-        `${HOSTLINK}/tables/apartment/rematch/${Object.keys(rowSelection)}`,
+        `${HOSTLINK}/tables/apartment/rematch`,
+        JSON.stringify({ apartment_ids: apartmentIds }), // Явно преобразуем в JSON
         {
-          params: {
-            apartment_ids: Object.keys(rowSelection),
-            apart_type: apartType
-          }
+          headers: {
+            'Content-Type': 'application/json', // Указываем тип содержимого
+          },
         }
       );
-      console.log(response.data);
+      console.log("Response:", response.data);
     } catch (error) {
-      console.error("Error rematch", error.response?.data);
+      console.error("Error rematch:", error.response?.data);
     }
-  };
-
+};
   const switchAparts = async () => {
     console.log(parseInt(Object.keys(rowSelection)[0]), parseInt(Object.keys(rowSelection)[1]), Object.keys(rowSelection).length, apartType);
     if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment') ) {
