@@ -231,7 +231,7 @@ class ApartmentRepository:
                         s.status AS status,
                         ROW_NUMBER() OVER (
                             PARTITION BY na.new_apart_id 
-                            ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC
+                            ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at ASC
                         ) AS rn
                     FROM 
                         new_apart na
@@ -275,6 +275,7 @@ class ApartmentRepository:
                         answer_date
                     FROM offer, 
                     jsonb_each(new_aparts)
+                    order by created_at ASC, updated_at DESC
                 ),
                 joined_aparts AS (
                     SELECT 
@@ -294,7 +295,7 @@ class ApartmentRepository:
                                 'status', s.status,
                                 'sentence_date', o.sentence_date :: DATE,
                                 'answer_date', o.answer_date :: DATE
-                            ) ORDER BY sentence_date DESC, answer_date DESC, created_at DESC
+                            ) ORDER BY sentence_date DESC, answer_date DESC
                         ) AS old_apartments
                     FROM 
                         unnset_offer o
@@ -332,6 +333,7 @@ class ApartmentRepository:
                         answer_date
                     FROM offer, 
                     jsonb_each(new_aparts)
+					order by created_at ASC, updated_at DESC
                 ),
                 joined_aparts AS (
                     SELECT 
@@ -351,7 +353,7 @@ class ApartmentRepository:
                                 'status', s.status,
                                 'sentence_date', o.sentence_date :: DATE,
                                 'answer_date', o.answer_date :: DATE
-                            ) ORDER BY sentence_date DESC, answer_date DESC, created_at DESC
+                            ) ORDER BY sentence_date DESC, answer_date DESC
                         ) AS new_apartments
                     FROM 
                         unnset_offer o
@@ -376,7 +378,7 @@ class ApartmentRepository:
                     joined_aparts.new_apartments
                 FROM old_apart  
                 LEFT JOIN joined_aparts USING (affair_id) 
-                WHERE affair_id = :apartment_id         
+                WHERE affair_id = :apartment_id       
             """
         else:
             raise ValueError(f"Unsupported apartment type: {apart_type}")
