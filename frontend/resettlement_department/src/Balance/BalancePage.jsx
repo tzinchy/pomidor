@@ -9,24 +9,13 @@ import FileUploader from "./Components/FileUploader";
 const ResponseDisplay = ({ data }) => {
   if (!data) return null;
 
+  console.log(data);
+
   return (
     <div className="mt-4 p-4 bg-white rounded-xl shadow-xl w-1/2">
       <h3 className="text-lg font-semibold mb-4">Результаты подбора:</h3>
       <div className="space-y-3">
-        {data.matches?.map((match, index) => (
-          <div key={index} className="bg-gray-50 p-3 rounded-md">
-            <div className="flex justify-between">
-              <span className="font-medium">Совпадение {index + 1}:</span>
-              <span className="bg-blue-100 text-blue-800 px-2 rounded">
-                {match.match_percent}%
-              </span>
-            </div>
-            <div className="mt-2 text-sm">
-              <p>Семья: {match.family}</p>
-              <p>Квартира: {match.apartment}</p>
-            </div>
-          </div>
-        ))}
+        Подобрано - {data.offer} кв., Не подобрано - {data.cannot_offer} кв.
       </div>
     </div>
   );

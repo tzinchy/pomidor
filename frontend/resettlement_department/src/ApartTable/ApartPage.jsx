@@ -120,7 +120,6 @@ export default function ApartPage() {
       setApartments(response.data);
       setLoading(false);
       setIsDetailsVisible(false);
-      console.log(response.data);
     } catch (error) {
       console.error("Error fetching apartments:", error.response?.data);
     }
@@ -136,7 +135,6 @@ export default function ApartPage() {
         }
       );
       setApartmentDetails(response.data);
-      console.log(response.data);
     } catch (error) {
       console.error("Error fetching apartment details:", error.response?.data);
     }
