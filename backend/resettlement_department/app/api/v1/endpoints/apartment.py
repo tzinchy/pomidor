@@ -98,13 +98,9 @@ async def get_apartment_by_id(
 
 @router.post("/apartment/rematch")
 def rematch_for_family(
-    apartment_ids: List[int],  
-    apart_type: ApartType = Query(ApartType.OLD, description="Только старые квартиры разрешены")
+    apartment_ids: List[int]
 ):
     apartment_ids = list(map(int, apartment_ids))  # <-- Исправлено
-
-    if apart_type != ApartType.OLD:
-        raise HTTPException(status_code=400, detail="Переподбор доступен только для старых квартир")
 
     res = rematch(apartment_ids)
     
