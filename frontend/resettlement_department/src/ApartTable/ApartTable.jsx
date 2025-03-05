@@ -27,9 +27,22 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     encode: (value) => encodeURIComponent(value)
   };
 
-  const handleGetSelectedIds = () => {
-    const selectedIds = Object.keys(rowSelection);
-    console.log("Выбранные ID:", selectedIds);
+  const rematch = async () => {
+    console.log(Object.keys(rowSelection));
+    try {
+      const response = await axios.post(
+        `${HOSTLINK}/tables/apartment/rematch/${Object.keys(rowSelection)}`,
+        {
+          params: {
+            apartment_ids: Object.keys(rowSelection),
+            apart_type: apartType
+          }
+        }
+      );
+      console.log(response.data);
+    } catch (error) {
+      console.error("Error rematch", error.response?.data);
+    }
   };
 
   const switchAparts = async () => {
@@ -163,11 +176,12 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   return (
     <div>
-      <button 
-          onClick={handleGetSelectedIds}
+      <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center justify-start gap-2 mb-2`}>
+        <button 
+          onClick={rematch}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
-          Показать выбранные ID
+          Переподбор
         </button>
 
         <button 
@@ -176,8 +190,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         >
           Поменять подобранные квартиры
         </button>
-
-      <div className="relative flex flex-col lg:flex-row h-[calc(100vh-1rem)] bg-neutral-100 w-full transition-all duration-300">
+      </div>
+      <div className="relative flex flex-col lg:flex-row h-[calc(100vh-5rem)] bg-neutral-100 w-full transition-all duration-300">
         {loading ? (
           <div className="flex flex-1 justify-center h-64">
             <div className="relative flex flex-col place-items-center py-4 text-gray-500">
