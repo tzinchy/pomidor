@@ -486,7 +486,7 @@ def match_new_apart_to_family_batch(
                                     old_apart_list.append(old_apart_id)
                                     df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
 
-                        df_new_apart_second
+                        df_new_apart_second = df_new_apart_second.loc[::-1]
 
                         for _, old_apart in df_old_apart_reversed[df_old_apart_reversed["room_count"] == i].iterrows():
                             old_apart_id = int(old_apart["affair_id"])

@@ -11,58 +11,88 @@ def get_db_connection():
         password=settings.project_management_setting.DB_PASSWORD,
         port=settings.project_management_setting.DB_PORT,
         database=settings.project_management_setting.DB_NAME
-       
     )
 
-def rematch(apart_id):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
+def rematch(apart_ids):
+    for apart_id in apart_ids:
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
 
-            apart_query = '''
-                SELECT affair_id, room_count, full_living_area, total_living_area, living_area, 
-                is_special_needs_marker, is_queue, queue_square, new_house_addresses, rank, 
-                (select max(rank) from public.new_apart where new_apart_id::text in 
-                (SELECT key FROM public.offer, LATERAL json_each_text(new_aparts::json) AS j(key, value) where affair_id = %s)) as new_apart_rank
-                FROM public.old_apart
-                join history USING(history_id)
-                where affair_id = %s
-            '''
-            cursor.execute(apart_query, (apart_id, apart_id))
-            apart = cursor.fetchall()[0]
-            new_apart_params = (apart[1], apart[2], apart[3], apart[4], apart[5], tuple(apart[8]), apart[9], apart[10], apart[0])
-            print(new_apart_params)
+                # Запрос для получения данных старой квартиры
+                apart_query = '''
+                    SELECT affair_id, room_count, full_living_area, total_living_area, living_area, 
+                    is_special_needs_marker, is_queue, queue_square, new_house_addresses, rank, 
+                    (SELECT MAX(rank) FROM public.new_apart WHERE new_apart_id::text IN 
+                    (SELECT key FROM public.offer, LATERAL json_each_text(new_aparts::json) AS j(key, value) WHERE affair_id = %s)) AS new_apart_rank
+                    FROM public.old_apart
+                    JOIN history USING(history_id)
+                    WHERE affair_id = %s
+                '''
+                cursor.execute(apart_query, (apart_id, apart_id))
+                aparts = cursor.fetchall()
 
-            
-            new_apart_query = '''
-                SELECT new_apart_id, room_count, full_living_area, total_living_area, living_area, rank FROM public.new_apart
-                where new_apart_id::text not in 
-                (SELECT key FROM public.offer, 
-                LATERAL json_each_text(new_aparts::json) AS j(key, value) 
-                WHERE (value::json->>'status_id')::int != 2)
-                and room_count = %s and full_living_area >= %s and total_living_area >= %s and living_area >= %s and for_special_needs_marker = %s and house_address in %s and rank in (%s, %s) 
-                and new_apart_id::text not in (SELECT key FROM public.offer, LATERAL json_each_text(new_aparts::json) AS j(key, value) WHERE affair_id = %s)
-                order by rank, (new_apart.full_living_area + new_apart.living_area) limit 1
-            '''
-            cursor.execute(new_apart_query, new_apart_params)
-            new_aparts = cursor.fetchall()
+                if aparts:
+                    apart = aparts[0]
+                    # Подготовка параметров для поиска новой квартиры
+                    new_apart_params = (
+                        apart[1],  # room_count
+                        apart[2],  # full_living_area
+                        apart[3],  # total_living_area
+                        apart[4],  # living_area
+                        apart[5],  # is_special_needs_marker
+                        tuple(apart[8]),  # new_house_addresses
+                        apart[9],  # rank
+                        apart[10],  # new_apart_rank
+                        apart[0]   # affair_id
+                    )
 
-            if new_aparts:
-                cursor.execute("""
-                    UPDATE public.offer
-                    SET new_aparts = (
-                        SELECT jsonb_object_agg(key, jsonb_set(value, '{status_id}', '2', false))
-                        FROM jsonb_each(new_aparts)
-                    ) || '{"%s": {"status_id": 7}}'::jsonb
-                    WHERE affair_id = %s;
-                """, (new_aparts[0][0], apart[0]))
-            
-            print(new_aparts)
+                    # Поиск подходящей новой квартиры
+                    new_apart_query = '''
+                        SELECT new_apart_id, room_count, full_living_area, total_living_area, living_area, rank 
+                        FROM public.new_apart
+                        WHERE new_apart_id::text NOT IN 
+                            (SELECT key FROM public.offer, 
+                            LATERAL json_each_text(new_aparts::json) AS j(key, value) 
+                            WHERE (value::json->>'status_id')::int != 2)
+                        AND room_count = %s 
+                        AND full_living_area >= %s 
+                        AND total_living_area >= %s 
+                        AND living_area >= %s 
+                        AND for_special_needs_marker = %s 
+                        AND house_address IN %s 
+                        AND rank IN (%s, %s)
+                        AND new_apart_id::text NOT IN 
+                            (SELECT key FROM public.offer, LATERAL json_each_text(new_aparts::json) AS j(key, value) 
+                            WHERE affair_id = %s)
+                        ORDER BY rank, (full_living_area + living_area) 
+                        LIMIT 1
+                    '''
+                    cursor.execute(new_apart_query, new_apart_params)
+                    new_aparts = cursor.fetchall()
 
-    except Exception as e:
-        print(f"Error: {e}")
-        raise     
+                    if new_aparts:
+                        # Обновление данных о новой квартире
+                        update_query = """
+                            UPDATE public.offer
+                            SET new_aparts = (
+                                SELECT jsonb_object_agg(key, jsonb_set(value, '{status_id}', '2', false))
+                                FROM jsonb_each(new_aparts)
+                            ) || jsonb_build_object(%s, jsonb_build_object('status_id', 7))
+                            WHERE affair_id = %s;
+                        """
+                        cursor.execute(update_query, (new_aparts[0][0], apart[0]))
+                        conn.commit()  # Фиксация изменений
+                        print(f"Обновлено для apart_id {apart_id}: {new_aparts[0][0]}")
+                    else:
+                        print(f"Новая квартира не найдена для apart_id {apart_id}")
+                else:
+                    print(f'Старая квартира не найдена для apart_id {apart_id}')
+
+        except Exception as e:
+            print(f"Ошибка при обработке apart_id {apart_id}: {e}")
+            conn.rollback()  # Откат в случае ошибки
 
     return None
 
-rematch((100107,))
+rematch([100107, 100108, 100110, 1001070, 1001080, 1001100])
