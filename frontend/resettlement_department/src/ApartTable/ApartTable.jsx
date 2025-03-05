@@ -6,6 +6,7 @@ import {
   getFilteredRowModel,
   flexRender,
 } from '@tanstack/react-table';
+import axios from "axios";
 import { useVirtualizer } from '@tanstack/react-virtual';
 import AdressCell from './Cells/AdressCell';
 import FamilyCell from './Cells/Fio';
@@ -13,6 +14,7 @@ import PloshCell from './Cells/PloshCell';
 import StatusCell from './Cells/StatusCell';
 import Notes from './Cells/Notes';
 import ApartDetails from './ApartDetails';
+import { HOSTLINK } from '..';
 
 const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, fetchApartmentDetails, apartmentDetails, collapsed }) => {
   const [globalFilter, setGlobalFilter] = useState('');
@@ -20,9 +22,29 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [rowSelection, setRowSelection] = useState({});
   const tableContainerRef = useRef(null);
 
+  const paramsSerializer = {
+    indexes: null,
+    encode: (value) => encodeURIComponent(value)
+  };
+
   const handleGetSelectedIds = () => {
     const selectedIds = Object.keys(rowSelection);
     console.log("Выбранные ID:", selectedIds);
+  };
+
+  const switchAparts = async (first_apart_id, second_apart_id) => {
+    try {
+      const response = await axios.post(
+        `${HOSTLINK}/tables/switch_aparts`,
+        { 
+          params: { first_apart_id: first_apart_id , second_apart_id: second_apart_id},
+          paramsSerializer
+        }
+      );
+      console.log(response.data);
+    } catch (error) {
+      console.error("Error fetching apartment details:", error.response?.data);
+    }
   };
 
   const columns = React.useMemo(
@@ -138,6 +160,14 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         >
           Показать выбранные ID
         </button>
+
+        <button 
+          onClick={switchAparts}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Поменять подобранные квартиры
+        </button>
+
       <div className="relative flex flex-col lg:flex-row h-[calc(100vh-1rem)] bg-neutral-100 w-full transition-all duration-300">
         {loading ? (
           <div className="flex flex-1 justify-center h-64">
