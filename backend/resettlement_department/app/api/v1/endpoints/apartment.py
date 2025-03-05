@@ -96,7 +96,7 @@ async def get_apartment_by_id(
         raise HTTPException(status_code=404, detail="Apartment not found")
     return apartment
 
-@router.post("/apartment/{apartment_id}/rematch")
+@router.post("/apartment/rematch")
 def rematch_for_family(
     apartment_ids : List[int],  
     apart_type: ApartType = Query(
