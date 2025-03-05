@@ -94,5 +94,3 @@ def rematch(apart_ids):
             conn.rollback()  # Откат в случае ошибки
 
     return None
-
-rematch([100107, 100108, 100110, 1001070, 1001080, 1001100])

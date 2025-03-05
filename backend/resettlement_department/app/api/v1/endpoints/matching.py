@@ -45,8 +45,7 @@ async def start_matching(
 
 
 @router.post("/upload-file/")
-async def upload_file(file: UploadFile = File(...),
-                      background_task = BackgroundTasks()):
+async def upload_file(file: UploadFile = File(...)):
     try:
         # Создаем папки если их нет
         folders = [
