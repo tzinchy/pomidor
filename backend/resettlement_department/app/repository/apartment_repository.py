@@ -404,7 +404,7 @@ class ApartmentRepository:
         async with self.db() as session:
             try:
                 result = await session.execute(text(query))
-                return [row[0] for row in result]
+                return result.fetchall()
             except Exception as e:
                 logger.error(f"Error executing query: {e}")
                 raise

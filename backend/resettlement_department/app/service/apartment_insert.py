@@ -7,7 +7,58 @@ from repository.database import project_managment_session
 import re
 from psycopg2.extras import execute_values
 
+
+district_mapping = {
+    "Восточный АО": "ВАО",
+    "Центральный АО": "ЦАО",
+    "Северо-Восточный АО": "СВАО",
+    "Новомосковский АО": "НАО",
+    "Люблинский р-н": "ЮВАО",  # Люблинский район относится к Юго-Восточному АО
+    "Юго-Восточный АО": "ЮВАО",
+    "Северо-Западный АО": "СЗАО",
+    "Северный АО": "САО",
+    "Зеленоградский АО": "ЗелАО",
+    "Юго-Западный АО": "ЮЗАО",
+    "Южный АО": "ЮАО",
+    "Вос": "ВАО",
+    "СЗАО": "СЗАО",
+    "Троицкий АО": "ТАО",
+    "Западный АО": "ЗАО",
+    "Зел": "ЗелАО",
+    "С-В": "СВАО",
+    "Южн": "ЮАО",
+    "С-З": "СЗАО",
+    "Зап": "ЗАО",
+    "Цен": "ЦАО",
+    "Ю-З": "ЮЗАО",
+    "ТАО": "ТАО",
+    "Сев": "САО",
+    "НАО": "НАО",
+    "МО": "МО",  # Московская область, если нужно
+    "Ю-В": "ЮВАО",
+    # Дополнительные варианты
+    "Якиманка": "ЦАО",  # Район в ЦАО
+    "Тверской": "ЦАО",  # Район в ЦАО
+    "Северное Бутово": "ЮЗАО",  # Район в ЮЗАО
+    "Очаково-Матвеевское": "ЗАО",  # Район в ЗАО
+    "Левобережный": "САО",  # Район в САО
+    "Некрасовка": "ЮВАО",  # Район в ЮВАО
+    "Митино": "СЗАО",  # Район в СЗАО
+    "Крылатское": "ЗАО",  # Район в ЗАО
+    "Бирюлёво Восточное": "ЮАО",  # Район в ЮАО
+    "Академический": "ЮЗАО",  # Район в ЮЗАО
+    "Цен": "ЦАО",
+    "Вос": "ВАО",
+    "Ю-В": "ЮВАО",
+    "Зел": "ЗелАО",
+    "С-В": "СВАО",
+    "Зап": "ЗАО",
+    "Сев": "САО",
+    "МО": "МО",  # Оставляем как есть, если нужно
+}
+
 def insert_data_to_old(df):
+    global district_mapping
     connection = None  # Инициализация соединения
     cursor = None      # Инициализация курсора
     try:
@@ -57,7 +108,7 @@ def insert_data_to_old(df):
         old_apart["people_uchet"] = old_apart["people_uchet"].replace(np.nan, 0).astype("Int64")
         old_apart["people_in_family"] = old_apart["people_in_family"].replace(np.nan, 0).astype("Int64")
         print('astype done')
-
+        old_apart['district'] = old_apart['district'].map(district_mapping).fillna(old_apart['district'])
         # Добавляем колонку is_queue на основе регулярного выражения
         old_apart["is_queue"] = old_apart["kpu_another"].apply(
               lambda x: 1 if re.search(r"-01-", str(x)) else 0
@@ -234,6 +285,7 @@ def insert_data_to_old(df):
 
 
 def new_apart_insert(new_apart_df: pd.DataFrame):
+    global district_mapping
     connection = None
     cursor = None
     try:
@@ -269,7 +321,7 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
             "un_kv", "apart_type", "owner", "apart_kad_number", "room_kad_number", "for_special_needs_marker"
         ]
         new_apart_df = new_apart_df[expected_columns]
-
+        new_apart_df['district'] = new_apart_df['district'].map(district_mapping).fillna(new_apart_df['district'])
         # Преобразование типов
         new_apart_df["apart_number"] = new_apart_df["apart_number"].astype("Int64")
         special_needs_mapping = {"да": 1, "нет": 0}
@@ -500,6 +552,7 @@ def insert_offer(offer_df: pd.DataFrame):
 
 
 def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
+    global district_mapping
     connection = psycopg2.connect(
         host=settings.project_management_setting.DB_HOST,
         user=settings.project_management_setting.DB_USER,
@@ -561,7 +614,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
                 "type_of_settlement", "for_special_needs_marker", "cad_num", "up_id", 
                 "manual_load_id"
             ]
-            
+            new_apart_df['district'] = new_apart_df['district'].map(district_mapping).fillna(new_apart_df['district'])
             for col in new_apart_required:
                 if col not in new_apart_df.columns:
                     new_apart_df[col] = None
@@ -619,7 +672,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
                 "max_floor", "buying_date", "type_of_settlement", "history_id", "rank", 
                 "kpu_another", "manual_load_id"
             ]
-            
+            old_apart_df['district'] = old_apart_df['district'].map(district_mapping).fillna(old_apart_df['district'])
             for col in old_apart_required:
                 if col not in old_apart_df.columns:
                     old_apart_df[col] = None
@@ -636,7 +689,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
                         updated_at = NOW()""",
                 old_apart_values
             )
-
+        
         # 4. Обработка CIN
         if not cin_df.empty:
             # Подготовка данных
@@ -688,6 +741,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
 
     except Exception as e:
         connection.rollback()
+        print(e)
         raise e
     finally:
         cursor.close()
