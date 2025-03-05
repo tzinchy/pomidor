@@ -35,7 +35,13 @@ async def balance(
     requirements: MatchingSchema = Body(...)
 ):
     try:
-
+        # Создаем папки если их нет
+        folders = [
+            Path("upload")
+        ]
+        for folder in folders:
+            folder.mkdir(parents=True, exist_ok=True)
+            
         output_path = os.path.join(os.getcwd(), '././uploads', 'matching_result.xlsx')
         print(requirements.old_apartment_house_address)
         print('ТО ЧТО ВЫШЕ ЭТО ПАРАМЕТР')
