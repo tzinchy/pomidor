@@ -32,18 +32,27 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     console.log("Выбранные ID:", selectedIds);
   };
 
-  const switchAparts = async (first_apart_id, second_apart_id) => {
-    try {
-      const response = await axios.post(
-        `${HOSTLINK}/tables/switch_aparts`,
-        { 
-          params: { first_apart_id: first_apart_id , second_apart_id: second_apart_id},
-          paramsSerializer
-        }
-      );
-      console.log(response.data);
-    } catch (error) {
-      console.error("Error fetching apartment details:", error.response?.data);
+  const switchAparts = async () => {
+    console.log(parseInt(Object.keys(rowSelection)[0]), parseInt(Object.keys(rowSelection)[1]), Object.keys(rowSelection).length, apartType);
+    if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment') ) {
+      console.log('Выбрано более 2 квартир или выбран ресурс');
+    }
+    else {
+      try {
+        const response = await axios.post(
+          `${HOSTLINK}/tables/switch_aparts`,
+          {}, // Тело запроса пустое, так как параметры передаются в URL
+          {
+            params: {
+              first_apart_id: parseInt(Object.keys(rowSelection)[0]),
+              second_apart_id: parseInt(Object.keys(rowSelection)[1])
+            }
+          }
+        );
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error ", error.response?.data);
+      }
     }
   };
 
