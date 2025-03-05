@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 from depends import apartment_service
 from schema.apartment import ApartType, MatchingSchema
 from service.alghorithm import match_new_apart_to_family_batch
-from service.balance_alghorithm import save_views_to_excel
+from fastapi import BackgroundTasks
 import os 
 from fastapi import File, HTTPException, UploadFile, status 
 from io import BytesIO
@@ -45,11 +45,11 @@ async def start_matching(
 
 
 @router.post("/upload-file/")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...),
+                      background_task = BackgroundTasks()):
     try:
         # Создаем папки если их нет
         folders = [
-            Path("../../../current"), 
             Path("manual_download")
         ]
         
@@ -58,11 +58,6 @@ async def upload_file(file: UploadFile = File(...)):
 
         # Читаем содержимое файла
         content = await file.read()
-
-        # Сохраняем в current
-        current_path = Path("../../../current") / file.filename
-        with open(current_path, "wb") as f:
-            f.write(content)
 
         # Сохраняем в manual_download
         manual_path = Path("manual_download") / file.filename
@@ -73,18 +68,14 @@ async def upload_file(file: UploadFile = File(...)):
         new_apart = pd.read_excel(BytesIO(content), sheet_name='new_apart')
         old_apart = pd.read_excel(BytesIO(content), sheet_name='old_apart')   
         cin = pd.read_excel(BytesIO(content), sheet_name='cin')
-        try:
         # Вызов функции с нужными параметрами
-            insert_to_db(
-                new_apart_df=new_apart,
-                old_apart_df=old_apart,
-                cin_df=cin,
-                file_name=file.filename,          # Имя файла
-                file_path=str(manual_path)        # Полный путь к файлу
-            )
-        except Exception as e:
-            print(e)
-
+        insert_to_db(
+            new_apart_df=new_apart,
+            old_apart_df=old_apart,
+            cin_df=cin,
+            file_name=file.filename,          # Имя файла
+            file_path=str(manual_path)        # Полный путь к файлу
+        )
         return {"message": "Файл успешно загружен и обработан"}
 
     except Exception as e:
