@@ -34,6 +34,8 @@ class MatchingSchema(BaseModel):
     new_apartment_house_address: List[str] = None 
     is_date : bool = None
 
+class Rematch(BaseModel):
+    apartment_ids : List[int]
 
 
 

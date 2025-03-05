@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, HTTPException
 from depends import apartment_service
-from schema.apartment import ApartType
+from schema.apartment import ApartType, Rematch
 from typing import Optional, List, Literal
 from service.rematch_service import rematch
 
@@ -98,11 +98,10 @@ async def get_apartment_by_id(
 
 @router.post("/apartment/rematch")
 def rematch_for_family(
-    apartment_ids: List[int]
+    rematch_list : Rematch
 ):
-    apartment_ids = list(map(int, apartment_ids))  # <-- Исправлено
 
-    res = rematch(apartment_ids)
+    res = rematch(rematch_list.apartment_ids)
     
     return {"res": res}
 
