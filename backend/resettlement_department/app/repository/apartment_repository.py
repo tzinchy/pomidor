@@ -410,15 +410,26 @@ class ApartmentRepository:
                 raise
 
     async def switch_apartment(self, first_apartment_id, second_apartment_id):
-        query = "SELECT switch_apartments(:first_id, :second_id)"
+        query = "SELECT swap_new_aparts(:first_apartment_id, :second_apartment_id)"
         params = {
-            "first_id": first_apartment_id,
-            "second_id": second_apartment_id
+            "first_apartment_id": int(first_apartment_id),
+            "second_apartment_id": int(second_apartment_id)
         }
         async with self.db() as session:
             try:
-                await session.execute(text(query), params)
+                result = await session.execute(text(query), params)
                 await session.commit()
+
+                # Преобразуем результат в сериализуемый формат
+                rows = result.fetchall()
+                if rows:
+                    # Если результат содержит строки, преобразуем их в список словарей
+                    serialized_result = [row._asdict() for row in rows]  # Используем ._asdict()
+                    return serialized_result
+                else:
+                    # Если результат пуст, возвращаем сообщение
+                    return {"message": "No rows affected"}
+
             except Exception as e:
                 logger.error(f"Error switching apartments: {e}")
                 raise

@@ -110,4 +110,4 @@ async def switch_apartments(
     first_apart_id : int, 
     second_apart_id : int
 ):
-    await apartment_service.switch_apartment(first_apart_id, second_apart_id)
+    return await apartment_service.switch_apartment(first_apart_id, second_apart_id)
