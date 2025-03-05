@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, HTTPException
 from depends import apartment_service
-from schema.apartment import ApartType
+from schema.apartment import ApartType, Rematch
+from service.rematch_service import rematch
 from typing import Optional, List, Literal
 router = APIRouter(prefix="/tables", tags=["Дерево"])
 
@@ -94,16 +95,15 @@ async def get_apartment_by_id(
         raise HTTPException(status_code=404, detail="Apartment not found")
     return apartment
 
-@router.post("/apartment/{apartment_id}/rematch")
-async def rematch_for_family(
-    apartment_id: int,  
-    apart_type: ApartType = Query(
-        ApartType.OLD, description="Только старые квартиры разрешены"
-    )
+@router.post("/apartment/rematch")
+def rematch_for_family(
+    rematch_list : Rematch
 ):
-    if apart_type != ApartType.OLD:
-        raise HTTPException(status_code=400, detail="Переподбор доступен только для старых квартир")
-    return {"res": "Позже здесь будет вызываться функция переподбора", "apartment_id": apartment_id}
+
+    res = rematch(rematch_list.apartment_ids)
+    
+    return {"res": res}
+
 
 @router.post("/switch_aparts")
 async def switch_apartments(
