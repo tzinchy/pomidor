@@ -72,18 +72,32 @@ def rematch(apart_ids):
                     new_aparts = cursor.fetchall()
 
                     if new_aparts:
-                        # Обновление данных о новой квартире
+                        new_apart_id = new_aparts[0][0]  # ID новой квартиры
+
+                        # Шаг 1: Обновление последней записи
                         update_query = """
                             UPDATE public.offer
-                            SET new_aparts = (
+                            SET
+                            status_id = 2, 
+                            new_aparts = (
                                 SELECT jsonb_object_agg(key, jsonb_set(value, '{status_id}', '2', false))
                                 FROM jsonb_each(new_aparts)
-                            ) || jsonb_build_object(%s, jsonb_build_object('status_id', 7))
-                            WHERE affair_id = %s;
+                            ) 
+                            WHERE affair_id = %s
+                            AND created_at = (SELECT MAX(created_at) FROM public.offer WHERE affair_id = %s);
                         """
-                        cursor.execute(update_query, (new_aparts[0][0], apart[0]))
+                        cursor.execute(update_query, (apart[0], apart[0]))
+                        print(f"Обновлена последняя запись для apart_id {apart_id}: {new_apart_id}")
+
+                        # Шаг 2: Вставка новой записи
+                        insert_query = """
+                            INSERT INTO public.offer (affair_id, new_aparts, status_id)
+                            VALUES (%s, jsonb_build_object(%s, jsonb_build_object('status_id', 7)), 7);
+                        """
+                        cursor.execute(insert_query, (apart[0], new_apart_id))
+                        print(f"Вставлена новая запись для apart_id {apart_id}: {new_apart_id}")
+
                         conn.commit()  # Фиксация изменений
-                        print(f"Обновлено для apart_id {apart_id}: {new_aparts[0][0]}")
                     else:
                         print(f"Новая квартира не найдена для apart_id {apart_id}")
                 else:
