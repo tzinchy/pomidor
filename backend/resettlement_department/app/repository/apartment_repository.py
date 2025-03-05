@@ -425,7 +425,7 @@ class ApartmentRepository:
                 if rows:
                     # Если результат содержит строки, преобразуем их в список словарей
                     serialized_result = [row._asdict() for row in rows]  # Используем ._asdict()
-                    return serialized_result
+                    return serialized_result[0]
                 else:
                     # Если результат пуст, возвращаем сообщение
                     return {"message": "No rows affected"}
