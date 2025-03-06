@@ -231,7 +231,7 @@ class ApartmentRepository:
                         s.status AS status,
                         ROW_NUMBER() OVER (
                             PARTITION BY na.new_apart_id 
-                            ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at ASC
+                            ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at ASC
                         ) AS rn
                     FROM 
                         new_apart na
