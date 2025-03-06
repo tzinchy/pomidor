@@ -188,7 +188,7 @@ class ApartmentRepository:
                         status.status,
                         o.notes,
                         affair_id,
-                        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn
+                        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at DESC) AS rn
                     FROM
                         old_apart oa
                     LEFT JOIN
