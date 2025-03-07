@@ -686,12 +686,12 @@ def search_kurs_living_space(apart_id_interval, layout_id: int, session_key: str
         "SearchDataNewDesign": urllib.parse.quote(json.dumps([
             {
                 "typeControl": "value",
-                "type": "BOOLEAN",
-                "text": "Распорядитель_П8=11,12,30,81",
-                "textValue": "Да",
-                "value": 1,
-                "id": 43726400,
-                "allowDelete": True  # Булево значение
+                "text": "Распорядитель_Код",
+                "textValue": "753891",
+                "type": "DECIMAL",
+                "value": "753891",
+                "id": 43704000,
+                "allowDelete": True
             },
             {
                 "typeControl": "value",
@@ -734,11 +734,11 @@ def search_kurs_living_space(apart_id_interval, layout_id: int, session_key: str
         "SearchDataNewDesign": json.dumps([
             {
                 "typeControl": "value",
-                "type": "BOOLEAN",
-                "text": "Распорядитель_П8=11,12,30,81",
-                "textValue": "Да",
-                "value": 1,
-                "id": 43726400,
+                "text": "Распорядитель_Код",
+                "textValue": "753891",
+                "type": "DECIMAL",
+                "value": "753891",
+                "id": 43704000,
                 "allowDelete": "true"
             },
             {
