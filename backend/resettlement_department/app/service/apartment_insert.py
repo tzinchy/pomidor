@@ -324,6 +324,7 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         int_columns = ["new_apart_id", "building_id", "floor", "rsm_id", "room_count", "un_kv"]
         for column in int_columns:
             new_apart_df[column] = new_apart_df[column].astype(int)
+        new_apart_df["apart_number"] = new_apart_df["apart_number"].astype(str)
         new_apart_df['district'] = new_apart_df['district'].map(district_mapping).fillna(new_apart_df['district'])
         # Преобразование типов
         new_apart_df["apart_number"] = new_apart_df["apart_number"].astype("Int64")
