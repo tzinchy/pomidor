@@ -15,6 +15,9 @@ import StatusCell from './Cells/StatusCell';
 import Notes from './Cells/Notes';
 import ApartDetails from './ApartDetails';
 import { HOSTLINK } from '..';
+import Dropdown from '../Filters/DropdownTry/Dropdown';
+
+const f = ['Статус', ['Отказ', 'Ждёт одобрения']]
 
 const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, fetchApartmentDetails, apartmentDetails, collapsed }) => {
   const [globalFilter, setGlobalFilter] = useState('');
@@ -147,11 +150,19 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onRowSelectionChange: setRowSelection, // Добавляем обработчик изменений
-    getRowId: (row) => 
-      apartType === 'OldApart' 
-        ? row.affair_id.toString() 
-        : row.new_apart_id.toString(),
+    onRowSelectionChange: setRowSelection, 
+    getRowId: (row) => {
+      if (!row) {
+        console.error("Row is undefined");
+        return "undefined-row";
+      }
+    
+      if (apartType === 'OldApart') {
+        return row.affair_id ? row.affair_id.toString() : "undefined-affair-id";
+      } else {
+        return row.new_apart_id ? row.new_apart_id.toString() : "undefined-new-apart-id";
+      }
+    },
   });
 
   const rowVirtualizer = useVirtualizer({
@@ -191,8 +202,9 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         >
           Поменять подобранные квартиры
         </button>
+        <Dropdown item={f[0]} data={f[1]} func={handleClick} filterType={'okrugs'} isFiltersReset={false} />
       </div>
-      <div className="relative flex flex-col lg:flex-row h-[calc(100vh-5rem)] bg-neutral-100 w-full transition-all duration-300">
+      <div className="relative flex flex-col lg:flex-row h-[calc(100vh-4rem)] bg-neutral-100 w-full transition-all duration-300">
         {loading ? (
           <div className="flex flex-1 justify-center h-64">
             <div className="relative flex flex-col place-items-center py-4 text-gray-500">
@@ -214,7 +226,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                 ref={tableContainerRef}
                 className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} overflow-auto rounded-md border h-[calc(100vh-1rem)] w-[calc(100% - 25px)] transition-all ease-in-out scrollbar-custom`}
               >
-                <table className="text-sm w-full border-collapse backdrop-blur-md sticky top-0 z-50">
+                <table className="text-sm w-full border-collapse backdrop-blur-md sticky top-0 z-30">
                   <thead className="border-b z-10 backdrop-blur-md shadow z-10">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr key={headerGroup.id} className="hover:bg-muted/50 transition-colors">
