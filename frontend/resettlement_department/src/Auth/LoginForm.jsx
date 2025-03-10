@@ -60,7 +60,7 @@ const LoginForm = () => {
                 // }
                })} 
               type="text" 
-              className="border-input border-1 bg-transparent ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70" id="email" name="email" aria-describedby=":r1:-form-item-description" aria-invalid="false"
+              className="border border-gray-300 bg-transparent ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-70" id="email" name="email" aria-describedby=":r1:-form-item-description" aria-invalid="false"
             //   placeholder="Введите логин"
             />
             
@@ -72,11 +72,10 @@ const LoginForm = () => {
       <input
         {...register("password", { required: "❌ Пароль обязателен" })}
         type={showPassword ? "text" : "password"}
-        className="peer border-input bg-transparent ring-offset-background 
+        className="peer border border-gray-300 bg-transparent ring-offset-background 
                    placeholder:text-muted-foreground focus-visible:ring-ring 
-                   flex h-10 w-full rounded-md border px-3 py-2 pr-10 text-sm 
+                   flex h-10 w-full rounded-md px-3 py-2 pr-10 text-sm 
                    file:border-0 file:bg-transparent file:text-sm file:font-medium 
-                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 
                    disabled:cursor-not-allowed disabled:opacity-50"
         id="password"
         name="password"
