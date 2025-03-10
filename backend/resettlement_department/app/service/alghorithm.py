@@ -171,7 +171,7 @@ def match_new_apart_to_family_batch(
                         "room_count", "full_living_area", "total_living_area", "living_area", "for_special_needs_marker",
                     ],
                 )
-                df_new_apart_second = pd.DataFrame(new_aparts, columns=[
+                df_new_apart_rev = pd.DataFrame(new_aparts, columns=[
                         "new_apart_id", "district", "municipal_district", "house_address", "apart_number", "floor",
                         "room_count", "full_living_area", "total_living_area", "living_area", "for_special_needs_marker",
                     ],
@@ -486,7 +486,9 @@ def match_new_apart_to_family_batch(
                                     old_apart_list.append(old_apart_id)
                                     df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
 
-                        df_new_apart_second = df_new_apart_second.loc[::-1]
+                        df_new_apart_second = df_new_apart_rev.loc[::-1]
+                        print('REVERSED NEW', df_new_apart_second[df_new_apart_second['room_count'] == 2])
+                        print('REVERSED OLD', df_old_apart_reversed[df_old_apart_reversed["room_count"] == 2])
 
                         for _, old_apart in df_old_apart_reversed[df_old_apart_reversed["room_count"] == i].iterrows():
                             old_apart_id = int(old_apart["affair_id"])
