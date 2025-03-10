@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -23,57 +23,62 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
   const [rowSelection, setRowSelection] = useState({});
+  const [selectedFilters, setSelectedFilters] = useState({});
   const tableContainerRef = useRef(null);
 
-  const paramsSerializer = {
-    indexes: null,
-    encode: (value) => encodeURIComponent(value)
+  // Добавлено: Обработчик изменения фильтров
+  const handleFilterChange = (filterType, selectedValues) => {
+    setSelectedFilters(prev => ({
+      ...prev,
+      [filterType]: selectedValues,
+    }));
   };
+
+  // Добавлено: Фильтрация данных
+  const filteredData = useMemo(() => {
+    let result = data;
+    
+    if (selectedFilters['Статус']?.length > 0) {
+      result = result.filter(item => 
+        selectedFilters['Статус'].includes(item.status))
+    }
+    
+    return result;
+  }, [data, selectedFilters]);
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
-    console.log("apartmentIds:", apartmentIds);
-
     try {
-      const response = await axios.post(
+      await axios.post(
         `${HOSTLINK}/tables/apartment/rematch`,
-        JSON.stringify({ apartment_ids: apartmentIds }), // Явно преобразуем в JSON
-        {
-          headers: {
-            'Content-Type': 'application/json', // Указываем тип содержимого
-          },
-        }
+        JSON.stringify({ apartment_ids: apartmentIds }),
+        { headers: { 'Content-Type': 'application/json' } }
       );
-      console.log("Response:", response.data);
     } catch (error) {
       console.error("Error rematch:", error.response?.data);
     }
-};
+  };
+
   const switchAparts = async () => {
-    console.log(parseInt(Object.keys(rowSelection)[0]), parseInt(Object.keys(rowSelection)[1]), Object.keys(rowSelection).length, apartType);
-    if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment') ) {
-      console.log('Выбрано более 2 квартир или выбран ресурс');
-    }
-    else {
-      try {
-        const response = await axios.post(
-          `${HOSTLINK}/tables/switch_aparts`,
-          {}, // Тело запроса пустое, так как параметры передаются в URL
-          {
-            params: {
-              first_apart_id: parseInt(Object.keys(rowSelection)[0]),
-              second_apart_id: parseInt(Object.keys(rowSelection)[1])
-            }
+    if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment')) return;
+    
+    try {
+      await axios.post(
+        `${HOSTLINK}/tables/switch_aparts`,
+        {},
+        {
+          params: {
+            first_apart_id: parseInt(Object.keys(rowSelection)[0]),
+            second_apart_id: parseInt(Object.keys(rowSelection)[1])
           }
-        );
-        console.log(response.data);
-      } catch (error) {
-        console.error("Error ", error.response?.data);
-      }
+        }
+      );
+    } catch (error) {
+      console.error("Error ", error.response?.data);
     }
   };
 
-  const columns = React.useMemo(
+  const columns = useMemo(
     () => [
       {
         id: 'select',
@@ -103,17 +108,13 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         cell: ({ row }) => <AdressCell props={row.original} />,
         size: 200,
       },
-      ...(apartType === 'FamilyStructure'
-        ? [
-            {
-              header: 'ФИО',
-              accessorKey: 'fio',
-              enableSorting: true,
-              cell: ({ row }) => <FamilyCell props={row.original} />,
-              size: 150,
-            },
-          ]
-        : []), // Если apartType не равен 'FamilyStructure', то колонка не добавляется
+      ...(apartType === 'FamilyStructure' ? [{
+        header: 'ФИО',
+        accessorKey: 'fio',
+        enableSorting: true,
+        cell: ({ row }) => <FamilyCell props={row.original} />,
+        size: 150,
+      }] : []),
       {
         header: 'Площадь, тип, этаж',
         accessorKey: 'full_living_area',
@@ -135,10 +136,9 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     ],
     [apartType]
   );
-  
 
   const table = useReactTable({
-    data,
+    data: filteredData, // Используем отфильтрованные данные
     columns,
     state: {
       globalFilter,
@@ -149,20 +149,10 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onRowSelectionChange: setRowSelection, 
-    getRowId: (row) => {
-      if (!row) {
-        console.error("Row is undefined");
-        return "undefined-row";
-      }
-    
-      if (apartType === 'OldApart') {
-        return row.affair_id ? row.affair_id.toString() : "undefined-affair-id";
-      } else {
-        return row.new_apart_id ? row.new_apart_id.toString() : "undefined-new-apart-id";
-      }
-    },
+    onRowSelectionChange: setRowSelection,
+    getRowId: (row) => apartType === 'OldApart' 
+      ? row.affair_id?.toString() 
+      : row.new_apart_id?.toString(),
   });
 
   const rowVirtualizer = useVirtualizer({
@@ -172,19 +162,20 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     overscan: 10,
   });
 
-
-  function handleClick(index, visibility, val) {
-    if (visibility) {
-        if (index !== selectedRow) {
-            setSelectedRow(index); // Обновляем выбранную строку
-            apartType === "OldApart" ? fetchApartmentDetails(val["affair_id"]) : fetchApartmentDetails(val["new_apart_id"]);
-        } 
-    } else {
-        setSelectedRow(index); // Устанавливаем выбранную строку
-        setIsDetailsVisible(true); // Открываем панел
-        apartType === "OldApart" ? fetchApartmentDetails(val["affair_id"]) : fetchApartmentDetails(val["new_apart_id"]);
+  const handleClick = (index, visibility, val) => {
+    const id = apartType === "OldApart" 
+      ? val.affair_id 
+      : val.new_apart_id;
+      
+    if (visibility && index !== selectedRow) {
+      setSelectedRow(index);
+      fetchApartmentDetails(id);
+    } else if (!visibility) {
+      setSelectedRow(index);
+      setIsDetailsVisible(true);
+      fetchApartmentDetails(id);
     }
-}
+  };
 
   return (
     <div>
@@ -202,7 +193,13 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         >
           Поменять подобранные квартиры
         </button>
-        <Dropdown item={f[0]} data={f[1]} func={handleClick} filterType={'okrugs'} isFiltersReset={false} />
+        <Dropdown 
+          item={f[0]} 
+          data={f[1]} 
+          func={handleFilterChange} // Исправлено: Передаем обработчик фильтрации
+          filterType={'Статус'} 
+          isFiltersReset={false} 
+        />
       </div>
       <div className="relative flex flex-col lg:flex-row h-[calc(100vh-4rem)] bg-neutral-100 w-full transition-all duration-300">
         {loading ? (
