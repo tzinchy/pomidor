@@ -156,7 +156,8 @@ async def change_status(
     apart_type: ApartType = Query(..., description="Тип апартаментов")
 ):
     try:
-        await apartment_service.update_history_for_apart(apartment_id, new_status, apart_type)
+        print(new_status)
+        await apartment_service.update_history_for_apart(apartment_id, new_status.new_status.value, apart_type)
         return {"message": "Status updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
