@@ -3,7 +3,7 @@ from depends import apartment_service
 from schema.apartment import ApartType, Rematch, ManualMatchingSchema
 from service.rematch_service import rematch
 from typing import Optional, List, Literal
-from schema.status import Status
+from schema.status import StatusUpdate
 
 router = APIRouter(prefix="/tables", tags=["Дерево"])
 
@@ -152,7 +152,7 @@ def rematch_for_family(rematch_list: Rematch):
 @router.post("/apartment/{apartment_id}/change_status")
 async def change_status(
     apartment_id: int,
-    new_status: Status = Body(..., description="Доступные статусы"),
+    new_status: StatusUpdate = Body(..., description="Доступные статусы"),
     apart_type: ApartType = Query(..., description="Тип апартаментов")
 ):
     try:
