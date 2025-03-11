@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -15,36 +15,57 @@ import StatusCell from './Cells/StatusCell';
 import Notes from './Cells/Notes';
 import ApartDetails from './ApartDetails';
 import { HOSTLINK } from '..';
-import Dropdown from '../Filters/DropdownTry/Dropdown';
+import AllFilters from './Filters/AllFilters';
 
-const f = ['Статус', ['Отказ', 'Ждёт одобрения']]
-
-const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, fetchApartmentDetails, apartmentDetails, collapsed }) => {
+const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, 
+  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments }) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
   const [rowSelection, setRowSelection] = useState({});
-  const [selectedFilters, setSelectedFilters] = useState({});
   const tableContainerRef = useRef(null);
+  const [filteredApartments, setFilteredApartments] = useState(data);
+  const [rooms, setRooms] = useState([]);
 
-  // Добавлено: Обработчик изменения фильтров
-  const handleFilterChange = (filterType, selectedValues) => {
-    setSelectedFilters(prev => ({
-      ...prev,
-      [filterType]: selectedValues,
-    }));
-  };
+  // Получаем уникальные значения room_count
+  const getUniqueRoomCounts = useMemo(() => {
+    console.log(data);
+    if (!filteredApartments) return [];
+    
+    return [...new Set(
+      filteredApartments
+        .map(apartment => parseInt(apartment.room_count, 10))
+        .filter(value => !isNaN(value))
+    )].sort((a, b) => a - b);
+  }, [filteredApartments]);
 
-  // Добавлено: Фильтрация данных
-  const filteredData = useMemo(() => {
-    let result = data;
+  // Обновляем rooms при изменении filteredApartments
+  useEffect(() => {
+    setRooms(getUniqueRoomCounts);
+  }, [getUniqueRoomCounts]);
+
+  // 2. Добавляем эффект для синхронизации с исходными данными
+  useEffect(() => {
+    setFilteredApartments(data);
+  }, [data]);
+  
+  const handleFilterChange = useCallback((filterType, selectedValues) => {
+    if (!data || data.length === 0) return;
+  
+    const filterKey = filterType.toLowerCase();
     
-    if (selectedFilters['Статус']?.length > 0) {
-      result = result.filter(item => 
-        selectedFilters['Статус'].includes(item.status))
-    }
-    
-    return result;
-  }, [data, selectedFilters]);
+    const filtered = selectedValues.length > 0 
+      ? data.filter(item => {
+          // Проверяем наличие "Не подобрано" в выбранных значениях
+          const hasNotMatched = selectedValues.includes('Не подобрано');
+          // Проверяем обычные значения статусов
+          const hasRegularStatus = selectedValues.some(val => val !== 'Не подобрано' && item[filterKey] === val);
+          
+          // Если выбран "Не подобрано" - проверяем на null, иначе проверяем обычные статусы
+          return (hasNotMatched && item[filterKey] === null) || hasRegularStatus;
+        })
+      : data;
+    setFilteredApartments(filtered);
+  }, [data]);
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
@@ -54,6 +75,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         JSON.stringify({ apartment_ids: apartmentIds }),
         { headers: { 'Content-Type': 'application/json' } }
       );
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
     } catch (error) {
       console.error("Error rematch:", error.response?.data);
     }
@@ -138,7 +160,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   );
 
   const table = useReactTable({
-    data: filteredData, // Используем отфильтрованные данные
+    data: filteredApartments, // Используем отфильтрованные данные
     columns,
     state: {
       globalFilter,
@@ -178,30 +200,27 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   };
 
   return (
-    <div>
-      <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center justify-start gap-2 mb-2`}>
-        <button 
-          onClick={rematch}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Переподбор
-        </button>
+    <div className='bg-neutral-100'>
+      <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
+          <AllFilters handleFilterChange={handleFilterChange} rooms={rooms}/>
+        <div className='flex'>
+          <button 
+              onClick={rematch}
+              className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
+            >
+              Переподбор
+            </button>
 
-        <button 
-          onClick={switchAparts}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Поменять подобранные квартиры
-        </button>
-        <Dropdown 
-          item={f[0]} 
-          data={f[1]} 
-          func={handleFilterChange} // Исправлено: Передаем обработчик фильтрации
-          filterType={'Статус'} 
-          isFiltersReset={false} 
-        />
+            <button 
+              onClick={switchAparts}
+              className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
+            >
+              Поменять подобранные квартиры
+            </button>
+          <p className='ml-8 mr-2 text-gray-400'>{filteredApartments.length}</p>
+        </div>
       </div>
-      <div className="relative flex flex-col lg:flex-row h-[calc(100vh-4rem)] bg-neutral-100 w-full transition-all duration-300">
+      <div className="relative flex flex-col lg:flex-row h-[calc(100vh-4rem)] w-full transition-all duration-300">
         {loading ? (
           <div className="flex flex-1 justify-center h-64">
             <div className="relative flex flex-col place-items-center py-4 text-gray-500">

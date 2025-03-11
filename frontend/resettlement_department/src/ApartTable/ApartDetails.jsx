@@ -52,7 +52,7 @@ export default function ApartDetails({ className, apartmentDetails, setIsDetails
                 {apartmentDetails[table].map((value, index) => (
                   <tr
                     key={index}
-                    className={`bg-white border-b transition-colors hover:bg-gray-100`}
+                    className={`bg-white border-b transition-colors`}
                   >
                     <td><AdressCell props={value} /></td>
                     <td><PloshCell props={value} /></td>

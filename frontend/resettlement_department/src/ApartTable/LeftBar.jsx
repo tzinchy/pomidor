@@ -16,7 +16,9 @@ function LeftBar({
     fetchApartments,
     setSelectedRow,
     setIsDetailsVisible,
-    setLoading
+    setLoading,
+    setLastSelectedMunicipal,
+    setLastSelectedAddres
   }) {
 
     const toggleExpand = (key) => {
@@ -37,13 +39,13 @@ function LeftBar({
                   <div className="flex justify-around mb-4">
                     <button
                       onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("OldApart"); setLoading(true)}}
-                      className={`p-8 py-4 rounded-md ${apartType === "OldApart" ? "bg-gray-200" : "bg-white"}`}
+                      className={`p-8 py-4 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Семьи
                     </button>
                     <button
                       onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("NewApartment"); setLoading(true)}}
-                      className={`p-8 py-4 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200" : "bg-white"}`}
+                      className={`p-8 py-4 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Ресурс
                     </button>
@@ -107,6 +109,8 @@ function LeftBar({
                                       onClick={(e) => {
                                         e.preventDefault();
                                         toggleExpand(municipal);
+                                        setLastSelectedMunicipal(municipal);
+                                        setLastSelectedAddres(null);
                                         fetchHouseAddresses(municipal);
                                         fetchApartments(null, municipal);
                                       }}
@@ -151,6 +155,7 @@ function LeftBar({
                                             onClick={(e) => {
                                               e.preventDefault();
                                               // По клику грузим квартиры этого адреса
+                                              setLastSelectedAddres(address);
                                               fetchApartments([address], municipal);
                                             }}
                                             className="flex items-center px-2"

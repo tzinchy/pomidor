@@ -28,6 +28,8 @@ export default function ApartPage() {
   const detailsRef = useRef(null);
   const [selectedRow, setSelectedRow] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+  const [lastSelectedMunicipal, setLastSelectedMunicipal] = useState('');
+  const [lastSelectedAddres, setLastSelectedAddres] = useState('');
 
   const [loading, setLoading] = useState(true);
 
@@ -140,10 +142,6 @@ export default function ApartPage() {
     }
   };
 
-  const filteredApartments = apartments.filter(apt =>
-    String(apt.new_apart_id).toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const handleToggleSidebar = () => setCollapsed(!collapsed);
 
   return (
@@ -168,11 +166,13 @@ export default function ApartPage() {
             setSelectedRow={setSelectedRow}
             setIsDetailsVisible={setIsDetailsVisible}
             setLoading={setLoading}
+            setLastSelectedMunicipal={setLastSelectedMunicipal}
+            setLastSelectedAddres={setLastSelectedAddres}
           />
 
           <div className="flex-1 overflow-auto">
             <ApartTable 
-              data={filteredApartments} 
+              data={apartments} 
               loading={loading} 
               selectedRow={selectedRow}
               setSelectedRow={setSelectedRow}
@@ -182,6 +182,9 @@ export default function ApartPage() {
               fetchApartmentDetails={fetchApartmentDetails}
               apartmentDetails={apartmentDetails}
               collapsed={collapsed}
+              lastSelectedMunicipal={lastSelectedMunicipal}
+              lastSelectedAddres={lastSelectedAddres}
+              fetchApartments={fetchApartments}
             />
           </div>
         </div>
