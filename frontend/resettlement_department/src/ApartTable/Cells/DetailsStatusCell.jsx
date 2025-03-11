@@ -1,8 +1,9 @@
 import React, { useState, useRef } from "react";
 import ReactDOM from "react-dom";
+import { HOSTLINK } from "../..";
 
-export default function DetailsStatusCell(props) {
-    const val = props['props'];
+export default function DetailsStatusCell({props, selectedRowId, apartType}) {
+    const val = props;
     const [isOpen, setIsOpen] = useState(false);
     const buttonRef = useRef(null); // Ссылка на кнопку для вычисления позиции
 
@@ -31,6 +32,36 @@ export default function DetailsStatusCell(props) {
         return { top: 0, left: 0, width: 0 };
     };
 
+    const changeStatus = async (apartmentId, newStatus, apartType) => {
+        try {
+            // Формируем URL с apartment_id и apart_type
+            const url = `${HOSTLINK}/tables/apartment/${apartmentId}/change_status?apart_type=${apartType}`;
+    
+            // Отправляем POST-запрос
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ new_status: newStatus }), // Тело запроса
+            });
+    
+            // Обработка ответа
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Ошибка при изменении статуса');
+            }
+    
+            const result = await response.json();
+            console.log('Статус успешно изменен:', result.message);
+            return result;
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('Не удалось изменить статус. Попробуйте снова.');
+            throw error; // Пробрасываем ошибку для дальнейшей обработки
+        }
+    };
+
     return (
         <td className="p-2 font-normal">
             <div className="relative">
@@ -46,7 +77,7 @@ export default function DetailsStatusCell(props) {
                         colors={colors}
                         position={getDropdownPosition()}
                         onSelect={(status) => {
-                            console.log(`Selected status: ${status}`);
+                            changeStatus(selectedRowId, status, apartType); // Отправляем запрос
                             setIsOpen(false);
                         }}
                     />

@@ -4,7 +4,7 @@ import PloshCell from "./Cells/PloshCell";
 import DetailsStatusCell from "./Cells/DetailsStatusCell";
 import DatesCell from "./Cells/DatesCell";
 
-export default function ApartDetails({ className, apartmentDetails, setIsDetailsVisible, apartType, setSelectedRow }) {
+export default function ApartDetails({ className, apartmentDetails, setIsDetailsVisible, apartType, setSelectedRow, selectedRowId }) {
   function handleClose() {
     setIsDetailsVisible(false);
     setSelectedRow(false);
@@ -57,7 +57,7 @@ export default function ApartDetails({ className, apartmentDetails, setIsDetails
                     <td><AdressCell props={value} /></td>
                     <td><PloshCell props={value} /></td>
                     <DatesCell props={value} />
-                    <DetailsStatusCell props={value} />
+                    <DetailsStatusCell props={value} selectedRowId={selectedRowId} apartType={apartType} />
                   </tr>
                 ))}
               </tbody>

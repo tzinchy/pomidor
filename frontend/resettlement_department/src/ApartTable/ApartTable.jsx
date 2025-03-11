@@ -25,8 +25,9 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const tableContainerRef = useRef(null);
   const [filteredApartments, setFilteredApartments] = useState(data);
   const [rooms, setRooms] = useState([]);
-  const [matchCount, setMatchCount] = useState([])
+  const [matchCount, setMatchCount] = useState([]);
   const [filters, setFilters] = useState({}); // Состояние для хранения фильтров
+  const [selectedRowId, setSelectedRowId] = useState();
   
 
   // Получаем уникальные значения room_count
@@ -62,33 +63,33 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     }));
 }, []);
 
-// Применение всех фильтров к данным
-useEffect(() => {
-    if (!data || data.length === 0) return;
+  // Применение всех фильтров к данным
+  useEffect(() => {
+      if (!data || data.length === 0) return;
 
-    let filtered = data;
+      let filtered = data;
 
-    // Применяем каждый фильтр
-    Object.entries(filters).forEach(([filterType, selectedValues]) => {
-        if (selectedValues.length > 0) {
-            const filterKey = filterType.toLowerCase();
+      // Применяем каждый фильтр
+      Object.entries(filters).forEach(([filterType, selectedValues]) => {
+          if (selectedValues.length > 0) {
+              const filterKey = filterType.toLowerCase();
 
-            filtered = filtered.filter((item) => {
-                // Проверяем наличие "Не подобрано" в выбранных значениях
-                const hasNotMatched = selectedValues.includes("Не подобрано");
-                // Проверяем обычные значения статусов
-                const hasRegularStatus = selectedValues.some(
-                    (val) => val !== "Не подобрано" && item[filterKey] === val
-                );
+              filtered = filtered.filter((item) => {
+                  // Проверяем наличие "Не подобрано" в выбранных значениях
+                  const hasNotMatched = selectedValues.includes("Не подобрано");
+                  // Проверяем обычные значения статусов
+                  const hasRegularStatus = selectedValues.some(
+                      (val) => val !== "Не подобрано" && item[filterKey] === val
+                  );
 
-                // Если выбран "Не подобрано" - проверяем на null, иначе проверяем обычные статусы
-                return (hasNotMatched && item[filterKey] === null) || hasRegularStatus;
-            });
-        }
-    });
+                  // Если выбран "Не подобрано" - проверяем на null, иначе проверяем обычные статусы
+                  return (hasNotMatched && item[filterKey] === null) || hasRegularStatus;
+              });
+          }
+      });
 
-    setFilteredApartments(filtered);
-}, [data, filters]);
+      setFilteredApartments(filtered);
+  }, [data, filters]);
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
@@ -215,10 +216,12 @@ useEffect(() => {
     if (visibility && index !== selectedRow) {
       setSelectedRow(index);
       fetchApartmentDetails(id);
+      setSelectedRowId(id);
     } else if (!visibility) {
       setSelectedRow(index);
       setIsDetailsVisible(true);
       fetchApartmentDetails(id);
+      setSelectedRowId(id);
     }
   };
 
@@ -414,6 +417,7 @@ useEffect(() => {
                         setIsDetailsVisible={setIsDetailsVisible}
                         apartType={apartType}
                         setSelectedRow={setSelectedRow}
+                        selectedRowId={selectedRowId}
                         className="flex-1" // Оставляем для гибкости внутри компонента
                       />
                     </div>
