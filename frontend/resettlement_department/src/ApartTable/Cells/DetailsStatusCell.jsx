@@ -45,7 +45,6 @@ export default function DetailsStatusCell(props) {
                     <Dropdown
                         colors={colors}
                         position={getDropdownPosition()}
-                        onClose={() => setIsOpen(false)}
                         onSelect={(status) => {
                             console.log(`Selected status: ${status}`);
                             setIsOpen(false);
@@ -58,7 +57,7 @@ export default function DetailsStatusCell(props) {
 }
 
 // Компонент для выпадающего списка (рендерится через портал)
-function Dropdown({ colors, position, onClose, onSelect }) {
+function Dropdown({ colors, position, onSelect }) {
     return ReactDOM.createPortal(
         <div 
             className="fixed z-50 bg-white shadow-lg rounded-md max-h-40 overflow-y-auto scrollbar-custom text-center"

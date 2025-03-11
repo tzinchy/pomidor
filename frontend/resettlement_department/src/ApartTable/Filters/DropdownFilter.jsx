@@ -3,8 +3,9 @@ import React, { useState, useRef, useEffect } from "react";
 export default function TryDropdown({ item, data, func, filterType, isFiltersReset }) {
     const [dropdownState, setDropdownState] = useState(false);
     const [selectedValues, setSelectedValues] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
     const container = useRef(null);
-  
+
     // Сброс выбранных значений при сбросе фильтров
     useEffect(() => {
         if (isFiltersReset) {
@@ -12,14 +13,14 @@ export default function TryDropdown({ item, data, func, filterType, isFiltersRes
             func(filterType, []);
         }
     }, [isFiltersReset, filterType, func]);
-  
+
     // Закрытие выпадающего списка при клике вне контейнера
     const handleClickOutside = (e) => {
         if (container.current && !container.current.contains(e.target)) {
             setDropdownState(false);
         }
     };
-  
+
     // Добавление/удаление значения из списка выбранных
     const toggleValue = (value) => {
         setSelectedValues((prev) => {
@@ -27,21 +28,28 @@ export default function TryDropdown({ item, data, func, filterType, isFiltersRes
             const newValues = isSelected
                 ? prev.filter((v) => v !== value)
                 : [...prev, value];
-  
+
             func(filterType, newValues);
             return newValues;
         });
     };
-  
+
     // Проверка, выбрано ли значение
     const isSelected = (value) => selectedValues.includes(value);
-  
+
     // Обработчик клика вне компонента
     useEffect(() => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
-  
+
+    // Фильтрация данных на основе поискового запроса
+    const filteredData = Array.isArray(data) // Проверка, что data — это массив
+        ? data.filter((value) =>
+              value.toString().toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        : []; // Если data не массив, возвращаем пустой массив
+
     return (
         <div className="flex items-center mr-4">
             <button
@@ -68,7 +76,7 @@ export default function TryDropdown({ item, data, func, filterType, isFiltersRes
                 </svg>
                 {item}
             </button>
-            
+
             {dropdownState && (
                 <div
                     ref={container}
@@ -103,12 +111,14 @@ export default function TryDropdown({ item, data, func, filterType, isFiltersRes
                                     role="combobox"
                                     aria-expanded="true"
                                     type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
                         </div>
                         <div className="max-h-[300px] overflow-y-auto overflow-x-hidden z-50">
                             <div className="text-foreground overflow-hidden p-1">
-                                {data.map((value) => (
+                                {filteredData.map((value) => (
                                     <div
                                         onClick={() => toggleValue(value)}
                                         key={value}
@@ -147,4 +157,4 @@ export default function TryDropdown({ item, data, func, filterType, isFiltersRes
             )}
         </div>
     );
-  }
+}

@@ -1,29 +1,30 @@
 import React from "react";
 import TryDropdown from "./DropdownFilter";
-import { StatusFilters } from "./FiltersData";
 
-export default function AllFilters({handleFilterChange, rooms}){
+export default function AllFilters({handleFilterChange, rooms, matchCount}){
+    const StatusFilters = ['Не подобрано', "Согласие", 'Отказ', "Суд", "Фонд компенсация", "Фонд докупка", "Ожидание",  'Ждёт одобрения']
+
     return (
         <div className="flex">
             <TryDropdown 
-                item={StatusFilters[0]} 
-                data={StatusFilters[1]} 
-                func={handleFilterChange} // Исправлено: Передаем обработчик фильтрации
+                item={'Статус'} 
+                data={StatusFilters} 
+                func={handleFilterChange}
                 filterType={'status'} 
                 isFiltersReset={false} 
             />
             <TryDropdown 
                 item={'Комнаты'} 
                 data={rooms} 
-                func={handleFilterChange} // Исправлено: Передаем обработчик фильтрации
+                func={handleFilterChange}
                 filterType={'room_count'} 
                 isFiltersReset={false} 
             />
             <TryDropdown 
-                item={StatusFilters[0]} 
-                data={StatusFilters[1]} 
-                func={handleFilterChange} // Исправлено: Передаем обработчик фильтрации
-                filterType={'status'} 
+                item={'Кол-во подборов'} 
+                data={matchCount} 
+                func={handleFilterChange}
+                filterType={'selection_count'} 
                 isFiltersReset={false} 
             />
         </div>

@@ -25,47 +25,70 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const tableContainerRef = useRef(null);
   const [filteredApartments, setFilteredApartments] = useState(data);
   const [rooms, setRooms] = useState([]);
+  const [matchCount, setMatchCount] = useState([])
+  const [filters, setFilters] = useState({}); // Состояние для хранения фильтров
+  
 
   // Получаем уникальные значения room_count
-  const getUniqueRoomCounts = useMemo(() => {
-    console.log(data);
-    if (!filteredApartments) return [];
-    
-    return [...new Set(
-      filteredApartments
-        .map(apartment => parseInt(apartment.room_count, 10))
-        .filter(value => !isNaN(value))
-    )].sort((a, b) => a - b);
-  }, [filteredApartments]);
+  const getUniqueValues = useMemo(() => {
+    if (!data) return [];
+
+    return (x) => {
+        return [...new Set(
+          data
+                .map(apartment => parseInt(apartment[x], 10)) // Используем параметр x
+                .filter(value => !isNaN(value))
+        )].sort((a, b) => a - b);
+    };
+}, [data]);
 
   // Обновляем rooms при изменении filteredApartments
   useEffect(() => {
-    setRooms(getUniqueRoomCounts);
-  }, [getUniqueRoomCounts]);
+    setRooms(getUniqueValues('room_count'));
+    setMatchCount(getUniqueValues('selection_count'))
+  }, [getUniqueValues]);
 
   // 2. Добавляем эффект для синхронизации с исходными данными
   useEffect(() => {
+    console.log(data);
     setFilteredApartments(data);
   }, [data]);
   
   const handleFilterChange = useCallback((filterType, selectedValues) => {
+    // Обновляем состояние фильтров
+    setFilters((prevFilters) => ({
+        ...prevFilters,
+        [filterType]: selectedValues,
+    }));
+}, []);
+
+// Применение всех фильтров к данным
+useEffect(() => {
     if (!data || data.length === 0) return;
-  
-    const filterKey = filterType.toLowerCase();
-    
-    const filtered = selectedValues.length > 0 
-      ? data.filter(item => {
-          // Проверяем наличие "Не подобрано" в выбранных значениях
-          const hasNotMatched = selectedValues.includes('Не подобрано');
-          // Проверяем обычные значения статусов
-          const hasRegularStatus = selectedValues.some(val => val !== 'Не подобрано' && item[filterKey] === val);
-          
-          // Если выбран "Не подобрано" - проверяем на null, иначе проверяем обычные статусы
-          return (hasNotMatched && item[filterKey] === null) || hasRegularStatus;
-        })
-      : data;
+
+    let filtered = data;
+
+    // Применяем каждый фильтр
+    Object.entries(filters).forEach(([filterType, selectedValues]) => {
+        if (selectedValues.length > 0) {
+            const filterKey = filterType.toLowerCase();
+
+            filtered = filtered.filter((item) => {
+                // Проверяем наличие "Не подобрано" в выбранных значениях
+                const hasNotMatched = selectedValues.includes("Не подобрано");
+                // Проверяем обычные значения статусов
+                const hasRegularStatus = selectedValues.some(
+                    (val) => val !== "Не подобрано" && item[filterKey] === val
+                );
+
+                // Если выбран "Не подобрано" - проверяем на null, иначе проверяем обычные статусы
+                return (hasNotMatched && item[filterKey] === null) || hasRegularStatus;
+            });
+        }
+    });
+
     setFilteredApartments(filtered);
-  }, [data]);
+}, [data, filters]);
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
@@ -202,7 +225,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   return (
     <div className='bg-neutral-100'>
       <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
-          <AllFilters handleFilterChange={handleFilterChange} rooms={rooms}/>
+          <AllFilters handleFilterChange={handleFilterChange} rooms={rooms} matchCount={matchCount}/>
         <div className='flex'>
           <button 
               onClick={rematch}
