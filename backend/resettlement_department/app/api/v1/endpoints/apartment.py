@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Body
 from depends import apartment_service
-from schema.apartment import ApartType, Rematch
+from schema.apartment import ApartType, Rematch, ManualMatchingSchema
 from service.rematch_service import rematch
 from typing import Optional, List, Literal
+from utils.valid_apart_type import old_apart_validator
+
 router = APIRouter(prefix="/tables", tags=["Дерево"])
 
 # Получение текущего типа апартаментов
@@ -12,7 +14,6 @@ async def get_current_apart_type(
 ):
     return {"apart_type": apart_type}
 
-
 # Получение списка районов
 @router.get("/district")
 async def get_districts(
@@ -20,24 +21,21 @@ async def get_districts(
 ):
     return await apartment_service.get_district(apart_type)
 
-
 # Получение списка муниципальных районов
 @router.get("/municipal_district")
 async def get_areas(
     apart_type: ApartType = Query(..., description="Тип апартаментов"),
-    district: list[str] = Query(..., description="Список районов")
+    district: List[str] = Query(..., description="Список районов")
 ):
     return await apartment_service.get_municipal_districts(apart_type, district)
-
 
 # Получение списка адресов домов
 @router.get("/house_addresses")
 async def get_house_addresses(
     apart_type: ApartType = Query(..., description="Тип апартаментов"),
-    municipal_district: list[str] = Query(..., description="Список областей")
+    municipal_district: List[str] = Query(..., description="Список областей")
 ):
     return await apartment_service.get_house_addresses(apart_type, municipal_district)
-
 
 @router.get('/apartments')
 async def get_apartments(
@@ -52,11 +50,13 @@ async def get_apartments(
         'full_living_area', 
         description='Тип площади для фильтрации'
     ),
-    room_count: Optional[List[int]] = Query(  # Добавляем новый параметр
+    room_count: Optional[List[int]] = Query(  
         None, 
         description='Фильтр по количеству комнат (можно несколько значений)',
         example=[1, 2, 3]
-    )
+    ), 
+    is_queue : bool= None,
+    is_private : bool = None
 ):
     """
     Получить отфильтрованный список квартир с возможностью фильтрации по:
@@ -78,7 +78,9 @@ async def get_apartments(
             min_area=min_area,
             max_area=max_area,
             area_type=area_type,
-            room_count=room_count  # Передаем новый параметр
+            room_count=room_count,
+            is_queue=is_queue,
+            is_private=is_private
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -87,27 +89,45 @@ async def get_apartments(
 @router.get("/apartment/{apartment_id}")
 async def get_apartment_by_id(
     apartment_id: int, 
-    apart_type: ApartType = Query(..., description="Тип апартаментов")
+    apart_type: ApartType = Query(..., description="Тип апартаментов"),
 ):
-
     apartment = await apartment_service.get_apartment_by_id(apartment_id, apart_type)
     if not apartment:
         raise HTTPException(status_code=404, detail="Apartment not found")
     return apartment
 
+@router.post("/apartment/{apartment_id}/manual_selection")
+async def manual_matching(
+    apartment_id: int,
+    manual_selection: ManualMatchingSchema = Body(..., description="Схема для ручного сопоставления"),
+    apart_type: ApartType = Query(..., description="Тип апартаментов"),
+):
+    return await apartment_service.manual_matching(apartment_id, manual_selection.new_apart_id) 
+
+@router.get("/apartment/{apartment_id}/void_aparts")
+async def get_void_aparts_for_apartment(
+    apartment_id: int,
+    apart_type: ApartType = Query(..., description="Тип апартаментов"),
+):
+    return await apartment_service.get_void_aparts_for_apartment(apartment_id, apart_type)
+
+@router.post("/apartment/{apartment_id}/cancell_matching_for_apart")
+async def cancell_matching_for_apart(
+    apartment_id: int, 
+    apart_type: ApartType = Query(...)
+):
+    return await apartment_service.cancell_matching_for_apart(apartment_id, apart_type)
+
+@router.post("/switch_aparts")
+async def switch_apartments(
+    first_apart_id: int = Body(..., description="ID первой квартиры"),
+    second_apart_id: int = Body(..., description="ID второй квартиры")
+):
+    await apartment_service.switch_apartment(first_apart_id, second_apart_id)
+
 @router.post("/apartment/rematch")
 def rematch_for_family(
     rematch_list : Rematch
 ):
-
     res = rematch(rematch_list.apartment_ids)
-    
     return {"res": res}
-
-
-@router.post("/switch_aparts")
-async def switch_apartments(
-    first_apart_id : int, 
-    second_apart_id : int
-):
-    await apartment_service.switch_apartment(first_apart_id, second_apart_id)

@@ -27,4 +27,4 @@ updt_offer AS (
             WHERE history_id = (SELECT hs_id FROM hstr_id)
         )
 )
-SELECT 1;
+SELECT 'done';

@@ -3,7 +3,8 @@ from schema.apartment import ApartType
 import logging
 from utils.sql_reader import read_sql_query
 from core.config import RECOMMENDATION_FILE_PATH
-
+from handlers.httpexceptions import SomethingWrong
+from sqlalchemy.exc import SQLAlchemyError
 logger = logging.getLogger(__name__)
 
 
@@ -107,6 +108,8 @@ class ApartmentRepository:
         min_area: float = None,
         max_area: float = None,
         area_type: str = 'full_living_area',
+        is_queue: bool = None,
+        is_private: bool = None
     ) -> list[dict]:
         """
         Получаем все квартиры с учетом опциональных фильтров.
@@ -156,7 +159,13 @@ class ApartmentRepository:
                 params[key] = room
             conditions.append(f"room_count IN ({', '.join(room_placeholders)})")
 
-        # Условия для площади
+        if is_queue is not None and apart_type == ApartType.OLD:
+            conditions.append("is_queue != 0")
+        
+        if is_private is not None and apart_type == ApartType.NEW: 
+            conditions.append("is_private != 0")
+        
+        
         area_conditions = []
         if min_area is not None:
             area_conditions.append(f"{area_type} >= :min_area")
@@ -188,7 +197,9 @@ class ApartmentRepository:
                         status.status,
                         o.notes,
                         affair_id,
-                        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn
+                        is_queue,
+                        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+                        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
                     FROM
                         old_apart oa
                     LEFT JOIN
@@ -229,10 +240,12 @@ class ApartmentRepository:
                         na.notes, 
                         na.new_apart_id,
                         s.status AS status,
+                        is_private,
                         ROW_NUMBER() OVER (
                             PARTITION BY na.new_apart_id 
                             ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at ASC
-                        ) AS rn
+                        ) AS rn,
+                        COUNT(o.affair_id) OVER (PARTITION BY na.new_apart_id) AS selection_count
                     FROM 
                         new_apart na
                     LEFT JOIN 
@@ -272,7 +285,9 @@ class ApartmentRepository:
                         (KEY)::integer as new_apart_id,
                         (VALUE->'status_id')::integer AS status_id,
                         sentence_date, 
-                        answer_date
+                        answer_date,
+						created_at,
+						updated_at
                     FROM offer, 
                     jsonb_each(new_aparts)
                     order by created_at ASC, updated_at ASC
@@ -437,3 +452,104 @@ class ApartmentRepository:
             except Exception as e:
                 logger.error(f"Error switching apartments: {e}")
                 raise
+
+    async def manual_matching(self, old_apart_id, new_apart_id):
+        try:
+            async with self.db() as session:
+                # Проверка существования записи
+                check_query = text("""
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM public.offer
+                        WHERE affair_id = :old_apart_id
+                    );
+                """)
+                result = await session.execute(check_query, {'old_apart_id': old_apart_id})
+                record_exists = result.scalar()
+
+                if record_exists:
+                    # Обновление записи
+                    update_query = text("""
+                        UPDATE public.offer
+                        SET
+                        status_id = 2, 
+                        new_aparts = (
+                            SELECT jsonb_object_agg(key, jsonb_set(value, '{status_id}', '2', false))
+                            FROM jsonb_each(new_aparts)
+                        ) 
+                        WHERE affair_id = :old_apart_id
+                        AND created_at = (SELECT MAX(created_at) FROM public.offer WHERE affair_id = :old_apart_id);
+                    """)
+                    await session.execute(update_query, {'old_apart_id': old_apart_id})
+                    print(f"Обновлена последняя запись для old_apart_id {old_apart_id}: {new_apart_id}")
+
+                # Вставка новой записи
+                insert_query = text("""
+                    INSERT INTO public.offer (affair_id, new_aparts, status_id)
+                    VALUES (:old_apart_id, jsonb_build_object((:new_apart_id)::int, jsonb_build_object('status_id', 7)), 7);
+                """)
+                await session.execute(insert_query, {'old_apart_id': old_apart_id, 'new_apart_id': new_apart_id})
+                print(f"Вставлена новая запись для old_apart_id {old_apart_id}: {new_apart_id}")
+
+                await session.commit()
+        except SQLAlchemyError as e:
+            print(f"Ошибка при обработке old_apart_id {old_apart_id}: {e}")
+            await session.rollback()
+            raise SomethingWrong
+
+        return 'success'
+    
+    async def get_void_aparts_for_apartment(self, apartment_id): 
+        async with self.db() as session: 
+            result = await session.execute(text('''
+                                WITH clr_dt AS (
+                    SELECT 
+                        affair_id, 
+                        (KEY)::int AS new_apart_id, 
+                        sentence_date, 
+                        answer_date, 
+                        (VALUE->'status_id')::int AS status_id 
+                    FROM 
+                        offer, 
+                        jsonb_each(new_aparts)
+                ),
+				apart_info AS (
+					select history_id, room_count from old_apart where affair_id = :apartment_id
+				),
+                ranked_apartments AS (
+                    SELECT 
+                        na.house_address, 
+                        na.apart_number, 
+                        na.district, 
+                        na.municipal_district,
+                        na.floor,
+                        na.full_living_area,
+                        na.total_living_area, 
+                        na.living_area, 
+                        na.room_count, 
+                        na.type_of_settlement, 
+                        na.notes, 
+                        na.new_apart_id,
+						 na.history_id, 
+                        s.status AS status,
+						o.status_id, 
+                        ROW_NUMBER() OVER (
+                            PARTITION BY na.new_apart_id 
+                            ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at ASC
+                        ) AS rn
+                    FROM 
+                        new_apart na
+                    LEFT JOIN 
+                        clr_dt as o on o.new_apart_id = na.new_apart_id
+                    LEFT JOIN 
+                        status s ON o.status_id = s.status_id
+                )
+                SELECT *
+                FROM ranked_apartments
+                WHERE ranked_apartments.history_id = (select history_id from apart_info) and ranked_apartments.room_count = (select room_count from apart_info)
+				and (status_id is null or status_id != 7)
+                ORDER BY status;'''), params = {'apartment_id' : apartment_id})
+            return [dict(row._mapping) for row in result]
+
+    async def cancell_matching_apart(self, apart_id, apart_type): 
+        pass    
