@@ -1,8 +1,7 @@
 import psycopg2
-import pandas as pd
 from core.config import settings
-from datetime import datetime
-import json
+from handlers.httpexceptions import SomethingWrong, HTTPException
+from fastapi import status 
 
 def get_db_connection():
     return psycopg2.connect(
@@ -100,12 +99,15 @@ def rematch(apart_ids):
 
                         conn.commit()  # Фиксация изменений
                     else:
-                        print(f"Новая квартира не найдена для apart_id {apart_id}")
+                        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Не нашлось подходящей квартиры!')
+
                 else:
-                    print(f'Старая квартира не найдена для apart_id {apart_id}')
+                    raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Не нашлось подходящей старой квартиры!')
+
 
         except Exception as e:
             print(f"Ошибка при обработке apart_id {apart_id}: {e}")
-            conn.rollback()  # Откат в случае ошибки
+            conn.rollback() 
+            raise SomethingWrong
 
     return None

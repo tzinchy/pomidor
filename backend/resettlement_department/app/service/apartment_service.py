@@ -29,7 +29,9 @@ class ApartmentService:
         min_area: Optional[float] = None,
         max_area: Optional[float] = None,
         area_type: str = "full_living_area",
-        room_count: Optional[List[int]] = None  # Добавляем новый параметр
+        room_count: Optional[List[int]] = None,
+        is_queue : bool = None,
+        is_private : bool = None
     ):
         return await self.apartment_repository.get_apartments(
             apart_type=apart_type,
@@ -40,7 +42,9 @@ class ApartmentService:
             min_area=min_area,
             max_area=max_area,
             area_type=area_type,
-            room_count=room_count  # Передаем новый параметр
+            room_count=room_count,
+            is_queue=is_queue,
+            is_private=is_private
         )
 
     async def get_apartment_by_id(self, apartment_id, apart_type):
@@ -58,3 +62,11 @@ class ApartmentService:
     async def switch_apartment(self, first_apartment_id, second_apartment_id):
         return await self.apartment_repository.switch_apartment(first_apartment_id, second_apartment_id)
     
+    async def manual_matching(self, old_apart_id, new_apart_id): 
+        return await self.apartment_repository.manual_matching(old_apart_id, new_apart_id)
+    
+    async def get_void_aparts_for_apartment(self, apartmentd_id):
+        return await self.apartment_repository.get_void_aparts_for_apartment(apartmentd_id)
+    
+    async def cancell_matching_for_apart(self, ):
+        return await self.apartment_repository()

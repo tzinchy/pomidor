@@ -85,8 +85,8 @@ def container(history_id: int):
         return {"error": str(e)}
     
 @router.delete('/delete/manual_load/{manual_load_id}')
-async def cancell_history(manual_load_id : int):
-    return await history_service.cancell_history(manual_load_id)
+async def cancell_history_manual_load(manual_load_id : int):
+    return await history_service.cancell_manual_load(manual_load_id)
 
 @router.get('/manual')
 async def get_manual_history():

@@ -37,5 +37,5 @@ class MatchingSchema(BaseModel):
 class Rematch(BaseModel):
     apartment_ids : List[int]
 
-
-
+class ManualMatchingSchema(BaseModel):
+    new_apart_id : int
