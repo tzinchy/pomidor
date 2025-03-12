@@ -368,13 +368,28 @@ class ApartmentRepository:
                     "An error occurred while updating the apartment status."
                 )
     
-    async def set_private_for_new_aparts(self, new_apart_ids, status : bool = True):
+    async def set_private_for_new_aparts(self, new_apart_ids, status: bool = True):
         async with self.db() as session:
-            try: 
-                await session.execute(text('UPDATE new_apart SET is_private = :status WHERE new_apart_id IN (:new_apart_ids)'), {'new_apart_ids' : new_apart_ids, 'status' : status})
-                await session.commit() 
-            except Exception as error: 
+            try:
+                # Проверяем, что new_apart_ids не пустой
+                if not new_apart_ids:
+                    raise ValueError("The list of apartment IDs is empty.")
+                
+                # Формируем строку с плейсхолдерами для каждого ID
+                placeholders = ', '.join([':id_' + str(i) for i in range(len(new_apart_ids))])
+                
+                # Формируем словарь с параметрами
+                params = {'status': status}
+                params.update({f'id_{i}': id for i, id in enumerate(new_apart_ids)})
+                
+                # Используем параметризованный запрос для безопасности
+                query = text(f'UPDATE new_apart SET is_private = :status WHERE new_apart_id IN ({placeholders})')
+                
+                # Передаем параметры в правильном формате
+                await session.execute(query, params)
+                await session.commit()
+            except Exception as error:
                 print(error)
-                raise SomethingWrong
+                raise SomethingWrong("Something went wrong while updating the apartments.")
             
    
