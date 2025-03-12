@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Query, HTTPException, Body
 from depends import apartment_service
-from schema.apartment import ApartType, Rematch, ManualMatchingSchema
+from schema.apartment import ApartType, Rematch, ManualMatchingSchema, SetPrivateStatusSchema
 from service.rematch_service import rematch
 from typing import Optional, List, Literal
 from schema.status import StatusUpdate
+from fastapi import BackgroundTasks
+
+
 
 router = APIRouter(prefix="/tables", tags=["Дерево"])
 
@@ -121,11 +124,10 @@ async def manual_matching(
 
 @router.get("/apartment/{apartment_id}/void_aparts")
 async def get_void_aparts_for_apartment(
-    apartment_id: int,
-    apart_type: ApartType = Query(..., description="Тип апартаментов"),
+    apartment_id: int
 ):
     return await apartment_service.get_void_aparts_for_apartment(
-        apartment_id, apart_type
+        apartment_id
     )
 
 
@@ -156,8 +158,20 @@ async def change_status(
     apart_type: ApartType = Query(..., description="Тип апартаментов")
 ):
     try:
-        print(new_status)
-        await apartment_service.update_history_for_apart(apartment_id, new_status.new_status.value, apart_type)
+        await apartment_service.update_status_for_apart(apartment_id, new_status.new_status.value, apart_type)
         return {"message": "Status updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@router.patch("/apartment/set_private_true")
+async def set_private_for_new_aparts_true(new_aparts_ids : SetPrivateStatusSchema):
+    apartment_service.set_private_for_new_aparts(
+        new_aparts_ids, status=True
+        )
+
+@router.patch("apartment/set_private_falce")
+async def set_private_for_new_aparts_false(new_apart_ids : SetPrivateStatusSchema):
+    apartment_service.set_private_for_new_aparts(
+        new_aparts = new_apart_ids, status=False
+    )
+

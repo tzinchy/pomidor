@@ -185,84 +185,12 @@ class ApartmentRepository:
 
         # Формируем запрос в зависимости от типа квартир
         if apart_type == "OldApart":
-            query = f"""
-                WITH ranked_apartments AS (
-                    SELECT
-                        house_address,
-                        apart_number,
-                        district,
-                        municipal_district,
-                        floor,
-                        fio,
-                        full_living_area,
-                        total_living_area,
-                        living_area,
-                        room_count,
-                        type_of_settlement,
-                        status.status,
-                        o.notes,
-                        affair_id,
-                        is_queue,
-                        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
-                        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
-                    FROM
-                        old_apart oa
-                    LEFT JOIN
-                        offer o USING (affair_id)
-                    LEFT JOIN
-                        status ON o.status_id = status.status_id
-                )
-                SELECT *
-                FROM ranked_apartments
-                WHERE {where_clause}
-                ORDER BY full_living_area
-            """
+            print(conditions)
+            query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/OldApartTable.sql")
         else:
-            query = f"""
-                WITH clr_dt AS (
-                    SELECT 
-                        affair_id, 
-                        (KEY)::int AS new_apart_id, 
-                        sentence_date, 
-                        answer_date, 
-                        (VALUE->'status_id')::int AS status_id 
-                    FROM 
-                        offer, 
-                        jsonb_each(new_aparts)
-                ),
-                ranked_apartments AS (
-                    SELECT 
-                        na.house_address, 
-                        na.apart_number, 
-                        na.district, 
-                        na.municipal_district,
-                        na.floor,
-                        na.full_living_area,
-                        na.total_living_area, 
-                        na.living_area, 
-                        na.room_count, 
-                        na.type_of_settlement, 
-                        na.notes, 
-                        na.new_apart_id,
-                        s.status AS status,
-                        is_private,
-                        ROW_NUMBER() OVER (
-                            PARTITION BY na.new_apart_id 
-                            ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at ASC
-                        ) AS rn,
-                        COUNT(o.affair_id) OVER (PARTITION BY na.new_apart_id) AS selection_count
-                    FROM 
-                        new_apart na
-                    LEFT JOIN 
-                        clr_dt as o on o.new_apart_id = na.new_apart_id
-                    LEFT JOIN 
-                        status s ON o.status_id = s.status_id
-                )
-                SELECT *
-                FROM ranked_apartments
-                WHERE {where_clause}
-                ORDER BY status;
-            """
+            query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartTable.sql")
+
+        query = f"{query} WHERE {where_clause}"
         async with self.db() as session:
             try:
                 logger.info(f"Executing query: {query}")
@@ -283,128 +211,12 @@ class ApartmentRepository:
         query_params = {"apart_id": apart_id}
 
         if apart_type == "NewApartment":
-            query = """
-                WITH unnset_offer AS (
-                    SELECT 
-                        affair_id,
-                        (KEY)::integer as new_apart_id,
-                        (VALUE->'status_id')::integer AS status_id,
-                        sentence_date, 
-                        answer_date,
-						created_at,
-						updated_at
-                    FROM offer, 
-                    jsonb_each(new_aparts)
-                    order by created_at ASC, updated_at ASC
-                ),
-                joined_aparts AS (
-                    SELECT 
-                        o.new_apart_id,
-                        JSON_AGG(
-                            JSON_BUILD_OBJECT(
-                                'house_address', old_apart.house_address,
-                                'apart_number', old_apart.apart_number,
-                                'district', old_apart.district,
-                                'municipal_district', old_apart.municipal_district,
-                                'full_living_area', old_apart.full_living_area,
-                                'total_living_area', old_apart.total_living_area,
-                                'living_area', old_apart.living_area,
-                                'room_count', old_apart.room_count,
-                                'type_of_settlement', old_apart.type_of_settlement,
-                                'notes', old_apart.notes,
-                                'status', s.status,
-                                'sentence_date', o.sentence_date :: DATE,
-                                'answer_date', o.answer_date :: DATE
-                            ) ORDER BY sentence_date DESC, answer_date DESC, o.created_at ASC, o.updated_at ASC
-                        ) AS old_apartments
-                    FROM 
-                        unnset_offer o
-                    LEFT JOIN 
-                        old_apart ON old_apart.affair_id = o.affair_id
-                    LEFT JOIN 
-                        status s ON o.status_id = s.status_id
-                    GROUP BY 
-                        o.new_apart_id
-                )
-                SELECT 
-                    new_apart.new_apart_id, 
-                    new_apart.house_address,
-                    new_apart.apart_number,
-                    new_apart.district,
-                    new_apart.municipal_district,
-                    new_apart.full_living_area,
-                    new_apart.total_living_area,
-                    new_apart.living_area,
-                    new_apart.room_count,
-                    new_apart.type_of_settlement,
-                    joined_aparts.old_apartments
-                FROM new_apart  
-                LEFT JOIN joined_aparts USING (new_apart_id) 
-                WHERE new_apart_id = :apart_id
-            """
+            query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartById.sql")
         elif apart_type == "OldApart":
-            query = """
-                WITH unnset_offer AS (
-                    SELECT 
-                        affair_id,
-                        (KEY)::integer as new_apart_id,
-                        (VALUE->'status_id')::integer AS status_id,
-                        sentence_date, 
-                        answer_date, 
-						created_at, 
-						updated_at
-                    FROM offer, 
-                    jsonb_each(new_aparts)
-					order by created_at ASC, updated_at ASC
-                ),
-                joined_aparts AS (
-                    SELECT 
-                        affair_id,
-                        JSON_AGG(
-                            JSON_BUILD_OBJECT(
-                                'house_address', na.house_address,
-                                'apart_number', na.apart_number,
-                                'district', na.district,
-                                'municipal_district', na.municipal_district,
-                                'full_living_area', na.full_living_area,
-                                'total_living_area', na.total_living_area,
-                                'living_area', na.living_area,
-                                'room_count', na.room_count,
-                                'type_of_settlement', na.type_of_settlement,
-                                'notes', na.notes,
-                                'status', s.status,
-                                'sentence_date', o.sentence_date :: DATE,
-                                'answer_date', o.answer_date :: DATE
-                            ) ORDER BY sentence_date DESC, answer_date DESC, o.created_at ASC, o.updated_at ASC 
-                        ) AS new_apartments
-                    FROM 
-                        unnset_offer o
-                    LEFT JOIN 
-                        new_apart na ON o.new_apart_id = na.new_apart_id
-                    LEFT JOIN 
-                        status s ON o.status_id = s.status_id
-                    GROUP BY 
-                        o.affair_id
-                )
-                SELECT 
-                    old_apart.affair_id, 
-                    old_apart.house_address,
-                    old_apart.apart_number,
-                    old_apart.district,
-                    old_apart.municipal_district,
-                    old_apart.full_living_area,
-                    old_apart.total_living_area,
-                    old_apart.living_area,
-                    old_apart.room_count,
-                    old_apart.type_of_settlement,
-                    joined_aparts.new_apartments
-                FROM old_apart  
-                LEFT JOIN joined_aparts USING (affair_id) 
-                WHERE affair_id = :apart_id        
-            """
+            query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/OldApartById.sql")
         else:
             raise ValueError(f"Unsupported apartment type: {apart_type}")
-
+        print(query)
         async with self.db() as session:
             try:
                 logger.info(f"Executing query: {query}")
@@ -448,13 +260,9 @@ class ApartmentRepository:
                 result = await session.execute(text(query), params)
                 await session.commit()
 
-                # Преобразуем результат в сериализуемый формат
                 rows = result.fetchall()
                 if rows:
-                    # Если результат содержит строки, преобразуем их в список словарей
-                    serialized_result = [
-                        row._asdict() for row in rows
-                    ]  # Используем ._asdict()
+                    serialized_result = [row._asdict() for row in rows] 
                     return serialized_result[0]
                 else:
                     # Если результат пуст, возвращаем сообщение
@@ -482,18 +290,8 @@ class ApartmentRepository:
 
                 if record_exists:
                     # Обновление записи
-                    update_query = text("""
-                        UPDATE public.offer
-                        SET
-                        status_id = 2, 
-                        new_aparts = (
-                            SELECT jsonb_object_agg(key, jsonb_set(value, '{status_id}', '2', false))
-                            FROM jsonb_each(new_aparts)
-                        ) 
-                        WHERE affair_id = :old_apart_id
-                        AND created_at = (SELECT MAX(created_at) FROM public.offer WHERE affair_id = :old_apart_id);
-                    """)
-                    await session.execute(update_query, {"old_apart_id": old_apart_id})
+                    update_query = text(read_sql_query(f'{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql'))
+                    await session.execute(update_query, {"status" : "Отказ", "old_apart_id": old_apart_id})
                     print(
                         f"Обновлена последняя запись для old_apart_id {old_apart_id}: {new_apart_id}"
                     )
@@ -510,7 +308,6 @@ class ApartmentRepository:
                 print(
                     f"Вставлена новая запись для old_apart_id {old_apart_id}: {new_apart_id}"
                 )
-
                 await session.commit()
         except SQLAlchemyError as e:
             print(f"Ошибка при обработке old_apart_id {old_apart_id}: {e}")
@@ -521,57 +318,8 @@ class ApartmentRepository:
 
     async def get_void_aparts_for_apartment(self, apart_id):
         async with self.db() as session:
-            result = await session.execute(
-                text("""
-                                WITH clr_dt AS (
-                    SELECT 
-                        affair_id, 
-                        (KEY)::int AS new_apart_id, 
-                        sentence_date, 
-                        answer_date, 
-                        (VALUE->'status_id')::int AS status_id 
-                    FROM 
-                        offer, 
-                        jsonb_each(new_aparts)
-                ),
-				apart_info AS (
-					select history_id, room_count from old_apart where affair_id = :apart_id
-				),
-                ranked_apartments AS (
-                    SELECT 
-                        na.house_address, 
-                        na.apart_number, 
-                        na.district, 
-                        na.municipal_district,
-                        na.floor,
-                        na.full_living_area,
-                        na.total_living_area, 
-                        na.living_area, 
-                        na.room_count, 
-                        na.type_of_settlement, 
-                        na.notes, 
-                        na.new_apart_id,
-						 na.history_id, 
-                        s.status AS status,
-						o.status_id, 
-                        ROW_NUMBER() OVER (
-                            PARTITION BY na.new_apart_id 
-                            ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at ASC
-                        ) AS rn
-                    FROM 
-                        new_apart na
-                    LEFT JOIN 
-                        clr_dt as o on o.new_apart_id = na.new_apart_id
-                    LEFT JOIN 
-                        status s ON o.status_id = s.status_id
-                )
-                SELECT *
-                FROM ranked_apartments
-                WHERE ranked_apartments.history_id = (select history_id from apart_info) and ranked_apartments.room_count = (select room_count from apart_info)
-				and (status_id is null or status_id != 7)
-                ORDER BY status;"""),
-                {"apart_id": apart_id},
-            )
+            query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/VoidAparts.sql")
+            result = await session.execute(text(query), {"apart_id": apart_id})
             return [dict(row._mapping) for row in result]
 
     async def cancell_matching_apart(self, apart_id, apart_type):
@@ -587,13 +335,13 @@ class ApartmentRepository:
                 else:
                     result = await session.execute(
                         text("""
-                    WITH unpucking AS (
+                    WITH new_apart_in_offer AS (
                         SELECT offer_id
                             FROM offer,
                             jsonb_each(new_aparts)
                             where (key)::int = :apart_id)
                     DELETE FROM offer
-                    WHERE offer_id IN (SELECT offer_id FROM unpucking)"""),
+                    WHERE offer_id IN (SELECT offer_id FROM new_apart_in_offer)"""),
                         {"apart_id": apart_id},
                     )
                     await session.commit()
@@ -602,37 +350,31 @@ class ApartmentRepository:
                 print(error)
                 raise SomethingWrong
 
-    async def update_history_for_apart(self, apart_id, status, apart_type):
+    async def update_status_for_apart(self, apart_id, status, apart_type):
         async with self.db() as session:
             try:
                 if apart_type == ApartType.OLD:
-                    query = text(
-                        """
-                        WITH changeStatus AS (
-                            SELECT status_id FROM status WHERE status = :status
-                        ),
-                        oldApartId AS (
-                            SELECT (:apart_id)::bigint AS apart_id
-                        )
-                        UPDATE public.offer
-                        SET
-                            status_id = (SELECT status_id FROM changeStatus), 
-                            new_aparts = (
-                                SELECT jsonb_object_agg(key, jsonb_set(value, '{status_id}', to_jsonb((SELECT status_id FROM changeStatus)), false))
-                                FROM jsonb_each(new_aparts)
-                            ) 
-                        WHERE affair_id = (SELECT apart_id FROM oldApartId)
-                        AND created_at = (
-                            SELECT MAX(created_at) 
-                            FROM public.offer 
-                            WHERE affair_id = (SELECT apart_id FROM oldApartId)
-                        );
-                        """
+
+                    query = text(read_sql_query(f'{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql'))
+                    result = await session.execute(
+                        query, {"status": status, "apart_id": apart_id}
                     )
-                    result = await session.execute(query, {"status": status, "apart_id": apart_id})
                     await session.commit()
                     return result
             except SQLAlchemyError as error:
                 print(error)
                 await session.rollback()
-                raise SomethingWrong("An error occurred while updating the apartment status.")
+                raise SomethingWrong(
+                    "An error occurred while updating the apartment status."
+                )
+    
+    async def set_private_for_new_aparts(self, new_apart_ids, status : bool = True):
+        async with self.db() as session:
+            try: 
+                await session.execute(text('UPDATE new_apart SET is_private = :status WHERE new_apart_id IN (:new_apart_ids)'), {'new_apart_ids' : new_apart_ids, 'status' : status})
+                await session.commit() 
+            except Exception as error: 
+                print(error)
+                raise SomethingWrong
+            
+   

@@ -9,6 +9,9 @@ WITH clr_dt AS (
         offer, 
         jsonb_each(new_aparts)
 ),
+apart_info AS (
+    select history_id, room_count from old_apart where affair_id = :apart_id
+),
 ranked_apartments AS (
     SELECT 
         na.house_address, 
@@ -23,13 +26,13 @@ ranked_apartments AS (
         na.type_of_settlement, 
         na.notes, 
         na.new_apart_id,
+        na.history_id, 
         s.status AS status,
-        is_private,
+        o.status_id, 
         ROW_NUMBER() OVER (
             PARTITION BY na.new_apart_id 
             ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at ASC
-        ) AS rn,
-        COUNT(o.affair_id) OVER (PARTITION BY na.new_apart_id) AS selection_count
+        ) AS rn
     FROM 
         new_apart na
     LEFT JOIN 
@@ -39,3 +42,6 @@ ranked_apartments AS (
 )
 SELECT *
 FROM ranked_apartments
+WHERE ranked_apartments.history_id = (select history_id from apart_info) and ranked_apartments.room_count = (select room_count from apart_info)
+and (status_id is null or status_id != 7)
+ORDER BY status;
