@@ -39,3 +39,7 @@ class Rematch(BaseModel):
 
 class ManualMatchingSchema(BaseModel):
     new_apart_id : int
+
+class SetPrivateStatusSchema(BaseModel):
+    new_apart_ids : List[int]
+    

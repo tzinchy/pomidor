@@ -90,7 +90,7 @@ class ApartmentService:
             apart_id, apart_type
         )
     
-    async def update_history_for_apart(self, apart_id : int, status : str, apart_type): 
-        return await self.apartment_repository.update_history_for_apart(
+    async def update_status_for_apart(self, apart_id : int, status : str, apart_type): 
+        return await self.apartment_repository.update_status_for_apart(
             apart_id, status, apart_type
         )
