@@ -41,7 +41,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                 .filter(value => !isNaN(value))
         )].sort((a, b) => a - b);
     };
-}, [data]);
+  }, [data]);
 
   // Обновляем rooms при изменении filteredApartments
   useEffect(() => {
@@ -51,7 +51,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   // 2. Добавляем эффект для синхронизации с исходными данными
   useEffect(() => {
-    console.log(data);
+    console.log(data)
     setFilteredApartments(data);
   }, [data]);
   
@@ -61,7 +61,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         ...prevFilters,
         [filterType]: selectedValues,
     }));
-}, []);
+  }, []);
 
   // Применение всех фильтров к данным
   useEffect(() => {
@@ -144,12 +144,12 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
-        size: 20,
+        size: 10,
         enableSorting: false,
       },
       {
         header: 'Адрес',
-        accessorKey: 'house_address',
+        accessorKey: 'apart_number',
         enableSorting: true,
         cell: ({ row }) => <AdressCell props={row.original} />,
         size: 200,
@@ -418,6 +418,9 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         apartType={apartType}
                         setSelectedRow={setSelectedRow}
                         selectedRowId={selectedRowId}
+                        fetchApartments={fetchApartments}
+                        lastSelectedAddres={lastSelectedAddres}
+                        lastSelectedMunicipal={lastSelectedMunicipal}
                         className="flex-1" // Оставляем для гибкости внутри компонента
                       />
                     </div>

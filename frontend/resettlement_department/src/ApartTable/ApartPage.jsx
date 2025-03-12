@@ -148,7 +148,7 @@ export default function ApartPage() {
     <div className="bg-muted/60 flex min-h-screen w-full flex-col">
       <Aside />
       <main className="relative flex flex-1 flex-col gap-4 p-2 sm:pl-16 bg-neutral-100">
-        <div className="flex flex-col lg:flex-row bg-white text-gray-800 relative min-h-[98vh]">
+        <div className="flex flex-col lg:flex-row text-gray-800 relative min-h-[98vh]">
           <LeftBar
             apartType={apartType}
             setApartType={setApartType}
