@@ -327,7 +327,7 @@ class ApartmentRepository:
             try:
                 if apart_type == ApartType.OLD:
                     result = await session.execute(
-                        text("DELETE FROM offer WHERE affair_id = :apart_id"),
+                        text("DELETE FROM offer WHERE affair_id = :apart_id AND offer_id = (select max(offer_id) from offer where affair_id = :apart_id)"),
                         {"apart_id": apart_id},
                     )
                     await session.commit()
@@ -336,12 +336,14 @@ class ApartmentRepository:
                     result = await session.execute(
                         text("""
                     WITH new_apart_in_offer AS (
-                        SELECT offer_id
-                            FROM offer,
-                            jsonb_each(new_aparts)
-                            where (key)::int = :apart_id)
-                    DELETE FROM offer
-                    WHERE offer_id IN (SELECT offer_id FROM new_apart_in_offer)"""),
+                                SELECT offer_id
+                                    FROM offer,
+                                    jsonb_each(new_aparts)
+                                    where (key)::int = :apart_id)
+                            DELETE FROM offer
+                            WHERE offer_id = (SELECT MAX(offer_id) FROM new_apart_in_offer)
+                        FROM public.offer 
+                        WHERE affair_id = (SELECT apart_id FROM new_apart_in_offer));"""),
                         {"apart_id": apart_id},
                     )
                     await session.commit()
