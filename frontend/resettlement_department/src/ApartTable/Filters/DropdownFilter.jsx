@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-export default function TryDropdown({ item, data, func, filterType, isFiltersReset }) {
+export default function DropdownFilter({ item, data, func, filterType, isFiltersReset }) {
     const [dropdownState, setDropdownState] = useState(false);
     const [selectedValues, setSelectedValues] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");

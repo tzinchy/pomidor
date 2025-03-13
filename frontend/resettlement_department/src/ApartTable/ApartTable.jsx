@@ -49,7 +49,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   // 2. Добавляем эффект для синхронизации с исходными данными
   useEffect(() => {
-    console.log(data);
     setFilteredApartments(data);
   }, [data]);
   

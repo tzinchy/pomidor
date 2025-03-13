@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import TryDropdown from "./DropdownFilter";
+import DropdownFilter from "./DropdownFilter";
 
 export default function AllFilters({handleFilterChange, rooms, matchCount, apartType}){
     const StatusFilters = ['Не подобрано', "Согласие", 'Отказ', "Суд", "Фонд компенсация", "Фонд докупка", "Ожидание", 'Ждёт одобрения'];
@@ -14,21 +14,21 @@ export default function AllFilters({handleFilterChange, rooms, matchCount, apart
 
     return (
         <div className="flex">
-            <TryDropdown 
+            <DropdownFilter 
                 item={'Статус'} 
                 data={StatusFilters} 
                 func={handleFilterChange}
                 filterType={'status'} 
                 isFiltersReset={false} 
             />
-            <TryDropdown 
+            <DropdownFilter 
                 item={'Комнаты'} 
                 data={rooms} 
                 func={handleFilterChange}
                 filterType={'room_count'} 
                 isFiltersReset={false} 
             />
-            <TryDropdown 
+            <DropdownFilter 
                 item={'Кол-во подборов'} 
                 data={matchCount} 
                 func={handleFilterChange}
