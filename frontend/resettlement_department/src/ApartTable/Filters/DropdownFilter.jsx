@@ -29,6 +29,7 @@ export default function TryDropdown({ item, data, func, filterType, isFiltersRes
                 ? prev.filter((v) => v !== value)
                 : [...prev, value];
 
+            // Передаем новые значения в handleFilterChange
             func(filterType, newValues);
             return newValues;
         });

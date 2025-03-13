@@ -9,6 +9,7 @@ export default function ApartDetails({ className, apartmentDetails, setIsDetails
     setIsDetailsVisible(false);
     setSelectedRow(false);
   }
+  console.log(apartmentDetails)
 
   const table = apartType === "OldApart" ? "new_apartments" : "old_apartments";
 

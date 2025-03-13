@@ -18,7 +18,8 @@ function LeftBar({
     setIsDetailsVisible,
     setLoading,
     setLastSelectedMunicipal,
-    setLastSelectedAddres
+    setLastSelectedAddres,
+    setFilters
   }) {
 
     const toggleExpand = (key) => {

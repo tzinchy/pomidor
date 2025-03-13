@@ -28,7 +28,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [matchCount, setMatchCount] = useState([]);
   const [selectedRowId, setSelectedRowId] = useState();
   
-
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
     if (!data) return [];
@@ -56,11 +55,19 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   
   const handleFilterChange = useCallback((filterType, selectedValues) => {
     // Обновляем состояние фильтров
-    setFilters((prevFilters) => ({
-        ...prevFilters,
-        [filterType]: selectedValues,
-    }));
-  }, []);
+    setFilters((prevFilters) => {
+        // Если selectedValues пуст, удаляем ключ filterType из объекта
+        if (selectedValues.length === 0) {
+            const { [filterType]: _, ...rest } = prevFilters;
+            return rest;
+        }
+        // Иначе обновляем значение для filterType
+        return {
+            ...prevFilters,
+            [filterType]: selectedValues,
+        };
+    });
+  }, []); 
 
   // Используем useEffect для отслеживания изменений filters
   useEffect(() => {
@@ -158,12 +165,12 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         cell: ({ row }) => <AdressCell props={row.original} />,
         size: 200,
       },
-      ...(apartType === 'FamilyStructure' ? [{
+      ...(apartType === 'OldApart' ? [{
         header: 'ФИО',
         accessorKey: 'fio',
         enableSorting: true,
         cell: ({ row }) => <FamilyCell props={row.original} />,
-        size: 150,
+        size: 100,
       }] : []),
       {
         header: 'Площадь, тип, этаж',
@@ -232,7 +239,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   return (
     <div className='bg-neutral-100'>
       <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
-          <AllFilters handleFilterChange={handleFilterChange} rooms={rooms} matchCount={matchCount}/>
+          <AllFilters handleFilterChange={handleFilterChange} rooms={rooms} matchCount={matchCount} apartType={apartType}/>
         <div className='flex'>
           <button 
               onClick={rematch}

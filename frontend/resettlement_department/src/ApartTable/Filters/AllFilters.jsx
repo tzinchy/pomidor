@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import TryDropdown from "./DropdownFilter";
 
-export default function AllFilters({handleFilterChange, rooms, matchCount}){
+export default function AllFilters({handleFilterChange, rooms, matchCount, apartType}){
     const StatusFilters = ['Не подобрано', "Согласие", 'Отказ', "Суд", "Фонд компенсация", "Фонд докупка", "Ожидание", 'Ждёт одобрения'];
     const [isQueueChecked, setIsQueueChecked] = useState(false); // Состояние для чек-бокса "Очередники"
 
@@ -35,7 +35,7 @@ export default function AllFilters({handleFilterChange, rooms, matchCount}){
                 filterType={'selection_count'} 
                 isFiltersReset={false} 
             />
-            <div className="flex">
+            {apartType === 'OldApart' ? (<div className="flex">
                 <label className="flex items-center mr-4 bg-white border border-dashed border-input hover:bg-gray-100 rounded-md px-3 h-8 cursor-pointer">
                 <input
                     type="checkbox"
@@ -64,7 +64,7 @@ export default function AllFilters({handleFilterChange, rooms, matchCount}){
                 </svg>
                 Очередники
                 </label>
-            </div>
+            </div>) : null}
         </div>
     )
 }
