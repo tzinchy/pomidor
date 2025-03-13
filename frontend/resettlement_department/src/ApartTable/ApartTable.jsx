@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -15,65 +15,127 @@ import StatusCell from './Cells/StatusCell';
 import Notes from './Cells/Notes';
 import ApartDetails from './ApartDetails';
 import { HOSTLINK } from '..';
-import Dropdown from '../Filters/DropdownTry/Dropdown';
+import AllFilters from './Filters/AllFilters';
 
-const f = ['Статус', ['Отказ', 'Ждёт одобрения']]
-
-const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, fetchApartmentDetails, apartmentDetails, collapsed }) => {
+const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, 
+  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters }) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
   const [rowSelection, setRowSelection] = useState({});
   const tableContainerRef = useRef(null);
+  const [filteredApartments, setFilteredApartments] = useState(data);
+  const [rooms, setRooms] = useState([]);
+  const [matchCount, setMatchCount] = useState([]);
+  const [selectedRowId, setSelectedRowId] = useState();
+  
+  // Получаем уникальные значения room_count
+  const getUniqueValues = useMemo(() => {
+    if (!data) return [];
 
-  const paramsSerializer = {
-    indexes: null,
-    encode: (value) => encodeURIComponent(value)
-  };
+    return (x) => {
+        return [...new Set(
+          data
+            .map(apartment => parseInt(apartment[x], 10)) // Используем параметр x
+            .filter(value => !isNaN(value))
+        )].sort((a, b) => a - b);
+    };
+  }, [data]);
+
+  // Обновляем rooms при изменении filteredApartments
+  useEffect(() => {
+    setRooms(getUniqueValues('room_count'));
+    setMatchCount(getUniqueValues('selection_count'))
+  }, [getUniqueValues]);
+
+  // 2. Добавляем эффект для синхронизации с исходными данными
+  useEffect(() => {
+    console.log(data);
+    setFilteredApartments(data);
+  }, [data]);
+  
+  const handleFilterChange = useCallback((filterType, selectedValues) => {
+    // Обновляем состояние фильтров
+    setFilters((prevFilters) => {
+        // Если selectedValues пуст, удаляем ключ filterType из объекта
+        if (selectedValues.length === 0) {
+            const { [filterType]: _, ...rest } = prevFilters;
+            return rest;
+        }
+        // Иначе обновляем значение для filterType
+        return {
+            ...prevFilters,
+            [filterType]: selectedValues,
+        };
+    });
+  }, []); 
+
+  // Используем useEffect для отслеживания изменений filters
+  useEffect(() => {
+    console.log('filters updated:', filters);
+  }, [filters]);
+
+  // Применение всех фильтров к данным
+  useEffect(() => {
+      if (!data || data.length === 0) return;
+
+      let filtered = data;
+
+      // Применяем каждый фильтр
+      Object.entries(filters).forEach(([filterType, selectedValues]) => {
+          if (selectedValues.length > 0) {
+              const filterKey = filterType.toLowerCase();
+
+              filtered = filtered.filter((item) => {
+                  // Проверяем наличие "Не подобрано" в выбранных значениях
+                  const hasNotMatched = selectedValues.includes("Не подобрано");
+                  // Проверяем обычные значения статусов
+                  const hasRegularStatus = selectedValues.some(
+                      (val) => val !== "Не подобрано" && item[filterKey] === val
+                  );
+
+                  // Если выбран "Не подобрано" - проверяем на null, иначе проверяем обычные статусы
+                  return (hasNotMatched && item[filterKey] === null) || hasRegularStatus;
+              });
+          }
+      });
+
+      setFilteredApartments(filtered);
+  }, [data, filters]);
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
-    console.log("apartmentIds:", apartmentIds);
-
     try {
-      const response = await axios.post(
+      await axios.post(
         `${HOSTLINK}/tables/apartment/rematch`,
-        JSON.stringify({ apartment_ids: apartmentIds }), // Явно преобразуем в JSON
-        {
-          headers: {
-            'Content-Type': 'application/json', // Указываем тип содержимого
-          },
-        }
+        JSON.stringify({ apartment_ids: apartmentIds }),
+        { headers: { 'Content-Type': 'application/json' } }
       );
-      console.log("Response:", response.data);
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
     } catch (error) {
       console.error("Error rematch:", error.response?.data);
     }
-};
+  };
+
   const switchAparts = async () => {
-    console.log(parseInt(Object.keys(rowSelection)[0]), parseInt(Object.keys(rowSelection)[1]), Object.keys(rowSelection).length, apartType);
-    if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment') ) {
-      console.log('Выбрано более 2 квартир или выбран ресурс');
-    }
-    else {
-      try {
-        const response = await axios.post(
-          `${HOSTLINK}/tables/switch_aparts`,
-          {}, // Тело запроса пустое, так как параметры передаются в URL
-          {
-            params: {
-              first_apart_id: parseInt(Object.keys(rowSelection)[0]),
-              second_apart_id: parseInt(Object.keys(rowSelection)[1])
-            }
+    if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment')) return;
+    
+    try {
+      await axios.post(
+        `${HOSTLINK}/tables/switch_aparts`,
+        {},
+        {
+          params: {
+            first_apart_id: parseInt(Object.keys(rowSelection)[0]),
+            second_apart_id: parseInt(Object.keys(rowSelection)[1])
           }
-        );
-        console.log(response.data);
-      } catch (error) {
-        console.error("Error ", error.response?.data);
-      }
+        }
+      );
+    } catch (error) {
+      console.error("Error ", error.response?.data);
     }
   };
 
-  const columns = React.useMemo(
+  const columns = useMemo(
     () => [
       {
         id: 'select',
@@ -93,27 +155,23 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
-        size: 20,
+        size: 10,
         enableSorting: false,
       },
       {
         header: 'Адрес',
-        accessorKey: 'house_address',
+        accessorKey: 'apart_number',
         enableSorting: true,
         cell: ({ row }) => <AdressCell props={row.original} />,
         size: 200,
       },
-      ...(apartType === 'FamilyStructure'
-        ? [
-            {
-              header: 'ФИО',
-              accessorKey: 'fio',
-              enableSorting: true,
-              cell: ({ row }) => <FamilyCell props={row.original} />,
-              size: 150,
-            },
-          ]
-        : []), // Если apartType не равен 'FamilyStructure', то колонка не добавляется
+      ...(apartType === 'OldApart' ? [{
+        header: 'ФИО',
+        accessorKey: 'fio',
+        enableSorting: true,
+        cell: ({ row }) => <FamilyCell props={row.original} />,
+        size: 100,
+      }] : []),
       {
         header: 'Площадь, тип, этаж',
         accessorKey: 'full_living_area',
@@ -135,10 +193,9 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     ],
     [apartType]
   );
-  
 
   const table = useReactTable({
-    data,
+    data: filteredApartments, // Используем отфильтрованные данные
     columns,
     state: {
       globalFilter,
@@ -149,20 +206,10 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onRowSelectionChange: setRowSelection, 
-    getRowId: (row) => {
-      if (!row) {
-        console.error("Row is undefined");
-        return "undefined-row";
-      }
-    
-      if (apartType === 'OldApart') {
-        return row.affair_id ? row.affair_id.toString() : "undefined-affair-id";
-      } else {
-        return row.new_apart_id ? row.new_apart_id.toString() : "undefined-new-apart-id";
-      }
-    },
+    onRowSelectionChange: setRowSelection,
+    getRowId: (row) => apartType === 'OldApart' 
+      ? row.affair_id?.toString() 
+      : row.new_apart_id?.toString(),
   });
 
   const rowVirtualizer = useVirtualizer({
@@ -172,39 +219,45 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     overscan: 10,
   });
 
-
-  function handleClick(index, visibility, val) {
-    if (visibility) {
-        if (index !== selectedRow) {
-            setSelectedRow(index); // Обновляем выбранную строку
-            apartType === "OldApart" ? fetchApartmentDetails(val["affair_id"]) : fetchApartmentDetails(val["new_apart_id"]);
-        } 
-    } else {
-        setSelectedRow(index); // Устанавливаем выбранную строку
-        setIsDetailsVisible(true); // Открываем панел
-        apartType === "OldApart" ? fetchApartmentDetails(val["affair_id"]) : fetchApartmentDetails(val["new_apart_id"]);
+  const handleClick = (index, visibility, val) => {
+    const id = apartType === "OldApart" 
+      ? val.affair_id 
+      : val.new_apart_id;
+      
+    if (visibility && index !== selectedRow) {
+      setSelectedRow(index);
+      fetchApartmentDetails(id);
+      setSelectedRowId(id);
+    } else if (!visibility) {
+      setSelectedRow(index);
+      setIsDetailsVisible(true);
+      fetchApartmentDetails(id);
+      setSelectedRowId(id);
     }
-}
+  };
 
   return (
-    <div>
-      <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center justify-start gap-2 mb-2`}>
-        <button 
-          onClick={rematch}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Переподбор
-        </button>
+    <div className='bg-neutral-100'>
+      <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
+          <AllFilters handleFilterChange={handleFilterChange} rooms={rooms} matchCount={matchCount} apartType={apartType}/>
+        <div className='flex'>
+          <button 
+              onClick={rematch}
+              className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
+            >
+              Переподбор
+            </button>
 
-        <button 
-          onClick={switchAparts}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Поменять подобранные квартиры
-        </button>
-        <Dropdown item={f[0]} data={f[1]} func={handleClick} filterType={'okrugs'} isFiltersReset={false} />
+            <button 
+              onClick={switchAparts}
+              className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
+            >
+              Поменять подобранные квартиры
+            </button>
+          <p className='ml-8 mr-2 text-gray-400'>{filteredApartments.length}</p>
+        </div>
       </div>
-      <div className="relative flex flex-col lg:flex-row h-[calc(100vh-4rem)] bg-neutral-100 w-full transition-all duration-300">
+      <div className="relative flex flex-col lg:flex-row h-[calc(100vh-4rem)] w-full transition-all duration-300">
         {loading ? (
           <div className="flex flex-1 justify-center h-64">
             <div className="relative flex flex-col place-items-center py-4 text-gray-500">
@@ -375,6 +428,10 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         setIsDetailsVisible={setIsDetailsVisible}
                         apartType={apartType}
                         setSelectedRow={setSelectedRow}
+                        selectedRowId={selectedRowId}
+                        fetchApartments={fetchApartments}
+                        lastSelectedAddres={lastSelectedAddres}
+                        lastSelectedMunicipal={lastSelectedMunicipal}
                         className="flex-1" // Оставляем для гибкости внутри компонента
                       />
                     </div>

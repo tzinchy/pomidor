@@ -46,6 +46,7 @@ SELECT
     old_apart.apart_number,
     old_apart.district,
     old_apart.municipal_district,
+    old_apart.fio,
     old_apart.full_living_area,
     old_apart.total_living_area,
     old_apart.living_area,

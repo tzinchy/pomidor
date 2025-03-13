@@ -28,6 +28,9 @@ export default function ApartPage() {
   const detailsRef = useRef(null);
   const [selectedRow, setSelectedRow] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+  const [lastSelectedMunicipal, setLastSelectedMunicipal] = useState('');
+  const [lastSelectedAddres, setLastSelectedAddres] = useState('');
+  const [filters, setFilters] = useState({}); // Состояние для хранения фильтров
 
   const [loading, setLoading] = useState(true);
 
@@ -140,17 +143,13 @@ export default function ApartPage() {
     }
   };
 
-  const filteredApartments = apartments.filter(apt =>
-    String(apt.new_apart_id).toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const handleToggleSidebar = () => setCollapsed(!collapsed);
 
   return (
     <div className="bg-muted/60 flex min-h-screen w-full flex-col">
       <Aside />
       <main className="relative flex flex-1 flex-col gap-4 p-2 sm:pl-16 bg-neutral-100">
-        <div className="flex flex-col lg:flex-row bg-white text-gray-800 relative min-h-[98vh]">
+        <div className="flex flex-col lg:flex-row text-gray-800 relative min-h-[98vh]">
           <LeftBar
             apartType={apartType}
             setApartType={setApartType}
@@ -168,11 +167,14 @@ export default function ApartPage() {
             setSelectedRow={setSelectedRow}
             setIsDetailsVisible={setIsDetailsVisible}
             setLoading={setLoading}
+            setLastSelectedMunicipal={setLastSelectedMunicipal}
+            setLastSelectedAddres={setLastSelectedAddres}
+            setFilters={setFilters}
           />
 
           <div className="flex-1 overflow-auto">
             <ApartTable 
-              data={filteredApartments} 
+              data={apartments} 
               loading={loading} 
               selectedRow={selectedRow}
               setSelectedRow={setSelectedRow}
@@ -182,6 +184,11 @@ export default function ApartPage() {
               fetchApartmentDetails={fetchApartmentDetails}
               apartmentDetails={apartmentDetails}
               collapsed={collapsed}
+              lastSelectedMunicipal={lastSelectedMunicipal}
+              lastSelectedAddres={lastSelectedAddres}
+              fetchApartments={fetchApartments}
+              filters={filters}
+              setFilters={setFilters}
             />
           </div>
         </div>
