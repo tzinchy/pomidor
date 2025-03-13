@@ -327,7 +327,7 @@ class ApartmentRepository:
             try:
                 if apart_type == ApartType.OLD:
                     result = await session.execute(
-                        text("DELETE FROM offer WHERE affair_id = :apart_id"),
+                        text("DELETE FROM offer WHERE affair_id = :apart_id AND offer_id = (select max(offer_id) from offer where affair_id = :apart_id)"),
                         {"apart_id": apart_id},
                     )
                     await session.commit()
@@ -336,12 +336,14 @@ class ApartmentRepository:
                     result = await session.execute(
                         text("""
                     WITH new_apart_in_offer AS (
-                        SELECT offer_id
-                            FROM offer,
-                            jsonb_each(new_aparts)
-                            where (key)::int = :apart_id)
-                    DELETE FROM offer
-                    WHERE offer_id IN (SELECT offer_id FROM new_apart_in_offer)"""),
+                                SELECT offer_id
+                                    FROM offer,
+                                    jsonb_each(new_aparts)
+                                    where (key)::int = :apart_id)
+                            DELETE FROM offer
+                            WHERE offer_id = (SELECT MAX(offer_id) FROM new_apart_in_offer)
+                        FROM public.offer 
+                        WHERE affair_id = (SELECT apart_id FROM new_apart_in_offer));"""),
                         {"apart_id": apart_id},
                     )
                     await session.commit()
@@ -368,13 +370,28 @@ class ApartmentRepository:
                     "An error occurred while updating the apartment status."
                 )
     
-    async def set_private_for_new_aparts(self, new_apart_ids, status : bool = True):
+    async def set_private_for_new_aparts(self, new_apart_ids, status: bool = True):
         async with self.db() as session:
-            try: 
-                await session.execute(text('UPDATE new_apart SET is_private = :status WHERE new_apart_id IN (:new_apart_ids)'), {'new_apart_ids' : new_apart_ids, 'status' : status})
-                await session.commit() 
-            except Exception as error: 
+            try:
+                # Проверяем, что new_apart_ids не пустой
+                if not new_apart_ids:
+                    raise ValueError("The list of apartment IDs is empty.")
+                
+                # Формируем строку с плейсхолдерами для каждого ID
+                placeholders = ', '.join([':id_' + str(i) for i in range(len(new_apart_ids))])
+                
+                # Формируем словарь с параметрами
+                params = {'status': status}
+                params.update({f'id_{i}': id for i, id in enumerate(new_apart_ids)})
+                
+                # Используем параметризованный запрос для безопасности
+                query = text(f'UPDATE new_apart SET is_private = :status WHERE new_apart_id IN ({placeholders})')
+                
+                # Передаем параметры в правильном формате
+                await session.execute(query, params)
+                await session.commit()
+            except Exception as error:
                 print(error)
-                raise SomethingWrong
+                raise SomethingWrong("Something went wrong while updating the apartments.")
             
    

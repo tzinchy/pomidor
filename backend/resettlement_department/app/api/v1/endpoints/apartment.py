@@ -165,13 +165,13 @@ async def change_status(
     
 @router.patch("/apartment/set_private_true")
 async def set_private_for_new_aparts_true(new_aparts_ids : SetPrivateStatusSchema):
-    apartment_service.set_private_for_new_aparts(
-        new_aparts_ids, status=True
+    return await apartment_service.set_private_for_new_aparts(
+        new_aparts_ids.new_apart_ids, status=True
         )
 
 @router.patch("apartment/set_private_falce")
 async def set_private_for_new_aparts_false(new_apart_ids : SetPrivateStatusSchema):
-    apartment_service.set_private_for_new_aparts(
-        new_aparts = new_apart_ids, status=False
+    return await apartment_service.set_private_for_new_aparts(
+        new_aparts = new_apart_ids.new_apart_ids, status=False
     )
 
