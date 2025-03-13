@@ -27,7 +27,7 @@ ranked_apartments AS (
         is_private,
         ROW_NUMBER() OVER (
             PARTITION BY na.new_apart_id 
-            ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at ASC
+            ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at DESC
         ) AS rn,
         COUNT(o.affair_id) OVER (PARTITION BY na.new_apart_id) AS selection_count
     FROM 
