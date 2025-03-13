@@ -4,9 +4,6 @@ from schema.apartment import ApartType, Rematch, ManualMatchingSchema, SetPrivat
 from service.rematch_service import rematch
 from typing import Optional, List, Literal
 from schema.status import StatusUpdate
-from fastapi import BackgroundTasks
-
-
 
 router = APIRouter(prefix="/tables", tags=["Дерево"])
 
@@ -109,7 +106,7 @@ async def get_apartment_by_id(
     return apartment
 
 
-@router.post("/apartment/{apartment_id}/manual_selection")
+@router.post("/apartment/{apartment_id}/manual_matching")
 async def manual_matching(
     apartment_id: int,
     manual_selection: ManualMatchingSchema = Body(

@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from core.config import settings
-from repository.database import project_managment_session
 import re
 from psycopg2.extras import execute_values
 
@@ -46,15 +45,7 @@ district_mapping = {
     "Митино": "СЗАО",  # Район в СЗАО
     "Крылатское": "ЗАО",  # Район в ЗАО
     "Бирюлёво Восточное": "ЮАО",  # Район в ЮАО
-    "Академический": "ЮЗАО",  # Район в ЮЗАО
-    "Цен": "ЦАО",
-    "Вос": "ВАО",
-    "Ю-В": "ЮВАО",
-    "Зел": "ЗелАО",
-    "С-В": "СВАО",
-    "Зап": "ЗАО",
-    "Сев": "САО",
-    "МО": "МО",  # Оставляем как есть, если нужно
+    "Академический": "ЮЗАО"  # Район в ЮЗАО
 }
 
 def insert_data_to_old(df):
