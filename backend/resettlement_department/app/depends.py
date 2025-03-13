@@ -3,8 +3,6 @@ from repository.dashboard_repository import DashboardRepository
 from repository.database import project_managment_session
 from repository.history_repository import HistoryRepository
 
-from service.alghorithm import match_new_apart_to_family_batch
-from service.balance_alghorithm import save_views_to_excel
 from service.apartment_service import ApartmentService
 from service.dashboard_service import DashboardService
 from service.history_service import HistoryService 

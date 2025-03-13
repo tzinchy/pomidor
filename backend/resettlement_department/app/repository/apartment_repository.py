@@ -335,15 +335,13 @@ class ApartmentRepository:
                 else:
                     result = await session.execute(
                         text("""
-                    WITH new_apart_in_offer AS (
+                        WITH new_apart_in_offer AS (
                                 SELECT offer_id
                                     FROM offer,
                                     jsonb_each(new_aparts)
                                     where (key)::int = :apart_id)
                             DELETE FROM offer
-                            WHERE offer_id = (SELECT MAX(offer_id) FROM new_apart_in_offer)
-                        FROM public.offer 
-                        WHERE affair_id = (SELECT apart_id FROM new_apart_in_offer));"""),
+                            WHERE offer_id = (SELECT MAX(offer_id) FROM new_apart_in_offer);"""),
                         {"apart_id": apart_id},
                     )
                     await session.commit()

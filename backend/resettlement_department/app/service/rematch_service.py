@@ -1,7 +1,8 @@
 import psycopg2
 from core.config import settings
 from handlers.httpexceptions import SomethingWrong, HTTPException
-from fastapi import status 
+from fastapi import status
+
 
 def get_db_connection():
     return psycopg2.connect(
@@ -9,8 +10,9 @@ def get_db_connection():
         user=settings.project_management_setting.DB_USER,
         password=settings.project_management_setting.DB_PASSWORD,
         port=settings.project_management_setting.DB_PORT,
-        database=settings.project_management_setting.DB_NAME
+        database=settings.project_management_setting.DB_NAME,
     )
+
 
 def rematch(apart_ids):
     print(apart_ids)
@@ -20,7 +22,7 @@ def rematch(apart_ids):
                 cursor = conn.cursor()
 
                 # Запрос для получения данных старой квартиры
-                apart_query = '''
+                apart_query = """
                     SELECT affair_id, room_count, full_living_area, total_living_area, living_area, 
                     is_special_needs_marker, is_queue, queue_square, new_house_addresses, rank, 
                     (SELECT MAX(rank) FROM public.new_apart WHERE new_apart_id::text IN 
@@ -28,7 +30,7 @@ def rematch(apart_ids):
                     FROM public.old_apart
                     JOIN history USING(history_id)
                     WHERE affair_id = %s
-                '''
+                """
                 cursor.execute(apart_query, (apart_id, apart_id))
                 aparts = cursor.fetchall()
 
@@ -44,11 +46,11 @@ def rematch(apart_ids):
                         tuple(apart[8]),  # new_house_addresses
                         apart[9],  # rank
                         apart[10],  # new_apart_rank
-                        apart[0]   # affair_id
+                        apart[0],  # affair_id
                     )
 
                     # Поиск подходящей новой квартиры
-                    new_apart_query = '''
+                    new_apart_query = """
                         SELECT new_apart_id, room_count, full_living_area, total_living_area, living_area, rank 
                         FROM public.new_apart
                         WHERE new_apart_id::text NOT IN 
@@ -67,7 +69,7 @@ def rematch(apart_ids):
                             WHERE affair_id = %s)
                         ORDER BY rank, (full_living_area + living_area) 
                         LIMIT 1
-                    '''
+                    """
                     cursor.execute(new_apart_query, new_apart_params)
                     new_aparts = cursor.fetchall()
 
@@ -87,7 +89,9 @@ def rematch(apart_ids):
                             AND created_at = (SELECT MAX(created_at) FROM public.offer WHERE affair_id = %s);
                         """
                         cursor.execute(update_query, (apart[0], apart[0]))
-                        print(f"Обновлена последняя запись для apart_id {apart_id}: {new_apart_id}")
+                        print(
+                            f"Обновлена последняя запись для apart_id {apart_id}: {new_apart_id}"
+                        )
 
                         # Шаг 2: Вставка новой записи
                         insert_query = """
@@ -95,19 +99,26 @@ def rematch(apart_ids):
                             VALUES (%s, jsonb_build_object(%s, jsonb_build_object('status_id', 7)), 7);
                         """
                         cursor.execute(insert_query, (apart[0], new_apart_id))
-                        print(f"Вставлена новая запись для apart_id {apart_id}: {new_apart_id}")
+                        print(
+                            f"Вставлена новая запись для apart_id {apart_id}: {new_apart_id}"
+                        )
 
                         conn.commit()  # Фиксация изменений
                     else:
-                        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Не нашлось подходящей квартиры!')
+                        raise HTTPException(
+                            status_code=status.HTTP_409_CONFLICT,
+                            detail="Не нашлось подходящей квартиры!",
+                        )
 
                 else:
-                    raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Не нашлось подходящей старой квартиры!')
-
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="Не нашлось подходящей старой квартиры!",
+                    )
 
         except Exception as e:
             print(f"Ошибка при обработке apart_id {apart_id}: {e}")
-            conn.rollback() 
+            conn.rollback()
             raise SomethingWrong
 
     return None
