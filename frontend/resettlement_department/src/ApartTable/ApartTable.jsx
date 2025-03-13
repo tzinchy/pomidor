@@ -37,8 +37,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     return (x) => {
         return [...new Set(
           data
-                .map(apartment => parseInt(apartment[x], 10)) // Используем параметр x
-                .filter(value => !isNaN(value))
+            .map(apartment => parseInt(apartment[x], 10)) // Используем параметр x
+            .filter(value => !isNaN(value))
         )].sort((a, b) => a - b);
     };
   }, [data]);
@@ -51,7 +51,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   // 2. Добавляем эффект для синхронизации с исходными данными
   useEffect(() => {
-    console.log(data)
+    console.log(data);
     setFilteredApartments(data);
   }, [data]);
   
@@ -62,6 +62,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         [filterType]: selectedValues,
     }));
   }, []);
+
+  // Используем useEffect для отслеживания изменений filters
+  useEffect(() => {
+    console.log('filters updated:', filters);
+  }, [filters]);
 
   // Применение всех фильтров к данным
   useEffect(() => {

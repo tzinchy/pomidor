@@ -94,6 +94,7 @@ export default function ApartDetails({ className, apartmentDetails, setIsDetails
                       fetchApartments={fetchApartments}
                       lastSelectedAddres={lastSelectedAddres}
                       lastSelectedMunicipal={lastSelectedMunicipal}
+                      apartmentDetails={apartmentDetails}
                     />
                   </tr>
                 ))}

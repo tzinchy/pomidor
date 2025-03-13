@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import ReactDOM from "react-dom";
 import { HOSTLINK } from "../..";
 
-export default function DetailsStatusCell({props, selectedRowId, apartType, fetchApartments, lastSelectedAddres, lastSelectedMunicipal}) {
+export default function DetailsStatusCell({props, selectedRowId, apartType, fetchApartments, lastSelectedAddres, lastSelectedMunicipal, apartmentDetails}) {
     const val = props;
     const [isOpen, setIsOpen] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState(false); // Состояние для отображения модального окна
@@ -139,7 +139,7 @@ export default function DetailsStatusCell({props, selectedRowId, apartType, fetc
             </button>
 
             {/* Адрес */}
-            <h2 className="text-lg font-semibold mb-4">Москва, Щербаковская ул, 53, кв 1</h2>
+            <h2 className="text-lg font-semibold mb-4">{apartmentDetails ? apartmentDetails.house_address + ", кв. " + apartmentDetails.apart_number : ""}</h2>
 
             {/* От какого этажа */}
             <div className="mb-4">
