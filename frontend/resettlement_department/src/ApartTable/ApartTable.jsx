@@ -18,7 +18,7 @@ import { HOSTLINK } from '..';
 import AllFilters from './Filters/AllFilters';
 
 const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, 
-  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments }) => {
+  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters }) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -26,7 +26,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [filteredApartments, setFilteredApartments] = useState(data);
   const [rooms, setRooms] = useState([]);
   const [matchCount, setMatchCount] = useState([]);
-  const [filters, setFilters] = useState({}); // Состояние для хранения фильтров
   const [selectedRowId, setSelectedRowId] = useState();
   
 

@@ -38,13 +38,13 @@ function LeftBar({
                 <>
                   <div className="flex justify-around mb-4">
                     <button
-                      onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("OldApart"); setLoading(true)}}
+                      onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("OldApart"); setLoading(true); setFilters({});}}
                       className={`p-8 py-4 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Семьи
                     </button>
                     <button
-                      onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("NewApartment"); setLoading(true)}}
+                      onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("NewApartment"); setLoading(true); setFilters({});}}
                       className={`p-8 py-4 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Ресурс

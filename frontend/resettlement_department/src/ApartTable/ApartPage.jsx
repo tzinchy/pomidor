@@ -30,6 +30,7 @@ export default function ApartPage() {
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
   const [lastSelectedMunicipal, setLastSelectedMunicipal] = useState('');
   const [lastSelectedAddres, setLastSelectedAddres] = useState('');
+  const [filters, setFilters] = useState({}); // Состояние для хранения фильтров
 
   const [loading, setLoading] = useState(true);
 
@@ -168,6 +169,7 @@ export default function ApartPage() {
             setLoading={setLoading}
             setLastSelectedMunicipal={setLastSelectedMunicipal}
             setLastSelectedAddres={setLastSelectedAddres}
+            setFilters={setFilters}
           />
 
           <div className="flex-1 overflow-auto">
@@ -185,6 +187,8 @@ export default function ApartPage() {
               lastSelectedMunicipal={lastSelectedMunicipal}
               lastSelectedAddres={lastSelectedAddres}
               fetchApartments={fetchApartments}
+              filters={filters}
+              setFilters={setFilters}
             />
           </div>
         </div>
