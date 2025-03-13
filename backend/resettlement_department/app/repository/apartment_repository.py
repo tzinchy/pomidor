@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from schema.apartment import ApartType
+from schema.apartment import ApartTypeSchema
 import logging
 from utils.sql_reader import read_sql_query
 from core.config import RECOMMENDATION_FILE_PATH
@@ -17,7 +17,7 @@ class ApartmentRepository:
         """
         Получить уникальные районы.
         """
-        if apart_type not in ApartType:
+        if apart_type not in ApartTypeSchema:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
         table = "old_apart" if apart_type == "OldApart" else "new_apart"
@@ -41,7 +41,7 @@ class ApartmentRepository:
         """
         Получить уникальные области по районам.
         """
-        if apart_type not in ApartType:
+        if apart_type not in ApartTypeSchema:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
         table = "old_apart" if apart_type == "OldApart" else "new_apart"
@@ -74,7 +74,7 @@ class ApartmentRepository:
         """
         Получить уникальные адреса домов по областям и районам (если указаны)
         """
-        if apart_type not in ApartType:
+        if apart_type not in ApartTypeSchema:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
         table = "old_apart" if apart_type == "OldApart" else "new_apart"
@@ -118,7 +118,7 @@ class ApartmentRepository:
         """
         Получаем все квартиры с учетом опциональных фильтров.
         """
-        if apart_type not in ApartType:
+        if apart_type not in ApartTypeSchema:
             raise ValueError(f"Invalid apartment type: {apart_type}")
         if area_type not in ["full_living_area", "total_living_area", "living_area"]:
             raise ValueError(f"Invalid area type: {area_type}")
@@ -165,10 +165,10 @@ class ApartmentRepository:
                 params[key] = room
             conditions.append(f"room_count IN ({', '.join(room_placeholders)})")
 
-        if is_queue is not None and apart_type == ApartType.OLD:
+        if is_queue is not None and apart_type == ApartTypeSchema.OLD:
             conditions.append("is_queue != 0")
 
-        if is_private is not None and apart_type == ApartType.NEW:
+        if is_private is not None and apart_type == ApartTypeSchema.NEW:
             conditions.append("is_private != 0")
 
         area_conditions = []
@@ -205,7 +205,7 @@ class ApartmentRepository:
         """
         Получить всю информацию о квартире по ID.
         """
-        if apart_type not in ApartType:
+        if apart_type not in ApartTypeSchema:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
         query_params = {"apart_id": apart_id}
@@ -325,7 +325,7 @@ class ApartmentRepository:
     async def cancell_matching_apart(self, apart_id, apart_type):
         async with self.db() as session:
             try:
-                if apart_type == ApartType.OLD:
+                if apart_type == ApartTypeSchema.OLD:
                     result = await session.execute(
                         text("DELETE FROM offer WHERE affair_id = :apart_id AND offer_id = (select max(offer_id) from offer where affair_id = :apart_id)"),
                         {"apart_id": apart_id},
@@ -353,7 +353,7 @@ class ApartmentRepository:
     async def update_status_for_apart(self, apart_id, status, apart_type):
         async with self.db() as session:
             try:
-                if apart_type == ApartType.OLD:
+                if apart_type == ApartTypeSchema.OLD:
 
                     query = text(read_sql_query(f'{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql'))
                     result = await session.execute(
@@ -392,4 +392,59 @@ class ApartmentRepository:
                 print(error)
                 raise SomethingWrong("Something went wrong while updating the apartments.")
             
-   
+    async def set_cancell_reason(self, apartment_id, min_floor, max_floor, unom, entrance, apartment_layout, notes):
+        async with self.db() as session:
+            try:
+                # Вставляем данные в таблицу decline_reason
+                insert_query = text('''
+                    INSERT INTO public.decline_reason 
+                    (min_floor, max_floor, unom, entrance, apartment_layout, notes)
+                    VALUES (:min_floor, :max_floor, :unom, :entrance, :apartment_layout, :notes)
+                    RETURNING declined_reason_id;
+                ''')
+                result = await session.execute(insert_query, {
+                    'min_floor': min_floor,
+                    'max_floor': max_floor,
+                    'unom': unom,
+                    'entrance': entrance,
+                    'apartment_layout': apartment_layout,
+                    'notes': notes
+                })
+                declined_reason_id = result.scalar()
+
+                # Обновляем статус в таблице offer
+                update_query = text('''
+                    WITH changeStatus AS (
+                        SELECT status_id 
+                        FROM status 
+                        WHERE status = :status
+                    ),
+                    latest_offer AS (
+                        SELECT offer_id 
+                        FROM public.offer 
+                        WHERE affair_id = :apart_id
+                        ORDER BY created_at DESC 
+                        LIMIT 1
+                    )
+                    UPDATE public.offer
+                    SET 
+                        status_id = (SELECT status_id FROM changeStatus),
+                        declined_reason_id = :declined_reason_id, 
+                    new_aparts = (
+                        SELECT jsonb_object_agg(key, jsonb_set(value, '{status_id}', to_jsonb((SELECT status_id FROM changeStatus)), false))
+                        FROM jsonb_each(new_aparts)
+                    ) 
+                    WHERE offer_id = (SELECT offer_id FROM latest_offer);
+                ''')
+                await session.execute(update_query, {
+                    'status': 'Отказ',  
+                    'apart_id': apartment_id,
+                    'declined_reason_id' : declined_reason_id  
+                })
+
+                await session.commit()
+                return declined_reason_id
+            except Exception as error:
+                print(error)
+                await session.rollback()
+                raise SomethingWrong

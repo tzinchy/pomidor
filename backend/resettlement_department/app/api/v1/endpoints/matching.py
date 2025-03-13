@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from depends import apartment_service
-from schema.apartment import ApartType, MatchingSchema
+from schema.apartment import ApartTypeSchema, MatchingSchema
 from service.alghorithm import match_new_apart_to_family_batch
 from fastapi import File, HTTPException, UploadFile
 from io import BytesIO
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/fisrt_matching", tags=["Первичный подб�
 @router.get("/old_apartment/house_addresses")
 async def get_family_structure_house_addresses():
     return await apartment_service.get_house_address_with_room_count(
-        apart_type=ApartType.OLD
+        apart_type=ApartTypeSchema.OLD
     )
 
 
@@ -24,7 +24,7 @@ async def get_family_structure_house_addresses():
 @router.get("/new_apartment/house_addresses")
 async def get_new_apartment_house_addresses():
     return await apartment_service.get_house_address_with_room_count(
-        apart_type=ApartType.NEW
+        apart_type=ApartTypeSchema.NEW
     )
 
 

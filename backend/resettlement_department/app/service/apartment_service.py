@@ -54,9 +54,7 @@ class ApartmentService:
 
     async def get_apartment_by_id(self, apart_id, apart_type):
         """Получить всю информацию по квартире."""
-        return await self.apartment_repository.get_apartment_by_id(
-            apart_id, apart_type
-        )
+        return await self.apartment_repository.get_apartment_by_id(apart_id, apart_type)
 
     async def get_house_address_with_room_count(self, apart_type):
         result = await self.apartment_repository.get_house_address_with_room_count(
@@ -89,13 +87,35 @@ class ApartmentService:
         return await self.apartment_repository.cancell_matching_apart(
             apart_id, apart_type
         )
-    
-    async def update_status_for_apart(self, apart_id : int, status : str, apart_type): 
+
+    async def update_status_for_apart(self, apart_id: int, status: str, apart_type):
         return await self.apartment_repository.update_status_for_apart(
             apart_id, status, apart_type
         )
 
-    async def set_private_for_new_aparts(self, new_aparts : List[int], status : bool = True): 
+    async def set_private_for_new_aparts(
+        self, new_aparts: List[int], status: bool = True
+    ):
         return await self.apartment_repository.set_private_for_new_aparts(
             new_aparts, status
+        )
+
+    async def set_cancell_reason(
+        self,
+        apartment_id,
+        min_floor,
+        max_floor,
+        unom,
+        entrance,
+        apartment_layout,
+        notes,
+    ):
+        return await self.apartment_repository.set_cancell_reason(
+            apartment_id,
+            min_floor,
+            max_floor,
+            unom,
+            entrance,
+            apartment_layout,
+            notes,
         )
