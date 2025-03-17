@@ -6,14 +6,15 @@ WITH unnset_offer AS (
         sentence_date, 
         answer_date, 
         created_at, 
-        updated_at
+        updated_at,
+        declined_reason_id
     FROM offer, 
     jsonb_each(new_aparts)
-    order by created_at ASC, updated_at ASC
+    ORDER BY created_at ASC, updated_at ASC
 ),
 joined_aparts AS (
     SELECT 
-        affair_id,
+        o.affair_id,
         JSON_AGG(
             JSON_BUILD_OBJECT(
                 'house_address', na.house_address,
@@ -28,8 +29,9 @@ joined_aparts AS (
                 'notes', na.notes,
                 'status', s.status,
                 'sentence_date', o.sentence_date :: DATE,
-                'answer_date', o.answer_date :: DATE
-            ) ORDER BY sentence_date DESC, answer_date DESC, o.created_at ASC, o.updated_at ASC 
+                'answer_date', o.answer_date :: DATE,
+                'decline_reason_notes', dr.notes
+            ) ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at ASC, o.updated_at ASC 
         ) AS new_apartments
     FROM 
         unnset_offer o
@@ -37,6 +39,8 @@ joined_aparts AS (
         new_apart na ON o.new_apart_id = na.new_apart_id
     LEFT JOIN 
         status s ON o.status_id = s.status_id
+    LEFT JOIN 
+        decline_reason dr ON o.declined_reason_id = dr.declined_reason_id
     GROUP BY 
         o.affair_id
 )
@@ -55,5 +59,5 @@ SELECT
     old_apart.is_queue,
     joined_aparts.new_apartments
 FROM old_apart  
-LEFT JOIN joined_aparts USING (affair_id) 
-WHERE affair_id = :apart_id        
+LEFT JOIN joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
+WHERE old_apart.affair_id = :apart_id;

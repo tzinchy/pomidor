@@ -6,7 +6,8 @@ WITH unnset_offer AS (
         sentence_date, 
         answer_date,
         created_at,
-        updated_at
+        updated_at,
+        declined_reason_id
     FROM offer, 
     jsonb_each(new_aparts)
     order by created_at ASC, updated_at ASC
@@ -28,7 +29,8 @@ joined_aparts AS (
                 'notes', old_apart.notes,
                 'status', s.status,
                 'sentence_date', o.sentence_date :: DATE,
-                'answer_date', o.answer_date :: DATE
+                'answer_date', o.answer_date :: DATE,
+                'decline_reason_notes', dr.notes
             ) ORDER BY sentence_date DESC, answer_date DESC, o.created_at ASC, o.updated_at ASC
         ) AS old_apartments
     FROM 
@@ -37,6 +39,8 @@ joined_aparts AS (
         old_apart ON old_apart.affair_id = o.affair_id
     LEFT JOIN 
         status s ON o.status_id = s.status_id
+    LEFT JOIN 
+        decline_reason AS dr USING (declined_reason_id)
     GROUP BY 
         o.new_apart_id
 )
