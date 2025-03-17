@@ -291,7 +291,7 @@ class ApartmentRepository:
                 if record_exists:
                     # Обновление записи
                     update_query = text(read_sql_query(f'{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql'))
-                    await session.execute(update_query, {"status" : "Отказ", "old_apart_id": old_apart_id})
+                    await session.execute(update_query, {"status" : "Отказ", "apart_id": old_apart_id})
                     print(
                         f"Обновлена последняя запись для old_apart_id {old_apart_id}: {new_apart_id}"
                     )
