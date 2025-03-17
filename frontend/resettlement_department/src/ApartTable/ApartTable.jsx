@@ -238,21 +238,21 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   return (
     <div className='bg-neutral-100'>
       <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
-          <AllFilters handleFilterChange={handleFilterChange} rooms={rooms} matchCount={matchCount} apartType={apartType}/>
+        <AllFilters handleFilterChange={handleFilterChange} rooms={rooms} matchCount={matchCount} apartType={apartType}/>
         <div className='flex'>
           <button 
-              onClick={rematch}
-              className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
-            >
-              Переподбор
-            </button>
+            onClick={rematch}
+            className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
+          >
+            Переподбор
+          </button>
 
-            <button 
-              onClick={switchAparts}
-              className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
-            >
-              Поменять подобранные квартиры
-            </button>
+          <button 
+            onClick={switchAparts}
+            className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
+          >
+            Поменять подобранные квартиры
+          </button>
           <p className='ml-8 mr-2 text-gray-400'>{filteredApartments.length}</p>
         </div>
       </div>
