@@ -16,39 +16,29 @@ def save_views_to_excel(
     old_selected_addresses=None,
 ):
     """РАБОЧИЙ ВАРИАНТ"""
+    print('in func')
     try:
-        views = (
-            ["new_apart_all_last", "res_of_rec_last", "ranked_last", "where_not_last"]
-            if date
-            else [
-                "new_apart_all",
-                "res_of_rec_last",
-                "ranked_with_district",
-                "where_not_offered",
-            ]
-        )
-
+        views = ["new_apart_all", "res_of_rec", "rank","where_not"]
         with get_db_connection() as conn:
             with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
                 for view in views:
                     print(f"Обработка представления: {view}")
 
-                    if view in ["ranked_with_district", "ranked_last"]:
+                    if view == "rank":
                         # Запросы для извлечения данных из базы данных
                         query_old_ranked = """
                             SELECT
-                                family_apartment_needs.family_apartment_needs_id as old_apart_id,
-                                family_structure.room_count,
-                                family_structure.living_area,
-                                family_structure.is_special_needs_marker,
-                                family_structure.full_living_area,
-                                family_structure.total_living_area,
-                                family_structure.district,
-                                family_structure.municipal_district,
-                                family_structure.house_address,
-                                family_apartment_needs.rank
-                            FROM family_apartment_needs
-							LEFT JOIN family_structure ON family_apartment_needs.affair_id = family_structure.affair_id 
+                                old_apart.affair_id as old_apart_id,
+                                old_apart.room_count,
+                                old_apart.living_area,
+                                old_apart.is_special_needs_marker,
+                                old_apart.full_living_area,
+                                old_apart.total_living_area,
+                                old_apart.district,
+                                old_apart.municipal_district,
+                                old_apart.house_address,
+                                old_apart.rank
+                            FROM old_apart
                             WHERE 1=1
                         """
 
@@ -67,25 +57,13 @@ def save_views_to_excel(
                             FROM new_apart 
                             WHERE 1=1
                         """
-
+                        print('all okay')
+                        
                         # Подключаем фильтрацию для запросов
                         params_old, params_new = [], []
-                        if old_selected_districts:
-                            query_old_ranked += " AND family_structure.district IN %s"
-                            params_old.append(tuple(old_selected_districts))
-                        if new_selected_districts:
-                            query_new_ranked += " AND new_apart.district IN %s"
-                            params_new.append(tuple(new_selected_districts))
-
-                        if old_selected_area:
-                            query_old_ranked += " AND family_structure.municipal_district IN %s"
-                            params_old.append(tuple(old_selected_area))
-                        if new_selected_area:
-                            query_new_ranked += " AND new_apart.municipal_district IN %s"
-                            params_new.append(tuple(new_selected_area))
 
                         if old_selected_addresses:
-                            query_old_ranked += " AND family_structure.house_address IN %s"
+                            query_old_ranked += " AND old_apart.house_address IN %s"
                             params_old.append(tuple(old_selected_addresses))
                         if new_selected_addresses:
                             query_new_ranked += " AND new_apart.house_address IN %s"
@@ -93,13 +71,14 @@ def save_views_to_excel(
 
                         # Добавляем фильтрацию по дате, если указана
                         if date:
-                            query_old_ranked += " AND family_apartment_needs.created_at = (SELECT MAX(created_at) FROM family_apartment_needs)"
+                            query_old_ranked += " AND old_apart.created_at = (SELECT MAX(created_at) FROM old_apart)"
                             query_new_ranked += " AND new_apart.created_at = (SELECT MAX(created_at) FROM new_apart)"
 
 
                         df_old_ranked = pd.read_sql(query_old_ranked, conn, params=params_old)
                         df_new_ranked = pd.read_sql(query_new_ranked, conn, params=params_new)
-                        print('ЧИНАЗЕС')
+                        print(df_old_ranked)
+                        print('----')
                         print(df_new_ranked)
                         # Получение максимальных рангов по количеству комнат из базы данных
                         max_rank_query = """
@@ -122,10 +101,10 @@ def save_views_to_excel(
                         )
 
                         # Присваиваем ранги и группируем данные
-                        df_combined["rank_group"] = df_combined["rank"].astype(int)
+                        df_combined["Ранг"] = df_combined["rank"].astype(int)
 
                         df = (
-                            df_combined.groupby(["room_count", "rank_group"])
+                            df_combined.groupby(["room_count", "Ранг"])
                             .agg(
                                 Пот_ть=("old_apart_id", "count"),
                                 Ресурс=("new_apart_id", "count"),
@@ -149,21 +128,21 @@ def save_views_to_excel(
 
                             for i in range(len(df)):
                                 row = df.iloc[i].to_dict()
-                                current_rank = row["rank_group"]
+                                current_rank = row["Ранг"]
                                 room_count = row["room_count"]
                                 max_rank = max_rank_by_room_count.get(room_count, 0) + 1
 
                                 if previous_row is not None:
-                                    # Проверяем, является ли previous_row['rank_group'] строкой с диапазоном или целым числом
+                                    # Проверяем, является ли previous_row['Ранг'] строкой с диапазоном или целым числом
                                     if (
-                                        isinstance(previous_row["rank_group"], str)
-                                        and "-" in previous_row["rank_group"]
+                                        isinstance(previous_row["Ранг"], str)
+                                        and "-" in previous_row["Ранг"]
                                     ):
                                         previous_rank = int(
-                                            previous_row["rank_group"].split("-")[-1]
+                                            previous_row["Ранг"].split("-")[-1]
                                         )
                                     else:
-                                        previous_rank = previous_row["rank_group"]
+                                        previous_rank = previous_row["Ранг"]
 
                                     # Проверяем, можно ли объединять строки
                                     if (
@@ -176,7 +155,7 @@ def save_views_to_excel(
                                         previous_row["Ресурс"] += row["Ресурс"]
                                         previous_row["Баланс"] += row["Баланс"]
                                         # Обновляем диапазон рангов
-                                        previous_row["rank_group"] = (
+                                        previous_row["Ранг"] = (
                                             f"{start_rank}-{current_rank}"
                                         )
                                     else:
@@ -210,7 +189,7 @@ def save_views_to_excel(
                             totals = pd.DataFrame(
                                 [
                                     {
-                                        "rank_group": "Итог",
+                                        "Ранг": "Итог",
                                         "Пот_ть": total_potency,
                                         "Ресурс": total_resource,
                                         "Баланс": total_balance,
@@ -256,9 +235,8 @@ def save_views_to_excel(
                             # Перебор всех типов комнат и запись данных в Excel
                             for room in df_grouped["room_count"].unique():
                                 room_df = df_grouped[df_grouped["room_count"] == room][
-                                    ["rank_group", "Пот_ть", "Ресурс", "Баланс"]
+                                    ["Ранг", "Пот_ть", "Ресурс", "Баланс"]
                                 ]
-
                                 # Заголовок типа квартир
                                 ws.cell(
                                     row=current_row, column=current_col
@@ -307,72 +285,35 @@ def save_views_to_excel(
                         query_params = []
                         query = f"SELECT * FROM public.{view}"
 
-                        if (
-                            old_selected_districts
-                            or new_selected_districts
-                            or old_selected_area
-                            or new_selected_area
-                            or old_selected_addresses
-                        ):
-                            query += " WHERE 1=1 "
-                            if view == "new_apart_all":
-                                if new_selected_districts:
-                                    placeholders = ", ".join(
-                                        ["%s"] * len(new_selected_districts)
-                                    )
-                                    query += f" AND district IN ({placeholders})"
-                                    query_params.extend(new_selected_districts)
+                        query += " WHERE 1=1 "
+                        if view == "new_apart_all":
+                            if new_selected_addresses:
+                                placeholders = ", ".join(
+                                    ["%s"] * len(new_selected_addresses)
+                                )
+                                query += f" AND Новый_адрес IN ({placeholders})"
+                                query_params.extend(new_selected_addresses)
+                        elif view == 'where_not':
+                            if old_selected_addresses:
+                                placeholders = ", ".join(
+                                    ["%s"] * len(old_selected_addresses)
+                                )
+                                query += f' AND Старый_адрес IN ({placeholders})'
+                                query_params.extend(old_selected_addresses)
+                        else:
+                            if new_selected_addresses :
+                                placeholders = ", ".join(
+                                    ["%s"] * len(new_selected_addresses)
+                                )
+                                query += f" AND Новый_адрес IN ({placeholders})"
+                                query_params.extend(new_selected_addresses)
 
-                                if new_selected_area:
-                                    placeholders = ", ".join(
-                                        ["%s"] * len(new_selected_area)
-                                    )
-                                    query += f" AND municipal_district IN ({placeholders})"
-                                    query_params.extend(new_selected_area)
-
-                                if new_selected_addresses:
-                                    placeholders = ", ".join(
-                                        ["%s"] * len(new_selected_addresses)
-                                    )
-                                    query += f" AND house_address IN ({placeholders})"
-                                    query_params.extend(new_selected_addresses)
-
-
-                            else:
-                                if old_selected_districts:
-                                    placeholders = ", ".join(
-                                        ["%s"] * len(old_selected_districts)
-                                    )
-                                    query += f" AND district IN ({placeholders})"
-                                    query_params.extend(old_selected_districts)
-
-                                if old_selected_area:
-                                    placeholders = ", ".join(
-                                        ["%s"] * len(old_selected_area)
-                                    )
-                                    query += f" AND Район_старый IN ({placeholders})"
-                                    query_params.extend(old_selected_area)
-
-                                if new_selected_area:
-                                    placeholders = ", ".join(
-                                        ["%s"] * len(new_selected_area)
-                                    )
-                                    query += f" AND Район_новый IN ({placeholders})"
-                                    query_params.extend(new_selected_area)
-
-                                if new_selected_addresses:
-                                    placeholders = ", ".join(
-                                        ["%s"] * len(new_selected_addresses)
-                                    )
-                                    query += f" AND Адрес_дома IN ({placeholders})"
-                                    query_params.extend(new_selected_addresses)
-
-                                if old_selected_addresses:
-                                    placeholders = ", ".join(
-                                        ["%s"] * len(old_selected_addresses)
-                                    )
-                                    query += f' AND "res_of_rec_last"."Старый_адерс" IN ({placeholders})'
-                                    query_params.extend(old_selected_addresses)
+                            if old_selected_addresses:
+                                placeholders = ", ".join(
+                                    ["%s"] * len(old_selected_addresses)
+                                )
+                                query += f' AND Старый_адрес IN ({placeholders})'
+                                query_params.extend(old_selected_addresses)
 
                         print(f"Выполнение запроса для представления {view}")
 
@@ -386,4 +327,3 @@ def save_views_to_excel(
                             )
     except Exception as e:
         print(f"Ошибка: {e}")
-

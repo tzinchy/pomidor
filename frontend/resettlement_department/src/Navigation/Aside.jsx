@@ -1,5 +1,6 @@
 import React from "react";
 import LinkButton from "./LinkButton/LinkButton";
+import UpdateDataButton from "./UpdateInfo/UpdateModal";
 
 export default function Aside() {
   return (
@@ -8,6 +9,8 @@ export default function Aside() {
         <LinkButton name="dashboard" />
         <LinkButton name="table_page" />
         <LinkButton name="aparts" />
+        <LinkButton name="balance" />
+        <UpdateDataButton />
       </nav>
     </aside>
   );

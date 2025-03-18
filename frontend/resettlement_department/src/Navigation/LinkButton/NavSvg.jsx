@@ -9,53 +9,47 @@ export function NavSvg(state) {
 
   export function NavPng(state) {
     const svg = {
-        'dashboard': (<svg width="43" height="43" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18.9524 28.8333V16.9286H13V28.5333C13 28.699 13.1343 28.8333 13.3 28.8333H18.9524Z" stroke="currentColor"/>
-          <path d="M30.8571 23.2778V28.5333C30.8571 28.699 30.7228 28.8333 30.5571 28.8333H21.9286V17.7222H30.8571V20.5M24.9047 8H30.5571C30.7228 8 30.8571 8.13431 30.8571 8.3V13.9524C24.4087 13.9524 13 13.9524 13 13.9524V8.3C13 8.13431 13.1343 8 13.3 8H21.9286" stroke="currentColor"/>
-        </svg>),
-        'table_page': (<svg width="43" height="43" viewBox="0 0 43 43" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 29L32 31" />
-          <path d="M20.5 31L22.6651 34H18.3349L20.5 31Z" />
-          <path d="M21.324 25.1514V27.8873M21.324 25.1514V22.4155M21.324 25.1514L23.9705 22.4155M23.9705 6L21.324 8.73592V11.4718M23.9705 6L26.617 8.73592V11.4718M23.9705 6V8.73592M26.617 14.2077L29.2636 11.4718M26.617 14.2077V11.4718M26.617 14.2077L23.9705 11.4718M26.617 14.2077V16.9437M29.2636 11.4718L31.9101 14.2077V16.9437M29.2636 11.4718V14.2077M31.9101 27.8873H29.2636M31.9101 27.8873V25.1514M31.9101 27.8873L29.2636 25.1514M21.324 27.8873H23.9705M21.324 27.8873L23.9705 25.1514M26.617 27.8873H23.9705M26.617 27.8873H29.2636M26.617 27.8873V26.5194M26.617 27.8873L29.2636 25.1514M26.617 27.8873L23.9705 25.1514M23.9705 27.8873V25.1514M29.2636 27.8873V25.1514M21.324 11.4718L23.9705 8.73592M21.324 11.4718V14.2077M23.9705 8.73592L26.617 11.4718M23.9705 8.73592V11.4718M23.9705 11.4718V14.2077M23.9705 11.4718L22.6473 12.8398L21.324 14.2077M21.324 14.2077V16.9437M21.324 16.9437L23.9705 14.2077M21.324 16.9437V19.6796M23.9705 14.2077L26.617 16.9437M23.9705 14.2077V16.9437M26.617 16.9437V19.6796M26.617 16.9437V26.5194M26.617 16.9437L29.2636 14.2077M21.324 19.6796L23.9705 16.9437M21.324 19.6796V22.4155M23.9705 16.9437L26.617 19.6796M23.9705 16.9437V19.6796M26.617 19.6796V22.4155M26.617 19.6796L29.2636 16.9437M21.324 22.4155L23.9705 19.6796M23.9705 19.6796L26.617 22.4155M23.9705 19.6796V22.4155M26.617 22.4155V25.1514M26.617 22.4155L29.2636 19.6796M23.9705 22.4155L26.617 25.1514M23.9705 22.4155V25.1514M26.617 25.1514V26.5194M26.617 25.1514L29.2636 22.4155M29.2636 14.2077L31.9101 16.9437M29.2636 14.2077V16.9437M31.9101 16.9437V19.6796M31.9101 19.6796L29.2636 16.9437M31.9101 19.6796V22.4155M29.2636 16.9437V19.6796M29.2636 19.6796L31.9101 22.4155M29.2636 19.6796V22.4155M31.9101 22.4155V25.1514M29.2636 22.4155L31.9101 25.1514M29.2636 22.4155V25.1514"  strokeWidth="0.5"/>
-          <path d="M33 27.8875H20"  strokeWidth="0.5"/>
-          <path d="M33 27.8875H20"  strokeWidth="0.5"/>
-          <path d="M12.9622 17L9.35334 19.9562V24.8169H16.5711V19.9562L12.9622 17Z"/>
-          <path d="M8 21.0648L12.9622 17L17.9245 21.0648M9.35334 19.9392V24.8169H16.5711V19.9392" strokeWidth="0.5"/>
-          <rect x="11.3086" y="20.1267" width="3.30815" height="3.12676"/>
-          <path d="M12.9627 20.1267V23.2535M11.3086 21.6901H14.6167"  strokeWidth="0.2"/>
-          <path d="M12.9627 20.1267V23.2535M11.3086 21.6901H14.6167"  strokeWidth="0.2"/>
-        </svg>
-        ),
-        'table_pag': (<svg width="34" height="22" viewBox="0 0 34 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M1 5.16L5.96223 1L11 5.09369M2.35334 4.008V8.7C2.35334 8.86569 2.48765 9 2.65334 9H9.27112C9.43681 9 9.57112 8.86569 9.57112 8.7V4.008" stroke="currentColor"/>
-          <path d="M31.7 16.3333H24.3401C24.1596 16.3333 24.0203 16.1719 24.0429 15.9927C25.3324 5.75779 26.1563 0.0645867 31.7589 1.12624C31.8974 1.15249 32 1.27599 32 1.417V16.0333C32 16.199 31.8657 16.3333 31.7 16.3333Z" stroke="currentColor"/>
-          <path d="M31.7 16.3333H24.3401C24.1596 16.3333 24.0203 16.1719 24.0429 15.9927C25.3324 5.75779 26.1563 0.0645867 31.7589 1.12624C31.8974 1.15249 32 1.27599 32 1.417V16.0333C32 16.199 31.8657 16.3333 31.7 16.3333Z" stroke="currentColor"/>
-          <path d="M25.5 6.11114L29.3333 6.11114" stroke="currentColor"/>
-          <path d="M25.5 6.11114L29.3333 6.11114" stroke="currentColor"/>
-          <path d="M26.5 3.55553L29.3333 3.55553" stroke="currentColor"/>
-          <path d="M26.5 3.55553L29.3333 3.55553" stroke="currentColor"/>
-          <path d="M25 8.66666L29.3333 8.66666" stroke="currentColor"/>
-          <path d="M25 8.66666L29.3333 8.66666" stroke="currentColor"/>
-          <path d="M24.5 11.2222L29.3333 11.2222" stroke="currentColor"/>
-          <path d="M24.5 11.2222L29.3333 11.2222" stroke="currentColor"/>
-          <path d="M24.5 13.7778L29.3333 13.7778" stroke="currentColor"/>
-          <path d="M24.5 13.7778L29.3333 13.7778" stroke="currentColor"/>
-          <path d="M33 17.5V20.7C33 20.8657 32.8657 21 32.7 21H1.3C1.13431 21 1 20.8657 1 20.7V10.5" stroke="currentColor"/>
-          <path d="M1 11H11V9.5" stroke="currentColor"/>
-          <path d="M33 18L22 18L22 10" stroke="currentColor"/>
-          <path d="M22 10C22 6.68629 19.5376 4 16.5 4C13.4624 4 11 6.68629 11 10" stroke="currentColor"/>
-          <path d="M20.5 10.5C20.5 12.7091 18.7091 14.5 16.5 14.5C14.2909 14.5 12.5 12.7091 12.5 10.5C12.5 8.29086 14.2909 6.5 16.5 6.5C18.7091 6.5 20.5 8.29086 20.5 10.5Z" stroke="currentColor"/>
-          <circle cx="16.5" cy="10.5" r="0.625" stroke="currentColor"/>
-          <path d="M16.5 6.5625V8.25" stroke="currentColor"/>
-          <path d="M18.75 10.5H20.4375M12.5625 10.5H14.25M16.5 14.4375V12.75" stroke="currentColor"/>
-          <path d="M17 10L18 9" stroke="currentColor"/>
+        'dashboard': (<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9.66667 26.8047V12.3101H1V26.5047C1 26.6704 1.13432 26.8047 1.3 26.8047H9.66667Z" stroke="currentColor" strokeWidth="2"/>
+          <path d="M27 20.0404V26.5046C27 26.6703 26.8657 26.8046 26.7 26.8046H14V13.2763H27V16.6583M18.3333 1.43896H26.7C26.8657 1.43896 27 1.57328 27 1.73896V8.68629C17.6111 8.68629 1 8.68629 1 8.68629V1.73896C1 1.57328 1.13431 1.43896 1.3 1.43896H14" stroke="currentColor" strokeWidth="2"/>
           </svg>
-          
+          ),
+        'table_page': (<svg width="32" height="31" viewBox="0 0 32 31" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5.06086 13.0406L1.38773 15.9794C1.31657 16.0363 1.27515 16.1225 1.27515 16.2137L1.27515 21.045C1.27515 21.2107 1.40946 21.345 1.57515 21.345H8.92141C9.0871 21.345 9.22141 21.2107 9.22141 21.045V16.2137C9.22141 16.1225 9.17999 16.0363 9.10884 15.9794L5.4357 13.0406C5.32613 12.9529 5.17043 12.9529 5.06086 13.0406Z" stroke="currentColor" strokeWidth="2"/>
+          <path d="M26.4686 29.6998V9.10762C26.4686 8.94193 26.3343 8.80762 26.1686 8.80762H18.6124C18.4467 8.80762 18.3124 8.94193 18.3124 9.10762V29.6998C18.3124 29.8655 18.4467 29.9998 18.6124 29.9998H26.1686C26.3343 29.9998 26.4686 29.8655 26.4686 29.6998Z" stroke="currentColor" strokeWidth="2"/>
+          <path d="M26.4688 29.6998V14.6845C26.4688 14.5188 26.6031 14.3845 26.7688 14.3845H30.7C30.8657 14.3845 31 14.5188 31 14.6845V29.6998C31 29.8655 30.8657 29.9998 30.7 29.9998H26.7688C26.6031 29.9998 26.4688 29.8655 26.4688 29.6998Z" stroke="currentColor" strokeWidth="2"/>
+          <path d="M5.17175 13.2692V1H22.3904V8.80766" stroke="currentColor" strokeWidth="2"/>
+          </svg>
         ),
-        'aparts': (<svg width="43" height="43" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 28V19.3C19 19.1343 19.1343 19 19.3 19H24.7C24.8657 19 25 19.1343 25 19.3V28" stroke="currentColor"/>
-          <path d="M10 17.5L21.8024 7.17286C21.9156 7.07389 22.0844 7.07389 22.1976 7.17286L28 12.25L34 17.5M13.2727 14.35V27.7C13.2727 27.8657 13.407 28 13.5727 28H30.4273C30.593 28 30.7273 27.8657 30.7273 27.7V14.35" stroke="currentColor"/>
-        </svg>
+        'aparts': (<svg width="36" height="37" viewBox="0 0 36 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13.5312 27.1947V16.6237C13.5312 16.458 13.6656 16.3237 13.8313 16.3237H22.1688C22.3344 16.3237 22.4688 16.458 22.4688 16.6237V27.1947" stroke="currentColor" strokeWidth="2"/>
+          <g filter="url(#filter0_d_269_889)">
+          <path d="M17.8275 1.94688L5.13097 10.6177C5.04912 10.6736 5.00016 10.7664 5.00016 10.8655L5 26.8947C5 27.0604 5.13432 27.1947 5.3 27.1947H30.7C30.8657 27.1947 31 27.0604 31 26.8947V10.8734C31 10.77 30.9467 10.6738 30.8589 10.619L26.9375 8.17051L18.1703 1.94995C18.068 1.87732 17.9312 1.87609 17.8275 1.94688Z" stroke="currentColor" strokeWidth="2" shapeRendering="crispEdges"/>
+          </g>
+          <defs>
+          <filter id="filter0_d_269_889" x="0" y="0.894531" width="36" height="35.3003" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+          <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+          <feOffset dy="4"/>
+          <feGaussianBlur stdDeviation="2"/>
+          <feComposite in2="hardAlpha" operator="out"/>
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_269_889"/>
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_269_889" result="shape"/>
+          </filter>
+          </defs>
+          </svg>
+        ),
+        'balance': (<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M30 3.33325H9.99996C8.15901 3.33325 6.66663 4.82564 6.66663 6.66659V33.3333C6.66663 35.1742 8.15901 36.6666 9.99996 36.6666H30C31.8409 36.6666 33.3333 35.1742 33.3333 33.3333V6.66659C33.3333 4.82564 31.8409 3.33325 30 3.33325Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M13.3334 10H26.6667" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M26.6666 23.3333V29.9999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M26.6666 16.6667H26.6833" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M20 16.6667H20.0167" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M13.3334 16.6667H13.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M20 23.3333H20.0167" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M13.3334 23.3333H13.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M20 30H20.0167" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M13.3334 30H13.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>          
         )
     };
     return svg[state['state']]

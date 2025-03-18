@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { TableHead, TableBody } from "./Components";
+import axios from "axios";
 import { HOSTLINK } from "../..";
+import HouseDetails from '../HouseDetails/HouseDetails' 
+
+
+const paramsSerializer = {
+  indexes: null,
+  encode: (value) => encodeURIComponent(value)
+};
 
 export default function Table({ filters, searchQuery }) {
   const headers = [
@@ -18,6 +26,10 @@ export default function Table({ filters, searchQuery }) {
   const [filteredData, setFilteredData] = useState([]); // Отфильтрованные данные
   const [displayData, setDisplayData] = useState([]); // Данные для отображения
   const [page, setPage] = useState(1); // Текущая страница
+  const [addressHouseDetails, setAddressHouseDetails] = useState([]);
+  const [houseDetails, setHouseDetails] = useState([]);
+  const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+  const [opendDetailsId, setOpendDetailsId] = useState(null);
   const loaderRef = useRef(null); // Реф для отслеживания конца таблицы
 
   const itemsPerPage = 50; // Количество строк на страницу
@@ -32,19 +44,49 @@ export default function Table({ filters, searchQuery }) {
       });
   }, []);
 
+
+  const fetchHouseDetails = async (houseId) => {
+    try {
+      const response = await axios.get(
+        `${HOSTLINK}/dashboard/table/${houseId}`,
+        { 
+          params: { houseId: houseId },
+          paramsSerializer
+        }
+      );
+      setHouseDetails(response.data);
+    } catch (error) {
+      console.error("Error fetching apartment details:", error.response?.data);
+    }
+  };
+
+  function houseDetailsHandler(index, data){
+    if (index === opendDetailsId){
+      setIsDetailsVisible(false);
+      setOpendDetailsId(null);
+      setAddressHouseDetails([]);
+      setHouseDetails([])
+    }
+    else {
+      setIsDetailsVisible(true);
+      setOpendDetailsId(index);
+      setAddressHouseDetails(data);
+      fetchHouseDetails(index);
+    }
+    console.log('CLICKED', index, isDetailsVisible);
+  }
+
   // Фильтрация данных
   useEffect(() => {
     if (data.length > 0) {
       const filterByQuery = (item) => {
-        // Проверка на item[3]
         const matchesItem3 = !searchQuery || item[3].toLowerCase().includes(searchQuery.toLowerCase());
 
-        // Проверка на item[4] и поле 'f1' в его под-объектах
         const matchesItem4 = !searchQuery || Object.values(item[4]).some((subItem) => 
           subItem?.f1?.toLowerCase().includes(searchQuery.toLowerCase())
         );
 
-        return matchesItem3 || matchesItem4;  // Возвращаем true, если найдено совпадение в любом из полей
+        return matchesItem3 || matchesItem4;  
       };
 
       const filterByFilters = (item) => {
@@ -101,14 +143,17 @@ export default function Table({ filters, searchQuery }) {
   }
 
   return (
-    <div className="relative flex h-[calc(100vh-3.5rem)] w-full">
-      <div className="overflow-auto rounded-md border absolute left-0 h-full transition-all ease-in-out w-[calc(100%)]">
-        <table className="text-sm caption-bottom w-full border-collapse bg-white">
-          <TableHead headers={headers} />
-          <TableBody data={displayData} /> {/* Передаём отображаемые данные */}
-        </table>
-        <div ref={loaderRef} className="loader text-center py-4"></div>
+    <div className="relative flex flex-col lg:flex-row h-[calc(100vh-3.5rem)] gap-2 bg-neutral-100 w-full transition-all duration-300">
+      <div className="relative flex h-[calc(100vh-3.5rem)] w-full">
+        <div className="overflow-auto rounded-md border absolute left-0 h-full transition-all ease-in-out w-[calc(100%)] scrollbar-custom">
+          <table className="text-sm caption-bottom w-full border-collapse bg-white transition-all duration-300">
+            <TableHead headers={headers} />
+            <TableBody data={displayData} houseDetailsHandler={houseDetailsHandler} />
+          </table>
+          <div ref={loaderRef} className="loader text-center py-4"></div>
+        </div>
       </div>
+      {isDetailsVisible ? <HouseDetails addressHouseDetails={addressHouseDetails} houseDetails={houseDetails} setIsDetailsVisible={setIsDetailsVisible} setOpendDetailsId={setOpendDetailsId}/> : <></>}
     </div>
   );
 }

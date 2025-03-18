@@ -30,3 +30,8 @@ class EmailSendException(HTTPException):
         detail: str = "Password reset email could not be sent. Please contact support.",
     ):
         super().__init__(status_code=500, detail=detail)
+
+
+class SomethingWrong(HTTPException):
+    def __init__(self, detail: str = "Something wrong!"):
+        super().__init__(status_code=404, detail=detail)

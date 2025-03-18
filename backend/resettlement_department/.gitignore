@@ -3,3 +3,10 @@
 __pycache__
 /__pycache__
 uploads/
+app/uploads/
+./uploads
+.log 
+/.log
+app/app_container.log
+.DS_Store
+app/manual_download/

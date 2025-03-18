@@ -10,14 +10,14 @@ export default function ResursTbody({ data, apartType, fetchApartmentDetails, is
     
     
     if (!data || data.length === 0) {
-        return <div></div>;
+        return <tbody></tbody>;
     }
 
     function handleClick(index, visibility, val) {
         if (visibility) {
             if (index !== selectedRow) {
                 setSelectedRow(index); // Обновляем выбранную строку
-                apartType === "FamilyStructure" ? fetchApartmentDetails(val["family_apartment_needs_id"]) : fetchApartmentDetails(val["new_apart_id"]);
+                apartType === "OldApart" ? fetchApartmentDetails(val["affair_id"]) : fetchApartmentDetails(val["new_apart_id"]);
             } else {
                 setSelectedRow(false)
                 setIsDetailsVisible(false); // Закрываем панель
@@ -25,7 +25,7 @@ export default function ResursTbody({ data, apartType, fetchApartmentDetails, is
         } else {
             setSelectedRow(index); // Устанавливаем выбранную строку
             setIsDetailsVisible(true); // Открываем панел
-            apartType === "FamilyStructure" ? fetchApartmentDetails(val["family_apartment_needs_id"]) : fetchApartmentDetails(val["new_apart_id"]);
+            apartType === "OldApart" ? fetchApartmentDetails(val["affair_id"]) : fetchApartmentDetails(val["new_apart_id"]);
         }
     }
     
@@ -38,7 +38,7 @@ export default function ResursTbody({ data, apartType, fetchApartmentDetails, is
                     onClick={() => handleClick(index, isDetailsVisible, val)}
                 >
                     <td className="p-2 font-normal whitespace-nowrap" style={{width: 13+'vw'}}><AdressCell props={val} /></td>
-                    {apartType == 'FamilyStructure' ? (<td className="p-2 font-normal whitespace-nowrap" style={{width: 15+'vw'}}><FamilyCell props={val}/></td>) : ''}
+                    {apartType == 'OldApart' ? (<td className="p-2 font-normal whitespace-nowrap" style={{width: 15+'vw'}}><FamilyCell props={val}/></td>) : ''}
                     <td className="p-2 font-normal whitespace-nowrap" style={{width: 5+'vw'}}><PloshCell props={val}/></td>
                     <td className="p-2 font-normal whitespace-nowrap" style={{width: 5+'vw'}}><StatusCell props={val}/></td>
                     <td className="p-2 font-normal whitespace-nowrap" style={{width: 20+'vw'}}><Notes props={val}/></td>

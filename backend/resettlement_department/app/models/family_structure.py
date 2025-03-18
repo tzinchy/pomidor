@@ -1,8 +1,6 @@
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, JSON
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
 from models.base import Base
-from models.status import Status
 
 class FamilyStructure(Base):
     __tablename__ = 'family_structure'
@@ -14,7 +12,6 @@ class FamilyStructure(Base):
     firstname = Column(String(100))
     lastname = Column(String(100))
     people_in_family = Column(Integer)
-    status_id = Column(Integer, ForeignKey('status.status_id'))
     category = Column(Integer)
     cad_num = Column(String(200))
     notes = Column(String)
@@ -41,4 +38,4 @@ class FamilyStructure(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    status = relationship("Status")
+

@@ -3,7 +3,7 @@ from typing import Optional, List
 from enum import Enum
 
 
-class FamilyStructure(BaseModel):
+class FamilyStructureSchema(BaseModel):
     affair_id: int = Field(..., description="ID дела")
     district: Optional[str] = Field(None, description="Район")
     house_address: Optional[str] = Field(None, description="Адрес дома")
@@ -13,31 +13,40 @@ class FamilyStructure(BaseModel):
         orm_mode = True
 
 
-class NewApartment(BaseModel):
-    up_id: int = Field(..., description="Идентификатор уникального пользователя")
+class NewApartmentSchema(BaseModel):
+    new_apart_id: int = Field(..., description="Id квартиры")
     district: str = Field(..., description="Район")
-    area: float = Field(..., description="Площадь")
+    municipal_district: float = Field(..., description="Площадь")
     house_address: str = Field(..., description="Адрес дома")
 
 
-class ApartType(str, Enum):
+class ApartTypeSchema(str, Enum):
     NEW = "NewApartment"
-    OLD = "FamilyStructure"
+    OLD = "OldApart"
 
 
 class MatchingSchema(BaseModel):
-    family_structure_district: Optional[List[str]] = Field(None, description="Район")
-    family_structure_municipal_district: Optional[List[str]] = Field(
-        None, description="Муниципальный район"
-    )
-    family_structure_house_address: Optional[List[str]] = Field(
-        None, description="Адрес дома"
-    )
+    old_apartment_district: List[str] = None
+    old_apartment_municipal_district: List[str] = None
+    old_apartment_house_address: List[str] = None
+    new_apartment_district: List[str] = None
+    new_apartment_municipal_district: List[str] = None
+    new_apartment_house_address: List[str] = None 
+    is_date : bool = None
 
-    new_apartment_district: Optional[List[str]] = Field(None, description="Район")
-    new_apartment_municipal_district: Optional[List[str]] = Field(
-        None, description="Муниципальный район"
-    )
-    new_apartment_house_address: Optional[List[str]] = Field(
-        None, description="Адрес дома"
-    )
+class RematchSchema(BaseModel):
+    apartment_ids : List[int]
+
+class ManualMatchingSchema(BaseModel):
+    new_apart_id : int
+
+class SetPrivateStatusSchema(BaseModel):
+    new_apart_ids : List[int]
+
+class DeclineReasonSchema(BaseModel):
+    min_floor: int = 0
+    max_floor: int = 0
+    unom: Optional[str] = None
+    entrance: Optional[str] = None
+    apartment_layout: Optional[int] = None
+    notes: Optional[str] = None

@@ -2,21 +2,56 @@ import React from "react";
 import AdressCell from "./Cells/AdressCell";
 import PloshCell from "./Cells/PloshCell";
 import DetailsStatusCell from "./Cells/DetailsStatusCell";
-import DatesCell from "./Cells/DatesCell";
+import { HOSTLINK } from "..";
 
-export default function ApartDetails({ apartmentDetails, setIsDetailsVisible, apartType, setSelectedRow }) {
+export default function ApartDetails({ className, apartmentDetails, setIsDetailsVisible, apartType, setSelectedRow, selectedRowId, fetchApartments, lastSelectedAddres, lastSelectedMunicipal }) {
   function handleClose() {
     setIsDetailsVisible(false);
     setSelectedRow(false);
   }
+  console.log(apartmentDetails)
 
-  const table = apartType === "FamilyStructure" ? "new_apartments" : "old_apartments";
+  const table = apartType === "OldApart" ? "new_apartments" : "old_apartments";
+
+  // Функция для отмены подборов
+  const handleCancelMatching = async () => {
+    if (!apartmentDetails?.affair_id) {
+      alert("Ошибка: ID квартиры не найден.");
+      return;
+    }
+
+    try {
+      // Формируем URL с apartment_id и apart_type
+      const url = `${HOSTLINK}/tables/apartment/${apartmentDetails.affair_id}/cancell_matching_for_apart?apart_type=${apartType}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Ошибка при отмене подборов");
+      }
+
+      const result = await response.json();
+      console.log("Подборы отменены:", result.message);
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal); // Обновляем данные
+    } catch (error) {
+      console.error("Ошибка:", error);
+      alert("Не удалось отменить подборы. Попробуйте снова.");
+    }
+  };
 
   return (
     <div
-      className={`relative z-20 flex flex-col bg-white rounded transition-all duration-300 shadow-lg
-      w-full sm:w-full md:w-3/4 lg:max-w-[50%]`}
-      style={{minWidth:700+'px'}}
+      className={`relative z-20 flex flex-col bg-white rounded transition-all duration-300 shadow-lg ${className}`}
+      style={{
+        minWidth: 650 + "px", // Минимальная ширина для читаемости
+        maxWidth: "calc(100vw - 32px)", // Отступы по краям экрана
+        maxHeight: "calc(100vh)", // Отступ сверху и снизу
+      }}
     >
       {/* Заголовок и кнопка закрытия */}
       <div className="flex justify-between items-center p-4 border-b">
@@ -49,16 +84,32 @@ export default function ApartDetails({ apartmentDetails, setIsDetailsVisible, ap
                 {apartmentDetails[table].map((value, index) => (
                   <tr
                     key={index}
-                    className={`bg-white border-b transition-colors hover:bg-gray-100`}
+                    className={`bg-white border-b transition-colors`}
                   >
-                    <AdressCell props={value} />
-                    <PloshCell props={value} />
-                    <DatesCell props={value} />
-                    <DetailsStatusCell props={value} />
+                    <td><AdressCell props={value} /></td>
+                    <td><PloshCell props={value} /></td>
+                    <DetailsStatusCell
+                      props={value}
+                      selectedRowId={selectedRowId}
+                      apartType={apartType}
+                      fetchApartments={fetchApartments}
+                      lastSelectedAddres={lastSelectedAddres}
+                      lastSelectedMunicipal={lastSelectedMunicipal}
+                      apartmentDetails={apartmentDetails}
+                    />
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            <div className="mt-4">
+              <button
+                onClick={handleCancelMatching}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Отменить подборы
+              </button>
+            </div>
           </div>
         ) : (
           <div className="relative flex flex-col place-items-center py-4 text-gray-500">
