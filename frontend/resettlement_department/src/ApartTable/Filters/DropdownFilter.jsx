@@ -52,7 +52,7 @@ export default function DropdownFilter({ item, data, func, filterType, isFilters
         : []; // Если data не массив, возвращаем пустой массив
 
     return (
-        <div className="flex items-center mr-4">
+        <div className="flex items-center mr-4" ref={container}>
             <button
                 onClick={() => setDropdownState(!dropdownState)}
                 type="button"
@@ -80,7 +80,7 @@ export default function DropdownFilter({ item, data, func, filterType, isFilters
 
             {dropdownState && (
                 <div
-                    ref={container}
+                    
                     className="fixed bg-white transition-transform duration-300 ease-in-out z-50 dropdown-open"
                     style={{ top: "5%" }}
                 >

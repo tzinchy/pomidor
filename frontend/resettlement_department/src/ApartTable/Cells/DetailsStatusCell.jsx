@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { HOSTLINK } from "../..";
 
@@ -13,15 +13,16 @@ export default function DetailsStatusCell({
 }) {
   const val = props;
   const [isOpen, setIsOpen] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false); // Состояние для отображения модального окна
-  const [selectedStatus, setSelectedStatus] = useState(null); // Состояние для хранения выбранного статуса
-  const buttonRef = useRef(null); // Ссылка на кнопку для вычисления позиции
-  const [minFloor, setMinFloor] = useState(""); // Состояние для минимального этажа
-  const [maxFloor, setMaxFloor] = useState(""); // Состояние для максимального этажа
-  const [unom, setUnom] = useState(""); // Состояние для UNOM
-  const [entrance, setEntrance] = useState(""); // Состояние для подъезда
-  const [apartment_layout, setApartment_layout] = useState(""); // Состояние для планировки
-  const [notes, setNotes] = useState(""); // Состояние для комментария
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const buttonRef = useRef(null);
+  const dropdownRef = useRef(null); // Ссылка на выпадающий список
+  const [minFloor, setMinFloor] = useState("");
+  const [maxFloor, setMaxFloor] = useState("");
+  const [unom, setUnom] = useState("");
+  const [entrance, setEntrance] = useState("");
+  const [apartment_layout, setApartment_layout] = useState("");
+  const [notes, setNotes] = useState("");
 
   const colors = {
     "Ждёт одобрения": "bg-blue-100 text-blue-500",
@@ -35,34 +36,53 @@ export default function DetailsStatusCell({
 
   const toggleDropdown = () => setIsOpen(!isOpen);
 
+  // Закрытие выпадающего списка при клике вне его области
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    // Добавляем обработчик при монтировании
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Убираем обработчик при размонтировании
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Вычисляем позицию выпадающего списка
   const getDropdownPosition = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       return {
-        top: rect.bottom + window.scrollY, // Ниже кнопки
-        left: rect.left + window.scrollX, // Слева от кнопки
-        width: rect.width, // Ширина кнопки
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
       };
     }
     return { top: 0, left: 0, width: 0 };
   };
 
+  // Остальной код без изменений
   const changeStatus = async (apartmentId, newStatus, apartType) => {
     try {
-      // Формируем URL с apartment_id и apart_type
       const url = `${HOSTLINK}/tables/apartment/${apartmentId}/change_status?apart_type=${apartType}`;
-
-      // Отправляем POST-запрос
       const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ new_status: newStatus }), // Тело запроса
+        body: JSON.stringify({ new_status: newStatus }),
       });
 
-      // Обработка ответа
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Ошибка при изменении статуса");
@@ -75,7 +95,7 @@ export default function DetailsStatusCell({
     } catch (error) {
       console.error("Ошибка:", error);
       alert("Не удалось изменить статус. Попробуйте снова.");
-      throw error; // Пробрасываем ошибку для дальнейшей обработки
+      throw error;
     }
   };
 
@@ -108,17 +128,16 @@ export default function DetailsStatusCell({
 
   const handleStatusSelect = (status) => {
     if (status === "Отказ") {
-      setSelectedStatus(status); // Сохраняем выбранный статус
-      setShowRejectModal(true); // Показываем модальное окно
+      setSelectedStatus(status);
+      setShowRejectModal(true);
     } else {
-      changeStatus(selectedRowId, status, apartType); // Отправляем запрос
+      changeStatus(selectedRowId, status, apartType);
     }
-    setIsOpen(false); // Закрываем выпадающий список
+    setIsOpen(false);
   };
 
   const handleAcceptReject = async () => {
     if (selectedStatus) {
-      // Создаем объект с данными для отправки
       const declineReason = {
         min_floor: minFloor,
         max_floor: maxFloor,
@@ -128,25 +147,20 @@ export default function DetailsStatusCell({
         notes: notes,
       };
 
-      // Выводим данные в консоль для проверки
       console.log("Данные для отправки:", declineReason);
 
       try {
-        // Устанавливаем причину отмены
         await setCancellReason(selectedRowId, declineReason);
-
-        // Меняем статус на "Отказ"
         await changeStatus(selectedRowId, selectedStatus, apartType);
 
-        // Закрываем модальное окно и сбрасываем состояния
         setShowRejectModal(false);
         setSelectedStatus(null);
-        setMinFloor(""); // Сбрасываем минимальный этаж
-        setMaxFloor(""); // Сбрасываем максимальный этаж
-        setUnom(""); // Сбрасываем UNOM
-        setEntrance(""); // Сбрасываем подъезд
-        setApartment_layout(""); // Сбрасываем планировку
-        setNotes(""); // Сбрасываем комментарий
+        setMinFloor("");
+        setMaxFloor("");
+        setUnom("");
+        setEntrance("");
+        setApartment_layout("");
+        setNotes("");
       } catch (error) {
         console.error("Ошибка при обработке отказа:", error);
         alert("Не удалось обработать отказ. Попробуйте снова.");
@@ -171,6 +185,7 @@ export default function DetailsStatusCell({
             colors={colors}
             position={getDropdownPosition()}
             onSelect={handleStatusSelect}
+            dropdownRef={dropdownRef} // Передаем ссылку на выпадающий список
           />
         )}
       </div>
@@ -179,9 +194,8 @@ export default function DetailsStatusCell({
       {showRejectModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-md">
-            {/* Кнопка закрытия (крестик) */}
             <button
-              onClick={() => setShowRejectModal(false)} // Закрываем окно без изменения статуса
+              onClick={() => setShowRejectModal(false)}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
             >
               <svg
@@ -200,7 +214,6 @@ export default function DetailsStatusCell({
               </svg>
             </button>
 
-            {/* Адрес */}
             <h2 className="text-lg font-semibold mb-4">
               {apartmentDetails
                 ? apartmentDetails.house_address +
@@ -209,7 +222,6 @@ export default function DetailsStatusCell({
                 : ""}
             </h2>
 
-            {/* От какого этажа */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Этажность
@@ -234,7 +246,6 @@ export default function DetailsStatusCell({
               </div>
             </div>
 
-            {/* Дом (выпадающий список) */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Дом
@@ -248,11 +259,9 @@ export default function DetailsStatusCell({
                 <option value="1">Дом 1</option>
                 <option value="2">Дом 2</option>
                 <option value="3">Дом 3</option>
-                {/* Добавьте больше опций по необходимости */}
               </select>
             </div>
 
-            {/* Секция */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Секция
@@ -266,7 +275,6 @@ export default function DetailsStatusCell({
               />
             </div>
 
-            {/* Планировка */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Планировка
@@ -280,7 +288,6 @@ export default function DetailsStatusCell({
               />
             </div>
 
-            {/* Общий комментарий */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Общий комментарий
@@ -294,7 +301,6 @@ export default function DetailsStatusCell({
               />
             </div>
 
-            {/* Кнопка "Принять" */}
             <button
               onClick={handleAcceptReject}
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full"
@@ -309,9 +315,10 @@ export default function DetailsStatusCell({
 }
 
 // Компонент для выпадающего списка (рендерится через портал)
-function Dropdown({ colors, position, onSelect }) {
+function Dropdown({ colors, position, onSelect, dropdownRef }) {
   return ReactDOM.createPortal(
     <div
+      ref={dropdownRef} // Используем переданную ссылку
       className="fixed z-50 bg-white shadow-lg rounded-md max-h-40 overflow-y-auto scrollbar-custom text-center"
       style={{
         top: position.top,
@@ -329,6 +336,6 @@ function Dropdown({ colors, position, onSelect }) {
         </div>
       ))}
     </div>,
-    document.body // Рендерим вне таблицы
+    document.body
   );
 }

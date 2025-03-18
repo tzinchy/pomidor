@@ -12,16 +12,15 @@ import AdressCell from './Cells/AdressCell';
 import FamilyCell from './Cells/Fio';
 import PloshCell from './Cells/PloshCell';
 import StatusCell from './Cells/StatusCell';
-import Notes from './Cells/Notes';
+import NotesCell from './Cells/Notes';
 import ApartDetails from './ApartDetails';
 import { HOSTLINK } from '..';
 import AllFilters from './Filters/AllFilters';
 
 const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, 
-  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters }) => {
+  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters, rowSelection, setRowSelection }) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
-  const [rowSelection, setRowSelection] = useState({});
   const tableContainerRef = useRef(null);
   const [filteredApartments, setFilteredApartments] = useState(data);
   const [rooms, setRooms] = useState([]);
@@ -134,6 +133,19 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     }
   };
 
+  const handleNotesSave = async (rowData, newNotes) => {
+    try {
+      await axios.patch(
+        `${HOSTLINK}/apartment/${rowData.id}/notes`,
+        { notes: newNotes }
+      );
+      // Обновить данные таблицы после успешного сохранения
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+    } catch (error) {
+      console.error("Ошибка при сохранении:", error);
+    }
+  };
+
   const columns = useMemo(
     () => [
       {
@@ -154,7 +166,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
-        size: 10,
+        size: 20,
         enableSorting: false,
       },
       {
@@ -184,9 +196,14 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         size: 120,
       },
       {
-        header: 'Примечания',
-        accessorKey: 'notes',
-        cell: ({ row }) => <Notes props={row.original} />,
+        header: "Примечания",
+        accessorKey: "notes",
+        cell: ({ row }) => (
+          <NotesCell
+            props={row.original}
+            onSave={(rowData, newNotes) => handleNotesSave(rowData, newNotes)}
+          />
+        ),
         size: 250,
       },
     ],

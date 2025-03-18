@@ -190,7 +190,7 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId }) {
     try {
       // Отправляем запрос для каждого выбранного ID
       const requests = selectedIds.map(newApartId =>
-        fetch(`${HOSTLINK}/tables/apartment/${apartmentId}/manual_matching`, {
+        fetch(`${HOSTLINK}/tables/apartment/${apartmentId}/manual_matching?apart_type=OldApart`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
