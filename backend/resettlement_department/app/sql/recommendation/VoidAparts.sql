@@ -39,9 +39,10 @@ ranked_apartments AS (
         clr_dt as o on o.new_apart_id = na.new_apart_id
     LEFT JOIN 
         status s ON o.status_id = s.status_id
+    WHERE na.new_apart_id not in (select new_apart_id from clr_dt)
 )
 SELECT *
 FROM ranked_apartments
-WHERE ranked_apartments.history_id = (select history_id from apart_info) and ranked_apartments.room_count = (select room_count from apart_info)
-and (status_id is null or status_id != 7)
+WHERE ranked_apartments.room_count = (select room_count from apart_info)
+and (status_id is null or status_id not in (1,4,5,6,7))
 ORDER BY status;
