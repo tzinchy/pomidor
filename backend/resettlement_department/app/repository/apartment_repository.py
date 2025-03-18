@@ -211,11 +211,6 @@ class ApartmentRepository:
         query_params = {"apart_id": apart_id}
 
         if apart_type == "NewApartment":
-<<<<<<< HEAD
-            query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartById.sql")
-        elif apart_type == "OldApart":
-            query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/OldApartById.sql")
-=======
             query = f"""
                 WITH old_apartment_list AS (
                     SELECT 
@@ -332,7 +327,6 @@ class ApartmentRepository:
                 ORDER BY 
                     fs.affair_id;
             """
->>>>>>> main
         else:
             raise ValueError(f"Unsupported apartment type: {apart_type}")
         print(query)
