@@ -1,5 +1,6 @@
 WITH ranked_apartments AS (
     SELECT
+        offer_id,
         house_address,
         apart_number,
         district,
