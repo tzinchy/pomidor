@@ -76,11 +76,31 @@ export default function DropdownFilter({ item, data, func, filterType, isFilters
                     <path d="M12 8v8"></path>
                 </svg>
                 {item}
+                {selectedValues.length > 0 && (
+                    <>
+                        <span className="mx-2">|</span>
+                        <div className="flex items-center space-x-1">
+                            {selectedValues.length > 2 ? (
+                                <span className="bg-gray-100 text-xs px-2 py-1 rounded">
+                                    {selectedValues.length} выбрано
+                                </span>
+                            ) : (
+                                selectedValues.map((value) => (
+                                    <span
+                                        key={value}
+                                        className="bg-gray-100 text-xs px-2 py-1 rounded"
+                                    >
+                                        {value}
+                                    </span>
+                                ))
+                            )}
+                        </div>
+                    </>
+                )}
             </button>
 
             {dropdownState && (
                 <div
-                    
                     className="fixed bg-white transition-transform duration-300 ease-in-out z-50 dropdown-open"
                     style={{ top: "5%" }}
                 >

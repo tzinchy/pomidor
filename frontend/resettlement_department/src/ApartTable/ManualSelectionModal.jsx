@@ -55,22 +55,6 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId }) {
     }
   };
 
-  // Обработчик изменения фильтров
-  const handleFilterChange = useCallback((filterType, selectedValues) => {
-    setFilters((prevFilters) => {
-      // Если selectedValues пуст, удаляем ключ filterType из объекта
-      if (selectedValues.length === 0) {
-        const { [filterType]: _, ...rest } = prevFilters;
-        return rest;
-      }
-      // Иначе обновляем значение для filterType
-      return {
-        ...prevFilters,
-        [filterType]: selectedValues,
-      };
-    });
-  }, []);
-
   // Применение фильтров и поиска к данным
   useEffect(() => {
     if (!data || data.length === 0) return;
@@ -238,27 +222,26 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId }) {
           </button>
         </div>
 
-        {/* Поисковая строка */}
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Поиск по адресу..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
         {/* Фильтры */}
         <div className="flex mb-2">
-          <div className="flex gap-4 mb-4">
+          {/* Поисковая строка */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Поиск по адресу..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="flex gap-4 mx-4">
             <div className="flex items-center gap-2">
               <label>Площадь от:</label>
               <input
-                type="number"
                 value={minArea}
                 onChange={(e) => setMinArea(e.target.value)}
-                className="w-24 px-2 py-1 border rounded"
+                className="w-14 px-2 py-1 border rounded"
                 placeholder="мин"
                 step="0.1"
               />
@@ -266,10 +249,9 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId }) {
             <div className="flex items-center gap-2">
               <label>до:</label>
               <input
-                type="number"
                 value={maxArea}
                 onChange={(e) => setMaxArea(e.target.value)}
-                className="w-24 px-2 py-1 border rounded"
+                className="w-14 px-2 py-1 border rounded"
                 placeholder="макс"
                 step="0.1"
               />
@@ -297,21 +279,78 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId }) {
             <table className="w-full table-fixed">
               <thead className="sticky top-0 backdrop-blur-md">
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="px-4 py-2 text-left font-bold"
-                        style={{ width: `${header.getSize()}px` }}
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
+                                    <tr key={headerGroup.id} className="hover:bg-muted/50 transition-colors">
+                                      {headerGroup.headers.map((header) => {
+                                        const isSelectColumn = header.id === 'select'; // Проверяем, является ли колонка первой (с чекбоксами)
+                                        
+                                        return (
+                                          <th
+                                            key={header.id}
+                                            onClick={!isSelectColumn ? header.column.getToggleSortingHandler() : undefined} // Отключаем сортировку для первой колонки
+                                            className="px-4 py-2 border-b-2 border-gray-300 text-left text-sm font-semibold text-gray-600 tracking-wider cursor-pointer hover:bg-gray-50"
+                                            style={{ width: `${header.column.columnDef.size}px` }}
+                                          >
+                                            <div className="flex items-center">
+                                              {flexRender(header.column.columnDef.header, header.getContext())}
+                                              
+                                              {/* Показываем иконки сортировки только для колонок, не являющихся первой */}
+                                              {!isSelectColumn && (
+                                                <>
+                                                  {header.column.getIsSorted() === 'asc' ? (
+                                                    <svg
+                                                      xmlns="http://www.w3.org/2000/svg"
+                                                      width="24"
+                                                      height="24"
+                                                      viewBox="0 0 24 24"
+                                                      fill="none"
+                                                      stroke="currentColor"
+                                                      strokeWidth="2"
+                                                      strokeLinecap="round"
+                                                      strokeLinejoin="round"
+                                                      className="lucide lucide-chevron-up h-4 w-4 -translate-x-[-25%] transition-transform scale-100"
+                                                    >
+                                                      <path d="m18 15-6-6-6 6"></path>
+                                                    </svg>
+                                                  ) : header.column.getIsSorted() === 'desc' ? (
+                                                    <svg
+                                                      xmlns="http://www.w3.org/2000/svg"
+                                                      width="24"
+                                                      height="24"
+                                                      viewBox="0 0 24 24"
+                                                      fill="none"
+                                                      stroke="currentColor"
+                                                      strokeWidth="2"
+                                                      strokeLinecap="round"
+                                                      strokeLinejoin="round"
+                                                      className="lucide lucide-chevron-up h-4 w-4 -translate-x-[-25%] transition-transform rotate-180 scale-100"
+                                                    >
+                                                      <path d="m18 15-6-6-6 6"></path>
+                                                    </svg>
+                                                  ) : (
+                                                    <svg
+                                                      xmlns="http://www.w3.org/2000/svg"
+                                                      width="24"
+                                                      height="24"
+                                                      viewBox="0 0 24 24"
+                                                      fill="none"
+                                                      stroke="currentColor"
+                                                      strokeWidth="2"
+                                                      strokeLinecap="round"
+                                                      strokeLinejoin="round"
+                                                      className="lucide lucide-chevrons-up-down text-muted-foreground/40 group-hover:text-muted-foreground ml-1 h-4 w-4 transition-transform scale-100"
+                                                    >
+                                                      <path d="m7 15 5 5 5-5"></path>
+                                                      <path d="m7 9 5-5 5 5"></path>
+                                                    </svg>
+                                                  )}
+                                                </>
+                                              )}
+                                            </div>
+                                          </th>
+                                        );
+                                      })}
+                                    </tr>
+                                  ))}
               </thead>
               <tbody>
                 {table.getRowModel().rows.map((row) => (

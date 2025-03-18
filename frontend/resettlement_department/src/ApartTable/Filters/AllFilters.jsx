@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import DropdownFilter from "./DropdownFilter";
 
-export default function AllFilters({handleFilterChange, rooms, matchCount, apartType}){
+export default function AllFilters({handleFilterChange, rooms, matchCount, apartType, setFilters}){
     const StatusFilters = ['Не подобрано', "Согласие", 'Отказ', "Суд", "Фонд компенсация", "Фонд докупка", "Ожидание", 'Ждёт одобрения'];
     const [isQueueChecked, setIsQueueChecked] = useState(false); // Состояние для чек-бокса "Очередники"
 
