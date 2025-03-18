@@ -6,9 +6,11 @@ from schema.apartment import (
     ManualMatchingSchema,
     SetPrivateStatusSchema,
     DeclineReasonSchema,
+    NewApartTableSchema, 
+    OldApartTableSchema
 )
 from service.rematch_service import rematch
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, Union
 from schema.status import StatusUpdate
 
 
@@ -73,7 +75,7 @@ async def get_apartments(
         example=[1, 2, 3],
     ),
     is_queue: bool = None,
-    is_private: bool = None,
+    is_private: bool = None
 ):
     """
     Получить отфильтрованный список квартир с возможностью фильтрации по:
@@ -103,7 +105,7 @@ async def get_apartments(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# Получение информации по конкретному апартаменту
+# Получение информации по конкретной квартире
 @router.get("/apartment/{apartment_id}")
 async def get_apartment_by_id(
     apartment_id: int,
@@ -118,13 +120,13 @@ async def get_apartment_by_id(
 @router.post("/apartment/{apartment_id}/manual_matching")
 async def manual_matching(
     apartment_id: int,
+    offer_id : int,
     manual_selection: ManualMatchingSchema = Body(
         ..., description="Схема для ручного сопоставления"
     ),
-    apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
 ):
     return await apartment_service.manual_matching(
-        apartment_id, manual_selection.new_apart_id
+        apartment_id, offer_id, manual_selection.new_apart_id
     )
 
 
@@ -154,15 +156,16 @@ def rematch_for_family(rematch_list: RematchSchema):
     return {"res": res}
 
 
-@router.post("/apartment/{apartment_id}/change_status")
+@router.post("/apartment/{apartment_id}/{new_apartment_id}change_status")
 async def change_status(
     apartment_id: int,
+    new_apartment_id : int,
     new_status: StatusUpdate = Body(..., description="Доступные статусы"),
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
 ):
     try:
         await apartment_service.update_status_for_apart(
-            apartment_id, new_status.new_status.value, apart_type
+            apartment_id, new_apartment_id, new_status.new_status.value, apart_type
         )
         return {"message": "Status updated successfully"}
     except Exception as e:

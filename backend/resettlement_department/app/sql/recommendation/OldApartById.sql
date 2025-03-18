@@ -1,8 +1,8 @@
-WITH unnset_offer AS (
+WITH unnested_offer AS (
     SELECT 
         offer_id,
         affair_id,
-        (KEY)::integer as new_apart_id,
+        (KEY)::integer AS new_apart_id,
         (VALUE->'status_id')::integer AS status_id,
         sentence_date, 
         answer_date, 
@@ -11,13 +11,13 @@ WITH unnset_offer AS (
         declined_reason_id
     FROM offer, 
     jsonb_each(new_aparts)
-    ORDER BY created_at ASC, updated_at ASC
 ),
 joined_aparts AS (
     SELECT 
         o.offer_id,
         o.affair_id,
-        JSON_AGG(
+        JSON_OBJECT_AGG(
+            o.new_apart_id,
             JSON_BUILD_OBJECT(
                 'house_address', na.house_address,
                 'apart_number', na.apart_number,
@@ -30,13 +30,13 @@ joined_aparts AS (
                 'type_of_settlement', na.type_of_settlement,
                 'notes', na.notes,
                 'status', s.status,
-                'sentence_date', o.sentence_date :: DATE,
-                'answer_date', o.answer_date :: DATE,
+                'sentence_date', o.sentence_date::DATE,
+                'answer_date', o.answer_date::DATE,
                 'decline_reason_notes', dr.notes
-            ) ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at ASC, o.updated_at ASC 
+            )
         ) AS new_apartments
     FROM 
-        unnset_offer o
+        unnested_offer o
     LEFT JOIN 
         new_apart na ON o.new_apart_id = na.new_apart_id
     LEFT JOIN 
@@ -48,7 +48,6 @@ joined_aparts AS (
         o.affair_id
 )
 SELECT 
-    joined_aparts.offer_id,
     old_apart.affair_id, 
     old_apart.house_address,
     old_apart.apart_number,
@@ -61,7 +60,27 @@ SELECT
     old_apart.room_count,
     old_apart.type_of_settlement,
     old_apart.is_queue,
-    joined_aparts.new_apartments
-FROM old_apart  
-LEFT JOIN joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
-WHERE old_apart.affair_id = :apart_id;
+    JSON_OBJECT_AGG(
+        joined_aparts.offer_id,
+        joined_aparts.new_apartments
+		ORDER BY offer_id
+    ) AS offers
+FROM 
+    old_apart  
+LEFT JOIN 
+    joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
+WHERE 
+    old_apart.affair_id = :apart_id
+GROUP BY 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue;
