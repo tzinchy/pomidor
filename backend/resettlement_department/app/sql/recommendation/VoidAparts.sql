@@ -10,7 +10,9 @@ WITH clr_dt AS (
         jsonb_each(new_aparts)
 ),
 apart_info AS (
-    select history_id, room_count from old_apart where affair_id = :apart_id
+    SELECT history_id, room_count, is_queue 
+    FROM old_apart 
+    WHERE affair_id = :apart_id
 ),
 ranked_apartments AS (
     SELECT 
@@ -39,10 +41,14 @@ ranked_apartments AS (
         clr_dt as o on o.new_apart_id = na.new_apart_id
     LEFT JOIN 
         status s ON o.status_id = s.status_id
-    WHERE na.new_apart_id not in (select new_apart_id from clr_dt)
+    WHERE na.new_apart_id NOT IN (SELECT new_apart_id FROM clr_dt)
 )
 SELECT *
 FROM ranked_apartments
-WHERE ranked_apartments.room_count = (select room_count from apart_info)
-and (status_id is null or status_id not in (1,4,5,6,7))
+WHERE 
+    CASE 
+        WHEN (SELECT is_queue FROM apart_info) = 1 THEN TRUE
+        ELSE ranked_apartments.room_count = (SELECT room_count FROM apart_info)
+    END
+    AND (status_id IS NULL OR status_id NOT IN (1,4,5,6,7))
 ORDER BY status;
