@@ -31,12 +31,14 @@ export default function ApartPage() {
   const [lastSelectedMunicipal, setLastSelectedMunicipal] = useState('');
   const [lastSelectedAddres, setLastSelectedAddres] = useState('');
   const [filters, setFilters] = useState({}); // Состояние для хранения фильтров
+  const [rowSelection, setRowSelection] = useState({});
 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     resetFilters();
     fetchDistricts();
+    fetchAllAparts();
   }, [apartType]);
 
   useEffect(() => {
@@ -65,6 +67,21 @@ export default function ApartPage() {
         paramsSerializer
       });
       setDistricts(response.data);
+      setIsDetailsVisible(false);
+    } catch (error) {
+      console.error("Error fetching districts:", error.response?.data);
+    }
+  };
+
+  const fetchAllAparts = async () => {
+    try {
+      const response = await axios.get(`${HOSTLINK}/tables/apartments`, {
+        params: { apart_type: apartType },
+        paramsSerializer
+      });
+      setApartments(response.data);
+      setLoading(false);
+      console.log(response.data);
       setIsDetailsVisible(false);
     } catch (error) {
       console.error("Error fetching districts:", error.response?.data);
@@ -150,7 +167,7 @@ export default function ApartPage() {
       <Aside />
       <main className="relative flex flex-1 flex-col gap-4 p-2 sm:pl-16 bg-neutral-100">
         <div className="flex flex-col lg:flex-row text-gray-800 relative min-h-[98vh]">
-          <LeftBar
+          {/*<LeftBar
             apartType={apartType}
             setApartType={setApartType}
             APART_TYPES={APART_TYPES}
@@ -170,7 +187,8 @@ export default function ApartPage() {
             setLastSelectedMunicipal={setLastSelectedMunicipal}
             setLastSelectedAddres={setLastSelectedAddres}
             setFilters={setFilters}
-          />
+            setRowSelection={setRowSelection}
+          />*/}
 
           <div className="flex-1 overflow-auto">
             <ApartTable 
@@ -189,6 +207,8 @@ export default function ApartPage() {
               fetchApartments={fetchApartments}
               filters={filters}
               setFilters={setFilters}
+              rowSelection={rowSelection} 
+              setRowSelection={setRowSelection}
             />
           </div>
         </div>

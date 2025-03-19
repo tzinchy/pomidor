@@ -19,7 +19,8 @@ function LeftBar({
     setLoading,
     setLastSelectedMunicipal,
     setLastSelectedAddres,
-    setFilters
+    setFilters,
+    setRowSelection
   }) {
 
     const toggleExpand = (key) => {
@@ -39,13 +40,13 @@ function LeftBar({
                 <>
                   <div className="flex justify-around mb-4">
                     <button
-                      onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("OldApart"); setLoading(true); setFilters({});}}
+                      onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("OldApart"); setLoading(true); setFilters({}); setRowSelection({});}}
                       className={`p-8 py-4 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Семьи
                     </button>
                     <button
-                      onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("NewApartment"); setLoading(true); setFilters({});}}
+                      onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("NewApartment"); setLoading(true); setFilters({}); setRowSelection({});}}
                       className={`p-8 py-4 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Ресурс
@@ -114,6 +115,7 @@ function LeftBar({
                                         setLastSelectedAddres(null);
                                         fetchHouseAddresses(municipal);
                                         fetchApartments(null, municipal);
+                                        setRowSelection({});
                                       }}
                                       className="flex items-center px-2"
                                     >
@@ -158,6 +160,7 @@ function LeftBar({
                                               // По клику грузим квартиры этого адреса
                                               setLastSelectedAddres(address);
                                               fetchApartments([address], municipal);
+                                              setRowSelection({});
                                             }}
                                             className="flex items-center px-2"
                                           >

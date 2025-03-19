@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-export default function TryDropdown({ item, data, func, filterType, isFiltersReset }) {
+export default function DropdownFilter({ item, data, func, filterType, isFiltersReset }) {
     const [dropdownState, setDropdownState] = useState(false);
     const [selectedValues, setSelectedValues] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -52,7 +52,7 @@ export default function TryDropdown({ item, data, func, filterType, isFiltersRes
         : []; // Если data не массив, возвращаем пустой массив
 
     return (
-        <div className="flex items-center mr-4">
+        <div className="flex items-center mr-4" ref={container}>
             <button
                 onClick={() => setDropdownState(!dropdownState)}
                 type="button"
@@ -76,11 +76,31 @@ export default function TryDropdown({ item, data, func, filterType, isFiltersRes
                     <path d="M12 8v8"></path>
                 </svg>
                 {item}
+                {selectedValues.length > 0 && (
+                    <>
+                        <span className="mx-2">|</span>
+                        <div className="flex items-center space-x-1">
+                            {selectedValues.length > 2 ? (
+                                <span className="bg-gray-100 text-xs px-2 py-1 rounded">
+                                    {selectedValues.length} выбрано
+                                </span>
+                            ) : (
+                                selectedValues.map((value) => (
+                                    <span
+                                        key={value}
+                                        className="bg-gray-100 text-xs px-2 py-1 rounded"
+                                    >
+                                        {value}
+                                    </span>
+                                ))
+                            )}
+                        </div>
+                    </>
+                )}
             </button>
 
             {dropdownState && (
                 <div
-                    ref={container}
                     className="fixed bg-white transition-transform duration-300 ease-in-out z-50 dropdown-open"
                     style={{ top: "5%" }}
                 >

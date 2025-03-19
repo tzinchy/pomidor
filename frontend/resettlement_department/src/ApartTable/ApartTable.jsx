@@ -1,4 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+import { Menu, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -12,16 +14,24 @@ import AdressCell from './Cells/AdressCell';
 import FamilyCell from './Cells/Fio';
 import PloshCell from './Cells/PloshCell';
 import StatusCell from './Cells/StatusCell';
-import Notes from './Cells/Notes';
+import NotesCell from './Cells/Notes';
 import ApartDetails from './ApartDetails';
 import { HOSTLINK } from '..';
 import AllFilters from './Filters/AllFilters';
 
+// Добавьте SVG для иконки меню
+const MenuIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-menu">
+    <line x1="4" y1="12" x2="20" y2="12" />
+    <line x1="4" y1="6" x2="20" y2="6" />
+    <line x1="4" y1="18" x2="20" y2="18" />
+  </svg>
+);
+
 const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, 
-  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters }) => {
+  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters, rowSelection, setRowSelection }) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
-  const [rowSelection, setRowSelection] = useState({});
   const tableContainerRef = useRef(null);
   const [filteredApartments, setFilteredApartments] = useState(data);
   const [rooms, setRooms] = useState([]);
@@ -49,7 +59,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   // 2. Добавляем эффект для синхронизации с исходными данными
   useEffect(() => {
-    console.log(data);
     setFilteredApartments(data);
   }, [data]);
   
@@ -118,20 +127,30 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   const switchAparts = async () => {
     if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment')) return;
-    
+    console.log('rowSelection', rowSelection);
     try {
       await axios.post(
         `${HOSTLINK}/tables/switch_aparts`,
-        {},
         {
-          params: {
-            first_apart_id: parseInt(Object.keys(rowSelection)[0]),
-            second_apart_id: parseInt(Object.keys(rowSelection)[1])
-          }
+          first_apart_id: parseInt(Object.keys(rowSelection)[0]),
+          second_apart_id: parseInt(Object.keys(rowSelection)[1])
         }
       );
     } catch (error) {
       console.error("Error ", error.response?.data);
+    }
+  };
+
+  const handleNotesSave = async (rowData, newNotes) => {
+    try {
+      await axios.patch(
+        `${HOSTLINK}/apartment/${rowData.id}/notes`,
+        { notes: newNotes }
+      );
+      // Обновить данные таблицы после успешного сохранения
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+    } catch (error) {
+      console.error("Ошибка при сохранении:", error);
     }
   };
 
@@ -155,7 +174,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
-        size: 10,
+        size: 20,
         enableSorting: false,
       },
       {
@@ -185,9 +204,15 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         size: 120,
       },
       {
-        header: 'Примечания',
-        accessorKey: 'notes',
-        cell: ({ row }) => <Notes props={row.original} />,
+        header: "Примечания",
+        accessorKey: "notes",
+        cell: ({ row }) => (
+          <NotesCell
+            props={row.original}
+            apartType={apartType}
+            onSave={(rowData, newNotes) => handleNotesSave(rowData, newNotes)}
+          />
+        ),
         size: 250,
       },
     ],
@@ -238,22 +263,54 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   return (
     <div className='bg-neutral-100'>
-      <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
-          <AllFilters handleFilterChange={handleFilterChange} rooms={rooms} matchCount={matchCount} apartType={apartType}/>
+      <div className={`${/*collapsed ? 'ml-[25px]' : 'ml-[260px]'*/''} flex flex-wrap items-center mb-2 justify-between`}>
+        <AllFilters handleFilterChange={handleFilterChange} rooms={rooms} matchCount={matchCount} apartType={apartType} setFilters={setFilters}/>
         <div className='flex'>
-          <button 
-              onClick={rematch}
-              className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
+        <Menu as="div" className="relative inline-block text-left z-[102]">
+            <div>
+              <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
+                <MenuIcon />
+              </Menu.Button>
+            </div>
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
             >
-              Переподбор
-            </button>
-
-            <button 
-              onClick={switchAparts}
-              className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
-            >
-              Поменять подобранные квартиры
-            </button>
+              <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                <div className="px-1 py-1">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={rematch}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Переподбор
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={switchAparts}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Поменять квартиры
+                      </button>
+                    )}
+                  </Menu.Item>
+                </div>
+              </Menu.Items>
+            </Transition>
+          </Menu>
           <p className='ml-8 mr-2 text-gray-400'>{filteredApartments.length}</p>
         </div>
       </div>
@@ -277,7 +334,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             >
               <div
                 ref={tableContainerRef}
-                className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} overflow-auto rounded-md border h-[calc(100vh-1rem)] w-[calc(100% - 25px)] transition-all ease-in-out scrollbar-custom`}
+                className={`${/*collapsed ? 'ml-[25px]' : 'ml-[260px]'*/''} overflow-auto rounded-md border h-[calc(100vh-1rem)] w-[calc(100% - 25px)] transition-all ease-in-out scrollbar-custom`}
               >
                 <table className="text-sm w-full border-collapse backdrop-blur-md sticky top-0 z-30">
                   <thead className="border-b z-10 backdrop-blur-md shadow z-10">

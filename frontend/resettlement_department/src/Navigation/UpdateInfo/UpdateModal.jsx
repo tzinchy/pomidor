@@ -39,8 +39,8 @@ export default function UpdateDataButton() {
             </button>
             
             {isModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg items-center justify-items-center w-[30%]">
+                <div className=" fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="z-[102] bg-white p-6 rounded-lg shadow-lg items-center justify-items-center w-[30%]">
                         <h2 className="text-lg font-semibold mb-4">Обновление данных</h2>
                         
                         <div className="grid grid-cols-2 gap-4 items-center justify-items-center mb-4">
