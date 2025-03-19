@@ -27,5 +27,4 @@ WITH ranked_apartments AS (
         status ON o.status_id = status.status_id
 )
 SELECT *
-FROM ranked_apartmentsa
-WHERE rn = 1
+FROM ranked_apartments
