@@ -209,6 +209,8 @@ export default function ApartPage() {
               setFilters={setFilters}
               rowSelection={rowSelection} 
               setRowSelection={setRowSelection}
+              setApartType={setApartType}
+              setLoading={setLoading}
             />
           </div>
         </div>

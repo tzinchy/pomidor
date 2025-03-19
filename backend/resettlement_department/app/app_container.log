@@ -944,3 +944,662 @@ ORDER BY house_address;
                 ORDER BY full_living_area
             
 2025-03-19 19:35:42,658 - INFO - Params: {'municipal_0': 'Богородское'}
+2025-03-19 19:54:40,667 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 19:54:41,929 - INFO - Executing query: 
+            SELECT DISTINCT municipal_district
+            FROM old_apart
+            WHERE district IN (:district_0)
+            ORDER BY municipal_district
+        
+2025-03-19 19:54:41,929 - INFO - Params: {'district_0': 'ВАО'}
+2025-03-19 19:54:42,749 - INFO - Executing query: 
+            SELECT DISTINCT house_address
+            FROM old_apart
+            WHERE municipal_district IN (:municipal_0)
+            ORDER BY house_address
+        
+2025-03-19 19:54:42,749 - INFO - Params: {'municipal_0': 'Богородское'}
+2025-03-19 19:54:42,754 - INFO - Executing query: WITH ranked_apartments AS (
+    SELECT
+        offer_id,
+        house_address,
+        apart_number,
+        district,
+        municipal_district,
+        floor,
+        fio,
+        full_living_area,
+        total_living_area,
+        living_area,
+        room_count,
+        type_of_settlement,
+        status.status,
+        oa.notes,
+        affair_id,
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+    FROM
+        old_apart oa
+    LEFT JOIN
+        offer o USING (affair_id)
+    LEFT JOIN
+        status ON o.status_id = status.status_id
+)
+SELECT *
+FROM ranked_apartments WHERE rn = 1 AND municipal_district IN (:municipal_0)
+2025-03-19 19:54:42,754 - INFO - Params: {'municipal_0': 'Богородское'}
+2025-03-19 19:54:45,305 - INFO - Executing query: WITH unnested_offer AS (
+    SELECT 
+        offer_id,
+        affair_id,
+        (KEY)::integer AS new_apart_id,
+        (VALUE->'status_id')::integer AS status_id,
+        sentence_date, 
+        answer_date, 
+        created_at, 
+        updated_at,
+        declined_reason_id
+    FROM offer, 
+    jsonb_each(new_aparts)
+),
+joined_aparts AS (
+    SELECT 
+        o.offer_id,
+        o.affair_id,
+        JSON_OBJECT_AGG(
+            o.new_apart_id::text,
+            JSON_BUILD_OBJECT(
+                'house_address', na.house_address,
+                'apart_number', na.apart_number,
+                'district', na.district,
+                'municipal_district', na.municipal_district,
+                'full_living_area', na.full_living_area,
+                'total_living_area', na.total_living_area,
+                'living_area', na.living_area,
+                'room_count', na.room_count,
+                'type_of_settlement', na.type_of_settlement,
+                'notes', na.notes,
+                'status', s.status,
+                'sentence_date', o.sentence_date::DATE,
+                'answer_date', o.answer_date::DATE,
+                'decline_reason_notes', dr.notes
+            )::jsonb
+        )::jsonb AS new_apartments
+    FROM 
+        unnested_offer o
+    LEFT JOIN 
+        new_apart na ON o.new_apart_id = na.new_apart_id
+    LEFT JOIN 
+        status s ON o.status_id = s.status_id
+    LEFT JOIN 
+        decline_reason dr ON o.declined_reason_id = dr.declined_reason_id
+    WHERE 
+        o.new_apart_id IS NOT NULL  
+    GROUP BY 
+        o.offer_id,
+        o.affair_id
+)
+SELECT 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue,
+    JSON_OBJECT_AGG(
+        joined_aparts.offer_id::text,
+        joined_aparts.new_apartments
+        ORDER BY joined_aparts.offer_id
+    ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL)::jsonb AS offers
+FROM 
+    old_apart  
+LEFT JOIN 
+    joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
+WHERE old_apart.affair_id = :apart_id
+GROUP BY 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue;
+
+2025-03-19 19:55:05,011 - INFO - Executing query: WITH unnested_offer AS (
+    SELECT 
+        offer_id,
+        affair_id,
+        (KEY)::integer AS new_apart_id,
+        (VALUE->'status_id')::integer AS status_id,
+        sentence_date, 
+        answer_date, 
+        created_at, 
+        updated_at,
+        declined_reason_id
+    FROM offer, 
+    jsonb_each(new_aparts)
+),
+joined_aparts AS (
+    SELECT 
+        o.offer_id,
+        o.affair_id,
+        JSON_OBJECT_AGG(
+            o.new_apart_id::text,
+            JSON_BUILD_OBJECT(
+                'house_address', na.house_address,
+                'apart_number', na.apart_number,
+                'district', na.district,
+                'municipal_district', na.municipal_district,
+                'full_living_area', na.full_living_area,
+                'total_living_area', na.total_living_area,
+                'living_area', na.living_area,
+                'room_count', na.room_count,
+                'type_of_settlement', na.type_of_settlement,
+                'notes', na.notes,
+                'status', s.status,
+                'sentence_date', o.sentence_date::DATE,
+                'answer_date', o.answer_date::DATE,
+                'decline_reason_notes', dr.notes
+            )::jsonb
+        )::jsonb AS new_apartments
+    FROM 
+        unnested_offer o
+    LEFT JOIN 
+        new_apart na ON o.new_apart_id = na.new_apart_id
+    LEFT JOIN 
+        status s ON o.status_id = s.status_id
+    LEFT JOIN 
+        decline_reason dr ON o.declined_reason_id = dr.declined_reason_id
+    WHERE 
+        o.new_apart_id IS NOT NULL  
+    GROUP BY 
+        o.offer_id,
+        o.affair_id
+)
+SELECT 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue,
+    JSON_OBJECT_AGG(
+        joined_aparts.offer_id::text,
+        joined_aparts.new_apartments
+        ORDER BY joined_aparts.offer_id
+    ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL)::jsonb AS offers
+FROM 
+    old_apart  
+LEFT JOIN 
+    joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
+WHERE old_apart.affair_id = :apart_id
+GROUP BY 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue;
+
+2025-03-19 20:16:09,195 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 20:16:28,352 - ERROR - Error executing query: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        ]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-03-19 20:16:32,860 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 20:16:49,194 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 20:17:12,226 - INFO - Executing query: WITH ranked_apartments AS (
+    SELECT
+        offer_id,
+        house_address,
+        apart_number,
+        district,
+        municipal_district,
+        floor,
+        fio,
+        full_living_area,
+        total_living_area,
+        living_area,
+        room_count,
+        type_of_settlement,
+        status.status,
+        oa.notes,
+        affair_id,
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+    FROM
+        old_apart oa
+    LEFT JOIN
+        offer o USING (affair_id)
+    LEFT JOIN
+        status ON o.status_id = status.status_id
+)
+SELECT *
+FROM ranked_apartments WHERE rn = 1
+2025-03-19 20:17:12,226 - INFO - Params: {}
+2025-03-19 20:17:12,526 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 20:17:59,421 - INFO - Executing query: WITH clr_dt AS (
+    SELECT 
+        offer_id,
+        affair_id, 
+        (KEY)::int AS new_apart_id, 
+        sentence_date, 
+        answer_date, 
+		created_at,
+		updated_at,
+        (VALUE->'status_id')::int AS status_id 
+    FROM 
+        offer, 
+        jsonb_each(new_aparts)
+),
+ranked_apartments AS (
+    SELECT 
+        o.offer_id,
+        na.house_address, 
+        na.apart_number, 
+        na.district, 
+        na.municipal_district,
+        na.floor,
+        na.full_living_area,
+        na.total_living_area, 
+        na.living_area, 
+        na.room_count, 
+        na.type_of_settlement, 
+        na.notes, 
+        na.new_apart_id,
+        s.status AS status,
+        is_private,
+        ROW_NUMBER() OVER (
+            PARTITION BY na.new_apart_id 
+            ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC
+        ) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY na.new_apart_id) AS selection_count, 
+        na.notes
+    FROM 
+        new_apart na
+    LEFT JOIN 
+        clr_dt as o on o.new_apart_id = na.new_apart_id
+    LEFT JOIN 
+        status s ON o.status_id = s.status_id
+)
+SELECT *
+FROM ranked_apartments
+ WHERE rn = 1
+2025-03-19 20:17:59,421 - INFO - Params: {}
+2025-03-19 20:17:59,421 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM new_apart
+            ORDER BY district
+        
+2025-03-19 20:18:04,384 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 20:18:04,385 - INFO - Executing query: WITH ranked_apartments AS (
+    SELECT
+        offer_id,
+        house_address,
+        apart_number,
+        district,
+        municipal_district,
+        floor,
+        fio,
+        full_living_area,
+        total_living_area,
+        living_area,
+        room_count,
+        type_of_settlement,
+        status.status,
+        oa.notes,
+        affair_id,
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+    FROM
+        old_apart oa
+    LEFT JOIN
+        offer o USING (affair_id)
+    LEFT JOIN
+        status ON o.status_id = status.status_id
+)
+SELECT *
+FROM ranked_apartments WHERE rn = 1
+2025-03-19 20:18:04,386 - INFO - Params: {}
+2025-03-19 20:19:36,773 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 20:19:36,773 - INFO - Executing query: WITH ranked_apartments AS (
+    SELECT
+        offer_id,
+        house_address,
+        apart_number,
+        district,
+        municipal_district,
+        floor,
+        fio,
+        full_living_area,
+        total_living_area,
+        living_area,
+        room_count,
+        type_of_settlement,
+        status.status,
+        oa.notes,
+        affair_id,
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+    FROM
+        old_apart oa
+    LEFT JOIN
+        offer o USING (affair_id)
+    LEFT JOIN
+        status ON o.status_id = status.status_id
+)
+SELECT *
+FROM ranked_apartments WHERE rn = 1
+2025-03-19 20:19:36,773 - INFO - Params: {}
+2025-03-19 20:19:48,375 - INFO - Executing query: 
+            SELECT DISTINCT municipal_district
+            FROM old_apart
+            WHERE district IN (:district_0)
+            ORDER BY municipal_district
+        
+2025-03-19 20:19:48,375 - INFO - Params: {'district_0': 'ВАО'}
+2025-03-19 20:19:48,852 - INFO - Executing query: 
+            SELECT DISTINCT house_address
+            FROM old_apart
+            WHERE municipal_district IN (:municipal_0)
+            ORDER BY house_address
+        
+2025-03-19 20:19:48,852 - INFO - Params: {'municipal_0': 'Богородское'}
+2025-03-19 20:19:48,922 - INFO - Executing query: WITH ranked_apartments AS (
+    SELECT
+        offer_id,
+        house_address,
+        apart_number,
+        district,
+        municipal_district,
+        floor,
+        fio,
+        full_living_area,
+        total_living_area,
+        living_area,
+        room_count,
+        type_of_settlement,
+        status.status,
+        oa.notes,
+        affair_id,
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+    FROM
+        old_apart oa
+    LEFT JOIN
+        offer o USING (affair_id)
+    LEFT JOIN
+        status ON o.status_id = status.status_id
+)
+SELECT *
+FROM ranked_apartments WHERE rn = 1 AND municipal_district IN (:municipal_0)
+2025-03-19 20:19:48,922 - INFO - Params: {'municipal_0': 'Богородское'}
+2025-03-19 20:21:32,970 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 20:21:32,971 - INFO - Executing query: WITH ranked_apartments AS (
+    SELECT
+        offer_id,
+        house_address,
+        apart_number,
+        district,
+        municipal_district,
+        floor,
+        fio,
+        full_living_area,
+        total_living_area,
+        living_area,
+        room_count,
+        type_of_settlement,
+        status.status,
+        oa.notes,
+        affair_id,
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+    FROM
+        old_apart oa
+    LEFT JOIN
+        offer o USING (affair_id)
+    LEFT JOIN
+        status ON o.status_id = status.status_id
+)
+SELECT *
+FROM ranked_apartments WHERE rn = 1
+2025-03-19 20:21:32,971 - INFO - Params: {}
+2025-03-19 20:21:34,299 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 20:21:34,304 - INFO - Executing query: WITH ranked_apartments AS (
+    SELECT
+        offer_id,
+        house_address,
+        apart_number,
+        district,
+        municipal_district,
+        floor,
+        fio,
+        full_living_area,
+        total_living_area,
+        living_area,
+        room_count,
+        type_of_settlement,
+        status.status,
+        oa.notes,
+        affair_id,
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+    FROM
+        old_apart oa
+    LEFT JOIN
+        offer o USING (affair_id)
+    LEFT JOIN
+        status ON o.status_id = status.status_id
+)
+SELECT *
+FROM ranked_apartments WHERE rn = 1
+2025-03-19 20:21:34,304 - INFO - Params: {}
+2025-03-19 20:23:03,660 - INFO - Executing query: WITH ranked_apartments AS (
+    SELECT
+        offer_id,
+        house_address,
+        apart_number,
+        district,
+        municipal_district,
+        floor,
+        fio,
+        full_living_area,
+        total_living_area,
+        living_area,
+        room_count,
+        type_of_settlement,
+        status.status,
+        oa.notes,
+        affair_id,
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+    FROM
+        old_apart oa
+    LEFT JOIN
+        offer o USING (affair_id)
+    LEFT JOIN
+        status ON o.status_id = status.status_id
+)
+SELECT *
+FROM ranked_apartments WHERE rn = 1
+2025-03-19 20:23:03,660 - INFO - Params: {}
+2025-03-19 20:23:03,661 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 20:31:51,371 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 20:31:51,371 - INFO - Executing query: WITH ranked_apartments AS (
+    SELECT
+        offer_id,
+        house_address,
+        apart_number,
+        district,
+        municipal_district,
+        floor,
+        fio,
+        full_living_area,
+        total_living_area,
+        living_area,
+        room_count,
+        type_of_settlement,
+        status.status,
+        oa.notes,
+        affair_id,
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+    FROM
+        old_apart oa
+    LEFT JOIN
+        offer o USING (affair_id)
+    LEFT JOIN
+        status ON o.status_id = status.status_id
+)
+SELECT *
+FROM ranked_apartments WHERE rn = 1
+2025-03-19 20:31:51,371 - INFO - Params: {}
+2025-03-19 20:35:27,214 - INFO - Executing query: WITH ranked_apartments AS (
+    SELECT
+        offer_id,
+        house_address,
+        apart_number,
+        district,
+        municipal_district,
+        floor,
+        fio,
+        full_living_area,
+        total_living_area,
+        living_area,
+        room_count,
+        type_of_settlement,
+        status.status,
+        oa.notes,
+        affair_id,
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+    FROM
+        old_apart oa
+    LEFT JOIN
+        offer o USING (affair_id)
+    LEFT JOIN
+        status ON o.status_id = status.status_id
+)
+SELECT *
+FROM ranked_apartments WHERE rn = 1
+2025-03-19 20:35:27,214 - INFO - Params: {}
+2025-03-19 20:35:27,215 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        
+2025-03-19 20:39:09,790 - INFO - Executing query: WITH ranked_apartments AS (
+    SELECT
+        offer_id,
+        house_address,
+        apart_number,
+        district,
+        municipal_district,
+        floor,
+        fio,
+        full_living_area,
+        total_living_area,
+        living_area,
+        room_count,
+        type_of_settlement,
+        status.status,
+        oa.notes,
+        affair_id,
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+    FROM
+        old_apart oa
+    LEFT JOIN
+        offer o USING (affair_id)
+    LEFT JOIN
+        status ON o.status_id = status.status_id
+)
+SELECT *
+FROM ranked_apartments WHERE rn = 1
+2025-03-19 20:39:09,790 - INFO - Params: {}
+2025-03-19 20:39:09,791 - INFO - Executing query: 
+            SELECT DISTINCT district 
+            FROM old_apart
+            ORDER BY district
+        

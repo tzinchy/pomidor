@@ -29,7 +29,8 @@ const MenuIcon = () => (
 );
 
 const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, 
-  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters, rowSelection, setRowSelection }) => {
+  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters, rowSelection, setRowSelection,
+  setApartType, setLoading}) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
   const tableContainerRef = useRef(null);
@@ -37,6 +38,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [rooms, setRooms] = useState([]);
   const [matchCount, setMatchCount] = useState([]);
   const [selectedRowId, setSelectedRowId] = useState();
+  const [filtersResetFlag, setFiltersResetFlag] = useState(false); // Флаг сброса
+  const [isQueueChecked, setIsQueueChecked] = useState(false); // Состояние для чек-бокса "Очередники"
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -261,10 +264,51 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     }
   };
 
+  const handleResetFilters = () => {
+    setFilters({});
+    setIsQueueChecked(false);
+    setFiltersResetFlag(prev => !prev); // Инвертируем флаг
+  };
+
+  const changeApartType= (apType) => {
+    if (apType !== apartType){
+      setIsDetailsVisible(false); 
+      setSelectedRow(false); 
+      setApartType(apType); 
+      setLoading(true); 
+      setFilters({}); 
+      setRowSelection({}); 
+      setFiltersResetFlag(prev => !prev);
+    }
+  }
+
   return (
     <div className='bg-neutral-100'>
       <div className={`${/*collapsed ? 'ml-[25px]' : 'ml-[260px]'*/''} flex flex-wrap items-center mb-2 justify-between`}>
-        <AllFilters handleFilterChange={handleFilterChange} rooms={rooms} matchCount={matchCount} apartType={apartType} setFilters={setFilters}/>
+        <AllFilters 
+          handleFilterChange={handleFilterChange} 
+          rooms={rooms} 
+          matchCount={matchCount} 
+          apartType={apartType} 
+          filtersResetFlag={filtersResetFlag} 
+          handleResetFilters={handleResetFilters}
+          isQueueChecked={isQueueChecked}
+          setIsQueueChecked={setIsQueueChecked}
+        />
+        <div className="flex justify-around">
+          <button
+            onClick={() => changeApartType('OldApart')}
+            className={`px-4 py-2 mr-2 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
+          >
+            Семьи
+          </button>
+          <button
+            onClick={() => changeApartType('NewApartment')}
+            className={`px-4 py-2 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
+          >
+            Ресурс
+          </button>
+        </div>
         <div className='flex'>
         <Menu as="div" className="relative inline-block text-left z-[102]">
             <div>
