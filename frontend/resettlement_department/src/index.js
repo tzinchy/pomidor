@@ -20,12 +20,12 @@ export const ASIDELINK = process.env.REACT_APP_REACT_LINK;
 root.render(
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<PrivateRoute><Koren /></PrivateRoute>} />
-        <Route path="/table_page" element={<PrivateRoute><Table_page /></PrivateRoute>} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard_page /></PrivateRoute>} />
-        <Route path="/aparts" element={<PrivateRoute><ApartPage /></PrivateRoute>} />
-        <Route path="/balance" element={<PrivateRoute><BalancePage /></PrivateRoute>} />
-        <Route path="/history" element={<PrivateRoute></PrivateRoute>} />
+        <Route path="/" element={<Koren />} />
+        <Route path="/table_page" element={<Table_page />} />
+        <Route path="/dashboard" element={<Dashboard_page />} />
+        <Route path="/aparts" element={<ApartPage />} />
+        <Route path="/balance" element={<BalancePage />} />
+        <Route path="/history" element={<HistoryPage />} />
         <Route path="/login" element={<LoginPage />} />
       </Routes>
     </BrowserRouter>,
