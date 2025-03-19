@@ -72,9 +72,9 @@ export default function DetailsStatusCell({
   };
 
   // Остальной код без изменений
-  const changeStatus = async (apartmentId, newStatus, apartType) => {
+  const changeStatus = async (apartmentId, newStatus) => {
     try {
-      const url = `${HOSTLINK}/tables/apartment/${apartmentId}/change_status?apart_type=${apartType}`;
+      const url = `${HOSTLINK}/tables/apartment/${apartmentId}/change_status`;
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -146,8 +146,6 @@ export default function DetailsStatusCell({
         apartment_layout: apartment_layout,
         notes: notes,
       };
-
-      console.log("Данные для отправки:", declineReason);
 
       try {
         await setCancellReason(selectedRowId, declineReason);

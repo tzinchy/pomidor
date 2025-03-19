@@ -209,6 +209,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         cell: ({ row }) => (
           <NotesCell
             props={row.original}
+            apartType={apartType}
             onSave={(rowData, newNotes) => handleNotesSave(rowData, newNotes)}
           />
         ),

@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { HOSTLINK } from "../..";
 
-export default function NotesCell(props) {
-  const value = props["props"];
-  console.log(value.affair_id);
+export default function NotesCell({props, apartType}) {
+  const value = props;
   const [isEditing, setIsEditing] = useState(false);
   const [notes, setNotes] = useState(value["notes"]);
   const inputRef = useRef(null);
+
+  const id = apartType === 'OldApart' ? 'affair_id' : 'new_apart_id';
 
   // Фокус на поле ввода при активации редактирования
   useEffect(() => {
@@ -22,15 +23,16 @@ export default function NotesCell(props) {
   };
 
   // Функция для отправки данных на сервер
-  const saveNotes = async (affairId, newNotes) => {
+  const saveNotes = async (apartment_id, newNotes, apartType) => {
     try {
-      const response = await fetch(`${HOSTLINK}/apartment/notes`, {
+      const response = await fetch(`${HOSTLINK}/tables/apartment/${apartment_id}/set_notes?apart_type=${apartType}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          affair_id: affairId,
+          apartment_id: apartment_id,
+          apart_type: apartType,
           notes: newNotes,
         }),
       });
@@ -51,7 +53,7 @@ export default function NotesCell(props) {
     setIsEditing(false);
     if (notes !== value["notes"]) {
       // Вызываем функцию сохранения, если данные изменились
-      saveNotes(value.affair_id, notes);
+      saveNotes(value[id], notes, apartType);
       props.onSave?.(value, notes); // Вызов родительской функции, если она передана
     }
   };

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import AdressCell from "./Cells/AdressCell";
 import PloshCell from "./Cells/PloshCell";
 import DetailsStatusCell from "./Cells/DetailsStatusCell";
 import { HOSTLINK } from "..";
-import ManualSelectionModal from "./ManualSelectionModal"; // Импортируем модальное окно
+import ManualSelectionModal from "./ManualSelectionModal";
+import DetailsAdressCell from "./Cells/DetailsCells/DetailsAddressCell";
 
 export default function ApartDetails({
   className,
@@ -17,12 +17,12 @@ export default function ApartDetails({
   lastSelectedMunicipal,
 }) {
   const [isManualSelectionOpen, setIsManualSelectionOpen] = useState(false); // Состояние для модального окна
+  console.log('apartmentDetails', apartmentDetails);
 
   function handleClose() {
     setIsDetailsVisible(false);
     setSelectedRow(false);
   }
-  console.log('apartmentDetails', apartmentDetails);
 
   const table = apartType === "OldApart" ? "new_apartments" : "old_apartments";
 
@@ -107,25 +107,54 @@ export default function ApartDetails({
           <div className="overflow-x-auto">
             <table className="text-sm caption-bottom w-full border-collapse bg-white">
               <tbody>
-                {apartmentDetails['offers'].map((value, index) => (
-                  <tr key={index} className={`bg-white border-b transition-colors`}>
-                    <td>
-                      <AdressCell props={value} />
-                    </td>
-                    <td>
-                      <PloshCell props={value} />
-                    </td>
-                    <DetailsStatusCell
-                      props={value}
-                      selectedRowId={selectedRowId}
-                      apartType={apartType}
-                      fetchApartments={fetchApartments}
-                      lastSelectedAddres={lastSelectedAddres}
-                      lastSelectedMunicipal={lastSelectedMunicipal}
-                      apartmentDetails={apartmentDetails}
-                    />
-                  </tr>
-                ))}
+                {Object.values(apartmentDetails.offers).map((value, index) => {
+                  const offerKeys = Object.keys(value); // Получаем ключи объекта offers
+                  const hasMultipleOffers = offerKeys.length > 1; // Проверяем, есть ли больше одного ключа
+                  return (
+                    <React.Fragment key={index}>
+                      {/* Основная строка */}
+                      <tr className={`bg-white border-b transition-colors ${hasMultipleOffers ? 'border-t-2 border-t-red-200' : ''}`}>
+                        <td>
+                          <DetailsAdressCell props={offerKeys.length > 0 ? value[offerKeys[0]] : value} />
+                        </td>
+                        <td>
+                          <PloshCell props={offerKeys.length > 0 ? value[offerKeys[0]] : value} />
+                        </td>
+                        <DetailsStatusCell
+                          props={offerKeys.length > 0 ? value[offerKeys[0]] : value} // Передаем первый элемент, если есть несколько
+                          selectedRowId={selectedRowId}
+                          apartType={apartType}
+                          fetchApartments={fetchApartments}
+                          lastSelectedAddres={lastSelectedAddres}
+                          lastSelectedMunicipal={lastSelectedMunicipal}
+                          apartmentDetails={apartmentDetails}
+                        />
+                      </tr>
+
+                      {/* Дополнительные строки, если есть несколько offers */}
+                      {hasMultipleOffers &&
+                        offerKeys.slice(1).map((key, subIndex) => (
+                          <tr key={`${index}-${subIndex}`} className={`bg-white border-b transition-colors ${key === offerKeys[offerKeys.length-1] ? 'border-b-2 border-b-red-200' : '' }`}>
+                            <td>
+                              <DetailsAdressCell props={value[key]} />
+                            </td>
+                            <td>
+                              <PloshCell props={value[key]} />
+                            </td>
+                            <DetailsStatusCell
+                              props={value[key]}
+                              selectedRowId={selectedRowId}
+                              apartType={apartType}
+                              fetchApartments={fetchApartments}
+                              lastSelectedAddres={lastSelectedAddres}
+                              lastSelectedMunicipal={lastSelectedMunicipal}
+                              apartmentDetails={apartmentDetails}
+                            />
+                          </tr>
+                        ))}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
 
