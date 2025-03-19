@@ -155,10 +155,10 @@ def rematch_for_family(rematch_list: RematchSchema):
     return {"res": res}
 
 
-@router.post("/apartment/{apartment_id}/{new_apartment_id}change_status")
+@router.post("/apartment/{apartment_id}/{new_apartment_id}/change_status")
 async def change_status(
     apartment_id: int,
-    new_apartment_id : int,
+    new_apartment_id: int,
     new_status: StatusUpdate = Body(..., description="Доступные статусы"),
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
 ):

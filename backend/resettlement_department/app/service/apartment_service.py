@@ -89,7 +89,7 @@ class ApartmentService:
         )
 
     async def update_status_for_apart(self, apart_id: int, new_apartment_id : int, status: str, apart_type):
-        return await self.apartment_repository.update_status_for_apart(self, apart_id, new_apartment_id, status, apart_type)
+        return await self.apartment_repository.update_status_for_apart(apart_id, new_apartment_id, status, apart_type)
 
     async def set_private_for_new_aparts(
         self, new_aparts: List[int], status: bool = True

@@ -359,7 +359,7 @@ class ApartmentRepository:
                 if apart_type == ApartTypeSchema.OLD:
                     query = text(read_sql_query(f'{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql'))
                     result = await session.execute(
-                        query, {"status": status, "apart_id": apart_id, "new_apartment_id": new_apartment_id}
+                        query, {"status": status, "apart_id": apart_id, "new_apart_id": str(new_apartment_id)}
                     )
                     await session.commit()
                     return result

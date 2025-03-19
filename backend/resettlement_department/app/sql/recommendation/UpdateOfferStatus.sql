@@ -1,19 +1,23 @@
-WITH changeStatus AS (
-    SELECT status_id FROM status WHERE status = :status
-),
-oldApartId AS (
-    SELECT (:apart_id)::bigint AS apart_id
+WITH updated_data AS (
+    SELECT
+        offer_id,
+        new_apart_id,
+        jsonb_set(
+            new_aparts->(new_apart_id),
+            '{status_id}',
+            to_jsonb((SELECT status_id FROM status WHERE status = :status))
+        ) AS updated_value
+    FROM
+        offer,
+        jsonb_each(new_aparts) AS each(new_apart_id, value)
+    WHERE
+        offer_id = (SELECT MAX(offer_id) FROM offer where affair_id = (:apart_id)) and new_apart_id = :new_apart_id and affair_id = :apart_id
 )
-UPDATE public.offer
-SET
-    status_id = (SELECT status_id FROM changeStatus), 
-    new_aparts = (
-        SELECT jsonb_object_agg(key, jsonb_set(value, '{status_id}', to_jsonb((SELECT status_id FROM changeStatus)), false))
-        FROM jsonb_each(new_aparts)
-    ) 
-WHERE affair_id = (SELECT apart_id FROM oldApartId)
-AND created_at = (
-    SELECT MAX(created_at) 
-    FROM public.offer 
-    WHERE affair_id = (SELECT apart_id FROM oldApartId)
-);
+UPDATE offer
+SET new_aparts = jsonb_set(
+    new_aparts,
+    ARRAY[updated_data.new_apart_id],
+    updated_data.updated_value
+)
+FROM updated_data
+WHERE offer.offer_id = updated_data.offer_id;
