@@ -1,97 +1,65 @@
 WITH unnset_offer AS (
     SELECT 
-        affair_id, 
-        (KEY)::int AS new_apart_id, 
+        offer_id,
+        affair_id,
+        (KEY)::integer as new_apart_id,
+        (VALUE->'status_id')::integer AS status_id,
         sentence_date, 
-        answer_date, 
-        (VALUE->'status_id')::int AS status_id 
-    FROM 
-        offer, 
-        jsonb_each(new_aparts)
+        answer_date,
+        created_at,
+        updated_at,
+        declined_reason_id
+    FROM offer, 
+    jsonb_each(new_aparts)
+    order by created_at ASC, updated_at ASC
 ),
-lft AS (
+joined_aparts AS (
     SELECT 
-        o.affair_id,
+        o.offer_id,
         o.new_apart_id,
-        na.house_address,
-        na.apart_number,
-        na.district,
-        na.municipal_district,
-        na.full_living_area,
-        na.total_living_area,
-        na.living_area,
-        na.room_count,
-        na.type_of_settlement,
-        na.notes,
-        s.status,
-        o.sentence_date,
-        o.answer_date
+        JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'house_address', old_apart.house_address,
+                'apart_number', old_apart.apart_number,
+                'district', old_apart.district,
+                'municipal_district', old_apart.municipal_district,
+                'full_living_area', old_apart.full_living_area,
+                'total_living_area', old_apart.total_living_area,
+                'living_area', old_apart.living_area,
+                'room_count', old_apart.room_count,
+                'type_of_settlement', old_apart.type_of_settlement,
+                'notes', old_apart.notes,
+                'status', s.status,
+                'sentence_date', o.sentence_date :: DATE,
+                'answer_date', o.answer_date :: DATE,
+                'decline_reason_notes', dr.notes
+            ) ORDER BY sentence_date DESC, answer_date DESC, o.created_at ASC, o.updated_at ASC
+        ) AS old_apartments
     FROM 
-        unnset_offer o 
-        LEFT JOIN new_apart na USING (new_apart_id)
-        LEFT JOIN status s ON o.status_id = s.status_id
-),
-old_apart_data AS (
-    SELECT 
-        oa.affair_id,
-        oa.house_address,
-        oa.apart_number,
-        oa.district,
-        oa.municipal_district,
-        oa.full_living_area,
-        oa.total_living_area,
-        oa.living_area,
-        oa.room_count,
-        oa.type_of_settlement,
-        o.sentence_date,
-        o.answer_date
-    FROM 
-        old_apart oa
-        LEFT JOIN unnset_offer o ON oa.affair_id = o.affair_id
+        unnset_offer o
+    LEFT JOIN 
+        old_apart ON old_apart.affair_id = o.affair_id
+    LEFT JOIN 
+        status s ON o.status_id = s.status_id
+    LEFT JOIN 
+        decline_reason AS dr USING (declined_reason_id)
+    GROUP BY 
+        o.offer_id,
+        o.new_apart_id
 )
 SELECT 
-	                na.new_apart_id,
-                            na.house_address,
-                            na.apart_number,
-                            na.district,
-                            na.municipal_district,
-                            na.full_living_area,
-                            na.total_living_area,
-                            na.living_area,
-                            na.room_count,
-    jsonb_build_object(
-        'old_apartments', 
-        jsonb_agg(
-            jsonb_build_object(
-                'house_address', oa.house_address,
-                'apart_number', oa.apart_number,
-                'district', oa.district,
-                'municipal_district', oa.municipal_district,
-                'full_living_area', oa.full_living_area,
-                'total_living_area', oa.total_living_area,
-                'living_area', oa.living_area,
-                'room_count', oa.room_count,
-                'type_of_settlement', oa.type_of_settlement,
-                'sentence_date', oa.sentence_date,
-                'answer_date', oa.answer_date
-            ) ORDER BY 
-                oa.sentence_date DESC NULLS LAST, 
-                oa.answer_date DESC NULLS LAST
-        )
-    ) AS result
-FROM 
-    lft na
-    LEFT JOIN old_apart_data oa ON na.affair_id = oa.affair_id
-    WHERE new_apart_id = {:new_apart_id}
-GROUP BY 
-    	                na.new_apart_id,
-                            na.house_address,
-                            na.apart_number,
-                            na.district,
-                            na.municipal_district,
-                            na.full_living_area,
-                            na.total_living_area,
-                            na.living_area,
-                            na.room_count
-ORDER BY 
-    na.new_apart_id;
+    joined_aparts.offer_id,
+    new_apart.new_apart_id, 
+    new_apart.house_address,
+    new_apart.apart_number,
+    new_apart.district,
+    new_apart.municipal_district,
+    new_apart.full_living_area,
+    new_apart.total_living_area,
+    new_apart.living_area,
+    new_apart.room_count,
+    new_apart.type_of_settlement,
+    joined_aparts.old_apartments
+FROM new_apart  
+LEFT JOIN joined_aparts USING (new_apart_id) 
+WHERE new_apart_id = :apart_id

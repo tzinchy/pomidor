@@ -28,12 +28,17 @@ export default function ApartPage() {
   const detailsRef = useRef(null);
   const [selectedRow, setSelectedRow] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+  const [lastSelectedMunicipal, setLastSelectedMunicipal] = useState('');
+  const [lastSelectedAddres, setLastSelectedAddres] = useState('');
+  const [filters, setFilters] = useState({}); // Состояние для хранения фильтров
+  const [rowSelection, setRowSelection] = useState({});
 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     resetFilters();
     fetchDistricts();
+    fetchAllAparts();
   }, [apartType]);
 
   useEffect(() => {
@@ -62,6 +67,21 @@ export default function ApartPage() {
         paramsSerializer
       });
       setDistricts(response.data);
+      setIsDetailsVisible(false);
+    } catch (error) {
+      console.error("Error fetching districts:", error.response?.data);
+    }
+  };
+
+  const fetchAllAparts = async () => {
+    try {
+      const response = await axios.get(`${HOSTLINK}/tables/apartments`, {
+        params: { apart_type: apartType },
+        paramsSerializer
+      });
+      setApartments(response.data);
+      setLoading(false);
+      console.log(response.data);
       setIsDetailsVisible(false);
     } catch (error) {
       console.error("Error fetching districts:", error.response?.data);
@@ -120,7 +140,6 @@ export default function ApartPage() {
       setApartments(response.data);
       setLoading(false);
       setIsDetailsVisible(false);
-      console.log(response.data);
     } catch (error) {
       console.error("Error fetching apartments:", error.response?.data);
     }
@@ -136,15 +155,10 @@ export default function ApartPage() {
         }
       );
       setApartmentDetails(response.data);
-      console.log(response.data);
     } catch (error) {
       console.error("Error fetching apartment details:", error.response?.data);
     }
   };
-
-  const filteredApartments = apartments.filter(apt =>
-    String(apt.new_apart_id).toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const handleToggleSidebar = () => setCollapsed(!collapsed);
 
@@ -152,8 +166,8 @@ export default function ApartPage() {
     <div className="bg-muted/60 flex min-h-screen w-full flex-col">
       <Aside />
       <main className="relative flex flex-1 flex-col gap-4 p-2 sm:pl-16 bg-neutral-100">
-        <div className="flex flex-col lg:flex-row bg-white text-gray-800 relative min-h-[98vh]">
-          <LeftBar
+        <div className="flex flex-col lg:flex-row text-gray-800 relative min-h-[98vh]">
+          {/*<LeftBar
             apartType={apartType}
             setApartType={setApartType}
             APART_TYPES={APART_TYPES}
@@ -170,11 +184,15 @@ export default function ApartPage() {
             setSelectedRow={setSelectedRow}
             setIsDetailsVisible={setIsDetailsVisible}
             setLoading={setLoading}
-          />
+            setLastSelectedMunicipal={setLastSelectedMunicipal}
+            setLastSelectedAddres={setLastSelectedAddres}
+            setFilters={setFilters}
+            setRowSelection={setRowSelection}
+          />*/}
 
           <div className="flex-1 overflow-auto">
             <ApartTable 
-              data={filteredApartments} 
+              data={apartments} 
               loading={loading} 
               selectedRow={selectedRow}
               setSelectedRow={setSelectedRow}
@@ -184,6 +202,13 @@ export default function ApartPage() {
               fetchApartmentDetails={fetchApartmentDetails}
               apartmentDetails={apartmentDetails}
               collapsed={collapsed}
+              lastSelectedMunicipal={lastSelectedMunicipal}
+              lastSelectedAddres={lastSelectedAddres}
+              fetchApartments={fetchApartments}
+              filters={filters}
+              setFilters={setFilters}
+              rowSelection={rowSelection} 
+              setRowSelection={setRowSelection}
             />
           </div>
         </div>

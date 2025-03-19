@@ -6,18 +6,6 @@ updt_history AS (
     SET status_id = 1
     WHERE history_id = (SELECT hs_id FROM hstr_id)
 ),
-updt_old_apart AS (
-    UPDATE old_apart
-    SET status_id = 6
-    WHERE history_id = (SELECT hs_id FROM hstr_id)
-),
-updt_new_apart AS (
-    UPDATE new_apart
-    SET status_id = 6
-    WHERE new_apart_id IN (
-        SELECT key::int AS new_apart_id  
-        FROM offer, jsonb_each(new_aparts)
-)),
 updt_offer AS (
     UPDATE offer
     SET
@@ -39,4 +27,4 @@ updt_offer AS (
             WHERE history_id = (SELECT hs_id FROM hstr_id)
         )
 )
-SELECT 1;
+SELECT 'done';

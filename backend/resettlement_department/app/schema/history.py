@@ -10,3 +10,9 @@ class HistoryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class EnvStatResponse(BaseModel):
+    id: int
+    name: str
+    timestamp: str
+    is_active: bool

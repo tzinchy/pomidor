@@ -28,7 +28,7 @@ def save_views_to_excel(
                         # Запросы для извлечения данных из базы данных
                         query_old_ranked = """
                             SELECT
-                                old_apart.old_apart_id as old_apart_id,
+                                old_apart.affair_id as old_apart_id,
                                 old_apart.room_count,
                                 old_apart.living_area,
                                 old_apart.is_special_needs_marker,
@@ -57,7 +57,8 @@ def save_views_to_excel(
                             FROM new_apart 
                             WHERE 1=1
                         """
-
+                        print('all okay')
+                        
                         # Подключаем фильтрацию для запросов
                         params_old, params_new = [], []
 
@@ -76,7 +77,9 @@ def save_views_to_excel(
 
                         df_old_ranked = pd.read_sql(query_old_ranked, conn, params=params_old)
                         df_new_ranked = pd.read_sql(query_new_ranked, conn, params=params_new)
-
+                        print(df_old_ranked)
+                        print('----')
+                        print(df_new_ranked)
                         # Получение максимальных рангов по количеству комнат из базы данных
                         max_rank_query = """
                             SELECT room_count, MAX(rank) as max_rank

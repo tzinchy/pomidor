@@ -55,8 +55,8 @@ export default function ActionsCell( {props, setData}) {
     }
   };
 
-  const download_balance = async (new_apartment_house_address, family_structure_house_address) => {
-    const requestBody = { "new_apartment_house_address": new_apartment_house_address, "family_structure_house_address": family_structure_house_address };
+  const download_balance = async (new_apartment_house_address,old_apartment_house_address) => {
+    const requestBody = { "new_apartment_house_address": new_apartment_house_address, "old_apartment_house_address": old_apartment_house_address };
     
     try {
       // Делаем запрос с responseType: 'arraybuffer' для скачивания файла

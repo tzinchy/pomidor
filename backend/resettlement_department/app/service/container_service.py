@@ -80,23 +80,31 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
 
     # Основной запрос
     query = """
-        SELECT o.house_address, o.apart_number, o.type_of_settlement, o.kpu_number, new_apart_id, 
-               n.house_address, n.apart_number, n.full_living_area, n.total_living_area, n.room_count, 
-               n.living_area, n.floor, cin_address, cin_schedule, dep_schedule, phone_osmotr, phone_otvet,  nd.unom, start_date, cin.otdel
-        FROM offer o
-        JOIN old_apart
-        JOIN new_apart n USING (new_apart_id)
-        JOIN cin ON cin.old_address = o.house_address
-        WHERE o.is_queue <> 1
+		with unnst AS (
+			SELECT 
+			affair_id, 
+			(KEY)::int as new_apart_id
+			FROM offer,
+			jsonb_each(new_aparts)
+		)
+		
+		SELECT oa.house_address, oa.apart_number, oa.type_of_settlement, oa.kpu_number, o.new_apart_id, 
+               na.house_address, na.apart_number, na.full_living_area, na.total_living_area, na.room_count, 
+               na.living_area, na.floor, cin_address, cin_schedule, dep_schedule, phone_osmotr, phone_otvet, oa.unom, start_date, cin.otdel
+        FROM unnst o
+        JOIN old_apart oa USING (affair_id)
+        JOIN new_apart na USING (new_apart_id) 
+        JOIN cin ON cin.old_address = oa.house_address
+        WHERE oa.is_queue <> 1
     """
     params = []
 
     # Добавляем условия в зависимости от входных параметров
     if old_selected_addresses:
-        query += " AND ol.house_address IN %s"
+        query += " AND oa.house_address IN %s"
         params.append(tuple(old_selected_addresses))
     if new_selected_addresses:
-        query += " AND n.house_address IN %s"
+        query += " AND na.house_address IN %s"
         params.append(tuple(new_selected_addresses))
 
     # Выполняем запрос

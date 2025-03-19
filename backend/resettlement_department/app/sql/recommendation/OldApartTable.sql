@@ -1,5 +1,6 @@
 WITH ranked_apartments AS (
     SELECT
+        offer_id,
         house_address,
         apart_number,
         district,
@@ -12,9 +13,11 @@ WITH ranked_apartments AS (
         room_count,
         type_of_settlement,
         status.status,
-        o.notes,
+        oa.notes,
         affair_id,
-        ROW_NUMBER() OVER (PARTITION BY o.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC) AS rn
+        is_queue,
+        ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
     FROM
         old_apart oa
     LEFT JOIN
@@ -24,4 +27,3 @@ WITH ranked_apartments AS (
 )
 SELECT *
 FROM ranked_apartments
-
