@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { HOSTLINK } from "../..";
 
 export default function NotesCell(props) {
   const value = props["props"];
@@ -20,12 +21,38 @@ export default function NotesCell(props) {
     setIsEditing(true);
   };
 
+  // Функция для отправки данных на сервер
+  const saveNotes = async (affairId, newNotes) => {
+    try {
+      const response = await fetch(`${HOSTLINK}/apartment/notes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          affair_id: affairId,
+          notes: newNotes,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Ошибка при сохранении примечаний");
+      }
+
+      const result = await response.json();
+      console.log("Примечания успешно сохранены:", result);
+    } catch (error) {
+      console.error("Ошибка:", error);
+    }
+  };
+
   // Обработчик сохранения при потере фокуса
   const handleBlur = () => {
     setIsEditing(false);
     if (notes !== value["notes"]) {
       // Вызываем функцию сохранения, если данные изменились
-      props.onSave?.(value, notes);
+      saveNotes(value.affair_id, notes);
+      props.onSave?.(value, notes); // Вызов родительской функции, если она передана
     }
   };
 
@@ -41,7 +68,7 @@ export default function NotesCell(props) {
             value={notes || ""}
             onChange={(e) => setNotes(e.target.value)}
             onBlur={handleBlur}
-            className="w-full border rounded focus:outline-none resize-none"
+            className="w-full rounded focus:outline-none resize-none"
             rows={3}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
