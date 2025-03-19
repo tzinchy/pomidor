@@ -1,5 +1,6 @@
 WITH clr_dt AS (
     SELECT 
+        offer_id,
         affair_id, 
         (KEY)::int AS new_apart_id, 
         sentence_date, 
@@ -11,6 +12,7 @@ WITH clr_dt AS (
 ),
 ranked_apartments AS (
     SELECT 
+        o.offer_id,
         na.house_address, 
         na.apart_number, 
         na.district, 

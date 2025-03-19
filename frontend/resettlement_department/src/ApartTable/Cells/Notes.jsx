@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 
 export default function NotesCell(props) {
   const value = props["props"];
+  console.log(value.affair_id);
   const [isEditing, setIsEditing] = useState(false);
   const [notes, setNotes] = useState(value["notes"]);
   const inputRef = useRef(null);

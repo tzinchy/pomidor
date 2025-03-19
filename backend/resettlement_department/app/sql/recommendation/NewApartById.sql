@@ -1,5 +1,6 @@
 WITH unnset_offer AS (
     SELECT 
+        offer_id,
         affair_id,
         (KEY)::integer as new_apart_id,
         (VALUE->'status_id')::integer AS status_id,
@@ -14,6 +15,7 @@ WITH unnset_offer AS (
 ),
 joined_aparts AS (
     SELECT 
+        o.offer_id,
         o.new_apart_id,
         JSON_AGG(
             JSON_BUILD_OBJECT(
@@ -42,9 +44,11 @@ joined_aparts AS (
     LEFT JOIN 
         decline_reason AS dr USING (declined_reason_id)
     GROUP BY 
+        o.offer_id,
         o.new_apart_id
 )
 SELECT 
+    joined_aparts.offer_id
     new_apart.new_apart_id, 
     new_apart.house_address,
     new_apart.apart_number,
