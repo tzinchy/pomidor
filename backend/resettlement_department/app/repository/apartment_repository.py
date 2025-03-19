@@ -200,7 +200,8 @@ class ApartmentRepository:
                 return [dict(row._mapping) for row in result]
             except Exception as error:
                 logger.error(f"Error executing query: {error}")
-                raise
+                print(error)
+                raise SomethingWrong
 
     async def get_apartment_by_id(self, apart_id: int, apart_type: str) -> dict:
         """
@@ -226,9 +227,10 @@ class ApartmentRepository:
                 if not data:
                     raise ValueError(f"Apartment with ID {apart_id} not found")
                 
-                return [row._asdict() for row in data] 
+                return [row._asdict() for row in data][0]
             except Exception as error:
                 logger.error(f"Error executing query: {error}")
+                print(error)
                 raise SomethingWrong
 
     async def get_house_address_with_room_count(self, apart_type):
@@ -448,3 +450,23 @@ class ApartmentRepository:
                 print(error)
                 await session.rollback()
                 raise SomethingWrong
+            
+    async def set_notes(self, apart_id : int, notes : str, apart_type : str): 
+        async with self.db() as session: 
+            try: 
+                if apart_type ==  ApartTypeSchema.OLD: 
+                    await session.execute(text("""
+                        UPDATE old_apart SET notes = :notes 
+                        WHERE affair_id = :apart_id
+                        """), {'notes' : notes, 'apart_id' : apart_id})
+                elif apart_type == ApartTypeSchema.NEW:
+                    await session.execute(text('''
+                        UPDATE new_apart SET notes = :notes 
+                        WHERE new_apart_id = :apart_id
+                        '''), {'notes' : notes, 'apart_id' : apart_id})
+                await session.commit() 
+                return {'status' : 'done'}
+            except Exception as e: 
+                print(e)
+                raise SomethingWrong
+                    

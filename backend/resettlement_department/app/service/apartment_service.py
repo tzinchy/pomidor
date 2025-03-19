@@ -117,3 +117,6 @@ class ApartmentService:
             apartment_layout,
             notes,
         )
+    
+    async def set_notes(self, apart_id : int, notes : str, apart_type : str): 
+        return await self.apartment_repository.set_notes(apart_id, notes, apart_type)

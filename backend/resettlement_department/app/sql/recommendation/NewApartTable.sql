@@ -5,6 +5,8 @@ WITH clr_dt AS (
         (KEY)::int AS new_apart_id, 
         sentence_date, 
         answer_date, 
+		created_at,
+		updated_at,
         (VALUE->'status_id')::int AS status_id 
     FROM 
         offer, 
@@ -29,9 +31,10 @@ ranked_apartments AS (
         is_private,
         ROW_NUMBER() OVER (
             PARTITION BY na.new_apart_id 
-            ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at DESC
+            ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC
         ) AS rn,
-        COUNT(o.affair_id) OVER (PARTITION BY na.new_apart_id) AS selection_count
+        COUNT(o.affair_id) OVER (PARTITION BY na.new_apart_id) AS selection_count, 
+        na.notes
     FROM 
         new_apart na
     LEFT JOIN 

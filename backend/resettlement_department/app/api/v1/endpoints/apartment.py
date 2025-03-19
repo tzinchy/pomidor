@@ -6,11 +6,10 @@ from schema.apartment import (
     ManualMatchingSchema,
     SetPrivateStatusSchema,
     DeclineReasonSchema,
-    NewApartTableSchema, 
-    OldApartTableSchema
+    SetNotesSchema
 )
 from service.rematch_service import rematch
-from typing import Optional, List, Literal, Union
+from typing import Optional, List, Literal
 from schema.status import StatusUpdate
 
 
@@ -197,3 +196,9 @@ async def set_cancell_reason(apartment_id: int, decline_reason: DeclineReasonSch
         decline_reason.apartment_layout,
         decline_reason.notes,
     )
+
+@router.post("/apartment/{apartment_id}/set_notes")
+async def set_notes(apartment_id : int,
+                    apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
+                    notes : SetNotesSchema = None):
+    return await apartment_service.set_notes(apartment_id, notes.notes, apart_type)
