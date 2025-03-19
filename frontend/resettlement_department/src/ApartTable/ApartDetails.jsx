@@ -103,11 +103,11 @@ export default function ApartDetails({
 
       {/* Контент */}
       <div className="p-4 overflow-y-auto">
-        {apartmentDetails[table] ? (
+        {apartmentDetails.offers ? (
           <div className="overflow-x-auto">
             <table className="text-sm caption-bottom w-full border-collapse bg-white">
               <tbody>
-                {apartmentDetails[table].map((value, index) => (
+                {apartmentDetails['offers'].map((value, index) => (
                   <tr key={index} className={`bg-white border-b transition-colors`}>
                     <td>
                       <AdressCell props={value} />
