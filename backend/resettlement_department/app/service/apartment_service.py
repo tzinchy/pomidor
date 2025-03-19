@@ -73,9 +73,9 @@ class ApartmentService:
             first_apart_id, second_apart_id
         )
 
-    async def manual_matching(self, old_apart_id, new_apart_id):
+    async def manual_matching(self, old_apart_id, offer_id, new_apart_id):
         return await self.apartment_repository.manual_matching(
-            old_apart_id, new_apart_id
+            old_apart_id, offer_id, new_apart_id
         )
 
     async def get_void_aparts_for_apartment(self, apartmentd_id):
@@ -88,10 +88,8 @@ class ApartmentService:
             apart_id, apart_type
         )
 
-    async def update_status_for_apart(self, apart_id: int, status: str, apart_type):
-        return await self.apartment_repository.update_status_for_apart(
-            apart_id, status, apart_type
-        )
+    async def update_status_for_apart(self, apart_id: int, new_apartment_id : int, status: str, apart_type):
+        return await self.apartment_repository.update_status_for_apart(self, apart_id, new_apartment_id, status, apart_type)
 
     async def set_private_for_new_aparts(
         self, new_aparts: List[int], status: bool = True
@@ -119,3 +117,6 @@ class ApartmentService:
             apartment_layout,
             notes,
         )
+    
+    async def set_notes(self, apart_id : int, notes : str, apart_type : str): 
+        return await self.apartment_repository.set_notes(apart_id, notes, apart_type)

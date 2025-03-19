@@ -50,3 +50,32 @@ class DeclineReasonSchema(BaseModel):
     entrance: Optional[str] = None
     apartment_layout: Optional[int] = None
     notes: Optional[str] = None
+
+class BaseApartmentTableSchema(BaseModel):
+    offer_id : Optional[int] = None,
+    house_address : Optional[str] = None,
+    apart_number : Optional[str] = None,
+    district: Optional[str] = None,
+    municipal_district : Optional[str] = None,
+    floor : Optional[int] = None,
+    fio : Optional[str] = None,
+    full_living_area : Optional[float] = None,
+    total_living_area : Optional[float] = None,
+    living_area : Optional[float] = None,
+    room_count : Optional[int] = None,
+    type_of_settlement : Optional[str] = None,
+    status : Optional[str] = None,
+    notes : Optional[str] = None,
+    rn : Optional[int] = None,
+    selection_count : Optional[int] = None
+
+class OldApartTableSchema(BaseApartmentTableSchema):
+    affair_id : Optional[int] = None,
+    is_queue : Optional[str] = None
+
+class NewApartTableSchema(BaseApartmentTableSchema):
+    new_apart_id : Optional[int] = None,
+    is_private : Optional[str] = None
+
+class SetNotesSchema(BaseModel):
+    notes : Optional[str] = None

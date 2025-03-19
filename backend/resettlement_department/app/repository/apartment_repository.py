@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class ApartmentRepository:
     def __init__(self, session_maker):
-        self.db = session_maker  # Это sessionmaker
+        self.db = session_maker 
 
     async def get_districts(self, apart_type: str) -> list[str]:
         """
@@ -196,10 +196,12 @@ class ApartmentRepository:
                 logger.info(f"Executing query: {query}")
                 logger.info(f"Params: {params}")
                 result = await session.execute(text(query), params)
+                
                 return [dict(row._mapping) for row in result]
             except Exception as error:
                 logger.error(f"Error executing query: {error}")
-                raise
+                print(error)
+                raise SomethingWrong
 
     async def get_apartment_by_id(self, apart_id: int, apart_type: str) -> dict:
         """
@@ -221,12 +223,14 @@ class ApartmentRepository:
             try:
                 logger.info(f"Executing query: {query}")
                 result = await session.execute(text(query), query_params)
-                data = result.fetchone()
+                data = result.fetchall()
                 if not data:
                     raise ValueError(f"Apartment with ID {apart_id} not found")
-                return dict(data._mapping)
+                
+                return [row._asdict() for row in data][0]
             except Exception as error:
                 logger.error(f"Error executing query: {error}")
+                print(error)
                 raise SomethingWrong
 
     async def get_house_address_with_room_count(self, apart_type):
@@ -272,10 +276,9 @@ class ApartmentRepository:
                 logger.error(f"Error switching apartments: {e}")
                 raise SomethingWrong
 
-    async def manual_matching(self, old_apart_id, new_apart_id):
+    async def manual_matching(self, old_apart_id, offer_id, new_apart_id):
         try:
             async with self.db() as session:
-                # Проверка существования записи
                 check_query = text("""
                     SELECT EXISTS (
                         SELECT 1
@@ -291,7 +294,7 @@ class ApartmentRepository:
                 if record_exists:
                     # Обновление записи
                     update_query = text(read_sql_query(f'{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql'))
-                    await session.execute(update_query, {"status" : "Отказ", "apart_id": old_apart_id})
+                    await session.execute(update_query, {"status" : "Отказ", "apart_id": old_apart_id, 'offer_id' : offer_id},)
                     print(
                         f"Обновлена последняя запись для old_apart_id {old_apart_id}: {new_apart_id}"
                     )
@@ -350,14 +353,13 @@ class ApartmentRepository:
                 print(error)
                 raise SomethingWrong
 
-    async def update_status_for_apart(self, apart_id, status, apart_type):
+    async def update_status_for_apart(self, apart_id, new_apartment_id, status, apart_type):
         async with self.db() as session:
             try:
                 if apart_type == ApartTypeSchema.OLD:
-
                     query = text(read_sql_query(f'{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql'))
                     result = await session.execute(
-                        query, {"status": status, "apart_id": apart_id}
+                        query, {"status": status, "apart_id": apart_id, "new_apartment_id": new_apartment_id}
                     )
                     await session.commit()
                     return result
@@ -448,3 +450,23 @@ class ApartmentRepository:
                 print(error)
                 await session.rollback()
                 raise SomethingWrong
+            
+    async def set_notes(self, apart_id : int, notes : str, apart_type : str): 
+        async with self.db() as session: 
+            try: 
+                if apart_type ==  ApartTypeSchema.OLD: 
+                    await session.execute(text("""
+                        UPDATE old_apart SET notes = :notes 
+                        WHERE affair_id = :apart_id
+                        """), {'notes' : notes, 'apart_id' : apart_id})
+                elif apart_type == ApartTypeSchema.NEW:
+                    await session.execute(text('''
+                        UPDATE new_apart SET notes = :notes 
+                        WHERE new_apart_id = :apart_id
+                        '''), {'notes' : notes, 'apart_id' : apart_id})
+                await session.commit() 
+                return {'status' : 'done'}
+            except Exception as e: 
+                print(e)
+                raise SomethingWrong
+                    

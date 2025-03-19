@@ -48,7 +48,7 @@ joined_aparts AS (
         o.new_apart_id
 )
 SELECT 
-    joined_aparts.offer_id
+    joined_aparts.offer_id,
     new_apart.new_apart_id, 
     new_apart.house_address,
     new_apart.apart_number,
