@@ -18,7 +18,7 @@ WITH ranked_apartments AS (
         is_queue,
         ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
         COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count,
-        old_apart.notes
+        oa.notes
     FROM
         old_apart oa
     LEFT JOIN
