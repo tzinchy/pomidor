@@ -359,7 +359,7 @@ class ApartmentRepository:
                 if apart_type == ApartTypeSchema.OLD:
                     query = text(read_sql_query(f'{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql'))
                     result = await session.execute(
-                        query, {"status": status, "apart_id": apart_id, "new_apartment_id": new_apartment_id}
+                        query, {"status": status, "apart_id": apart_id, "new_apart_id": str(new_apartment_id)}
                     )
                     await session.commit()
                     return result
@@ -394,7 +394,7 @@ class ApartmentRepository:
                 print(error)
                 raise SomethingWrong("Something went wrong while updating the apartments.")
             
-    async def set_cancell_reason(self, apartment_id, min_floor, max_floor, unom, entrance, apartment_layout, notes):
+    async def set_cancell_reason(self, apartment_id, new_apart_id, min_floor, max_floor, unom, entrance, apartment_layout, notes):
         async with self.db() as session:
             try:
                 # Вставляем данные в таблицу decline_reason
@@ -416,32 +416,43 @@ class ApartmentRepository:
 
                 # Обновляем статус в таблице offer
                 update_query = text('''
-                    WITH changeStatus AS (
-                        SELECT status_id 
-                        FROM status 
-                        WHERE status = :status
-                    ),
-                    latest_offer AS (
-                        SELECT offer_id 
-                        FROM public.offer 
-                        WHERE affair_id = :apart_id
-                        ORDER BY created_at DESC 
-                        LIMIT 1
+                    WITH updated_data AS (
+                        SELECT
+                            offer_id,
+                            new_apart_id,
+                            jsonb_set(
+                                jsonb_set(
+                                    new_aparts->(new_apart_id::text),
+                                    '{status_id}',
+                                    to_jsonb((SELECT status_id FROM status WHERE status = :status))
+                                ),
+                                '{decline_reason_id}',
+                                to_jsonb((:declined_reason_id)::int)
+                            ) AS updated_value
+                        FROM
+                            offer,
+                            jsonb_each(new_aparts) AS each(new_apart_id, value)
+                        WHERE
+                            offer_id = (SELECT MAX(offer_id) FROM offer where affair_id = :apart_id) 
+                            AND new_apart_id::text = (:new_apart_id)::text 
+                            AND affair_id = :apart_id
                     )
-                    UPDATE public.offer
+                    UPDATE offer
                     SET 
-                        status_id = (SELECT status_id FROM changeStatus),
-                        declined_reason_id = :declined_reason_id, 
-                    new_aparts = (
-                        SELECT jsonb_object_agg(key, jsonb_set(value, '{status_id}', to_jsonb((SELECT status_id FROM changeStatus)), false))
-                        FROM jsonb_each(new_aparts)
-                    ) 
-                    WHERE offer_id = (SELECT offer_id FROM latest_offer);
+                        new_aparts = jsonb_set(
+                            new_aparts,
+                            ARRAY[updated_data.new_apart_id::text],
+                            updated_data.updated_value
+                        ),
+                        status_id = (SELECT status_id FROM status WHERE status = :status)
+                    FROM updated_data
+                    WHERE offer.offer_id = updated_data.offer_id;
                 ''')
                 await session.execute(update_query, {
                     'status': 'Отказ',  
                     'apart_id': apartment_id,
-                    'declined_reason_id' : declined_reason_id  
+                    'declined_reason_id': declined_reason_id,
+                    'new_apart_id': str(new_apart_id)
                 })
 
                 await session.commit()

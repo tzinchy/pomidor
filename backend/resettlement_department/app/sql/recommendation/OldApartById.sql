@@ -2,23 +2,23 @@ WITH unnested_offer AS (
     SELECT 
         offer_id,
         affair_id,
-        (KEY)::integer AS new_apart_id,
-        (VALUE->'status_id')::integer AS status_id,
+        (key)::integer AS new_apart_id,
+        (value->'status_id')::integer AS status_id,
         sentence_date, 
         answer_date, 
         created_at, 
         updated_at,
-        declined_reason_id
+        (value->>'decline_reason_id')::integer AS decline_reason_id  -- Fixed: Extract from value
     FROM offer, 
-    jsonb_each(new_aparts)
+    jsonb_each(new_aparts) AS each(key, value)
 ),
 joined_aparts AS (
     SELECT 
         o.offer_id,
         o.affair_id,
-        JSON_OBJECT_AGG(
+        JSONB_OBJECT_AGG(  -- Use JSONB_OBJECT_AGG for efficiency
             o.new_apart_id::text,
-            JSON_BUILD_OBJECT(
+            JSONB_BUILD_OBJECT(  -- Use JSONB_BUILD_OBJECT to avoid casting
                 'house_address', na.house_address,
                 'apart_number', na.apart_number,
                 'district', na.district,
@@ -32,9 +32,16 @@ joined_aparts AS (
                 'status', s.status,
                 'sentence_date', o.sentence_date::DATE,
                 'answer_date', o.answer_date::DATE,
-                'decline_reason_notes', dr.notes
-            )::jsonb
-        )::jsonb AS new_apartments
+                'decline_reason_id', JSONB_BUILD_OBJECT(
+                    'min_floor', dr.min_floor, 
+                    'max_floor', dr.max_floor, 
+                    'unom', dr.unom, 
+                    'entrance', dr.entrance, 
+                    'apartment_layout', dr.apartment_layout, 
+                    'notes', dr.notes
+                )
+            )
+        ) AS new_apartments
     FROM 
         unnested_offer o
     LEFT JOIN 
@@ -42,7 +49,7 @@ joined_aparts AS (
     LEFT JOIN 
         status s ON o.status_id = s.status_id
     LEFT JOIN 
-        decline_reason dr ON o.declined_reason_id = dr.declined_reason_id
+        decline_reason dr ON o.decline_reason_id = dr.declined_reason_id  -- Fixed join condition
     WHERE 
         o.new_apart_id IS NOT NULL  
     GROUP BY 
@@ -62,11 +69,11 @@ SELECT
     old_apart.room_count,
     old_apart.type_of_settlement,
     old_apart.is_queue,
-    JSON_OBJECT_AGG(
+    JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
         joined_aparts.new_apartments
         ORDER BY joined_aparts.offer_id
-    ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL)::jsonb AS offers
+    ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL) AS offers
 FROM 
     old_apart  
 LEFT JOIN 
