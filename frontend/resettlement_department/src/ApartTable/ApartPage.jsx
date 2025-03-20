@@ -203,7 +203,7 @@ export default function ApartPage() {
               collapsed={collapsed}
               lastSelectedMunicipal={lastSelectedMunicipal}
               lastSelectedAddres={lastSelectedAddres}
-              fetchApartments={fetchAllAparts}
+              fetchApartments={fetchApartments}
               filters={filters}
               setFilters={setFilters}
               rowSelection={rowSelection} 

@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import DropdownFilter from "./DropdownFilter";
 import { areas } from "../../Filters/FilterData";
 import MunicipalDropdownFilter from "./MunicipalDropdownFilter";
+import SearchTry from "./SearchTry";
 
-export default function AllFilters({ handleFilterChange, rooms, matchCount, apartType, filtersResetFlag, handleResetFilters, isQueueChecked, setIsQueueChecked }) {
+export default function AllFilters({ handleFilterChange, rooms, matchCount, apartType, filtersResetFlag, handleResetFilters, isQueueChecked, setIsQueueChecked, setSearchQuery }) {
     const StatusFilters = ['Не подобрано', "Согласие", 'Отказ', "Суд", "Фонд компенсация", "Фонд докупка", "Ожидание", 'Ждёт одобрения'];
 
     const handleQueueChange = (e) => {
@@ -16,6 +17,7 @@ export default function AllFilters({ handleFilterChange, rooms, matchCount, apar
 
     return (
         <div className="flex">
+            <SearchTry placeholder={'Поиск по адреу'} setSearchQuery={setSearchQuery} />
             <DropdownFilter 
                 item={'АО'} 
                 data={areas.map(area => area.label).flat()} 

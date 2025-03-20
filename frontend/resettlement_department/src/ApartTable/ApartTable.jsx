@@ -40,6 +40,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [selectedRowId, setSelectedRowId] = useState();
   const [filtersResetFlag, setFiltersResetFlag] = useState(false); // Флаг сброса
   const [isQueueChecked, setIsQueueChecked] = useState(false); // Состояние для чек-бокса "Очередники"
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -92,6 +97,15 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
       let filtered = data;
 
+      if (searchQuery) {
+        filtered = filtered.filter((item) => {
+            // Проверяем поисковый запрос по нескольким полям
+            return (
+                item.house_address?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        });
+    }
+
       // Применяем каждый фильтр
       Object.entries(filters).forEach(([filterType, selectedValues]) => {
           if (selectedValues.length > 0) {
@@ -112,7 +126,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       });
 
       setFilteredApartments(filtered);
-  }, [data, filters]);
+  }, [data, filters, searchQuery]);
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
@@ -281,6 +295,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       setFiltersResetFlag(prev => !prev);
     }
   }
+  
 
   return (
     <div className='bg-neutral-100'>
@@ -294,6 +309,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           handleResetFilters={handleResetFilters}
           isQueueChecked={isQueueChecked}
           setIsQueueChecked={setIsQueueChecked}
+          setSearchQuery={handleSearchChange}
         />
         
         <div className='flex items-center'>
