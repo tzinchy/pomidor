@@ -81,7 +81,6 @@ export default function ApartPage() {
       });
       setApartments(response.data);
       setLoading(false);
-      console.log(response.data);
       setIsDetailsVisible(false);
     } catch (error) {
       console.error("Error fetching districts:", error.response?.data);
@@ -209,6 +208,8 @@ export default function ApartPage() {
               setFilters={setFilters}
               rowSelection={rowSelection} 
               setRowSelection={setRowSelection}
+              setApartType={setApartType}
+              setLoading={setLoading}
             />
           </div>
         </div>

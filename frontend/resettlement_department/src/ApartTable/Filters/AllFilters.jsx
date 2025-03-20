@@ -2,11 +2,10 @@ import React, { useState } from "react";
 import DropdownFilter from "./DropdownFilter";
 import { areas } from "../../Filters/FilterData";
 import MunicipalDropdownFilter from "./MunicipalDropdownFilter";
+import SearchTry from "./SearchTry";
 
-export default function AllFilters({ handleFilterChange, rooms, matchCount, apartType, setFilters }) {
+export default function AllFilters({ handleFilterChange, rooms, matchCount, apartType, filtersResetFlag, handleResetFilters, isQueueChecked, setIsQueueChecked, setSearchQuery }) {
     const StatusFilters = ['Не подобрано', "Согласие", 'Отказ', "Суд", "Фонд компенсация", "Фонд докупка", "Ожидание", 'Ждёт одобрения'];
-    const [isQueueChecked, setIsQueueChecked] = useState(false); // Состояние для чек-бокса "Очередники"
-    const [filtersResetFlag, setFiltersResetFlag] = useState(false); // Флаг сброса
 
     const handleQueueChange = (e) => {
         const isChecked = e.target.checked;
@@ -14,14 +13,11 @@ export default function AllFilters({ handleFilterChange, rooms, matchCount, apar
         handleFilterChange('is_queue', isChecked ? [1] : [0, 1]);
     };
 
-    const handleResetFilters = () => {
-        setFilters({});
-        setIsQueueChecked(false);
-        setFiltersResetFlag(prev => !prev); // Инвертируем флаг
-    };
+    
 
     return (
         <div className="flex">
+            <SearchTry placeholder={'Поиск по адреу'} setSearchQuery={setSearchQuery} />
             <DropdownFilter 
                 item={'АО'} 
                 data={areas.map(area => area.label).flat()} 

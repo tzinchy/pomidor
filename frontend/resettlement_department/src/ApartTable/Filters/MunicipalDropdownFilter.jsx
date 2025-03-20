@@ -54,7 +54,7 @@ export default function MunicipalDropdownFilter({ item, data, func, filterType, 
                 onClick={() => setDropdownState(!dropdownState)}
                 type="button"
                 aria-haspopup="dialog"
-                className="bg-white inline-flex items-center justify-center whitespace-nowrap text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-gray-100 rounded-md px-3 h-8 border-dashed"
+                className="bg-white font-medium inline-flex items-center justify-center whitespace-nowrap text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-gray-100 rounded-md px-3 h-8 border-dashed"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

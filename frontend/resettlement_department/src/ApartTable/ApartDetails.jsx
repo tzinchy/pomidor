@@ -4,6 +4,7 @@ import DetailsStatusCell from "./Cells/DetailsStatusCell";
 import { HOSTLINK } from "..";
 import ManualSelectionModal from "./ManualSelectionModal";
 import DetailsAdressCell from "./Cells/DetailsCells/DetailsAddressCell";
+import DeclineResonsCell from "./Cells/DetailsCells/DeclineResonsCell";
 
 export default function ApartDetails({
   className,
@@ -61,7 +62,6 @@ export default function ApartDetails({
       className={`relative z-20 flex flex-col bg-white rounded transition-all duration-300 shadow-lg ${className}`}
       style={{
         minWidth: 650 + "px",
-        maxWidth: "calc(100vw - 32px)",
         maxHeight: "calc(100vh)",
       }}
     >
@@ -128,7 +128,9 @@ export default function ApartDetails({
                           lastSelectedAddres={lastSelectedAddres}
                           lastSelectedMunicipal={lastSelectedMunicipal}
                           apartmentDetails={apartmentDetails}
+                          newApartId={offerKeys[0]}
                         />
+                        <DeclineResonsCell props={offerKeys.length > 0 ? value[offerKeys[0]] : value} />
                       </tr>
 
                       {/* Дополнительные строки, если есть несколько offers */}
@@ -149,7 +151,9 @@ export default function ApartDetails({
                               lastSelectedAddres={lastSelectedAddres}
                               lastSelectedMunicipal={lastSelectedMunicipal}
                               apartmentDetails={apartmentDetails}
+                              newApartId={key}
                             />
+                            <DeclineResonsCell props={offerKeys.length > 0 ? value[key] : value} />
                           </tr>
                         ))}
                     </React.Fragment>
