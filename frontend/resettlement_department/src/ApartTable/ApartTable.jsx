@@ -377,7 +377,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           <div className="flex flex-1 overflow-hidden">
             {/* Таблица */}
             <div
-              className={` rounded-md h-full transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[80vw]' : 'flex-grow'}`}
+              className={` rounded-md h-full transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
             >
               <div
                 ref={tableContainerRef}
@@ -519,7 +519,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               >
                 <div className="fixed inset-0 bg-opacity-50 lg:bg-transparent lg:relative">
                   <div
-                    className={`fixed min-w-[650px] max-w-[650px] h-[calc(100vh-1rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+                    className={`fixed min-w-[42vw] max-w-[42vw] h-[calc(100vh-1rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
                       isDetailsVisible ? 'translate-x-0' : 'translate-x-full'
                     }`}
                     style={{

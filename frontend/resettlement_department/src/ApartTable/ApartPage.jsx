@@ -81,7 +81,6 @@ export default function ApartPage() {
       });
       setApartments(response.data);
       setLoading(false);
-      console.log(response.data);
       setIsDetailsVisible(false);
     } catch (error) {
       console.error("Error fetching districts:", error.response?.data);
@@ -204,7 +203,7 @@ export default function ApartPage() {
               collapsed={collapsed}
               lastSelectedMunicipal={lastSelectedMunicipal}
               lastSelectedAddres={lastSelectedAddres}
-              fetchApartments={fetchApartments}
+              fetchApartments={fetchAllAparts}
               filters={filters}
               setFilters={setFilters}
               rowSelection={rowSelection} 

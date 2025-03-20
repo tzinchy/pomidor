@@ -10,6 +10,7 @@ export default function DetailsStatusCell({
   lastSelectedAddres,
   lastSelectedMunicipal,
   apartmentDetails,
+  newApartId
 }) {
   const val = props;
   const [isOpen, setIsOpen] = useState(false);
@@ -74,7 +75,7 @@ export default function DetailsStatusCell({
   // Остальной код без изменений
   const changeStatus = async (apartmentId, newStatus) => {
     try {
-      const url = `${HOSTLINK}/tables/apartment/${apartmentId}/change_status`;
+      const url = `${HOSTLINK}/tables/apartment/${apartmentId}/${parseInt(newApartId)}/change_status?apart_type=OldApart`;
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -102,7 +103,7 @@ export default function DetailsStatusCell({
   async function setCancellReason(apartmentId, declineReason) {
     try {
       const response = await fetch(
-        `${HOSTLINK}/tables/apartment/${apartmentId}/set_cancell_reason`,
+        `${HOSTLINK}/tables/apartment/${apartmentId}/${newApartId}/set_cancell_reason`,
         {
           method: "POST",
           headers: {
