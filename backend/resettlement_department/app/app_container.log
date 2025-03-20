@@ -944,3 +944,457 @@ ORDER BY house_address;
                 ORDER BY full_living_area
             
 2025-03-19 19:35:42,658 - INFO - Params: {'municipal_0': '�����������'}
+2025-03-20 11:10:40,326 - INFO - Executing query: WITH unnested_offer AS (
+    SELECT 
+        offer_id,
+        affair_id,
+        (KEY)::integer AS new_apart_id,
+        (VALUE->'status_id')::integer AS status_id,
+        sentence_date, 
+        answer_date, 
+        created_at, 
+        updated_at,
+        (VALUE->'decline_reason_id')::integer AS decline_reason_id
+    FROM offer, 
+    jsonb_each(new_aparts)
+),
+joined_aparts AS (
+    SELECT 
+        o.offer_id,
+        o.affair_id,
+        JSON_OBJECT_AGG(
+            o.new_apart_id::text,
+            JSON_BUILD_OBJECT(
+                'house_address', na.house_address,
+                'apart_number', na.apart_number,
+                'district', na.district,
+                'municipal_district', na.municipal_district,
+                'full_living_area', na.full_living_area,
+                'total_living_area', na.total_living_area,
+                'living_area', na.living_area,
+                'room_count', na.room_count,
+                'type_of_settlement', na.type_of_settlement,
+                'notes', na.notes,
+                'status', s.status,
+                'sentence_date', o.sentence_date::DATE,
+                'answer_date', o.answer_date::DATE,
+                'decline_reason_id', jsonb_build_object('min_floor', dr.min_floor, 'max_floor', dr.max_floor, 'unom', dr.unom, 'entrance', dr.entrance, 'apartment_layout', dr.apartment_layout, 'notes', dr.notes)
+            )::jsonb
+        )::jsonb AS new_apartments
+    FROM 
+        unnested_offer o
+    LEFT JOIN 
+        new_apart na ON o.new_apart_id = na.new_apart_id
+    LEFT JOIN 
+        status s ON o.status_id = s.status_id
+    LEFT JOIN 
+        decline_reason dr ON o.declined_reason_id = dr.declined_reason_id
+    WHERE 
+        o.new_apart_id IS NOT NULL  
+    GROUP BY 
+        o.offer_id,
+        o.affair_id
+)
+SELECT 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue,
+    JSON_OBJECT_AGG(
+        joined_aparts.offer_id::text,
+        joined_aparts.new_apartments
+        ORDER BY joined_aparts.offer_id
+    ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL)::jsonb AS offers
+FROM 
+    old_apart  
+LEFT JOIN 
+    joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
+WHERE old_apart.affair_id = :apart_id
+GROUP BY 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue;
+
+2025-03-20 11:10:41,083 - ERROR - Error executing query: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedColumnError'>: столбец o.declined_reason_id не существует
+HINT:  Возможно, предполагалась ссылка на столбец "o.decline_reason_id".
+[SQL: WITH unnested_offer AS (
+    SELECT 
+        offer_id,
+        affair_id,
+        (KEY)::integer AS new_apart_id,
+        (VALUE->'status_id')::integer AS status_id,
+        sentence_date, 
+        answer_date, 
+        created_at, 
+        updated_at,
+        (VALUE->'decline_reason_id')::integer AS decline_reason_id
+    FROM offer, 
+    jsonb_each(new_aparts)
+),
+joined_aparts AS (
+    SELECT 
+        o.offer_id,
+        o.affair_id,
+        JSON_OBJECT_AGG(
+            o.new_apart_id::text,
+            JSON_BUILD_OBJECT(
+                'house_address', na.house_address,
+                'apart_number', na.apart_number,
+                'district', na.district,
+                'municipal_district', na.municipal_district,
+                'full_living_area', na.full_living_area,
+                'total_living_area', na.total_living_area,
+                'living_area', na.living_area,
+                'room_count', na.room_count,
+                'type_of_settlement', na.type_of_settlement,
+                'notes', na.notes,
+                'status', s.status,
+                'sentence_date', o.sentence_date::DATE,
+                'answer_date', o.answer_date::DATE,
+                'decline_reason_id', jsonb_build_object('min_floor', dr.min_floor, 'max_floor', dr.max_floor, 'unom', dr.unom, 'entrance', dr.entrance, 'apartment_layout', dr.apartment_layout, 'notes', dr.notes)
+            )::jsonb
+        )::jsonb AS new_apartments
+    FROM 
+        unnested_offer o
+    LEFT JOIN 
+        new_apart na ON o.new_apart_id = na.new_apart_id
+    LEFT JOIN 
+        status s ON o.status_id = s.status_id
+    LEFT JOIN 
+        decline_reason dr ON o.declined_reason_id = dr.declined_reason_id
+    WHERE 
+        o.new_apart_id IS NOT NULL  
+    GROUP BY 
+        o.offer_id,
+        o.affair_id
+)
+SELECT 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue,
+    JSON_OBJECT_AGG(
+        joined_aparts.offer_id::text,
+        joined_aparts.new_apartments
+        ORDER BY joined_aparts.offer_id
+    ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL)::jsonb AS offers
+FROM 
+    old_apart  
+LEFT JOIN 
+    joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
+WHERE old_apart.affair_id = $1
+GROUP BY 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue;
+]
+[parameters: (727312,)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-03-20 11:12:41,730 - INFO - Executing query: WITH unnested_offer AS (
+    SELECT 
+        offer_id,
+        affair_id,
+        (KEY)::integer AS new_apart_id,
+        (VALUE->'status_id')::integer AS status_id,
+        sentence_date, 
+        answer_date, 
+        created_at, 
+        updated_at,
+        (key->'decline_reason_id')::integer AS decline_reason_id
+    FROM offer, 
+    jsonb_each(new_aparts)
+),
+joined_aparts AS (
+    SELECT 
+        o.offer_id,
+        o.affair_id,
+        JSON_OBJECT_AGG(
+            o.new_apart_id::text,
+            JSON_BUILD_OBJECT(
+                'house_address', na.house_address,
+                'apart_number', na.apart_number,
+                'district', na.district,
+                'municipal_district', na.municipal_district,
+                'full_living_area', na.full_living_area,
+                'total_living_area', na.total_living_area,
+                'living_area', na.living_area,
+                'room_count', na.room_count,
+                'type_of_settlement', na.type_of_settlement,
+                'notes', na.notes,
+                'status', s.status,
+                'sentence_date', o.sentence_date::DATE,
+                'answer_date', o.answer_date::DATE,
+                'decline_reason_id', jsonb_build_object('min_floor', dr.min_floor, 'max_floor', dr.max_floor, 'unom', dr.unom, 'entrance', dr.entrance, 'apartment_layout', dr.apartment_layout, 'notes', dr.notes)
+            )::jsonb
+        )::jsonb AS new_apartments
+    FROM 
+        unnested_offer o
+    LEFT JOIN 
+        new_apart na ON o.new_apart_id = na.new_apart_id
+    LEFT JOIN 
+        status s ON o.status_id = s.status_id
+    LEFT JOIN 
+        decline_reason dr ON o.declined_reason_id = dr.declined_reason_id
+    WHERE 
+        o.new_apart_id IS NOT NULL  
+    GROUP BY 
+        o.offer_id,
+        o.affair_id
+)
+SELECT 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue,
+    JSON_OBJECT_AGG(
+        joined_aparts.offer_id::text,
+        joined_aparts.new_apartments
+        ORDER BY joined_aparts.offer_id
+    ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL)::jsonb AS offers
+FROM 
+    old_apart  
+LEFT JOIN 
+    joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
+WHERE old_apart.affair_id = :apart_id
+GROUP BY 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue;
+
+2025-03-20 11:12:42,058 - ERROR - Error executing query: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedFunctionError'>: оператор не существует: text -> unknown
+HINT:  Оператор с данными именем и типами аргументов не найден. Возможно, вам следует добавить явные приведения типов.
+[SQL: WITH unnested_offer AS (
+    SELECT 
+        offer_id,
+        affair_id,
+        (KEY)::integer AS new_apart_id,
+        (VALUE->'status_id')::integer AS status_id,
+        sentence_date, 
+        answer_date, 
+        created_at, 
+        updated_at,
+        (key->'decline_reason_id')::integer AS decline_reason_id
+    FROM offer, 
+    jsonb_each(new_aparts)
+),
+joined_aparts AS (
+    SELECT 
+        o.offer_id,
+        o.affair_id,
+        JSON_OBJECT_AGG(
+            o.new_apart_id::text,
+            JSON_BUILD_OBJECT(
+                'house_address', na.house_address,
+                'apart_number', na.apart_number,
+                'district', na.district,
+                'municipal_district', na.municipal_district,
+                'full_living_area', na.full_living_area,
+                'total_living_area', na.total_living_area,
+                'living_area', na.living_area,
+                'room_count', na.room_count,
+                'type_of_settlement', na.type_of_settlement,
+                'notes', na.notes,
+                'status', s.status,
+                'sentence_date', o.sentence_date::DATE,
+                'answer_date', o.answer_date::DATE,
+                'decline_reason_id', jsonb_build_object('min_floor', dr.min_floor, 'max_floor', dr.max_floor, 'unom', dr.unom, 'entrance', dr.entrance, 'apartment_layout', dr.apartment_layout, 'notes', dr.notes)
+            )::jsonb
+        )::jsonb AS new_apartments
+    FROM 
+        unnested_offer o
+    LEFT JOIN 
+        new_apart na ON o.new_apart_id = na.new_apart_id
+    LEFT JOIN 
+        status s ON o.status_id = s.status_id
+    LEFT JOIN 
+        decline_reason dr ON o.declined_reason_id = dr.declined_reason_id
+    WHERE 
+        o.new_apart_id IS NOT NULL  
+    GROUP BY 
+        o.offer_id,
+        o.affair_id
+)
+SELECT 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue,
+    JSON_OBJECT_AGG(
+        joined_aparts.offer_id::text,
+        joined_aparts.new_apartments
+        ORDER BY joined_aparts.offer_id
+    ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL)::jsonb AS offers
+FROM 
+    old_apart  
+LEFT JOIN 
+    joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
+WHERE old_apart.affair_id = $1
+GROUP BY 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue;
+]
+[parameters: (727312,)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-03-20 12:36:55,398 - INFO - Executing query: WITH unnested_offer AS (
+    SELECT 
+        offer_id,
+        affair_id,
+        (key)::integer AS new_apart_id,
+        (value->'status_id')::integer AS status_id,
+        sentence_date, 
+        answer_date, 
+        created_at, 
+        updated_at,
+        (value->>'decline_reason_id')::integer AS decline_reason_id  -- Fixed: Extract from value
+    FROM offer, 
+    jsonb_each(new_aparts) AS each(key, value)
+),
+joined_aparts AS (
+    SELECT 
+        o.offer_id,
+        o.affair_id,
+        JSONB_OBJECT_AGG(  -- Use JSONB_OBJECT_AGG for efficiency
+            o.new_apart_id::text,
+            JSONB_BUILD_OBJECT(  -- Use JSONB_BUILD_OBJECT to avoid casting
+                'house_address', na.house_address,
+                'apart_number', na.apart_number,
+                'district', na.district,
+                'municipal_district', na.municipal_district,
+                'full_living_area', na.full_living_area,
+                'total_living_area', na.total_living_area,
+                'living_area', na.living_area,
+                'room_count', na.room_count,
+                'type_of_settlement', na.type_of_settlement,
+                'notes', na.notes,
+                'status', s.status,
+                'sentence_date', o.sentence_date::DATE,
+                'answer_date', o.answer_date::DATE,
+                'decline_reason_id', JSONB_BUILD_OBJECT(
+                    'min_floor', dr.min_floor, 
+                    'max_floor', dr.max_floor, 
+                    'unom', dr.unom, 
+                    'entrance', dr.entrance, 
+                    'apartment_layout', dr.apartment_layout, 
+                    'notes', dr.notes
+                )
+            )
+        ) AS new_apartments
+    FROM 
+        unnested_offer o
+    LEFT JOIN 
+        new_apart na ON o.new_apart_id = na.new_apart_id
+    LEFT JOIN 
+        status s ON o.status_id = s.status_id
+    LEFT JOIN 
+        decline_reason dr ON o.decline_reason_id = dr.declined_reason_id  -- Fixed join condition
+    WHERE 
+        o.new_apart_id IS NOT NULL  
+    GROUP BY 
+        o.offer_id,
+        o.affair_id
+)
+SELECT 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue,
+    JSONB_OBJECT_AGG(
+        joined_aparts.offer_id::text,
+        joined_aparts.new_apartments
+        ORDER BY joined_aparts.offer_id
+    ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL) AS offers
+FROM 
+    old_apart  
+LEFT JOIN 
+    joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
+WHERE old_apart.affair_id = :apart_id
+GROUP BY 
+    old_apart.affair_id, 
+    old_apart.house_address,
+    old_apart.apart_number,
+    old_apart.district,
+    old_apart.municipal_district,
+    old_apart.fio,
+    old_apart.full_living_area,
+    old_apart.total_living_area,
+    old_apart.living_area,
+    old_apart.room_count,
+    old_apart.type_of_settlement,
+    old_apart.is_queue;
