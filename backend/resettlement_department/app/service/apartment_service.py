@@ -88,8 +88,8 @@ class ApartmentService:
             apart_id, apart_type
         )
 
-    async def update_status_for_apart(self, apart_id: int, new_apartment_id : int, status: str, apart_type):
-        return await self.apartment_repository.update_status_for_apart(apart_id, new_apartment_id, status, apart_type)
+    async def update_status_for_apart(self, apart_id: int, new_apart_id : int, status: str, apart_type):
+        return await self.apartment_repository.update_status_for_apart(apart_id, new_apart_id, status, apart_type)
 
     async def set_private_for_new_aparts(
         self, new_aparts: List[int], status: bool = True
@@ -100,7 +100,8 @@ class ApartmentService:
 
     async def set_cancell_reason(
         self,
-        apartment_id,
+        apart_id,
+        new_apart_id, 
         min_floor,
         max_floor,
         unom,
@@ -109,7 +110,8 @@ class ApartmentService:
         notes,
     ):
         return await self.apartment_repository.set_cancell_reason(
-            apartment_id,
+            apart_id,
+            new_apart_id,
             min_floor,
             max_floor,
             unom,

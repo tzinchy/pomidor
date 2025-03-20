@@ -105,40 +105,40 @@ async def get_apartments(
 
 
 # Получение информации по конкретной квартире
-@router.get("/apartment/{apartment_id}")
+@router.get("/apartment/{apart_id}")
 async def get_apartment_by_id(
-    apartment_id: int,
+    apart_id: int,
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
 ):
-    apartment = await apartment_service.get_apartment_by_id(apartment_id, apart_type)
+    apartment = await apartment_service.get_apartment_by_id(apart_id, apart_type)
     if not apartment:
         raise HTTPException(status_code=404, detail="Apartment not found")
     return apartment
 
 
-@router.post("/apartment/{apartment_id}/manual_matching")
+@router.post("/apartment/{apart_id}/manual_matching")
 async def manual_matching(
-    apartment_id: int,
+    apart_id: int,
     offer_id : int,
     manual_selection: ManualMatchingSchema = Body(
         ..., description="Схема для ручного сопоставления"
     ),
 ):
     return await apartment_service.manual_matching(
-        apartment_id, offer_id, manual_selection.new_apart_id
+        apart_id, offer_id, manual_selection.new_apart_id
     )
 
 
-@router.get("/apartment/{apartment_id}/void_aparts")
-async def get_void_aparts_for_apartment(apartment_id: int):
-    return await apartment_service.get_void_aparts_for_apartment(apartment_id)
+@router.get("/apartment/{apart_id}/void_aparts")
+async def get_void_aparts_for_apartment(apart_id: int):
+    return await apartment_service.get_void_aparts_for_apartment(apart_id)
 
 
-@router.post("/apartment/{apartment_id}/cancell_matching_for_apart")
+@router.post("/apartment/{apart_id}/cancell_matching_for_apart")
 async def cancell_matching_for_apart(
-    apartment_id: int, apart_type: ApartTypeSchema = Query(...)
+    apart_id: int, apart_type: ApartTypeSchema = Query(...)
 ):
-    return await apartment_service.cancell_matching_for_apart(apartment_id, apart_type)
+    return await apartment_service.cancell_matching_for_apart(apart_id, apart_type)
 
 
 @router.post("/switch_aparts")
@@ -155,16 +155,16 @@ def rematch_for_family(rematch_list: RematchSchema):
     return {"res": res}
 
 
-@router.post("/apartment/{apartment_id}/{new_apartment_id}/change_status")
+@router.post("/apartment/{apart_id}/{new_apart_id}/change_status")
 async def change_status(
-    apartment_id: int,
-    new_apartment_id: int,
+    apart_id: int,
+    new_apart_id: int,
     new_status: StatusUpdate = Body(..., description="Доступные статусы"),
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
 ):
     try:
         await apartment_service.update_status_for_apart(
-            apartment_id, new_apartment_id, new_status.new_status.value, apart_type
+            apart_id, new_apart_id, new_status.new_status.value, apart_type
         )
         return {"message": "Status updated successfully"}
     except Exception as e:
@@ -185,10 +185,11 @@ async def set_private_for_new_aparts_false(new_apart_ids: SetPrivateStatusSchema
     )
 
 
-@router.post("/apartment/{apartment_id}/set_cancell_reason")
-async def set_cancell_reason(apartment_id: int, decline_reason: DeclineReasonSchema):
+@router.post("/apartment/{apart_id}/{new_apart_id}/set_cancell_reason")
+async def set_cancell_reason(apart_id: int, new_apart_id : int, decline_reason: DeclineReasonSchema):
     await apartment_service.set_cancell_reason(
-        apartment_id,
+        apart_id,
+        new_apart_id, 
         decline_reason.min_floor,
         decline_reason.max_floor,
         decline_reason.unom,
@@ -197,8 +198,8 @@ async def set_cancell_reason(apartment_id: int, decline_reason: DeclineReasonSch
         decline_reason.notes,
     )
 
-@router.post("/apartment/{apartment_id}/set_notes")
-async def set_notes(apartment_id : int,
+@router.post("/apartment/{apart_id}/set_notes")
+async def set_notes(apart_id : int,
                     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
                     notes : SetNotesSchema = None):
-    return await apartment_service.set_notes(apartment_id, notes.notes, apart_type)
+    return await apartment_service.set_notes(apart_id, notes.notes, apart_type)
