@@ -92,7 +92,7 @@ export default function DetailsStatusCell({
 
       const result = await response.json();
       console.log("Статус успешно изменен:", result.message);
-      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      fetchApartments();
       return result;
     } catch (error) {
       console.error("Ошибка:", error);
