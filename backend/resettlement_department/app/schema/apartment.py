@@ -48,7 +48,7 @@ class DeclineReasonSchema(BaseModel):
     max_floor: int = 0
     unom: Optional[str] = None
     entrance: Optional[str] = None
-    apartment_layout: Optional[int] = None
+    apartment_layout: Optional[str] = None
     notes: Optional[str] = None
 
 class BaseApartmentTableSchema(BaseModel):
