@@ -295,21 +295,24 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           isQueueChecked={isQueueChecked}
           setIsQueueChecked={setIsQueueChecked}
         />
-        <div className="flex justify-around">
-          <button
-            onClick={() => changeApartType('OldApart')}
-            className={`px-4 py-2 mr-2 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
-          >
-            Семьи
-          </button>
-          <button
-            onClick={() => changeApartType('NewApartment')}
-            className={`px-4 py-2 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
-          >
-            Ресурс
-          </button>
-        </div>
-        <div className='flex'>
+        
+        <div className='flex items-center'>
+
+          <div className="flex justify-around">
+            <button
+              onClick={() => changeApartType('OldApart')}
+              className={`px-4 py-2 mr-2 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
+            >
+              Семьи
+            </button>
+            <button
+              onClick={() => changeApartType('NewApartment')}
+              className={`px-4 py-2 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
+            >
+              Ресурс
+            </button>
+          </div>
+
         <Menu as="div" className="relative inline-block text-left z-[102]">
             <div>
               <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
