@@ -40,6 +40,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [selectedRowId, setSelectedRowId] = useState();
   const [filtersResetFlag, setFiltersResetFlag] = useState(false); // Флаг сброса
   const [isQueueChecked, setIsQueueChecked] = useState(false); // Состояние для чек-бокса "Очередники"
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -92,6 +97,15 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
       let filtered = data;
 
+      if (searchQuery) {
+        filtered = filtered.filter((item) => {
+            // Проверяем поисковый запрос по нескольким полям
+            return (
+                item.house_address?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        });
+    }
+
       // Применяем каждый фильтр
       Object.entries(filters).forEach(([filterType, selectedValues]) => {
           if (selectedValues.length > 0) {
@@ -112,7 +126,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       });
 
       setFilteredApartments(filtered);
-  }, [data, filters]);
+  }, [data, filters, searchQuery]);
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
@@ -281,6 +295,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       setFiltersResetFlag(prev => !prev);
     }
   }
+  
 
   return (
     <div className='bg-neutral-100'>
@@ -294,22 +309,26 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           handleResetFilters={handleResetFilters}
           isQueueChecked={isQueueChecked}
           setIsQueueChecked={setIsQueueChecked}
+          setSearchQuery={handleSearchChange}
         />
-        <div className="flex justify-around">
-          <button
-            onClick={() => changeApartType('OldApart')}
-            className={`px-4 py-2 mr-2 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
-          >
-            Семьи
-          </button>
-          <button
-            onClick={() => changeApartType('NewApartment')}
-            className={`px-4 py-2 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
-          >
-            Ресурс
-          </button>
-        </div>
-        <div className='flex'>
+        
+        <div className='flex items-center'>
+
+          <div className="flex justify-around">
+            <button
+              onClick={() => changeApartType('OldApart')}
+              className={`px-4 py-2 mr-2 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
+            >
+              Семьи
+            </button>
+            <button
+              onClick={() => changeApartType('NewApartment')}
+              className={`px-4 py-2 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
+            >
+              Ресурс
+            </button>
+          </div>
+
         <Menu as="div" className="relative inline-block text-left z-[102]">
             <div>
               <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
@@ -374,7 +393,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           <div className="flex flex-1 overflow-hidden">
             {/* Таблица */}
             <div
-              className={` rounded-md h-full transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[80vw]' : 'flex-grow'}`}
+              className={` rounded-md h-full transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
             >
               <div
                 ref={tableContainerRef}
@@ -516,7 +535,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               >
                 <div className="fixed inset-0 bg-opacity-50 lg:bg-transparent lg:relative">
                   <div
-                    className={`fixed min-w-[650px] max-w-[650px] h-[calc(100vh-1rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+                    className={`fixed min-w-[42vw] max-w-[42vw] h-[calc(100vh-1rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
                       isDetailsVisible ? 'translate-x-0' : 'translate-x-full'
                     }`}
                     style={{
