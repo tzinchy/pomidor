@@ -32,7 +32,8 @@ joined_aparts AS (
                 'status', s.status,
                 'sentence_date', o.sentence_date::DATE,
                 'answer_date', o.answer_date::DATE,
-                'decline_reason_id', JSONB_BUILD_OBJECT(
+                'decline_reason_id', o.decline_reason_id,
+                'decline_reason', JSONB_BUILD_OBJECT(
                     'min_floor', dr.min_floor, 
                     'max_floor', dr.max_floor, 
                     'unom', dr.unom, 

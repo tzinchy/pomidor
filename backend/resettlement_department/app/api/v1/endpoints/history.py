@@ -16,23 +16,16 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
-router = APIRouter(tags=["history"])
+router = APIRouter(tags=["History"])
 
 
 @router.get("/history", response_model=List[HistoryResponse])
 async def get_history():
     return await history_service.get_history()
 
-
-@router.patch("/approve/{history_id}")
-async def approve_history(history_id: int):
-    return await history_service.approve_history(history_id)
-
-
-@router.delete("/delete/{history_id}")
-async def cancell_history(history_id: int):
-    return await history_service.cancell_history(history_id)
-
+@router.get("/manual")
+async def get_manual_history():
+    return await history_service.get_manual_load_history()
 
 @router.post("/balance")
 async def balance(requirements: MatchingSchema = Body(...)):
@@ -59,8 +52,7 @@ async def balance(requirements: MatchingSchema = Body(...)):
         )
     except Exception as e:
         return {"error": str(e)}
-
-
+    
 @router.post("/container/{history_id}")
 def container(history_id: int):
     try:
@@ -84,13 +76,16 @@ def container(history_id: int):
     except Exception as e:
         logging.error(f"Ошибка: {e}")
         return {"error": str(e)}
+    
+@router.patch("/approve/{history_id}")
+async def approve_history(history_id: int):
+    return await history_service.approve_history(history_id)
 
+@router.delete("/delete/{history_id}")
+async def cancell_history(history_id: int):
+    return await history_service.cancell_history(history_id)
 
 @router.delete("/delete/manual_load/{manual_load_id}")
 async def cancell_history_manual_load(manual_load_id: int):
     return await history_service.cancell_manual_load(manual_load_id)
 
-
-@router.get("/manual")
-async def get_manual_history():
-    return await history_service.get_manual_load_history()

@@ -38,7 +38,7 @@ class RematchSchema(BaseModel):
     apartment_ids : List[int]
 
 class ManualMatchingSchema(BaseModel):
-    new_apart_id : int
+    new_apart_ids : List[int]
 
 class SetPrivateStatusSchema(BaseModel):
     new_apart_ids : List[int]

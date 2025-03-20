@@ -5,13 +5,14 @@ from utils.sql_reader import read_sql_query
 from core.config import RECOMMENDATION_FILE_PATH
 from handlers.httpexceptions import SomethingWrong
 from sqlalchemy.exc import SQLAlchemyError
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 
 class ApartmentRepository:
     def __init__(self, session_maker):
-        self.db = session_maker 
+        self.db = session_maker
 
     async def get_districts(self, apart_type: str) -> list[str]:
         """
@@ -196,17 +197,14 @@ class ApartmentRepository:
                 logger.info(f"Executing query: {query}")
                 logger.info(f"Params: {params}")
                 result = await session.execute(text(query), params)
-                
-                return [dict(row._mapping) for row in result]
+
+                return [row._mapping for row in result]
             except Exception as error:
                 logger.error(f"Error executing query: {error}")
                 print(error)
                 raise SomethingWrong
 
     async def get_apartment_by_id(self, apart_id: int, apart_type: str) -> dict:
-        """
-        Получить всю информацию о квартире по ID.
-        """
         if apart_type not in ApartTypeSchema:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
@@ -226,8 +224,8 @@ class ApartmentRepository:
                 data = result.fetchall()
                 if not data:
                     raise ValueError(f"Apartment with ID {apart_id} not found")
-                
-                return [row._asdict() for row in data][0]
+
+                return [row._mapping for row in data][0]
             except Exception as error:
                 logger.error(f"Error executing query: {error}")
                 print(error)
@@ -266,7 +264,7 @@ class ApartmentRepository:
 
                 rows = result.fetchall()
                 if rows:
-                    serialized_result = [row._asdict() for row in rows] 
+                    serialized_result = [row._asdict() for row in rows]
                     return serialized_result[0]
                 else:
                     # Если результат пуст, возвращаем сообщение
@@ -276,61 +274,82 @@ class ApartmentRepository:
                 logger.error(f"Error switching apartments: {e}")
                 raise SomethingWrong
 
-    async def manual_matching(self, old_apart_id, offer_id, new_apart_id):
+    async def manual_matching(self, apart_id, new_apart_ids):
         try:
             async with self.db() as session:
-                check_query = text("""
-                    SELECT EXISTS (
-                        SELECT 1
-                        FROM public.offer
-                        WHERE affair_id = :old_apart_id
-                    );
+                # Проверяем существующие согласованные квартиры
+                check_approved_query = text("""
+                    SELECT jsonb_object_agg(key::text, value)
+                    FROM (
+                        SELECT key, value 
+                        FROM offer, jsonb_each(new_aparts)
+                        WHERE affair_id = :apart_id
+                        AND (value->>'status_id')::int = 1
+                    ) approved_aparts;
                 """)
-                result = await session.execute(
-                    check_query, {"old_apart_id": old_apart_id}
-                )
-                record_exists = result.scalar()
 
-                if record_exists:
-                    # Обновление записи
-                    update_query = text(read_sql_query(f'{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql'))
-                    await session.execute(update_query, {"status" : "Отказ", "apart_id": old_apart_id, 'offer_id' : offer_id},)
-                    print(
-                        f"Обновлена последняя запись для old_apart_id {old_apart_id}: {new_apart_id}"
+                result = await session.execute(
+                    check_approved_query, {"apart_id": apart_id}
+                )
+                approved_aparts = result.scalar() or {}
+
+                # Объединяем существующие согласованные квартиры с новыми
+                all_apart_ids = list(approved_aparts.keys()) + new_apart_ids
+
+                if not all_apart_ids:
+                    raise ValueError("Нет квартир для добавления")
+
+                # Обновляем предыдущий офер только если нет согласованных квартир
+                if not approved_aparts:
+                    update_query = text(
+                        read_sql_query(
+                            f"{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql"
+                        )
+                    )
+                    await session.execute(
+                        update_query, {"status": "Отказ", "apart_id": apart_id}
                     )
 
-                # Вставка новой записи
+                # Создаем JSONB объект для новых квартир
                 insert_query = text("""
                     INSERT INTO public.offer (affair_id, new_aparts, status_id)
-                    VALUES (:old_apart_id, jsonb_build_object((:new_apart_id)::int, jsonb_build_object('status_id', 7)), 7);
+                    VALUES (
+                        :old_apart_id,
+                        jsonb_object(
+                            (:apart_ids)::text[],
+                            (SELECT array_agg(jsonb_build_object('status_id', 7)) 
+                            FROM unnest((:apart_ids)::text[]))
+                        ),
+                        7
+                    );
                 """)
+
                 await session.execute(
-                    insert_query,
-                    {"old_apart_id": old_apart_id, "new_apart_id": new_apart_id},
+                    insert_query, {"old_apart_id": apart_id, "apart_ids": all_apart_ids}
                 )
-                print(
-                    f"Вставлена новая запись для old_apart_id {old_apart_id}: {new_apart_id}"
-                )
+
                 await session.commit()
+                return "success"
+
         except SQLAlchemyError as e:
-            print(f"Ошибка при обработке old_apart_id {old_apart_id}: {e}")
+            print(f"Ошибка при обработке old_apart_id {apart_id}: {e}")
             await session.rollback()
             raise SomethingWrong
-
-        return "success"
 
     async def get_void_aparts_for_apartment(self, apart_id):
         async with self.db() as session:
             query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/VoidAparts.sql")
             result = await session.execute(text(query), {"apart_id": apart_id})
-            return [dict(row._mapping) for row in result]
+            return [row._mapping for row in result]
 
     async def cancell_matching_apart(self, apart_id, apart_type):
         async with self.db() as session:
             try:
                 if apart_type == ApartTypeSchema.OLD:
                     result = await session.execute(
-                        text("DELETE FROM offer WHERE affair_id = :apart_id AND offer_id = (select max(offer_id) from offer where affair_id = :apart_id)"),
+                        text(
+                            "DELETE FROM offer WHERE affair_id = :apart_id AND offer_id = (select max(offer_id) from offer where affair_id = :apart_id)"
+                        ),
                         {"apart_id": apart_id},
                     )
                     await session.commit()
@@ -353,13 +372,24 @@ class ApartmentRepository:
                 print(error)
                 raise SomethingWrong
 
-    async def update_status_for_apart(self, apart_id, new_apartment_id, status, apart_type):
+    async def update_status_for_apart(
+        self, apart_id, new_apartment_id, status, apart_type
+    ):
         async with self.db() as session:
             try:
                 if apart_type == ApartTypeSchema.OLD:
-                    query = text(read_sql_query(f'{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql'))
+                    query = text(
+                        read_sql_query(
+                            f"{RECOMMENDATION_FILE_PATH}/UpdateOfferStatusOfferStatusForNewApart.sql"
+                        )
+                    )
                     result = await session.execute(
-                        query, {"status": status, "apart_id": apart_id, "new_apart_id": str(new_apartment_id)}
+                        query,
+                        {
+                            "status": status,
+                            "apart_id": apart_id,
+                            "new_apart_id": str(new_apartment_id),
+                        },
                     )
                     await session.commit()
                     return result
@@ -369,53 +399,72 @@ class ApartmentRepository:
                 raise SomethingWrong(
                     "An error occurred while updating the apartment status."
                 )
-    
+
     async def set_private_for_new_aparts(self, new_apart_ids, status: bool = True):
         async with self.db() as session:
             try:
                 # Проверяем, что new_apart_ids не пустой
                 if not new_apart_ids:
                     raise ValueError("The list of apartment IDs is empty.")
-                
+
                 # Формируем строку с плейсхолдерами для каждого ID
-                placeholders = ', '.join([':id_' + str(i) for i in range(len(new_apart_ids))])
-                
+                placeholders = ", ".join(
+                    [":id_" + str(i) for i in range(len(new_apart_ids))]
+                )
+
                 # Формируем словарь с параметрами
-                params = {'status': status}
-                params.update({f'id_{i}': id for i, id in enumerate(new_apart_ids)})
-                
+                params = {"status": status}
+                params.update({f"id_{i}": id for i, id in enumerate(new_apart_ids)})
+
                 # Используем параметризованный запрос для безопасности
-                query = text(f'UPDATE new_apart SET is_private = :status WHERE new_apart_id IN ({placeholders})')
-                
+                query = text(
+                    f"UPDATE new_apart SET is_private = :status WHERE new_apart_id IN ({placeholders})"
+                )
+
                 # Передаем параметры в правильном формате
                 await session.execute(query, params)
                 await session.commit()
             except Exception as error:
                 print(error)
-                raise SomethingWrong("Something went wrong while updating the apartments.")
-            
-    async def set_cancell_reason(self, apartment_id, new_apart_id, min_floor, max_floor, unom, entrance, apartment_layout, notes):
+                raise SomethingWrong(
+                    "Something went wrong while updating the apartments."
+                )
+
+    async def set_cancell_reason(
+        self,
+        apartment_id,
+        new_apart_id,
+        min_floor: Optional[int] = None,
+        max_floor: Optional[int] = None,
+        unom: Optional[str] = None,
+        entrance: Optional[str] = None,
+        apartment_layout: Optional[str] = None,
+        notes: Optional[str] = None,
+    ):
         async with self.db() as session:
             try:
                 # Вставляем данные в таблицу decline_reason
-                insert_query = text('''
+                insert_query = text("""
                     INSERT INTO public.decline_reason 
                     (min_floor, max_floor, unom, entrance, apartment_layout, notes)
                     VALUES (:min_floor, :max_floor, :unom, :entrance, :apartment_layout, :notes)
                     RETURNING declined_reason_id;
-                ''')
-                result = await session.execute(insert_query, {
-                    'min_floor': min_floor,
-                    'max_floor': max_floor,
-                    'unom': unom,
-                    'entrance': entrance,
-                    'apartment_layout': apartment_layout,
-                    'notes': notes
-                })
+                """)
+                result = await session.execute(
+                    insert_query,
+                    {
+                        "min_floor": min_floor,
+                        "max_floor": max_floor,
+                        "unom": unom,
+                        "entrance": entrance,
+                        "apartment_layout": apartment_layout,
+                        "notes": notes,
+                    },
+                )
                 declined_reason_id = result.scalar()
 
                 # Обновляем статус в таблице offer
-                update_query = text('''
+                update_query = text("""
                     WITH updated_data AS (
                         SELECT
                             offer_id,
@@ -447,13 +496,16 @@ class ApartmentRepository:
                         status_id = (SELECT status_id FROM status WHERE status = :status)
                     FROM updated_data
                     WHERE offer.offer_id = updated_data.offer_id;
-                ''')
-                await session.execute(update_query, {
-                    'status': 'Отказ',  
-                    'apart_id': apartment_id,
-                    'declined_reason_id': declined_reason_id,
-                    'new_apart_id': str(new_apart_id)
-                })
+                """)
+                await session.execute(
+                    update_query,
+                    {
+                        "status": "Отказ",
+                        "apart_id": apartment_id,
+                        "declined_reason_id": declined_reason_id,
+                        "new_apart_id": str(new_apart_id),
+                    },
+                )
 
                 await session.commit()
                 return declined_reason_id
@@ -461,23 +513,89 @@ class ApartmentRepository:
                 print(error)
                 await session.rollback()
                 raise SomethingWrong
-            
-    async def set_notes(self, apart_id : int, notes : str, apart_type : str): 
-        async with self.db() as session: 
-            try: 
-                if apart_type ==  ApartTypeSchema.OLD: 
-                    await session.execute(text("""
+
+    async def set_notes(self, apart_id: int, notes: str, apart_type: str):
+        async with self.db() as session:
+            try:
+                if apart_type == ApartTypeSchema.OLD:
+                    await session.execute(
+                        text("""
                         UPDATE old_apart SET notes = :notes 
                         WHERE affair_id = :apart_id
-                        """), {'notes' : notes, 'apart_id' : apart_id})
+                        """),
+                        {"notes": notes, "apart_id": apart_id},
+                    )
                 elif apart_type == ApartTypeSchema.NEW:
-                    await session.execute(text('''
+                    await session.execute(
+                        text("""
                         UPDATE new_apart SET notes = :notes 
                         WHERE new_apart_id = :apart_id
-                        '''), {'notes' : notes, 'apart_id' : apart_id})
-                await session.commit() 
-                return {'status' : 'done'}
-            except Exception as e: 
+                        """),
+                        {"notes": notes, "apart_id": apart_id},
+                    )
+                await session.commit()
+                return {"status": "done"}
+            except Exception as e:
                 print(e)
                 raise SomethingWrong
-                    
+
+    async def get_decline_reason(self, decline_reason_id: int):
+        async with self.db() as session:
+            result = await session.execute(
+                (
+                    text("""SELECT min_floor, max_floor, unom, entrance, notes, apartment_layout FROM public.decline_reason
+                                                WHERE decline_reason_id = :decline_reason_id 
+            """)
+                ),
+                {"decline_reason_id": decline_reason_id},
+            )
+            result = result.fetchone() 
+            return result._mapping
+
+    async def update_decline_reason(
+        self,
+        decline_reason_id: int,
+        min_floor: Optional[int] = None,
+        max_floor: Optional[int] = None,
+        unom: Optional[str] = None,
+        entrance: Optional[str] = None,
+        apartment_layout: Optional[str] = None,
+        notes: Optional[str] = None,
+    ):
+        async with self.db() as session:
+            try:
+                # Собираем параметры, исключая None
+                params = {
+                    "min_floor": min_floor,
+                    "max_floor": max_floor,
+                    "unom": unom,
+                    "entrance": entrance,
+                    "apartment_layout": apartment_layout,
+                    "notes": notes,
+                }
+                filtered_params = {
+                    key: value for key, value in params.items() if value is not None
+                }
+
+                if not filtered_params:
+                    return {"status": "no_changes"} 
+
+                set_clause = ", ".join(
+                    [f"{key} = :{key}" for key in filtered_params.keys()]
+                )
+                filtered_params["cancell_reason_id"] = (
+                    decline_reason_id 
+                )
+
+                update_query = text(f"""
+                    UPDATE public.decline_reason 
+                    SET {set_clause}
+                    WHERE decline_reason_id = :cancell_reason_id
+                """)
+
+                await session.execute(update_query, filtered_params)
+                await session.commit()
+                return {"status": "done"}
+            except Exception as e:
+                await session.rollback()
+                raise Exception(f"Something went wrong: {e}")
