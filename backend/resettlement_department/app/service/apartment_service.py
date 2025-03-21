@@ -98,7 +98,7 @@ class ApartmentService:
             new_aparts, status
         )
 
-    async def set_cancell_reason(
+    async def set_decline_reason(
         self,
         apart_id,
         new_apart_id,
@@ -109,15 +109,15 @@ class ApartmentService:
         apartment_layout,
         notes,
     ):
-        return await self.apartment_repository.set_cancell_reason(
-            apart_id,
-            new_apart_id,
-            min_floor,
-            max_floor,
-            unom,
-            entrance,
-            apartment_layout,
-            notes,
+        return await self.apartment_repository.set_decline_reason(
+            apartment_id=apart_id,
+            new_apart_id=new_apart_id,
+            min_floor=min_floor,
+            max_floor=max_floor,
+            unom=unom,
+            entrance=entrance,
+            apartment_layout=apartment_layout,
+            notes=notes,
         )
 
     async def set_notes(self, apart_id: int, notes: str, apart_type: str):

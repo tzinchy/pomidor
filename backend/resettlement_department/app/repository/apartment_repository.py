@@ -430,7 +430,7 @@ class ApartmentRepository:
                     "Something went wrong while updating the apartments."
                 )
 
-    async def set_cancell_reason(
+    async def set_decline_reason(
         self,
         apartment_id,
         new_apart_id,
@@ -448,7 +448,7 @@ class ApartmentRepository:
                     INSERT INTO public.decline_reason 
                     (min_floor, max_floor, unom, entrance, apartment_layout, notes)
                     VALUES (:min_floor, :max_floor, :unom, :entrance, :apartment_layout, :notes)
-                    RETURNING declined_reason_id;
+                    RETURNING decline_reason_id;
                 """)
                 result = await session.execute(
                     insert_query,
@@ -461,7 +461,7 @@ class ApartmentRepository:
                         "notes": notes,
                     },
                 )
-                declined_reason_id = result.scalar()
+                decline_reason_id = result.scalar()
 
                 # Обновляем статус в таблице offer
                 update_query = text("""
@@ -502,13 +502,13 @@ class ApartmentRepository:
                     {
                         "status": "Отказ",
                         "apart_id": apartment_id,
-                        "declined_reason_id": declined_reason_id,
+                        "declined_reason_id": decline_reason_id,
                         "new_apart_id": str(new_apart_id),
                     },
                 )
 
                 await session.commit()
-                return declined_reason_id
+                return {'status' : 'done'}
             except Exception as error:
                 print(error)
                 await session.rollback()
