@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import DeclineModal from "../DeclineModal";
 import { HOSTLINK } from "../../..";
 
-export default function DeclineResonsCell({ props, newApartId, apartmentDetails, selectedRowId }) {
+export default function DeclineResonsCell({ props, newApartId, apartmentDetails, selectedRowId, fetchApartmentDetails }) {
   const value = props['decline_reason'];
   const [minFloor, setMinFloor] = useState(value.min_floor);
   const [maxFloor, setMaxFloor] = useState(value.max_floor);
@@ -25,12 +25,12 @@ export default function DeclineResonsCell({ props, newApartId, apartmentDetails,
 
   console.log(minFloor, maxFloor, unom, entrance, apartment_layout, notes, showRejectModal);
 
-  async function setCancellReason(apartmentId, declineReason) {
+  async function update_declined_reason(decline_reason_id, declineReason) {
     try {
       const response = await fetch(
-        `${HOSTLINK}/tables/apartment/${parseInt(apartmentId)}/${parseInt(newApartId)}/set_cancell_reason`,
+        `${HOSTLINK}/tables/apartment/decline_reason/${decline_reason_id}/update_declined_reason`,
         {
-          method: "POST",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
@@ -63,7 +63,7 @@ export default function DeclineResonsCell({ props, newApartId, apartmentDetails,
     };
 
     try {
-      await setCancellReason(selectedRowId, declineReason);
+      await update_declined_reason(props.decline_reason_id, declineReason);
 
       setShowRejectModal(false);
       setMinFloor("");
@@ -72,6 +72,7 @@ export default function DeclineResonsCell({ props, newApartId, apartmentDetails,
       setEntrance("");
       setApartment_layout("");
       setNotes("");
+      fetchApartmentDetails(selectedRowId);
     } catch (error) {
       console.error("Ошибка при обработке отказа:", error);
       alert("Не удалось обработать отказ. Попробуйте снова.");

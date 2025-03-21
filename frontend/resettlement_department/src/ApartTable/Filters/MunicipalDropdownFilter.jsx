@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-export default function MunicipalDropdownFilter({ item, data, func, filterType, isFiltersReset }) {
+export default function MunicipalDropdownFilter({ item, data, func, filterType, isFiltersReset, filters }) {
     const [dropdownState, setDropdownState] = useState(false);
     const [selectedValues, setSelectedValues] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -38,15 +38,23 @@ export default function MunicipalDropdownFilter({ item, data, func, filterType, 
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Фильтрация данных на основе поискового запроса
     const filteredData = data
-        .map((area) => ({
-            ...area,
-            items: area.items.filter((item) =>
-                item.label.toLowerCase().includes(searchQuery.toLowerCase())
-            ),
-        }))
-        .filter((area) => area.items.length > 0); // Убираем области, в которых нет подходящих элементов
+    .filter((area) => {
+        // Если filters.district не пуст, фильтруем по нему
+        if (filters.district && filters.district.length > 0) {
+            const isIncluded = filters.district.includes(area.value);
+            return isIncluded;
+        }
+        // Если filters.district пуст, пропускаем фильтрацию
+        return true;
+    })
+    .map((area) => ({
+        ...area,
+        items: area.items.filter((item) =>
+            item.label.toLowerCase().includes(searchQuery.toLowerCase())
+        ),
+    }))
+    .filter((area) => area.items.length > 0); // Убираем области, в которых нет подходящих элементов
 
     return (
         <div className="relative flex items-center mr-4" ref={container}>

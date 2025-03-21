@@ -16,6 +16,7 @@ export default function ApartDetails({
   fetchApartments,
   lastSelectedAddres,
   lastSelectedMunicipal,
+  fetchApartmentDetails={fetchApartmentDetails}
 }) {
   const [isManualSelectionOpen, setIsManualSelectionOpen] = useState(false); // Состояние для модального окна
   console.log('apartmentDetails', apartmentDetails);
@@ -135,6 +136,7 @@ export default function ApartDetails({
                         newApartId={offerKeys[0]} 
                         apartmentDetails={apartmentDetails}
                         selectedRowId={selectedRowId}
+                        fetchApartmentDetails={fetchApartmentDetails}
                         />
                       </tr>
 
@@ -163,6 +165,7 @@ export default function ApartDetails({
                               newApartId={key} 
                               apartmentDetails={apartmentDetails}
                               selectedRowId={selectedRowId}
+                              fetchApartmentDetails={fetchApartmentDetails}
                             />
                           </tr>
                         ))}

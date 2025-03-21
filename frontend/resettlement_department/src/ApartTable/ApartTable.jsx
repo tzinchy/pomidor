@@ -38,9 +38,10 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [rooms, setRooms] = useState([]);
   const [matchCount, setMatchCount] = useState([]);
   const [selectedRowId, setSelectedRowId] = useState();
-  const [filtersResetFlag, setFiltersResetFlag] = useState(false); // Флаг сброса
-  const [isQueueChecked, setIsQueueChecked] = useState(false); // Состояние для чек-бокса "Очередники"
+  const [filtersResetFlag, setFiltersResetFlag] = useState(false);
+  const [isQueueChecked, setIsQueueChecked] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [municipalDistrict, setMunicipalDistrict] = useState([]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -63,6 +64,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   useEffect(() => {
     setRooms(getUniqueValues('room_count'));
     setMatchCount(getUniqueValues('selection_count'))
+    setMunicipalDistrict(getUniqueValues('municipal_district'))
+    console.log('municipal_district', municipalDistrict, rooms)
   }, [getUniqueValues]);
 
   // 2. Добавляем эффект для синхронизации с исходными данными
@@ -310,6 +313,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           isQueueChecked={isQueueChecked}
           setIsQueueChecked={setIsQueueChecked}
           setSearchQuery={handleSearchChange}
+          filters={filters}
         />
         
         <div className='flex items-center'>
@@ -552,6 +556,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         fetchApartments={fetchApartments}
                         lastSelectedAddres={lastSelectedAddres}
                         lastSelectedMunicipal={lastSelectedMunicipal}
+                        fetchApartmentDetails={fetchApartmentDetails}
                         className="flex-1" // Оставляем для гибкости внутри компонента
                       />
                     </div>

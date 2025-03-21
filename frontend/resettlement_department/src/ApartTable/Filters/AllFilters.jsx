@@ -4,7 +4,7 @@ import { areas } from "../../Filters/FilterData";
 import MunicipalDropdownFilter from "./MunicipalDropdownFilter";
 import SearchTry from "./SearchTry";
 
-export default function AllFilters({ handleFilterChange, rooms, matchCount, apartType, filtersResetFlag, handleResetFilters, isQueueChecked, setIsQueueChecked, setSearchQuery }) {
+export default function AllFilters({ handleFilterChange, rooms, matchCount, apartType, filtersResetFlag, handleResetFilters, isQueueChecked, setIsQueueChecked, setSearchQuery, filters }) {
     const StatusFilters = ['Не подобрано', "Согласие", 'Отказ', "Суд", "Фонд компенсация", "Фонд докупка", "Ожидание", 'Ждёт одобрения'];
 
     const handleQueueChange = (e) => {
@@ -31,6 +31,7 @@ export default function AllFilters({ handleFilterChange, rooms, matchCount, apar
                 func={handleFilterChange}
                 filterType={'municipal_district'} 
                 isFiltersReset={filtersResetFlag} 
+                filters={filters}
             />
             <DropdownFilter 
                 item={'Статус'} 
