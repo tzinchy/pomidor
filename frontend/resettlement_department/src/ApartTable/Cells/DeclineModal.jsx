@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 
-export default function RejectModal({
+export default function DeclineModal({
   isOpen,
   onClose,
   onAccept,

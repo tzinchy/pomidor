@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { HOSTLINK } from "../..";
-import RejectModal from "./RejectModal";
+import DeclineModal from "./DeclineModal";
 
 export default function DetailsStatusCell({
   props,
@@ -190,8 +190,7 @@ export default function DetailsStatusCell({
         )}
       </div>
 
-      {/* Используем новый компонент RejectModal */}
-      <RejectModal
+      <DeclineModal
         isOpen={showRejectModal}
         onClose={() => setShowRejectModal(false)}
         onAccept={handleAcceptReject}
