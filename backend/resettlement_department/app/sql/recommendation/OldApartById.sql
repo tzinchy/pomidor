@@ -50,7 +50,7 @@ joined_aparts AS (
     LEFT JOIN 
         status s ON o.status_id = s.status_id
     LEFT JOIN 
-        decline_reason dr ON o.decline_reason_id = dr.declined_reason_id  -- Fixed join condition
+        decline_reason dr ON o.decline_reason_id = dr.decline_reason_id  
     WHERE 
         o.new_apart_id IS NOT NULL  
     GROUP BY 
