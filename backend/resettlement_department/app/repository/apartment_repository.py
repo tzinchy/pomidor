@@ -6,6 +6,7 @@ from core.config import RECOMMENDATION_FILE_PATH
 from handlers.httpexceptions import SomethingWrong
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Optional
+import json 
 
 logger = logging.getLogger(__name__)
 
@@ -15,9 +16,6 @@ class ApartmentRepository:
         self.db = session_maker
 
     async def get_districts(self, apart_type: str) -> list[str]:
-        """
-        Получить уникальные районы.
-        """
         if apart_type not in ApartTypeSchema:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
@@ -39,9 +37,6 @@ class ApartmentRepository:
     async def get_municipal_district(
         self, apart_type: str, districts: list[str]
     ) -> list[str]:
-        """
-        Получить уникальные области по районам.
-        """
         if apart_type not in ApartTypeSchema:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
@@ -72,9 +67,6 @@ class ApartmentRepository:
     async def get_house_addresses(
         self, apart_type: str, municipal_districts: list[str]
     ) -> list[str]:
-        """
-        Получить уникальные адреса домов по областям и районам (если указаны)
-        """
         if apart_type not in ApartTypeSchema:
             raise ValueError(f"Invalid apartment type: {apart_type}")
 
@@ -116,9 +108,6 @@ class ApartmentRepository:
         is_queue: bool = None,
         is_private: bool = None,
     ) -> list[dict]:
-        """
-        Получаем все квартиры с учетом опциональных фильтров.
-        """
         if apart_type not in ApartTypeSchema:
             raise ValueError(f"Invalid apartment type: {apart_type}")
         if area_type not in ["full_living_area", "total_living_area", "living_area"]:
@@ -127,7 +116,6 @@ class ApartmentRepository:
         conditions = ["rn = 1"]
         params = {}
 
-        # Формируем условия для каждого переданного параметра
         if house_addresses:
             addr_placeholders = []
             for i, addr in enumerate(house_addresses):
@@ -184,7 +172,6 @@ class ApartmentRepository:
 
         where_clause = " AND ".join(conditions)
 
-        # Формируем запрос в зависимости от типа квартир
         if apart_type == "OldApart":
             print(conditions)
             query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/OldApartTable.sql")
@@ -267,7 +254,6 @@ class ApartmentRepository:
                     serialized_result = [row._asdict() for row in rows]
                     return serialized_result[0]
                 else:
-                    # Если результат пуст, возвращаем сообщение
                     return {"message": "No rows affected"}
 
             except Exception as e:
@@ -277,9 +263,9 @@ class ApartmentRepository:
     async def manual_matching(self, apart_id, new_apart_ids):
         try:
             async with self.db() as session:
-                # Проверяем существующие согласованные квартиры
+                # Запрос для получения одобренных квартир
                 check_approved_query = text("""
-                    SELECT jsonb_object_agg(key::text, value)
+                    SELECT jsonb_object_agg(key::text, value) 
                     FROM (
                         SELECT key, value 
                         FROM offer, jsonb_each(new_aparts)
@@ -291,46 +277,39 @@ class ApartmentRepository:
                 result = await session.execute(
                     check_approved_query, {"apart_id": apart_id}
                 )
-                approved_aparts = result.scalar() or {}
+                aparts = result.scalar() or {}  # Если результат NULL, используем пустой словарь
+                print(aparts)
 
                 # Объединяем существующие согласованные квартиры с новыми
-                all_apart_ids = list(approved_aparts.keys()) + new_apart_ids
+                for id in new_apart_ids:
+                    aparts[str(id)] = {"status_id": 7}
 
-                if not all_apart_ids:
-                    raise ValueError("Нет квартир для добавления")
-
-                # Обновляем предыдущий офер только если нет согласованных квартир
-                if not approved_aparts:
-                    update_query = text(
-                        read_sql_query(
-                            f"{RECOMMENDATION_FILE_PATH}/UpdateOfferStatus.sql"
-                        )
+                # Обновляем статус последнего предложения
+                await session.execute(text("""
+                    WITH last_offer AS (
+                        SELECT offer_id 
+                        FROM offer 
+                        WHERE affair_id = :apart_id 
+                        ORDER BY offer_id DESC 
+                        LIMIT 1
                     )
-                    await session.execute(
-                        update_query, {"status": "Отказ", "apart_id": apart_id}
-                    )
+                    UPDATE offer 
+                    SET status_id = 2 
+                    WHERE offer_id = (SELECT offer_id FROM last_offer);
+                """), {'apart_id': apart_id})
 
-                # Создаем JSONB объект для новых квартир
-                insert_query = text("""
-                    INSERT INTO public.offer (affair_id, new_aparts, status_id)
-                    VALUES (
-                        :old_apart_id,
-                        jsonb_object(
-                            (:apart_ids)::text[],
-                            (SELECT array_agg(jsonb_build_object('status_id', 7)) 
-                            FROM unnest((:apart_ids)::text[]))
-                        ),
-                        7
-                    );
-                """)
+                # Преобразуем словарь в JSON-строку
+                aparts_json = json.dumps(aparts)
 
-                await session.execute(
-                    insert_query, {"old_apart_id": apart_id, "apart_ids": all_apart_ids}
-                )
+                # Вставляем новое предложение
+                await session.execute(text("""
+                    INSERT INTO offer (affair_id, new_aparts, status_id) 
+                    VALUES (:apart_id, (:aparts)::jsonb, 7);
+                """), {'apart_id': apart_id, 'aparts': aparts_json})
 
+                # Фиксируем изменения
                 await session.commit()
-                return "success"
-
+                return {'status': 'done'}
         except SQLAlchemyError as e:
             print(f"Ошибка при обработке old_apart_id {apart_id}: {e}")
             await session.rollback()
@@ -443,7 +422,6 @@ class ApartmentRepository:
     ):
         async with self.db() as session:
             try:
-                # Вставляем данные в таблицу decline_reason
                 insert_query = text("""
                     INSERT INTO public.decline_reason 
                     (min_floor, max_floor, unom, entrance, apartment_layout, notes)
@@ -508,7 +486,7 @@ class ApartmentRepository:
                 )
 
                 await session.commit()
-                return {'status' : 'done'}
+                return {"status": "done"}
             except Exception as error:
                 print(error)
                 await session.rollback()
@@ -549,7 +527,7 @@ class ApartmentRepository:
                 ),
                 {"decline_reason_id": decline_reason_id},
             )
-            result = result.fetchone() 
+            result = result.fetchone()
             return result._mapping
 
     async def update_decline_reason(
@@ -578,19 +556,17 @@ class ApartmentRepository:
                 }
 
                 if not filtered_params:
-                    return {"status": "no_changes"} 
+                    return {"status": "no_changes"}
 
                 set_clause = ", ".join(
                     [f"{key} = :{key}" for key in filtered_params.keys()]
                 )
-                filtered_params["cancell_reason_id"] = (
-                    decline_reason_id 
-                )
+                filtered_params["decline_reason_id"] = decline_reason_id
 
                 update_query = text(f"""
                     UPDATE public.decline_reason 
                     SET {set_clause}
-                    WHERE decline_reason_id = :cancell_reason_id
+                    WHERE decline_reason_id = :decline_reason_id
                 """)
 
                 await session.execute(update_query, filtered_params)
