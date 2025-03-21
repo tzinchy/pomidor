@@ -7,11 +7,9 @@ class ApartmentService:
         self.apartment_repository = repository
 
     async def get_district(self, apart_type: str):
-        """Получить список районов."""
         return await self.apartment_repository.get_districts(apart_type)
 
     async def get_municipal_districts(self, apart_type: str, districts: List[str]):
-        """Получить список областей по районам."""
         return await self.apartment_repository.get_municipal_district(
             apart_type, districts
         )
@@ -19,7 +17,6 @@ class ApartmentService:
     async def get_house_addresses(
         self, apart_type: str, municipal_districts: List[str]
     ):
-        """Получить список адресов домов по районам и областям."""
         return await self.apartment_repository.get_house_addresses(
             apart_type, municipal_districts
         )
@@ -52,11 +49,10 @@ class ApartmentService:
             is_private=is_private,
         )
 
-    async def get_apartment_by_id(self, apart_id, apart_type):
-        """Получить всю информацию по квартире."""
+    async def get_apartment_by_id(self, apart_id: int, apart_type: str):
         return await self.apartment_repository.get_apartment_by_id(apart_id, apart_type)
 
-    async def get_house_address_with_room_count(self, apart_type):
+    async def get_house_address_with_room_count(self, apart_type: str):
         result = await self.apartment_repository.get_house_address_with_room_count(
             apart_type
         )
@@ -68,28 +64,32 @@ class ApartmentService:
             formatted_result.append((address, room_details))
         return formatted_result
 
-    async def switch_apartment(self, first_apart_id, second_apart_id):
+    async def switch_apartment(self, first_apart_id: int, second_apart_id: int):
         return await self.apartment_repository.switch_apartment(
             first_apart_id, second_apart_id
         )
 
-    async def manual_matching(self, old_apart_id, offer_id, new_apart_id):
+    async def manual_matching(self, old_apart_id: int, new_apart_ids: List[int]):
         return await self.apartment_repository.manual_matching(
-            old_apart_id, offer_id, new_apart_id
+            old_apart_id, new_apart_ids
         )
 
-    async def get_void_aparts_for_apartment(self, apartmentd_id):
+    async def get_void_aparts_for_apartment(self, apartmentd_id: int):
         return await self.apartment_repository.get_void_aparts_for_apartment(
             apartmentd_id
         )
 
-    async def cancell_matching_for_apart(self, apart_id, apart_type):
+    async def cancell_matching_for_apart(self, apart_id: int, apart_type: str):
         return await self.apartment_repository.cancell_matching_apart(
             apart_id, apart_type
         )
 
-    async def update_status_for_apart(self, apart_id: int, new_apart_id : int, status: str, apart_type):
-        return await self.apartment_repository.update_status_for_apart(apart_id, new_apart_id, status, apart_type)
+    async def update_status_for_apart(
+        self, apart_id: int, new_apart_id: int, status: str, apart_type: str
+    ):
+        return await self.apartment_repository.update_status_for_apart(
+            apart_id, new_apart_id, status, apart_type
+        )
 
     async def set_private_for_new_aparts(
         self, new_aparts: List[int], status: bool = True
@@ -101,7 +101,7 @@ class ApartmentService:
     async def set_cancell_reason(
         self,
         apart_id,
-        new_apart_id, 
+        new_apart_id,
         min_floor,
         max_floor,
         unom,
@@ -119,6 +119,29 @@ class ApartmentService:
             apartment_layout,
             notes,
         )
-    
-    async def set_notes(self, apart_id : int, notes : str, apart_type : str): 
+
+    async def set_notes(self, apart_id: int, notes: str, apart_type: str):
         return await self.apartment_repository.set_notes(apart_id, notes, apart_type)
+
+    async def get_decline_reason(self, decline_reason_id):
+        return await self.apartment_repository.get_decline_reason(decline_reason_id)
+
+    async def update_decline_reason(
+        self,
+        decline_reason_id: int,
+        min_floor: Optional[int] = None,
+        max_floor: Optional[int] = None,
+        unom: Optional[str] = None,
+        entrance: Optional[str] = None,
+        apartment_layout: Optional[str] = None,
+        notes: Optional[str] = None,
+    ):
+        return await self.apartment_repository.update_decline_reason(
+            decline_reason_id,
+            min_floor,
+            max_floor,
+            unom,
+            entrance,
+            apartment_layout,
+            notes,
+        )

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from depends import dashboard_service
 
-router = APIRouter(prefix="/dashboard", tags=["Дашборд"])
+router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 
 @router.get("/table")
