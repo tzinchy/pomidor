@@ -380,7 +380,7 @@ class ApartmentRepository:
                 if apart_type == ApartTypeSchema.OLD:
                     query = text(
                         read_sql_query(
-                            f"{RECOMMENDATION_FILE_PATH}/UpdateOfferStatusForNewApartt.sql"
+                            f"{RECOMMENDATION_FILE_PATH}/UpdateOfferStatusForNewApart.sql"
                         )
                     )
                     result = await session.execute(
