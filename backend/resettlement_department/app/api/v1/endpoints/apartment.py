@@ -80,15 +80,15 @@ async def change_status(
 async def set_cancell_reason(
     apart_id: int, new_apart_id: int, decline_reason: DeclineReasonSchema
 ):
-    await apartment_service.set_cancell_reason(
-        apart_id,
-        new_apart_id,
-        decline_reason.min_floor,
-        decline_reason.max_floor,
-        decline_reason.unom,
-        decline_reason.entrance,
-        decline_reason.apartment_layout,
-        decline_reason.notes,
+    return await apartment_service.set_decline_reason(
+        apart_id=apart_id,
+        new_apart_id=new_apart_id,
+        min_floor=decline_reason.min_floor,
+        max_floor=decline_reason.max_floor,
+        unom=decline_reason.unom,
+        entrance=decline_reason.entrance,
+        apartment_layout=decline_reason.apartment_layout,
+        notes=decline_reason.notes,
     )
 
 
