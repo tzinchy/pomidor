@@ -130,7 +130,12 @@ export default function ApartDetails({
                           apartmentDetails={apartmentDetails}
                           newApartId={offerKeys[0]}
                         />
-                        <DeclineResonsCell props={offerKeys.length > 0 ? value[offerKeys[0]] : value} />
+                        <DeclineResonsCell 
+                        props={offerKeys.length > 0 ? value[offerKeys[0]] : value} 
+                        newApartId={offerKeys[0]} 
+                        apartmentDetails={apartmentDetails}
+                        selectedRowId={selectedRowId}
+                        />
                       </tr>
 
                       {/* Дополнительные строки, если есть несколько offers */}
@@ -153,7 +158,12 @@ export default function ApartDetails({
                               apartmentDetails={apartmentDetails}
                               newApartId={key}
                             />
-                            <DeclineResonsCell props={offerKeys.length > 0 ? value[key] : value} />
+                            <DeclineResonsCell 
+                              props={offerKeys.length > 0 ? value[key] : value} 
+                              newApartId={key} 
+                              apartmentDetails={apartmentDetails}
+                              selectedRowId={selectedRowId}
+                            />
                           </tr>
                         ))}
                     </React.Fragment>
