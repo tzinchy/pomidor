@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 
-export default function MunicipalDropdownFilter({ item, data, func, filterType, isFiltersReset, filters }) {
+export default function MunicipalDropdownFilter({
+    item,
+    data,
+    func,
+    filterType,
+    isFiltersReset,
+    filters,
+    showAddresses = true,
+}) {
     const [dropdownState, setDropdownState] = useState(false);
     const [selectedValues, setSelectedValues] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -38,23 +46,55 @@ export default function MunicipalDropdownFilter({ item, data, func, filterType, 
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const filteredData = data
-    .filter((area) => {
-        // Если filters.district не пуст, фильтруем по нему
-        if (filters.district && filters.district.length > 0) {
-            const isIncluded = filters.district.includes(area.value);
-            return isIncluded;
-        }
-        // Если filters.district пуст, пропускаем фильтрацию
-        return true;
-    })
-    .map((area) => ({
-        ...area,
-        items: area.items.filter((item) =>
-            item.label.toLowerCase().includes(searchQuery.toLowerCase())
-        ),
-    }))
-    .filter((area) => area.items.length > 0); // Убираем области, в которых нет подходящих элементов
+    // Фильтрация данных
+    const filteredData = Object.entries(data)
+        .filter(([district]) => {
+            // Фильтрация по district
+            if (filters.district?.length && !filters.district.includes(district)) {
+                return false;
+            }
+            return true;
+        })
+        .map(([district, municipalDistricts]) => {
+            const filteredMunicipalDistricts = Object.entries(municipalDistricts)
+                .filter(([municipal]) => {
+                    // Фильтрация по municipal_district если есть фильтры
+                    if (
+                        showAddresses &&
+                        filters.municipal_district?.length &&
+                        !filters.municipal_district.includes(municipal)
+                    ) {
+                        return false;
+                    }
+                    return true;
+                })
+                .map(([municipal, addresses]) => ({
+                    municipal,
+                    addresses: showAddresses
+                        ? addresses.filter((address) =>
+                            address.toLowerCase().includes(searchQuery.toLowerCase())
+                        )
+                        : addresses,
+                }))
+                .filter(({ addresses }) => addresses.length > 0);
+
+            return {
+                district,
+                municipalDistricts: filteredMunicipalDistricts,
+            };
+        })
+        .filter(({ municipalDistricts }) => municipalDistricts.length > 0);
+
+    // Сортировка адресов, если showAddresses === true
+    const sortedData = showAddresses
+        ? filteredData.map(({ district, municipalDistricts }) => ({
+            district,
+            municipalDistricts: municipalDistricts.map(({ municipal, addresses }) => ({
+                municipal,
+                addresses: addresses.sort((a, b) => a.localeCompare(b)),
+            })),
+        }))
+        : filteredData;
 
     return (
         <div className="relative flex items-center mr-4" ref={container}>
@@ -131,38 +171,77 @@ export default function MunicipalDropdownFilter({ item, data, func, filterType, 
                             />
                         </div>
                         <div className="max-h-[300px] overflow-y-auto mt-2">
-                            {filteredData.map((area) => (
-                                <div key={area.value}>
+                            {sortedData.map(({ district, municipalDistricts }) => (
+                                <div key={district}>
                                     <div className="p-2 text-sm text-gray-400">
-                                        {area.label}
+                                        {district}
                                     </div>
-                                    {area.items.map((item) => (
-                                        <div
-                                            key={item.value}
-                                            className="flex items-center text-sm p-2 hover:bg-gray-100 rounded-md cursor-pointer"
-                                            onClick={() => toggleValue(item.value)}
-                                        >
-                                            <div className={`w-4 h-4  border rounded-sm mr-2 flex items-center justify-center ${
-                                                isSelected(item.value) ? 'bg-blue-500 border-blue-500' : 'border-gray-400'
-                                            }`}>
-                                                {isSelected(item.value) && (
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="16"
-                                                        height="16"
-                                                        viewBox="0 0 24 24"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        strokeWidth="2"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        className="lucide lucide-check text-white"
+                                    {municipalDistricts.map(({ municipal, addresses }) => (
+                                        <div key={municipal}>
+                                            {!showAddresses ? (
+                                                <div
+                                                    className="flex items-center text-sm p-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                                                    onClick={() => toggleValue(municipal)}
+                                                >
+                                                    <div
+                                                        className={`mr-2 flex h-4 w-4 items-center justify-center rounded-sm border ${
+                                                            isSelected(municipal)
+                                                                ? "text-primary-foreground border-black"
+                                                                : "opacity-60 [&_svg]:invisible"
+                                                        }`}
                                                     >
-                                                        <path d="M20 6 9 17l-5-5"></path>
-                                                    </svg>
-                                                )}
-                                            </div>
-                                            <span>{item.label}</span>
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="24"
+                                                            height="24"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            className="lucide lucide-check h-4 w-4"
+                                                        >
+                                                            <path d="M20 6 9 17l-5-5"></path>
+                                                        </svg>
+                                                    </div>
+                                                    <span>{municipal}</span>
+                                                </div>
+                                            ) : (
+                                                <div className="p-2 text-sm text-gray-400">
+                                                    {municipal}
+                                                </div>
+                                            )}
+                                            {showAddresses &&
+                                                addresses.map((address) => (
+                                                    <div
+                                                        key={address}
+                                                        className="flex items-center text-sm p-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                                                        onClick={() => toggleValue(address)}
+                                                    >
+                                                        <div className={`w-4 h-4 border rounded-sm mr-2 flex items-center justify-center ${
+                                                            isSelected(address) ? 'bg-blue-500 border-blue-500' : 'border-gray-400'
+                                                        }`}>
+                                                            {isSelected(address) && (
+                                                                <svg
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    width="16"
+                                                                    height="16"
+                                                                    viewBox="0 0 24 24"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    strokeWidth="2"
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    className="lucide lucide-check text-white"
+                                                                >
+                                                                    <path d="M20 6 9 17l-5-5"></path>
+                                                                </svg>
+                                                            )}
+                                                        </div>
+                                                        <span>{address}</span>
+                                                    </div>
+                                                ))}
                                         </div>
                                     ))}
                                 </div>

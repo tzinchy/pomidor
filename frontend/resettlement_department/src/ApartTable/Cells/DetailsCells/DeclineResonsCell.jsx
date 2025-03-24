@@ -23,8 +23,6 @@ export default function DeclineResonsCell({ props, newApartId, apartmentDetails,
     setNotes(value.notes);
   }, [value]); // Зависимость от value
 
-  console.log(minFloor, maxFloor, unom, entrance, apartment_layout, notes, showRejectModal);
-
   async function update_declined_reason(decline_reason_id, declineReason) {
     try {
       const response = await fetch(

@@ -51,7 +51,7 @@ export default function ApartDetails({
 
       const result = await response.json();
       console.log("Подборы отменены:", result.message);
-      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      fetchApartments();
     } catch (error) {
       console.error("Ошибка:", error);
       alert("Не удалось отменить подборы. Попробуйте снова.");
@@ -213,6 +213,7 @@ export default function ApartDetails({
         isOpen={isManualSelectionOpen}
         onClose={() => setIsManualSelectionOpen(false)}
         apartmentId={apartmentDetails.affair_id}
+        fetchApartments={fetchApartments}
       />
     </div>
   );
