@@ -255,45 +255,49 @@ class OldApartRepository:
                 logger.error(f"Error switching apartments: {e}")
                 raise SomethingWrong
 
-    async def manual_matching(self, apart_id, new_apart_ids):
+    async def manual_matching(self, old_apart_id, new_apart_ids):
         try:
             async with self.db() as session:
-                check_approved_query = text("""
-                    SELECT jsonb_object_agg(key::text, value) 
-                    FROM (
-                        SELECT key, value 
-                        FROM offer, jsonb_each(new_aparts)
-                        WHERE affair_id = :apart_id
-                        AND (value->>'status_id')::int = 1
-                    ) approved_aparts;
-                """)
+                aparts = {}
+                check_exist = await session.execute(text('''
+                    SELECT 1 FROM offer WHERE affair_id = :old_apart_id LIMIT 1;
+                '''), {'old_apart_id' : old_apart_id})
+                
+                if check_exist.fetchone() is not None:
+                    check_approved_query = text("""
+                        SELECT jsonb_object_agg(key::text, value) 
+                        FROM (
+                            SELECT key, value 
+                            FROM offer, jsonb_each(new_aparts)
+                            WHERE affair_id = :apart_id
+                            AND (value->>'status_id')::int = 1
+                        ) approved_aparts;
+                    """)
 
-                result = await session.execute(
-                    check_approved_query, {"apart_id": apart_id}
-                )
-                aparts = (
-                    result.scalar() or {}
-                ) 
-                print(aparts)
+                    result = await session.execute(
+                        check_approved_query, {"apart_id": old_apart_id}
+                    )
+                    aparts = (
+                        result.scalar() or {}
+                    ) 
+                    await session.execute(
+                        text("""
+                        WITH last_offer AS (
+                            SELECT offer_id 
+                            FROM offer 
+                            WHERE affair_id = :apart_id 
+                            ORDER BY offer_id DESC 
+                            LIMIT 1
+                        )
+                        UPDATE offer 
+                        SET status_id = 2 
+                        WHERE offer_id = (SELECT offer_id FROM last_offer);
+                    """),
+                        {"apart_id": old_apart_id},
+                    )
 
                 for id in new_apart_ids:
                     aparts[str(id)] = {"status_id": 7}
-
-                await session.execute(
-                    text("""
-                    WITH last_offer AS (
-                        SELECT offer_id 
-                        FROM offer 
-                        WHERE affair_id = :apart_id 
-                        ORDER BY offer_id DESC 
-                        LIMIT 1
-                    )
-                    UPDATE offer 
-                    SET status_id = 2 
-                    WHERE offer_id = (SELECT offer_id FROM last_offer);
-                """),
-                    {"apart_id": apart_id},
-                )
 
                 aparts_json = json.dumps(aparts)
 
@@ -302,13 +306,13 @@ class OldApartRepository:
                     INSERT INTO offer (affair_id, new_aparts, status_id) 
                     VALUES (:apart_id, (:aparts)::jsonb, 7);
                 """),
-                    {"apart_id": apart_id, "aparts": aparts_json},
+                    {"apart_id": old_apart_id, "aparts": aparts_json},
                 )
 
                 await session.commit()
                 return {"status": "done"}
         except SQLAlchemyError as e:
-            print(f"Ошибка при обработке old_apart_id {apart_id}: {e}")
+            print(f"Ошибка при обработке old_apart_id {old_apart_id}: {e}")
             await session.rollback()
             raise SomethingWrong
 
@@ -318,7 +322,7 @@ class OldApartRepository:
             result = await session.execute(text(query), {"apart_id": apart_id})
             return [row._mapping for row in result]
 
-    async def cancell_matching_apart(self, apart_id, apart_type):
+    async def cancell_matching_apart(self, apart_id):
         async with self.db() as session:
             try:
                 result = await session.execute(
@@ -334,7 +338,7 @@ class OldApartRepository:
                 raise SomethingWrong
 
     async def update_status_for_apart(
-        self, apart_id, new_apartment_id, status, apart_type
+        self, apart_id, new_apart_id, status
     ):
         async with self.db() as session:
             try:
@@ -348,12 +352,12 @@ class OldApartRepository:
                     {
                         "status": status,
                         "apart_id": apart_id,
-                        "new_apart_id": str(new_apartment_id),
+                        "new_apart_id": str(new_apart_id),
                     },
                 )
                 await session.commit()
                 return result
-            except SQLAlchemyError as error:
+            except Exception as error:
                 print(error)
                 await session.rollback()
                 raise SomethingWrong(
@@ -443,25 +447,17 @@ class OldApartRepository:
                 await session.rollback()
                 raise SomethingWrong
 
-    async def set_notes(self, apart_id: int, notes: str, apart_type: str):
+    async def set_notes(self, apart_id: int, notes: str):
         async with self.db() as session:
             try:
-                if apart_type == ApartTypeSchema.OLD:
-                    await session.execute(
-                        text("""
-                        UPDATE old_apart SET notes = :notes 
-                        WHERE affair_id = :apart_id
-                        """),
-                        {"notes": notes, "apart_id": apart_id},
-                    )
-                elif apart_type == ApartTypeSchema.NEW:
-                    await session.execute(
-                        text("""
-                        UPDATE new_apart SET notes = :notes 
-                        WHERE new_apart_id = :apart_id
-                        """),
-                        {"notes": notes, "apart_id": apart_id},
-                    )
+
+                await session.execute(
+                    text("""
+                    UPDATE new_apart SET notes = :notes 
+                    WHERE new_apart_id = :apart_id
+                    """),
+                    {"notes": notes, "apart_id": apart_id},
+                )
                 await session.commit()
                 return {"status": "done"}
             except Exception as e:

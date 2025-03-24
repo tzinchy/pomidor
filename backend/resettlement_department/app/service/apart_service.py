@@ -122,7 +122,7 @@ class ApartService:
 
     async def manual_matching(self, old_apart_id: int, new_apart_ids: List[int]):
         return await self.old_apart_repository.manual_matching(
-            old_apart_id, new_apart_ids
+            old_apart_id=old_apart_id, new_apart_ids=new_apart_ids
         )
 
     async def get_void_aparts_for_apartment(self, apartmentd_id: int):
@@ -147,7 +147,7 @@ class ApartService:
     ):
         if apart_type == ApartTypeSchema.OLD: 
             return await self.old_apart_repository.update_status_for_apart(
-                apart_id, new_apart_id, status, apart_type
+                apart_id=apart_id, new_apart_id=new_apart_id, status=status
             )
         else:
             raise AttributeError
@@ -183,9 +183,9 @@ class ApartService:
 
     async def set_notes(self, apart_id: int, notes: str, apart_type: str):
         if apart_type == ApartTypeSchema.OLD:
-            return await self.new_apart_repository.set_notes(apart_id, notes, apart_type)
+            return await self.new_apart_repository.set_notes(apart_id, notes=notes)
         elif apart_type == ApartTypeSchema.NEW: 
-            return await self.new_apart_repository
+            return await self.new_apart_repository.set_notes(apart_id=apart_id, notes=notes)
         else:
             raise AttributeError
 
