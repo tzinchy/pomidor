@@ -29,6 +29,7 @@ ranked_apartments AS (
         na.new_apart_id,
         s.status AS status,
         is_private,
+        for_special_needs_marker,
         ROW_NUMBER() OVER (
             PARTITION BY na.new_apart_id 
             ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC

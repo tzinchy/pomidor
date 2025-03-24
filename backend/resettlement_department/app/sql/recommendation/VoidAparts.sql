@@ -10,9 +10,9 @@ WITH clr_dt AS (
         jsonb_each(new_aparts)
 ),
 apart_info AS (
-    SELECT history_id, room_count, is_queue 
+    SELECT history_id, room_count, is_queue, is_special_needs_marker
     FROM old_apart 
-    WHERE affair_id = :apart_id
+    WHERE affair_id = 415274856325
 ),
 ranked_apartments AS (
     SELECT 
@@ -31,6 +31,7 @@ ranked_apartments AS (
         na.history_id, 
         s.status AS status,
         o.status_id, 
+		for_special_needs_marker,
         ROW_NUMBER() OVER (
             PARTITION BY na.new_apart_id 
             ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at ASC
@@ -51,4 +52,5 @@ WHERE
         ELSE ranked_apartments.room_count = (SELECT room_count FROM apart_info)
     END
     AND (status_id IS NULL OR status_id NOT IN (1,4,5,6,7))
+    AND for_special_needs_marker = (SELECT is_special_needs_marker FROM apart_info) 
 ORDER BY status;
