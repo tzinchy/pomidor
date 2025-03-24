@@ -4,7 +4,8 @@ import { areas } from "../../Filters/FilterData";
 import MunicipalDropdownFilter from "./MunicipalDropdownFilter";
 import SearchTry from "./SearchTry";
 
-export default function AllFilters({ handleFilterChange, rooms, matchCount, apartType, filtersResetFlag, handleResetFilters, isQueueChecked, setIsQueueChecked, setSearchQuery }) {
+export default function AllFilters({ handleFilterChange, rooms, matchCount, apartType, filtersResetFlag, handleResetFilters, isQueueChecked, setIsQueueChecked, setSearchQuery, filters,
+    houseAddress, filterData }) {
     const StatusFilters = ['Не подобрано', "Согласие", 'Отказ', "Суд", "Фонд компенсация", "Фонд докупка", "Ожидание", 'Ждёт одобрения'];
 
     const handleQueueChange = (e) => {
@@ -13,24 +14,33 @@ export default function AllFilters({ handleFilterChange, rooms, matchCount, apar
         handleFilterChange('is_queue', isChecked ? [1] : [0, 1]);
     };
 
-    
-
     return (
         <div className="flex">
-            <SearchTry placeholder={'Поиск по адреу'} setSearchQuery={setSearchQuery} />
+            {/*<SearchTry placeholder={'Поиск по адреу'} setSearchQuery={setSearchQuery} />*/}
             <DropdownFilter 
                 item={'АО'} 
-                data={areas.map(area => area.label).flat()} 
+                data={Object.keys(filterData)} 
                 func={handleFilterChange}
                 filterType={'district'} 
                 isFiltersReset={filtersResetFlag} 
             />
             <MunicipalDropdownFilter
                 item={'Район'} 
-                data={areas} 
+                data={filterData} 
                 func={handleFilterChange}
                 filterType={'municipal_district'} 
                 isFiltersReset={filtersResetFlag} 
+                filters={filters}
+                showAddresses={false}
+            />
+            <MunicipalDropdownFilter 
+                item={'Дом'} 
+                data={filterData} 
+                func={handleFilterChange}
+                filterType={'house_address'} 
+                isFiltersReset={filtersResetFlag} 
+                filters={filters}
+                showAddresses={true}
             />
             <DropdownFilter 
                 item={'Статус'} 

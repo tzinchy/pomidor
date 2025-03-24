@@ -104,7 +104,7 @@ export default function DetailsStatusCell({
   async function setCancellReason(apartmentId, declineReason) {
     try {
       const response = await fetch(
-        `${HOSTLINK}/tables/apartment/${apartmentId}/${newApartId}/set_cancell_reason`,
+        `${HOSTLINK}/tables/apartment/${apartmentId}/${parseInt(newApartId)}/set_decline_reason`,
         {
           method: "POST",
           headers: {
