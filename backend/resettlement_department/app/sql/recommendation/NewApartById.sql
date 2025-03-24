@@ -8,7 +8,7 @@ WITH unnset_offer AS (
         answer_date,
         created_at,
         updated_at,
-        declined_reason_id
+        (value->>'decline_reason_id')::integer AS decline_reason_id
     FROM offer, 
     jsonb_each(new_aparts)
     order by created_at ASC, updated_at ASC
@@ -42,7 +42,7 @@ joined_aparts AS (
     LEFT JOIN 
         status s ON o.status_id = s.status_id
     LEFT JOIN 
-        decline_reason AS dr USING (declined_reason_id)
+        decline_reason AS dr USING (decline_reason_id)
     GROUP BY 
         o.offer_id,
         o.new_apart_id

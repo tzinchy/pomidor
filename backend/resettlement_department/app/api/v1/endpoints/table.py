@@ -5,30 +5,22 @@ from schema.apartment import (
 )
 from typing import Optional, List, Literal
 
-
-
 router = APIRouter(prefix="/tables", tags=["Table and Tree"])
 
-
-# Получение текущего типа апартаментов
 @router.get("/apart_type")
 async def get_current_apart_type(
     apart_type: ApartTypeSchema = Query(
-        default=ApartTypeSchema.NEW, description="Тип квартир"
+        default=ApartTypeSchema.NEW, description="Получить тип апартаментов (старая(семья)/новая(ресурс))"
     ),
 ):
     return {"apart_type": apart_type}
 
-
-# Получение списка районов
 @router.get("/district")
 async def get_districts(
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
 ):
     return await apartment_service.get_district(apart_type)
 
-
-# Получение списка муниципальных районов
 @router.get("/municipal_district")
 async def get_areas(
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
@@ -36,15 +28,12 @@ async def get_areas(
 ):
     return await apartment_service.get_municipal_districts(apart_type, district)
 
-
-# Получение списка адресов домов
 @router.get("/house_addresses")
 async def get_house_addresses(
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
     municipal_district: List[str] = Query(..., description="Список областей"),
 ):
     return await apartment_service.get_house_addresses(apart_type, municipal_district)
-
 
 @router.get("/apartments")
 async def get_apartments(
@@ -104,3 +93,6 @@ async def switch_apartments(
 ):
     await apartment_service.switch_apartment(first_apart_id, second_apart_id)
 
+@router.get('/get_district_chain')
+async def get_district_chain(apart_type: ApartTypeSchema = Query(..., description='Тип апартаментов')):
+    return await apartment_service.get_district_chain(apart_type)
