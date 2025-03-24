@@ -741,3 +741,308 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
     finally:
         cursor.close()
         connection.close()
+
+def insert_data_to_structure(df: pd.DataFrame):
+    try:
+        family_structure = df.dropna(subset=["ID"])
+
+        # 2. Rename columns to match the database schema
+        family_structure.rename(
+            columns={
+                "ID": "affair_id",
+                "КПУ_Дело_№ полный(новый)": "kpu_number",
+                "КПУ_Заявитель_Фамилия": "surname",
+                "КПУ_Заявитель_Имя": "firstname",
+                "КПУ_Заявитель_Отчество": "lastname",
+                "КПУ_кадастровый_номер_адреса": "cad_num",
+                "К_Тип_Кв": "apart_type",
+                "К_Комн": "room_count",
+                "К_Этаж": "floor",
+                "К_Общ": "full_living_area",
+                "К_Общ(б/л)": "total_living_area",
+                "К_Жил": "living_area",
+                "КПУ_ФИО": "fio",
+                "Notes": "notes",
+                "Адрес_Округ": "district",
+                "Адрес_Короткий": "house_address",
+                "Адрес_№ кв": "apart_number",
+                "КПУ_Чел.в деле": "people_v_dele",
+                "КПУ_Чел.учете": "people_uchet",
+                "КПУ_Чел.в семье": "people_in_family",
+                "КПУ_Состояние": "status_id",
+                "КПУ_Направление": "category",
+            },
+            inplace=True,
+        )
+
+        # status_mapping = {
+        #     "в орд.гр": 1,
+        #     "в плане": 2,
+        #     "на учете": 3,
+        #     "перед.в др.АО": 4,
+        #     "пред.пл.": 5,
+        #     "снято": 6,
+        # }
+        # # Применение маппинга
+        # family_structure["status_id"] = family_structure["status_id"].apply(
+        #     lambda x: status_mapping.get(x, x)
+        # )
+        family_structure["floor"] = family_structure["floor"].astype("Int64")
+        family_structure["category"] = family_structure["category"].astype("Int64")
+        family_structure["full_living_area"] = family_structure[
+            "full_living_area"
+        ].astype(float)
+        family_structure["total_living_area"] = family_structure[
+            "total_living_area"
+        ].astype(float)
+        family_structure["living_area"] = family_structure["living_area"].astype(float)
+        family_structure["people_v_dele"] = family_structure["people_v_dele"].astype(
+            "Int64"
+        )
+        family_structure["people_uchet"] = family_structure["people_uchet"].astype(
+            "Int64"
+        )
+        family_structure["people_in_family"] = family_structure[
+            "people_in_family"
+        ].astype("Int64")
+        family_structure = family_structure[
+            [
+                "affair_id",
+                "kpu_number",
+                "fio",
+                "surname",
+                "firstname",
+                "lastname",
+                "people_in_family",
+                "cad_num",
+                "notes",
+                "district",
+                "house_address",
+                "apart_number",
+                "room_count",
+                "floor",
+                "full_living_area",
+                "living_area",
+                "people_v_dele",
+                "people_uchet",
+                "total_living_area",
+                "apart_type",
+                "category",
+            ]
+        ]
+        # Convert to list of dictionaries for batch insertion
+        family_structure = family_structure.replace({np.nan: None})
+        family_structure["status_id"] = family_structure["status_id"].astype("Int64")
+        # Convert DataFrame rows into a list of tuples for bulk insert
+        args = list(family_structure.itertuples(index=False, name=None))
+        # Prepare the arguments string for the SQL query
+
+        # Connect to the PostgreSQL database
+        connection  =  psycopg2.connect(
+            host=settings.project_management_setting.DB_HOST,
+            user=settings.project_management_setting.DB_USER,
+            password=settings.project_management_setting.DB_PASSWORD,
+            port=settings.project_management_setting.DB_PORT,
+            database=settings.project_management_setting.DB_NAME
+        )
+        cursor = connection.cursor()
+
+        # Prepare the arguments string for the SQL query
+        args_str = ",".join(
+            "({})".format(
+                ", ".join(
+                    "'{}'".format(x.replace("'", "''"))
+                    if isinstance(x, str)
+                    else "NULL"
+                    if x is None
+                    else str(x)
+                    for x in arg
+                )
+            )
+            for arg in args
+        )
+
+        cursor.execute(f"""
+        INSERT INTO public.family_structure (
+            affair_id, kpu_number, fio, surname, firstname, lastname, 
+            people_in_family, cad_num, notes, district, house_address, 
+            apart_number, room_count, floor, full_living_area, living_area, people_v_dele, 
+            people_uchet, total_living_area, apart_type, category
+        )
+        VALUES 
+            {args_str}
+                    ON CONFLICT (affair_id) 
+        DO UPDATE SET 
+        kpu_number = EXCLUDED.kpu_number,
+        fio = EXCLUDED.fio,
+        surname = EXCLUDED.surname,
+        firstname = EXCLUDED.firstname,
+        lastname = EXCLUDED.lastname,
+        people_in_family = EXCLUDED.people_in_family,
+        cad_num = EXCLUDED.cad_num,
+        notes = EXCLUDED.notes,
+        district = EXCLUDED.district,
+        house_address = EXCLUDED.house_address,
+        apart_number = EXCLUDED.apart_number,
+        room_count = EXCLUDED.room_count,
+        floor = EXCLUDED.floor,
+        full_living_area = EXCLUDED.full_living_area,
+        living_area = EXCLUDED.living_area,
+        people_v_dele = EXCLUDED.people_v_dele,
+        people_uchet = EXCLUDED.people_uchet,
+        total_living_area = EXCLUDED.total_living_area,
+        apart_type = EXCLUDED.apart_type,
+        status_id = EXCLUDED.status_id,
+        category = EXCLUDED.category,
+        updated_at = NOW()
+    """)
+        connection.commit()
+        ds = 1
+    except Exception as e:
+        ds = e
+    finally:
+        cursor.close()
+        connection.close()
+        return ds
+    
+
+def read_excel_to_df():
+    try:
+        df = pd.read_excel("/home/alex/Desktop/test/backend/resettlement_department/resettlement_old_aparts_24.03.2025_093444 (2).xlsx")
+        columns_db = [
+            "affair_id",
+            "kpu_number",
+            "fio",
+            "surname",
+            "firstname",
+            "lastname",
+            "people_in_family",
+            "category",  # КПУ_Направление_код?
+            "cad_num",  # КПУ_кадастровый_номер_адреса
+            "notes",  # КПУ_Примечание
+            "district",  # Адрес_Округ
+            "municipal_district",  # Адрес_Район
+            "house_address",  # Адрес_Короткий
+            "apart_number",  # Адрес_№ кв
+            "room_count",  # К_Комн
+            "floor",  # К_Этаж
+            "total_living_area",  # К_Общ
+            "living_area",  # К_Жил
+            "people_v_dele",  # КПУ_Чел.в деле
+            "people_uchet",  # КПУ_Чел.учете
+            "full_living_area",  # К_Общ(б/л)
+            "apart_type",  # К_Тип_Кв
+            "kpu_another",
+            "type_of_settlement",  # КПУ_Вид засел.
+            "rsm_status",
+        ]
+        columns_name = {
+            "ID": "affair_id",
+            "КПУ_Дело_№ полный(новый)": "kpu_number",
+            "КПУ_ФИО": "fio",
+            "КПУ_Заявитель_Фамилия": "surname",
+            "КПУ_Заявитель_Имя": "firstname",
+            "КПУ_Заявитель_Отчество": "lastname",
+            "КПУ_Чел.в семье": "people_in_family",
+            "КПУ_Направление_код": "category",
+            "КПУ_кадастровый_номер_адреса": "cad_num",
+            "КПУ_Примечание": "notes",
+            "Адрес_Округ": "district",
+            "Адрес_Район": "municipal_district",
+            "Адрес_Короткий": "house_address",
+            "Адрес_№ кв": "apart_number",
+            "К_Комн": "room_count",
+            "К_Этаж": "floor",
+            "К_Общ": "total_living_area",
+            "К_Жил": "living_area",
+            "КПУ_Чел.в деле": "people_v_dele",
+            "КПУ_Чел.учете": "people_uchet",
+            "К_Общ(б/л)": "full_living_area",
+            "К_Тип_Кв": "apart_type",
+            "КПУ_Др. напр. откр.": "kpu_another",
+            "КПУ_Вид засел.": "type_of_settlement",
+            "КПУ_Состояние": "rsm_status",
+        }
+        df.rename(
+            columns=columns_name,
+            inplace=True,
+        )
+
+        df["affair_id"] = df["affair_id"].astype("Int64")
+        df["people_in_family"] = df["people_in_family"].astype("Int64")
+        df["category"] = df["category"].astype("Int64")
+        df["room_count"] = df["room_count"].astype("Int64")
+        df["floor"] = df["floor"].astype("Int64")
+        df["total_living_area"] = df["total_living_area"].astype(float)
+        df["living_area"] = df["living_area"].astype(float)
+        df["people_v_dele"] = df["people_v_dele"].astype("Int64")
+        df["people_uchet"] = df["people_uchet"].astype("Int64")
+        df["full_living_area"] = df["full_living_area"].astype(float)
+
+        # Добавляем колонку is_queue на основе регулярного выражения
+        df["is_queue"] = df["kpu_another"].apply(
+              lambda x: 1 if re.search(r"-01-", str(x)) else 0
+        ).astype("Int64")
+
+        df = df.replace({np.nan: None})
+
+        df = df[columns_db]
+
+        df = df[:30]  # для теста
+
+        args = df.itertuples(index=False, name=None)
+        # Prepare the arguments string for the SQL query
+        args_str = ",".join(
+            "({})".format(
+                ", ".join(
+                    "'{}'".format(x.replace("'", "''"))
+                    if isinstance(x, str)
+                    else "NULL"
+                    if x is None
+                    else str(x)
+                    for x in arg
+                )
+            )
+            for arg in args
+        )
+
+        connection  =  psycopg2.connect(
+            host=settings.project_management_setting.DB_HOST,
+            user=settings.project_management_setting.DB_USER,
+            password=settings.project_management_setting.DB_PASSWORD,
+            port=settings.project_management_setting.DB_PORT,
+            database=settings.project_management_setting.DB_NAME
+        )
+        cursor = connection.cursor()
+
+        sql = f"""
+            INSERT INTO public.old_apart (
+                {", ".join(columns_db)}
+            )
+            VALUES 
+                {args_str}
+            ON CONFLICT (affair_id) 
+            DO UPDATE SET 
+            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
+            updated_at = NOW()
+        """
+        
+        with open("temp.sql", "w") as f:
+            f.write(sql)
+
+        cursor.execute(sql)
+        connection.commit()
+        ds = 1
+    except Exception as e:
+        print(e.with_traceback())
+        ds = e
+    finally:
+        cursor.close()
+        connection.close()
+        return df
+
+
+
+
+if __name__ == '__main__':
+    read_excel_to_df()
