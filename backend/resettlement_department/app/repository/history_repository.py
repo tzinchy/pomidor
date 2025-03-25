@@ -32,15 +32,6 @@ class HistoryRepository:
             if result.fetchone()[0] == "done":
                 return "cancell succes"
 
-    async def get_env_history(self):
-        async with self.db() as session:
-            result = await session.execute(
-                text(
-                    "SELECT id, name, (updated_at)::varchar, success FROM env.data_updates"
-                )
-            )
-            return result.fetchall()
-
     async def cancell_manual_load(self, manual_load_id):
         async with self.db() as session:
             query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/CancellManualLoad.sql")
