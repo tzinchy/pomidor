@@ -38,9 +38,12 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [rooms, setRooms] = useState([]);
   const [matchCount, setMatchCount] = useState([]);
   const [selectedRowId, setSelectedRowId] = useState();
-  const [filtersResetFlag, setFiltersResetFlag] = useState(false); // Флаг сброса
-  const [isQueueChecked, setIsQueueChecked] = useState(false); // Состояние для чек-бокса "Очередники"
+  const [filtersResetFlag, setFiltersResetFlag] = useState(false);
+  const [isQueueChecked, setIsQueueChecked] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [municipalDistrict, setMunicipalDistrict] = useState([]);
+  const [houseAddress, sethouseAddress] = useState([]);
+  const [filterData, setFilterData] = useState([]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -59,11 +62,60 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     };
   }, [data]);
 
+  const getUniqueStringValues = useMemo(() => {
+    if (!data) return [];
+  
+    return (columnName) => {
+      return [...new Set(
+        data
+          .map(apartment => apartment[columnName]) // Используем параметр columnName
+          .filter(value => value !== undefined && value !== null && value.trim() !== '') // Фильтруем пустые значения
+      )].sort((a, b) => a.localeCompare(b)); // Сортируем строки
+    };
+  }, [data]);
+
   // Обновляем rooms при изменении filteredApartments
   useEffect(() => {
     setRooms(getUniqueValues('room_count'));
-    setMatchCount(getUniqueValues('selection_count'))
-  }, [getUniqueValues]);
+    setMatchCount(getUniqueValues('selection_count'));
+    sethouseAddress(getUniqueStringValues('house_address'));
+    setMunicipalDistrict(getUniqueStringValues('municipal_district'))
+  }, [getUniqueValues, getUniqueStringValues]);
+
+  useEffect(() => {
+    setFilterData(getFilteData(data));
+  })
+
+  const getFilteData = (data) => {
+    if (!data) return {};
+  
+    const result = {};
+  
+    data.forEach(apartment => {
+      const { district, municipal_district, house_address } = apartment;
+  
+      if (!district || !municipal_district || !house_address) return;
+  
+      if (!result[district]) {
+        result[district] = {};
+      }
+  
+      if (!result[district][municipal_district]) {
+        result[district][municipal_district] = new Set();
+      }
+  
+      result[district][municipal_district].add(house_address);
+    });
+  
+    // Преобразуем Set в массив для удобства
+    for (const district in result) {
+      for (const municipal_district in result[district]) {
+        result[district][municipal_district] = Array.from(result[district][municipal_district]);
+      }
+    }
+  
+    return result;
+  };
 
   // 2. Добавляем эффект для синхронизации с исходными данными
   useEffect(() => {
@@ -144,7 +196,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   const switchAparts = async () => {
     if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment')) return;
-    console.log('rowSelection', rowSelection);
     try {
       await axios.post(
         `${HOSTLINK}/tables/switch_aparts`,
@@ -310,6 +361,9 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           isQueueChecked={isQueueChecked}
           setIsQueueChecked={setIsQueueChecked}
           setSearchQuery={handleSearchChange}
+          filters={filters}
+          houseAddress={houseAddress}
+          filterData={filterData}
         />
         
         <div className='flex items-center'>
@@ -329,51 +383,53 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             </button>
           </div>
 
-        <Menu as="div" className="relative inline-block text-left z-[102]">
-            <div>
-              <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
-                <MenuIcon />
-              </Menu.Button>
-            </div>
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                <div className="px-1 py-1">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={rematch}
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                      >
-                        Переподбор
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={switchAparts}
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                      >
-                        Поменять квартиры
-                      </button>
-                    )}
-                  </Menu.Item>
-                </div>
-              </Menu.Items>
-            </Transition>
-          </Menu>
+          {apartType === 'OldApart' ? (
+            <Menu as="div" className="relative inline-block text-left z-[102]">
+              <div>
+                <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
+                  <MenuIcon />
+                </Menu.Button>
+              </div>
+              <Transition
+                as={Fragment}
+                enter="transition ease-out duration-100"
+                enterFrom="transform opacity-0 scale-95"
+                enterTo="transform opacity-100 scale-100"
+                leave="transition ease-in duration-75"
+                leaveFrom="transform opacity-100 scale-100"
+                leaveTo="transform opacity-0 scale-95"
+              >
+                <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  <div className="px-1 py-1">
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={rematch}
+                          className={`${
+                            active ? 'bg-gray-100' : ''
+                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                        >
+                          Переподбор
+                        </button>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={switchAparts}
+                          className={`${
+                            active ? 'bg-gray-100' : ''
+                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                        >
+                          Поменять квартиры
+                        </button>
+                      )}
+                    </Menu.Item>
+                  </div>
+                </Menu.Items>
+              </Transition>
+            </Menu>
+          ) : null}
           <p className='ml-8 mr-2 text-gray-400'>{filteredApartments.length}</p>
         </div>
       </div>
@@ -535,7 +591,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               >
                 <div className="fixed inset-0 bg-opacity-50 lg:bg-transparent lg:relative">
                   <div
-                    className={`fixed min-w-[42vw] max-w-[42vw] h-[calc(100vh-1rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+                    className={`fixed min-w-[40.5vw] max-w-[40.5vw] h-[calc(100vh-1rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
                       isDetailsVisible ? 'translate-x-0' : 'translate-x-full'
                     }`}
                     style={{
@@ -552,6 +608,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         fetchApartments={fetchApartments}
                         lastSelectedAddres={lastSelectedAddres}
                         lastSelectedMunicipal={lastSelectedMunicipal}
+                        fetchApartmentDetails={fetchApartmentDetails}
                         className="flex-1" // Оставляем для гибкости внутри компонента
                       />
                     </div>

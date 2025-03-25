@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Принудительно установить светлую тему */
+html {
+  color-scheme: light !important;
+}
+
 /* Отключаем глобальные стили для скроллбаров */
 * {
   scrollbar-color: unset !important;
