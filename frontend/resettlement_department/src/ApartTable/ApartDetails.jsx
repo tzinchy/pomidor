@@ -114,7 +114,7 @@ export default function ApartDetails({
                   return (
                     <React.Fragment key={index}>
                       {/* Основная строка */}
-                      <tr className={`bg-white border-b-2 border-b-red-200 transition-colors ${hasMultipleOffers ? 'border-b-2 border-b-gray-200' : ''}`}>
+                      <tr className={`bg-white transition-colors ${hasMultipleOffers ? 'border-b-2 border-b-gray-200' : 'border-b-2 border-b-red-200'}`}>
                         <td>
                           <DetailsAdressCell props={offerKeys.length > 0 ? value[offerKeys[0]] : value} />
                         </td>
