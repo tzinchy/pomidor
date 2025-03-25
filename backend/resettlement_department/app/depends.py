@@ -3,10 +3,12 @@ from repository.new_apart_repository import NewApartRepository
 from repository.dashboard_repository import DashboardRepository
 from repository.database import project_managment_session
 from repository.history_repository import HistoryRepository
+from repository.env_repository import EnvRepository
 
 from service.apart_service import ApartService
 from service.dashboard_service import DashboardService
 from service.history_service import HistoryService 
+from service.env_service import EnvService
 
 old_apartment_repository = OldApartRepository(project_managment_session)
 new_apartment_repository = NewApartRepository(project_managment_session)
@@ -17,3 +19,6 @@ dashboard_service = DashboardService(dashboard_repository)
 
 history_repository = HistoryRepository(project_managment_session)
 history_service = HistoryService(history_repository)
+
+env_repository = EnvRepository(project_managment_session)
+env_service = EnvService(env_repository)

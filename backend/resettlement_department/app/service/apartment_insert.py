@@ -742,4 +742,192 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
         cursor.close()
         connection.close()
 
+def insert_data_to_old_apart(df):
+    try:
+        global district_mapping
+        connection = None
+        cursor = None
 
+        columns_db = [
+            "affair_id",
+            "kpu_number",
+            "fio",
+            "surname",
+            "firstname",
+            "lastname",
+            "people_in_family",
+            "category",  # КПУ_Направление_код
+            "cad_num",  # КПУ_кадастровый_номер_адреса
+            "notes",  # КПУ_Примечание
+            "district",  # Адрес_Округ
+            "municipal_district",  # Адрес_Район
+            "house_address",  # Адрес_Короткий
+            "apart_number",  # Адрес_№ кв
+            "room_count",  # К_Комн
+            "floor",  # К_Этаж
+            "total_living_area",  # К_Общ
+            "living_area",  # К_Жил
+            "people_v_dele",  # КПУ_Чел.в деле
+            "people_uchet",  # КПУ_Чел.учете
+            "full_living_area",  # К_Общ(б/л)
+            "apart_type",  # К_Тип_Кв
+            "kpu_another",
+            "type_of_settlement",  # КПУ_Вид засел.
+            "rsm_status",
+        ]
+        columns_name = {
+            "ID": "affair_id",
+            "КПУ_Дело_№ полный(новый)": "kpu_number",
+            "КПУ_ФИО": "fio",
+            "КПУ_Заявитель_Фамилия": "surname",
+            "КПУ_Заявитель_Имя": "firstname",
+            "КПУ_Заявитель_Отчество": "lastname",
+            "КПУ_Чел.в семье": "people_in_family",
+            "КПУ_Направление_код": "category",
+            "КПУ_кадастровый_номер_адреса": "cad_num",
+            "КПУ_Примечание": "notes",
+            "Адрес_Округ": "district",
+            "Адрес_Район": "municipal_district",
+            "Адрес_Короткий": "house_address",
+            "Адрес_№ кв": "apart_number",
+            "К_Комн": "room_count",
+            "К_Этаж": "floor",
+            "К_Общ": "total_living_area",
+            "К_Жил": "living_area",
+            "КПУ_Чел.в деле": "people_v_dele",
+            "КПУ_Чел.учете": "people_uchet",
+            "К_Общ(б/л)": "full_living_area",
+            "К_Тип_Кв": "apart_type",
+            "КПУ_Др. напр. откр.": "kpu_another",
+            "КПУ_Вид засел.": "type_of_settlement",
+            "КПУ_Состояние": "rsm_status",
+        }
+        # Удаляем строки с пустыми ID
+        df = df.dropna(subset=["ID"])
+        df.rename(
+            columns=columns_name,
+            inplace=True,
+        )
+
+        df["affair_id"] = df["affair_id"].astype("Int64")
+        df["people_in_family"] = df["people_in_family"].astype("Int64")
+        df["category"] = df["category"].astype("Int64")
+        df["room_count"] = df["room_count"].astype("Int64")
+        df["floor"] = df["floor"].astype("Int64")
+        df["total_living_area"] = df["total_living_area"].astype(float)
+        df["living_area"] = df["living_area"].astype(float)
+        df["people_v_dele"] = df["people_v_dele"].astype("Int64")
+        df["people_uchet"] = df["people_uchet"].astype("Int64")
+        df["full_living_area"] = df["full_living_area"].astype(float)
+
+        # Добавляем колонку is_queue на основе регулярного выражения
+        df["is_queue"] = df["kpu_another"].apply(
+              lambda x: 1 if re.search(r"-01-", str(x)) else 0
+        ).astype("Int64")
+
+        # df['district'] = df['district'].map(district_mapping).fillna(df['district'])
+
+        df = df.replace({np.nan: None})
+
+        df = df[columns_db]
+
+        args = df.itertuples(index=False, name=None)
+        # Prepare the arguments string for the SQL query
+        args_str = ",".join(
+            "({})".format(
+                ", ".join(
+                    "'{}'".format(x.replace("'", "''"))
+                    if isinstance(x, str)
+                    else "NULL"
+                    if x is None
+                    else str(x)
+                    for x in arg
+                )
+            )
+            for arg in args
+        )
+
+        connection  =  psycopg2.connect(
+            host=settings.project_management_setting.DB_HOST,
+            user=settings.project_management_setting.DB_USER,
+            password=settings.project_management_setting.DB_PASSWORD,
+            port=settings.project_management_setting.DB_PORT,
+            database=settings.project_management_setting.DB_NAME
+        )
+        cursor = connection.cursor()
+
+        sql = f"""
+            INSERT INTO public.old_apart (
+                {", ".join(columns_db)}
+            )
+            VALUES 
+                {args_str}
+            ON CONFLICT (affair_id) 
+            DO UPDATE SET 
+            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
+            updated_at = NOW()
+        """
+        print("000")
+        cursor.execute(sql)
+        connection.commit()
+
+        # Обновляем статус успешного выполнения в отдельной транзакции
+        cursor.execute(
+            """UPDATE env.data_updates
+                SET success = True,
+                updated_at = NOW()
+                WHERE name = 'old_aparts_kpu'
+            """
+        )
+        connection.commit()
+
+        ds = 1
+    except Exception as e:
+        print("111")
+        ds = e
+        status_updated = False
+        try:
+            if connection:
+                print("222")
+                connection.rollback()  # Сброс состояния транзакции
+                # Создаем новый курсор для обновления статуса
+                with connection.cursor() as status_cursor:
+                    print("333")
+                    status_cursor.execute(
+                        """UPDATE env.data_updates
+                            SET success = False,
+                            updated_at = NOW()
+                            WHERE name = 'old_aparts_kpu'
+                        """
+                    )
+                    connection.commit()
+                    status_updated = True
+        except Exception as status_error:
+            print('ERROR updating status:', status_error)
+        if not status_updated:
+            # Попытка переподключиться, если соединение было потеряно
+            print("444")
+            try:
+                new_conn = psycopg2.connect(
+                    host=settings.project_management_setting.DB_HOST,
+                    user=settings.project_management_setting.DB_USER,
+                    password=settings.project_management_setting.DB_PASSWORD,
+                    port=settings.project_management_setting.DB_PORT,
+                    database=settings.project_management_setting.DB_NAME
+                )
+                with new_conn.cursor() as new_cursor:
+                    new_cursor.execute(
+                        """UPDATE env.data_updates
+                            SET success = False,
+                            updated_at = NOW()
+                            WHERE name = 'old_aparts_kpu'
+                        """
+                    )
+                    new_conn.commit()
+                new_conn.close()
+            except Exception as fallback_error:
+                print('Fallback update failed:', fallback_error)
+    finally:
+        cursor.close()
+        connection.close()
+        return ds
