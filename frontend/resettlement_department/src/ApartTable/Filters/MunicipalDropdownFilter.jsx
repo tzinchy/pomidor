@@ -14,6 +14,13 @@ export default function MunicipalDropdownFilter({
     const [searchQuery, setSearchQuery] = useState("");
     const container = useRef(null);
 
+    // Инициализация выбранных значений из filters[filterType]
+    useEffect(() => {
+        if (filters[filterType] && filters[filterType].length > 0) {
+            setSelectedValues(filters[filterType]);
+        }
+    }, [filters, filterType]);
+
     useEffect(() => {
         if (isFiltersReset) {
             setSelectedValues([]);
@@ -66,6 +73,10 @@ export default function MunicipalDropdownFilter({
                     ) {
                         return false;
                     }
+                    // Фильтрация по searchQuery для municipal, если showAddresses === false
+                    if (!showAddresses && !municipal.toLowerCase().includes(searchQuery.toLowerCase())) {
+                        return false;
+                    }
                     return true;
                 })
                 .map(([municipal, addresses]) => ({
@@ -76,7 +87,7 @@ export default function MunicipalDropdownFilter({
                         )
                         : addresses,
                 }))
-                .filter(({ addresses }) => addresses.length > 0);
+                .filter(({ addresses }) => showAddresses ? addresses.length > 0 : true);
 
             return {
                 district,
@@ -215,6 +226,7 @@ export default function MunicipalDropdownFilter({
                                             {showAddresses &&
                                                 addresses.map((address) => (
                                                     <div
+                                                        key={address}
                                                         className="flex items-center text-sm p-2 hover:bg-gray-100 rounded-md cursor-pointer"
                                                         onClick={() => toggleValue(address)}
                                                     >

@@ -21,6 +21,7 @@ export default function AllFilters({ handleFilterChange, rooms, matchCount, apar
                 func={handleFilterChange}
                 filterType={'district'} 
                 isFiltersReset={filtersResetFlag} 
+                filters={filters}
             />
             <MunicipalDropdownFilter
                 item={'Район'} 
@@ -46,6 +47,7 @@ export default function AllFilters({ handleFilterChange, rooms, matchCount, apar
                 func={handleFilterChange}
                 filterType={'status'} 
                 isFiltersReset={filtersResetFlag} 
+                filters={filters}
             />
             <DropdownFilter 
                 item={'Комнаты'} 
@@ -53,14 +55,18 @@ export default function AllFilters({ handleFilterChange, rooms, matchCount, apar
                 func={handleFilterChange}
                 filterType={'room_count'} 
                 isFiltersReset={filtersResetFlag} 
+                filters={filters}
             />
-            <DropdownFilter 
-                item={'Кол-во подборов'} 
-                data={matchCount} 
-                func={handleFilterChange}
-                filterType={'selection_count'} 
-                isFiltersReset={filtersResetFlag} 
-            />
+            {apartType === 'OldApart' ? (
+                <DropdownFilter 
+                    item={'Кол-во подборов'} 
+                    data={matchCount} 
+                    func={handleFilterChange}
+                    filterType={'selection_count'} 
+                    isFiltersReset={filtersResetFlag} 
+                    filters={filters}
+                />
+            ) : null}
             {apartType === 'OldApart' ? (
                 <div className="flex">
                     <label className="font-medium flex items-center mr-4 bg-white border border-dashed border-input hover:bg-gray-100 rounded-md px-3 h-8 cursor-pointer">

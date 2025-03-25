@@ -16,9 +16,6 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
   const [filteredApartments, setFilteredApartments] = useState([]); // Отфильтрованные данные
   const [isLoading, setIsLoading] = useState(false); // Состояние для загрузки
   const [error, setError] = useState(null); // Состояние для ошибок
-  const [searchQuery, setSearchQuery] = useState(""); // Состояние для поискового запроса
-  const [minArea, setMinArea] = useState(""); // Минимальная площадь
-  const [maxArea, setMaxArea] = useState(""); // Максимальная площадь
   const [rowSelection, setRowSelection] = useState({}); // Состояние для выбранных строк
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false); // Состояние для индикатора загрузки фильтрации
@@ -26,6 +23,14 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
   const [filters, setFilters] = useState({}); // Состояние для фильтров
   const [filtersData, setFiltersData] = useState({}); // Состояние для фильтров
   const [filtersResetFlag, setFiltersResetFlag] = useState(false);
+  const [firstMinArea, setFirstMinArea] = useState("");
+  const [firstMaxArea, setFirstMaxArea] = useState("");
+  const [secondMinArea, setSecondMinArea] = useState(""); 
+  const [secondMaxArea, setSecondMaxArea] = useState(""); 
+  const [thirdMinArea, setThirdMinArea] = useState(""); 
+  const [thirdMaxArea, setThirdMaxArea] = useState(""); 
+  const [minFloor, setMinFloor] = useState("");
+  const [maxFloor, setMaxFloor] = useState("");
 
   // Состояние для хранения выбранных фильтров
   const [selectedFilters, setSelectedFilters] = useState({
@@ -60,6 +65,15 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
     });
     setFilters({});
     setFiltersResetFlag(prev => !prev);
+    // Сбрасываем все площади
+    setFirstMinArea("");
+    setFirstMaxArea("");
+    setSecondMinArea("");
+    setSecondMaxArea("");
+    setThirdMinArea("");
+    setThirdMaxArea("");
+    setMinFloor("");
+    setMaxFloor("");
   };
 
   useEffect(() => {
@@ -99,15 +113,57 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
     setIsFiltering(true);
     let filtered = data;
   
-    if (minArea || maxArea) {
+    // Фильтрация по full_living_area (firstMinArea/firstMaxArea)
+    if (firstMinArea || firstMaxArea) {
       filtered = filtered.filter((item) => {
         const area = parseFloat(item.full_living_area);
-        const min = parseFloat(minArea);
-        const max = parseFloat(maxArea);
+        const min = parseFloat(firstMinArea);
+        const max = parseFloat(firstMaxArea);
   
         let valid = true;
         if (!isNaN(min)) valid = valid && area >= min;
         if (!isNaN(max)) valid = valid && area <= max;
+        return valid;
+      });
+    }
+  
+    // Фильтрация по total_living_area (secondMinArea/secondMaxArea)
+    if (secondMinArea || secondMaxArea) {
+      filtered = filtered.filter((item) => {
+        const area = parseFloat(item.total_living_area);
+        const min = parseFloat(secondMinArea);
+        const max = parseFloat(secondMaxArea);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && area >= min;
+        if (!isNaN(max)) valid = valid && area <= max;
+        return valid;
+      });
+    }
+  
+    // Фильтрация по living_area (thirdMinArea/thirdMaxArea)
+    if (thirdMinArea || thirdMaxArea) {
+      filtered = filtered.filter((item) => {
+        const area = parseFloat(item.living_area);
+        const min = parseFloat(thirdMinArea);
+        const max = parseFloat(thirdMaxArea);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && area >= min;
+        if (!isNaN(max)) valid = valid && area <= max;
+        return valid;
+      });
+    }
+
+    if (minFloor || maxFloor) {
+      filtered = filtered.filter((item) => {
+        const floor = parseFloat(item.floor);
+        const min = parseFloat(minFloor);
+        const max = parseFloat(maxFloor);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && floor >= min;
+        if (!isNaN(max)) valid = valid && floor <= max;
         return valid;
       });
     }
@@ -121,15 +177,9 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
       }
     });
   
-    if (searchQuery) {
-      filtered = filtered.filter((item) =>
-        item.house_address.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-  
     setFilteredApartments(filtered);
     setIsFiltering(false);
-  }, [data, filters, searchQuery, minArea, maxArea]);
+  }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor]);
 
   // Колонки для таблицы
   const columns = useMemo(
@@ -245,50 +295,13 @@ return (
         </button>
       </div>
 
-      {/* Фильтры */}
-      <div className="flex mb-2">
-        {/* Поисковая строка */}
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Поиск по адресу..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="flex gap-4 mx-4">
-          <div className="flex items-center gap-2">
-            <label>Площадь от:</label>
-            <input
-              value={minArea}
-              onChange={(e) => setMinArea(e.target.value)}
-              className="w-14 px-2 py-1 border rounded"
-              placeholder="мин"
-              step="0.1"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <label>до:</label>
-            <input
-              value={maxArea}
-              onChange={(e) => setMaxArea(e.target.value)}
-              className="w-14 px-2 py-1 border rounded"
-              placeholder="макс"
-              step="0.1"
-            />
-          </div>
-        </div>
-      </div>
-
       <div className="mb-4">
         <button
           onClick={handleManualMatching}
           disabled={isSubmitting}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 mr-2"
         >
-          {isSubmitting ? "Отправка..." : "Сопоставить выбранное"}
+          {isSubmitting ? "Отправка..." : "Подобрать"}
         </button>
         <button
           onClick={() => setFilterWindow(true)}
@@ -414,6 +427,23 @@ return (
       filters={filters}
       filtersResetFlag={filtersResetFlag}
       handleResetFilters={handleResetFilters}
+      // Площади
+      setFirstMinArea={setFirstMinArea}
+      setFirstMaxArea={setFirstMaxArea}
+      firstMinArea={firstMinArea}
+      firstMaxArea={firstMaxArea}
+      setSecondMinArea={setSecondMinArea}
+      setSecondMaxArea={setSecondMaxArea}
+      secondMinArea={secondMinArea}
+      secondMaxArea={secondMaxArea}
+      setThirdMinArea={setThirdMinArea}
+      setThirdMaxArea={setThirdMaxArea}
+      thirdMinArea={thirdMinArea}
+      thirdMaxArea={thirdMaxArea}
+      setMinFloor={setMinFloor}
+      setMaxFloor={setMaxFloor}
+      minFloor={minFloor}
+      maxFloor={maxFloor}
     />
   </div>
 );

@@ -114,7 +114,7 @@ export default function ApartDetails({
                   return (
                     <React.Fragment key={index}>
                       {/* Основная строка */}
-                      <tr className={`bg-white border-b transition-colors ${hasMultipleOffers ? 'border-t-2 border-t-red-200' : ''}`}>
+                      <tr className={`bg-white border-b-2 border-b-red-200 transition-colors ${hasMultipleOffers ? 'border-b-2 border-b-gray-200' : ''}`}>
                         <td>
                           <DetailsAdressCell props={offerKeys.length > 0 ? value[offerKeys[0]] : value} />
                         </td>
@@ -143,7 +143,7 @@ export default function ApartDetails({
                       {/* Дополнительные строки, если есть несколько offers */}
                       {hasMultipleOffers &&
                         offerKeys.slice(1).map((key, subIndex) => (
-                          <tr key={`${index}-${subIndex}`} className={`bg-white border-b transition-colors ${key === offerKeys[offerKeys.length-1] ? 'border-b-2 border-b-red-200' : '' }`}>
+                          <tr key={`${index}-${subIndex}`} className={`bg-white border-b-2 transition-colors ${key === offerKeys[offerKeys.length-1] ? 'border-b-2 border-b-red-200' : '' }`}>
                             <td>
                               <DetailsAdressCell props={value[key]} />
                             </td>

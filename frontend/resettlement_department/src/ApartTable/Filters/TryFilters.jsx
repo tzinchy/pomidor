@@ -1,8 +1,33 @@
-import React from "react";
+import React, { useEffect } from "react";
 import DropdownFilter from "./DropdownFilter";
 import MunicipalDropdownFilter from "./MunicipalDropdownFilter";
 
-export default function TryFilters({ data, isOpen, onClose, handleFilterChange, filtersResetFlag, filters, handleResetFilters }){
+export default function TryFilters({ 
+        data, 
+        isOpen, 
+        onClose, 
+        handleFilterChange, 
+        filtersResetFlag, 
+        filters, 
+        handleResetFilters, 
+        setFirstMinArea,
+        setFirstMaxArea,
+        firstMinArea,
+        firstMaxArea,
+        setSecondMinArea,
+        setSecondMaxArea,
+        secondMinArea,
+        secondMaxArea,
+        setThirdMinArea,
+        setThirdMaxArea,
+        thirdMinArea,
+        thirdMaxArea,
+        setMinFloor,
+        setMaxFloor,
+        minFloor,
+        maxFloor
+    }){
+
     if (!isOpen) return null;
 
     return (
@@ -25,6 +50,7 @@ export default function TryFilters({ data, isOpen, onClose, handleFilterChange, 
                             func={handleFilterChange}
                             filterType={'district'} 
                             isFiltersReset={filtersResetFlag} 
+                            filters={filters}
                         />
                     </div>
                     <div className="mb-2">
@@ -48,6 +74,102 @@ export default function TryFilters({ data, isOpen, onClose, handleFilterChange, 
                             filters={filters}
                             showAddresses={true}
                         />
+                    </div>
+                    <div className="mb-2">
+                        <div className="flex gap-4">
+                            <div className="flex items-center gap-2">
+                                <label>Площ. жил. от:</label>
+                                <input
+                                value={firstMinArea}
+                                onChange={(e) => setFirstMinArea(e.target.value)}
+                                className="w-14 px-2 py-1 border rounded"
+                                placeholder=""
+                                step="0.1"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <label>до:</label>
+                                <input
+                                value={firstMaxArea}
+                                onChange={(e) => setFirstMaxArea(e.target.value)}
+                                className="w-14 px-2 py-1 border rounded"
+                                placeholder=""
+                                step="0.1"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mb-2">
+                        <div className="flex gap-4">
+                            <div className="flex items-center gap-2">
+                                <label>Общ. площ. от:</label>
+                                <input
+                                value={secondMinArea}
+                                onChange={(e) => setSecondMinArea(e.target.value)}
+                                className="w-14 px-2 py-1 border rounded"
+                                placeholder=""
+                                step="0.1"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <label>до:</label>
+                                <input
+                                value={secondMaxArea}
+                                onChange={(e) => setSecondMaxArea(e.target.value)}
+                                className="w-14 px-2 py-1 border rounded"
+                                placeholder=""
+                                step="0.1"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mb-2">
+                        <div className="flex gap-4">
+                            <div className="flex items-center gap-2">
+                                <label>Жил. площ. от:</label>
+                                <input
+                                value={thirdMinArea}
+                                onChange={(e) => setThirdMinArea(e.target.value)}
+                                className="w-14 px-2 py-1 border rounded"
+                                placeholder=""
+                                step="0.1"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <label>до:</label>
+                                <input
+                                value={thirdMaxArea}
+                                onChange={(e) => setThirdMaxArea(e.target.value)}
+                                className="w-14 px-2 py-1 border rounded"
+                                placeholder=""
+                                step="0.1"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mb-2">
+                        <div className="flex gap-4">
+                            <div className="flex items-center gap-2">
+                                <label>Этаж от:</label>
+                                <input
+                                value={minFloor}
+                                onChange={(e) => setMinFloor(e.target.value)}
+                                className="w-14 px-2 py-1 border rounded"
+                                placeholder=""
+                                step="0.1"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <label>до:</label>
+                                <input
+                                value={maxFloor}
+                                onChange={(e) => setMaxFloor(e.target.value)}
+                                className="w-14 px-2 py-1 border rounded"
+                                placeholder=""
+                                step="0.1"
+                                />
+                            </div>
+                        </div>
                     </div>
                     <button
                         onClick={handleResetFilters}

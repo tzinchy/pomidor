@@ -1,10 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
 
-export default function DropdownFilter({ item, data, func, filterType, isFiltersReset }) {
+export default function DropdownFilter({ item, data, func, filterType, isFiltersReset, filters }) {
     const [dropdownState, setDropdownState] = useState(false);
     const [selectedValues, setSelectedValues] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const container = useRef(null);
+    
+    // Инициализация выбранных значений из filters[filterType]
+    useEffect(() => {
+        if (filters[filterType] && filters[filterType].length > 0) {
+            setSelectedValues(filters[filterType]);
+        }
+    }, [filters, filterType]);
 
     // Сброс выбранных значений при сбросе фильтров
     useEffect(() => {
