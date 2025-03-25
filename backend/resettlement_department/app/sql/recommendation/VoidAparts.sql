@@ -12,7 +12,7 @@ WITH clr_dt AS (
 apart_info AS (
     SELECT history_id, room_count, is_queue, is_special_needs_marker
     FROM old_apart 
-    WHERE affair_id = 415274856325
+    WHERE affair_id = :apart_id
 ),
 ranked_apartments AS (
     SELECT 
