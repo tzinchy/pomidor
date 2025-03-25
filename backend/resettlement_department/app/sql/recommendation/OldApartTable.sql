@@ -18,7 +18,8 @@ WITH ranked_apartments AS (
         is_queue,
         is_special_needs_marker,
         ROW_NUMBER() OVER (PARTITION BY oa.affair_id ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC) AS rn,
-        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count
+        COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count,
+        people_v_dele
     FROM
         old_apart oa
     LEFT JOIN
