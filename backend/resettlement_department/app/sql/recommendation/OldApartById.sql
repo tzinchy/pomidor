@@ -8,7 +8,7 @@ WITH unnested_offer AS (
         answer_date, 
         created_at, 
         updated_at,
-        (value->>'decline_reason_id')::integer AS decline_reason_id  -- Fixed: Extract from value
+        (value->>'decline_reason_id')::integer AS decline_reason_id 
     FROM offer, 
     jsonb_each(new_aparts) AS each(key, value)
 ),
@@ -16,9 +16,9 @@ joined_aparts AS (
     SELECT 
         o.offer_id,
         o.affair_id,
-        JSONB_OBJECT_AGG(  -- Use JSONB_OBJECT_AGG for efficiency
+        JSONB_OBJECT_AGG( 
             o.new_apart_id::text,
-            JSONB_BUILD_OBJECT(  -- Use JSONB_BUILD_OBJECT to avoid casting
+            JSONB_BUILD_OBJECT( 
                 'house_address', na.house_address,
                 'apart_number', na.apart_number,
                 'district', na.district,

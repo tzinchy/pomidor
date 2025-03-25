@@ -128,3 +128,4 @@ async def update_declined_reason(
         apartment_layout=decline_reason.apartment_layout,
         notes=decline_reason.notes,
     )
+
