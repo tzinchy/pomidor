@@ -1,11 +1,15 @@
 from RSM.RSM import get_kpu, get_kurs_living_space
-from service.apartment_insert import insert_data_to_old, new_apart_insert
+from service.apartment_insert import insert_data_to_old, new_apart_insert, insert_data_to_old_apart
 from fastapi import APIRouter
 from datetime import datetime, time
 from io import BytesIO
 from depends import env_service
 from schema.history import EnvStatResponse
 from typing import List
+from fastapi import File, UploadFile, HTTPException
+import pandas as pd
+from pathlib import Path
+
 
 router = APIRouter(prefix="/rsm", tags=["RSM"])
 
@@ -42,3 +46,34 @@ def from_rsm_get_new_apart() -> dict:
     output.seek(0)
     result = new_apart_insert(df)
     return {"status": "success", "inserted": result}
+
+@router.post("/upload-file/")
+async def upload_file2(file: UploadFile = File(...)):
+    try:
+        # Создаем папку если ее нет
+        folders = [Path("manual_download")]
+
+        for folder in folders:
+            folder.mkdir(parents=True, exist_ok=True)
+
+        content = await file.read()
+
+        # Сохраняем в manual_download
+        manual_path = Path("manual_download") / file.filename
+        with open(manual_path, "wb") as f:
+            f.write(content)
+
+        # Обработка данных
+        old_apart = pd.read_excel(BytesIO(content))
+
+        ds = insert_data_to_old_apart(old_apart)
+        if isinstance(ds, Exception):
+            raise ds
+        return {"message": "Файл успешно загружен и обработан"}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Ошибка при обработке файла: {str(e)}"
+        )
+    finally:
+        await file.close()
