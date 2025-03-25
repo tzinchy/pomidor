@@ -5,7 +5,7 @@ from service.alghorithm import match_new_apart_to_family_batch
 from fastapi import File, HTTPException, UploadFile
 from io import BytesIO
 import pandas as pd
-from service.apartment_insert import insert_to_db
+from service.apartment_insert import insert_to_db, insert_data_to_old_apart
 from pathlib import Path
 
 
@@ -67,6 +67,36 @@ async def upload_file(file: UploadFile = File(...)):
             file_name=file.filename, 
             file_path=str(manual_path), 
         )
+        return {"message": "Файл успешно загружен и обработан"}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Ошибка при обработке файла: {str(e)}"
+        )
+    finally:
+        await file.close()
+
+
+@router.post("/upload-file/rsm_hanlde")
+async def upload_file2(file: UploadFile = File(...)):
+    try:
+        # Создаем папку если ее нет
+        folders = [Path("manual_download")]
+
+        for folder in folders:
+            folder.mkdir(parents=True, exist_ok=True)
+
+        content = await file.read()
+
+        # Сохраняем в manual_download
+        manual_path = Path("manual_download") / file.filename
+        with open(manual_path, "wb") as f:
+            f.write(content)
+
+        # Обработка данных
+        old_apart = pd.read_excel(BytesIO(content))
+
+        de = insert_data_to_old_apart(old_apart)
         return {"message": "Файл успешно загружен и обработан"}
 
     except Exception as e:
