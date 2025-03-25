@@ -35,7 +35,6 @@ district_mapping = {
     "НАО": "НАО",
     "МО": "МО",  # Московская область, если нужно
     "Ю-В": "ЮВАО",
-    # Дополнительные варианты
     "Якиманка": "ЦАО",  # Район в ЦАО
     "Тверской": "ЦАО",  # Район в ЦАО
     "Северное Бутово": "ЮЗАО",  # Район в ЮЗАО
@@ -207,6 +206,7 @@ def insert_data_to_old(df):
                 is_queue = EXCLUDED.is_queue,
                 type_of_settlement = EXCLUDED.type_of_settlement,
                 rsm_status = EXCLUDED.rsm_status,
+            
                 updated_at = NOW()
         """)
 
@@ -664,7 +664,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
                 "house_address", "apart_number", "room_count", "floor", "full_living_area",
                 "living_area", "people_v_dele", "people_uchet", "total_living_area", "apart_type",
                 "manipulation_notes", "municipal_district", "is_special_needs_marker", "min_floor",
-                "max_floor", "buying_date", "type_of_settlement", "history_id", "rank", 
+                "max_floor", "buying_date", "type_of_settlement", "history_id", 
                 "kpu_another", "manual_load_id"
             ]
             old_apart_df['district'] = old_apart_df['district'].map(district_mapping).fillna(old_apart_df['district'])
@@ -741,3 +741,5 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
     finally:
         cursor.close()
         connection.close()
+
+
