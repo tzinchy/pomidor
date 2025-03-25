@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import DropdownFilter from "./DropdownFilter";
-import { areas } from "../../Filters/FilterData";
 import MunicipalDropdownFilter from "./MunicipalDropdownFilter";
 import SearchTry from "./SearchTry";
 
-export default function AllFilters({ handleFilterChange, rooms, matchCount, apartType, filtersResetFlag, handleResetFilters, isQueueChecked, setIsQueueChecked, setSearchQuery, filters,
-    houseAddress, filterData }) {
+export default function AllFilters({ handleFilterChange, rooms, matchCount, apartType, filtersResetFlag, handleResetFilters, isQueueChecked, setIsQueueChecked, setSearchQuery, filters, filterData }) {
     const StatusFilters = ['Не подобрано', "Согласие", 'Отказ', "Суд", "Фонд компенсация", "Фонд докупка", "Ожидание", 'Ждёт одобрения'];
 
     const handleQueueChange = (e) => {

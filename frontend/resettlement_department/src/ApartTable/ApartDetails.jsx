@@ -16,10 +16,10 @@ export default function ApartDetails({
   fetchApartments,
   lastSelectedAddres,
   lastSelectedMunicipal,
-  fetchApartmentDetails={fetchApartmentDetails}
+  fetchApartmentDetails,
+  getFilteData
 }) {
   const [isManualSelectionOpen, setIsManualSelectionOpen] = useState(false); // Состояние для модального окна
-  console.log('apartmentDetails', apartmentDetails);
 
   function handleClose() {
     setIsDetailsVisible(false);
@@ -89,11 +89,11 @@ export default function ApartDetails({
           </p>
         </div>
         <button
-                onClick={() => setIsManualSelectionOpen(true)}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              >
-                Ручной подбор
-              </button>
+          onClick={() => setIsManualSelectionOpen(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Ручной подбор
+        </button>
         <button
           className="h-10 w-10 p-0 border border-gray-300 rounded-full flex items-center justify-center"
           onClick={handleClose}
@@ -214,6 +214,7 @@ export default function ApartDetails({
         onClose={() => setIsManualSelectionOpen(false)}
         apartmentId={apartmentDetails.affair_id}
         fetchApartments={fetchApartments}
+        getFilteData={getFilteData}
       />
     </div>
   );

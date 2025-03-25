@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -9,21 +9,59 @@ import {
 import { HOSTLINK } from "..";
 import AdressCell from "./Cells/AdressCell";
 import PloshCell from "./Cells/PloshCell";
+import TryFilters from "./Filters/TryFilters";
 
-export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fetchApartments }) {
+export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fetchApartments, getFilteData }) {
   const [data, setData] = useState([]); // Состояние для данных таблицы
   const [filteredApartments, setFilteredApartments] = useState([]); // Отфильтрованные данные
   const [isLoading, setIsLoading] = useState(false); // Состояние для загрузки
   const [error, setError] = useState(null); // Состояние для ошибок
-  const [filters, setFilters] = useState({}); // Состояние для фильтров
   const [searchQuery, setSearchQuery] = useState(""); // Состояние для поискового запроса
   const [minArea, setMinArea] = useState(""); // Минимальная площадь
   const [maxArea, setMaxArea] = useState(""); // Максимальная площадь
   const [rowSelection, setRowSelection] = useState({}); // Состояние для выбранных строк
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false); // Состояние для индикатора загрузки фильтрации
+  const [filterWindow, setFilterWindow] = useState(false);
+  const [filters, setFilters] = useState({}); // Состояние для фильтров
+  const [filtersData, setFiltersData] = useState({}); // Состояние для фильтров
+  const [filtersResetFlag, setFiltersResetFlag] = useState(false);
 
-  // Загрузка данных при открытии модального окна
+  // Состояние для хранения выбранных фильтров
+  const [selectedFilters, setSelectedFilters] = useState({
+    district: [],
+    municipal_district: [],
+    house_address: []
+  });
+
+  const handleFilterChange = useCallback((filterType, selectedValues) => {
+    setSelectedFilters(prev => ({
+      ...prev,
+      [filterType]: selectedValues
+    }));
+    
+    setFilters(prevFilters => {
+      if (selectedValues.length === 0) {
+        const { [filterType]: _, ...rest } = prevFilters;
+        return rest;
+      }
+      return {
+        ...prevFilters,
+        [filterType]: selectedValues,
+      };
+    });
+  }, []);
+
+  const handleResetFilters = () => {
+    setSelectedFilters({
+      district: [],
+      municipal_district: [],
+      house_address: []
+    });
+    setFilters({});
+    setFiltersResetFlag(prev => !prev);
+  };
+
   useEffect(() => {
     if (isOpen && apartmentId) {
       fetchData();
@@ -46,6 +84,7 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
       const result = await response.json();
       setData(result);
       setFilteredApartments(result);
+      setFiltersData(getFilteData(result));
     } catch (error) {
       console.error("Ошибка:", error);
       setError("Не удалось загрузить данные. Попробуйте снова.");
@@ -57,11 +96,9 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
   useEffect(() => {
     if (!data || data.length === 0) return;
   
-    setIsFiltering(true); // Устанавливаем состояние фильтрации в true
-  
+    setIsFiltering(true);
     let filtered = data;
   
-    // Применяем фильтр по площади
     if (minArea || maxArea) {
       filtered = filtered.filter((item) => {
         const area = parseFloat(item.full_living_area);
@@ -75,23 +112,15 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
       });
     }
   
-    // Применяем каждый фильтр
     Object.entries(filters).forEach(([filterType, selectedValues]) => {
       if (selectedValues.length > 0) {
         const filterKey = filterType.toLowerCase();
-  
         filtered = filtered.filter((item) => {
-          const hasNotMatched = selectedValues.includes("Не подобрано");
-          const hasRegularStatus = selectedValues.some(
-            (val) => val !== "Не подобрано" && item[filterKey] === val
-          );
-  
-          return (hasNotMatched && item[filterKey] === null) || hasRegularStatus;
+          return selectedValues.some(val => item[filterKey] === val);
         });
       }
     });
   
-    // Применяем поисковый запрос
     if (searchQuery) {
       filtered = filtered.filter((item) =>
         item.house_address.toLowerCase().includes(searchQuery.toLowerCase())
@@ -99,7 +128,7 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
     }
   
     setFilteredApartments(filtered);
-    setIsFiltering(false); // Устанавливаем состояние фильтрации в false после завершения
+    setIsFiltering(false);
   }, [data, filters, searchQuery, minArea, maxArea]);
 
   // Колонки для таблицы
@@ -261,6 +290,12 @@ return (
         >
           {isSubmitting ? "Отправка..." : "Сопоставить выбранное"}
         </button>
+        <button
+          onClick={() => setFilterWindow(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Фильтры
+        </button>
       </div>
 
       {/* Сообщение о загрузке или ошибке */}
@@ -371,6 +406,15 @@ return (
         </div>
       )}
     </div>
+    <TryFilters 
+      isOpen={filterWindow} 
+      onClose={() => {setFilterWindow(false)}} 
+      handleFilterChange={handleFilterChange} 
+      data={filtersData}
+      filters={filters}
+      filtersResetFlag={filtersResetFlag}
+      handleResetFilters={handleResetFilters}
+    />
   </div>
 );
 }

@@ -41,8 +41,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [filtersResetFlag, setFiltersResetFlag] = useState(false);
   const [isQueueChecked, setIsQueueChecked] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [municipalDistrict, setMunicipalDistrict] = useState([]);
-  const [houseAddress, sethouseAddress] = useState([]);
   const [filterData, setFilterData] = useState([]);
 
   const handleSearchChange = (e) => {
@@ -62,29 +60,13 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     };
   }, [data]);
 
-  const getUniqueStringValues = useMemo(() => {
-    if (!data) return [];
-  
-    return (columnName) => {
-      return [...new Set(
-        data
-          .map(apartment => apartment[columnName]) // Используем параметр columnName
-          .filter(value => value !== undefined && value !== null && value.trim() !== '') // Фильтруем пустые значения
-      )].sort((a, b) => a.localeCompare(b)); // Сортируем строки
-    };
-  }, [data]);
 
   // Обновляем rooms при изменении filteredApartments
   useEffect(() => {
     setRooms(getUniqueValues('room_count'));
     setMatchCount(getUniqueValues('selection_count'));
-    sethouseAddress(getUniqueStringValues('house_address'));
-    setMunicipalDistrict(getUniqueStringValues('municipal_district'))
-  }, [getUniqueValues, getUniqueStringValues]);
+  }, [getUniqueValues]);
 
-  useEffect(() => {
-    setFilterData(getFilteData(data));
-  })
 
   const getFilteData = (data) => {
     if (!data) return {};
@@ -120,6 +102,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   // 2. Добавляем эффект для синхронизации с исходными данными
   useEffect(() => {
     setFilteredApartments(data);
+    setFilterData(getFilteData(data));
   }, [data]);
   
   const handleFilterChange = useCallback((filterType, selectedValues) => {
@@ -362,7 +345,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           setIsQueueChecked={setIsQueueChecked}
           setSearchQuery={handleSearchChange}
           filters={filters}
-          houseAddress={houseAddress}
           filterData={filterData}
         />
         
@@ -609,6 +591,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         lastSelectedAddres={lastSelectedAddres}
                         lastSelectedMunicipal={lastSelectedMunicipal}
                         fetchApartmentDetails={fetchApartmentDetails}
+                        getFilteData={getFilteData}
                         className="flex-1" // Оставляем для гибкости внутри компонента
                       />
                     </div>
