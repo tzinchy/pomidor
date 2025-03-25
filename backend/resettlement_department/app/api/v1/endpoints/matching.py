@@ -77,7 +77,7 @@ async def upload_file(file: UploadFile = File(...)):
         await file.close()
 
 
-@router.post("/upload-file/rsm_hanlde")
+@router.post("/upload-file/rsm_handle/")
 async def upload_file2(file: UploadFile = File(...)):
     try:
         # Создаем папку если ее нет
@@ -96,7 +96,9 @@ async def upload_file2(file: UploadFile = File(...)):
         # Обработка данных
         old_apart = pd.read_excel(BytesIO(content))
 
-        de = insert_data_to_old_apart(old_apart)
+        ds = insert_data_to_old_apart(old_apart)
+        if isinstance(ds, Exception):
+            raise ds
         return {"message": "Файл успешно загружен и обработан"}
 
     except Exception as e:

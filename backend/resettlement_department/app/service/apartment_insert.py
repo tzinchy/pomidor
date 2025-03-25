@@ -908,6 +908,10 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
 
 def insert_data_to_old_apart(df):
     try:
+        global district_mapping
+        connection = None
+        cursor = None
+
         columns_db = [
             "affair_id",
             "kpu_number",
@@ -985,6 +989,8 @@ def insert_data_to_old_apart(df):
               lambda x: 1 if re.search(r"-01-", str(x)) else 0
         ).astype("Int64")
 
+        # df['district'] = df['district'].map(district_mapping).fillna(df['district'])
+
         df = df.replace({np.nan: None})
 
         df = df[columns_db]
@@ -1025,16 +1031,66 @@ def insert_data_to_old_apart(df):
             {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
             updated_at = NOW()
         """
-        
-        with open("temp.sql", "w") as f:
-            f.write(sql)
-
+        print("000")
         cursor.execute(sql)
         connection.commit()
+
+        # Обновляем статус успешного выполнения в отдельной транзакции
+        cursor.execute(
+            """UPDATE env.data_updates
+                SET success = True,
+                updated_at = NOW()
+                WHERE name = 'old_aparts_kpu'
+            """
+        )
+        connection.commit()
+
         ds = 1
     except Exception as e:
-        print(e.with_traceback())
+        print("111")
         ds = e
+        status_updated = False
+        try:
+            if connection:
+                print("222")
+                connection.rollback()  # Сброс состояния транзакции
+                # Создаем новый курсор для обновления статуса
+                with connection.cursor() as status_cursor:
+                    print("333")
+                    status_cursor.execute(
+                        """UPDATE env.data_updates
+                            SET success = False,
+                            updated_at = NOW()
+                            WHERE name = 'old_aparts_kpu'
+                        """
+                    )
+                    connection.commit()
+                    status_updated = True
+        except Exception as status_error:
+            print('ERROR updating status:', status_error)
+        if not status_updated:
+            # Попытка переподключиться, если соединение было потеряно
+            print("444")
+            try:
+                new_conn = psycopg2.connect(
+                    host=settings.project_management_setting.DB_HOST,
+                    user=settings.project_management_setting.DB_USER,
+                    password=settings.project_management_setting.DB_PASSWORD,
+                    port=settings.project_management_setting.DB_PORT,
+                    database=settings.project_management_setting.DB_NAME
+                )
+                with new_conn.cursor() as new_cursor:
+                    new_cursor.execute(
+                        """UPDATE env.data_updates
+                            SET success = False,
+                            updated_at = NOW()
+                            WHERE name = 'old_aparts_kpu'
+                        """
+                    )
+                    new_conn.commit()
+                new_conn.close()
+            except Exception as fallback_error:
+                print('Fallback update failed:', fallback_error)
     finally:
         cursor.close()
         connection.close()

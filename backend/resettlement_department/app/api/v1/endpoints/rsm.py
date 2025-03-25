@@ -3,7 +3,7 @@ from service.apartment_insert import insert_data_to_old, new_apart_insert
 from fastapi import APIRouter
 from datetime import datetime, time
 from io import BytesIO
-from depends import history_service
+from depends import env_service
 from schema.history import EnvStatResponse
 from typing import List
 
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/rsm", tags=["RSM"])
 
 @router.get("/update_info_stat", response_model=List[EnvStatResponse])
 async def get_update_info():
-    result = await history_service.get_env_history()
+    result = await env_service.get_env_history()
 
     response = [
         EnvStatResponse(id=item[0], name=item[1], timestamp=item[2], is_active=item[3])
