@@ -1,32 +1,45 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import DropdownFilter from "./DropdownFilter";
 import MunicipalDropdownFilter from "./MunicipalDropdownFilter";
 
 export default function TryFilters({ 
-        data, 
-        isOpen, 
-        onClose, 
-        handleFilterChange, 
-        filtersResetFlag, 
-        filters, 
-        handleResetFilters, 
-        setFirstMinArea,
-        setFirstMaxArea,
-        firstMinArea,
-        firstMaxArea,
-        setSecondMinArea,
-        setSecondMaxArea,
-        secondMinArea,
-        secondMaxArea,
-        setThirdMinArea,
-        setThirdMaxArea,
-        thirdMinArea,
-        thirdMaxArea,
-        setMinFloor,
-        setMaxFloor,
-        minFloor,
-        maxFloor
-    }){
+    data, 
+    isOpen, 
+    onClose, 
+    handleFilterChange, 
+    filtersResetFlag, 
+    filters, 
+    handleResetFilters, 
+    setFirstMinArea,
+    setFirstMaxArea,
+    firstMinArea,
+    firstMaxArea,
+    setSecondMinArea,
+    setSecondMaxArea,
+    secondMinArea,
+    secondMaxArea,
+    setThirdMinArea,
+    setThirdMaxArea,
+    thirdMinArea,
+    thirdMaxArea,
+    setMinFloor,
+    setMaxFloor,
+    minFloor,
+    maxFloor,
+    setSearchQuery,
+    localSearchQuery, 
+    setLocalSearchQuery
+}){
+
+
+    useEffect(() => {
+        // Добавляем задержку для поиска (debounce)
+        const timer = setTimeout(() => {
+            setSearchQuery(localSearchQuery);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [localSearchQuery, setSearchQuery]);
 
     if (!isOpen) return null;
 
@@ -43,7 +56,8 @@ export default function TryFilters({
                     </button>
                 </div>
                 <div>
-                    <div className="mb-2">
+                    <div className="flex flex-wrap gap-2 items-center mb-4">
+                    <div className="flex-shrink-0">
                         <DropdownFilter 
                             item={'АО'} 
                             data={Object.keys(data)} 
@@ -53,7 +67,7 @@ export default function TryFilters({
                             filters={filters}
                         />
                     </div>
-                    <div className="mb-2">
+                    <div className="flex-shrink-0">
                         <MunicipalDropdownFilter
                             item={'Район'} 
                             data={data} 
@@ -64,7 +78,7 @@ export default function TryFilters({
                             showAddresses={false}
                         />
                     </div>
-                    <div className="mb-2">
+                    <div className="flex-shrink-0">
                         <MunicipalDropdownFilter 
                             item={'Дом'} 
                             data={data} 
@@ -75,99 +89,123 @@ export default function TryFilters({
                             showAddresses={true}
                         />
                     </div>
-                    <div className="mb-2">
-                        <div className="flex gap-4">
-                            <div className="flex items-center gap-2">
-                                <label>Площ. жил. от:</label>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
+                        {/* Площадь жилая */}
+                        <div className="flex items-center gap-2">
+                            <label className="w-24">Площ. жил.:</label>
+                            <div className="flex gap-2 flex-1">
                                 <input
-                                value={firstMinArea}
-                                onChange={(e) => setFirstMinArea(e.target.value)}
-                                className="w-14 px-2 py-1 border rounded"
-                                placeholder=""
-                                step="0.1"
+                                    value={firstMinArea}
+                                    onChange={(e) => setFirstMinArea(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="от"
+                                    step="0.1"
                                 />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <label>до:</label>
                                 <input
-                                value={firstMaxArea}
-                                onChange={(e) => setFirstMaxArea(e.target.value)}
-                                className="w-14 px-2 py-1 border rounded"
-                                placeholder=""
-                                step="0.1"
+                                    value={firstMaxArea}
+                                    onChange={(e) => setFirstMaxArea(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="до"
+                                    step="0.1"
                                 />
                             </div>
                         </div>
-                    </div>
-                    <div className="mb-2">
-                        <div className="flex gap-4">
-                            <div className="flex items-center gap-2">
-                                <label>Общ. площ. от:</label>
+
+                        {/* Общая площадь */}
+                        <div className="flex items-center gap-2">
+                            <label className="w-24">Общ. площ.:</label>
+                            <div className="flex gap-2 flex-1">
                                 <input
-                                value={secondMinArea}
-                                onChange={(e) => setSecondMinArea(e.target.value)}
-                                className="w-14 px-2 py-1 border rounded"
-                                placeholder=""
-                                step="0.1"
+                                    value={secondMinArea}
+                                    onChange={(e) => setSecondMinArea(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="от"
+                                    step="0.1"
                                 />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <label>до:</label>
                                 <input
-                                value={secondMaxArea}
-                                onChange={(e) => setSecondMaxArea(e.target.value)}
-                                className="w-14 px-2 py-1 border rounded"
-                                placeholder=""
-                                step="0.1"
+                                    value={secondMaxArea}
+                                    onChange={(e) => setSecondMaxArea(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="до"
+                                    step="0.1"
                                 />
                             </div>
                         </div>
-                    </div>
-                    <div className="mb-2">
-                        <div className="flex gap-4">
-                            <div className="flex items-center gap-2">
-                                <label>Жил. площ. от:</label>
+
+                        {/* Жилая площадь */}
+                        <div className="flex items-center gap-2">
+                            <label className="w-24">Жил. площ.:</label>
+                            <div className="flex gap-2 flex-1">
                                 <input
-                                value={thirdMinArea}
-                                onChange={(e) => setThirdMinArea(e.target.value)}
-                                className="w-14 px-2 py-1 border rounded"
-                                placeholder=""
-                                step="0.1"
+                                    value={thirdMinArea}
+                                    onChange={(e) => setThirdMinArea(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="от"
+                                    step="0.1"
                                 />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <label>до:</label>
                                 <input
-                                value={thirdMaxArea}
-                                onChange={(e) => setThirdMaxArea(e.target.value)}
-                                className="w-14 px-2 py-1 border rounded"
-                                placeholder=""
-                                step="0.1"
+                                    value={thirdMaxArea}
+                                    onChange={(e) => setThirdMaxArea(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="до"
+                                    step="0.1"
                                 />
                             </div>
                         </div>
-                    </div>
-                    <div className="mb-2">
-                        <div className="flex gap-4">
-                            <div className="flex items-center gap-2">
-                                <label>Этаж от:</label>
+
+                        {/* Этаж */}
+                        <div className="flex items-center gap-2">
+                            <label className="w-24">Этаж:</label>
+                            <div className="flex gap-2 flex-1">
                                 <input
-                                value={minFloor}
-                                onChange={(e) => setMinFloor(e.target.value)}
-                                className="w-14 px-2 py-1 border rounded"
-                                placeholder=""
-                                step="0.1"
+                                    value={minFloor}
+                                    onChange={(e) => setMinFloor(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="от"
+                                    step="1"
+                                />
+                                <input
+                                    value={maxFloor}
+                                    onChange={(e) => setMaxFloor(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="до"
+                                    step="1"
                                 />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <label>до:</label>
+                        </div>
+                        {/* Добавляем поисковую строку */}
+                        <div className="mb-4">
+                            <div className="relative">
                                 <input
-                                value={maxFloor}
-                                onChange={(e) => setMaxFloor(e.target.value)}
-                                className="w-14 px-2 py-1 border rounded"
-                                placeholder=""
-                                step="0.1"
+                                    type="text"
+                                    value={localSearchQuery}
+                                    onChange={(e) => setLocalSearchQuery(e.target.value)}
+                                    placeholder="Поиск по номеру квартиры"
+                                    className="w-[250px] px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
+                                {localSearchQuery && (
+                                    <button
+                                        onClick={() => setLocalSearchQuery("")}
+                                        className="relative right-5 text-gray-400 hover:text-gray-600"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            className="lucide lucide-x"
+                                        >
+                                            <path d="M18 6 6 18" />
+                                            <path d="m6 6 12 12" />
+                                        </svg>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

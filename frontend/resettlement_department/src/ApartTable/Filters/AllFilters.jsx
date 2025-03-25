@@ -13,63 +13,90 @@ export default function AllFilters({ handleFilterChange, rooms, matchCount, apar
     };
 
     return (
-        <div className="flex">
-            {/*<SearchTry placeholder={'Поиск по адреу'} setSearchQuery={setSearchQuery} />*/}
-            <DropdownFilter 
-                item={'АО'} 
-                data={Object.keys(filterData)} 
-                func={handleFilterChange}
-                filterType={'district'} 
-                isFiltersReset={filtersResetFlag} 
-                filters={filters}
-            />
-            <MunicipalDropdownFilter
-                item={'Район'} 
-                data={filterData} 
-                func={handleFilterChange}
-                filterType={'municipal_district'} 
-                isFiltersReset={filtersResetFlag} 
-                filters={filters}
-                showAddresses={false}
-            />
-            <MunicipalDropdownFilter 
-                item={'Дом'} 
-                data={filterData} 
-                func={handleFilterChange}
-                filterType={'house_address'} 
-                isFiltersReset={filtersResetFlag} 
-                filters={filters}
-                showAddresses={true}
-            />
-            <DropdownFilter 
-                item={'Статус'} 
-                data={StatusFilters} 
-                func={handleFilterChange}
-                filterType={'status'} 
-                isFiltersReset={filtersResetFlag} 
-                filters={filters}
-            />
-            <DropdownFilter 
-                item={'Комнаты'} 
-                data={rooms} 
-                func={handleFilterChange}
-                filterType={'room_count'} 
-                isFiltersReset={filtersResetFlag} 
-                filters={filters}
-            />
-            {apartType === 'OldApart' ? (
+        <div className="flex flex-wrap gap-2 items-center">
+            {/* Поиск (если раскомментировать) */}
+            {/*<SearchTry placeholder={'Поиск по адресу'} setSearchQuery={setSearchQuery} />*/}
+            
+            {/* Фильтр АО */}
+            <div className="flex-shrink-0">
                 <DropdownFilter 
-                    item={'Кол-во подборов'} 
-                    data={matchCount} 
+                    item={'АО'} 
+                    data={Object.keys(filterData)} 
                     func={handleFilterChange}
-                    filterType={'selection_count'} 
+                    filterType={'district'} 
                     isFiltersReset={filtersResetFlag} 
                     filters={filters}
                 />
-            ) : null}
-            {apartType === 'OldApart' ? (
-                <div className="flex">
-                    <label className="font-medium flex items-center mr-4 bg-white border border-dashed border-input hover:bg-gray-100 rounded-md px-3 h-8 cursor-pointer">
+            </div>
+            
+            {/* Фильтр Район */}
+            <div className="flex-shrink-0">
+                <MunicipalDropdownFilter
+                    item={'Район'} 
+                    data={filterData} 
+                    func={handleFilterChange}
+                    filterType={'municipal_district'} 
+                    isFiltersReset={filtersResetFlag} 
+                    filters={filters}
+                    showAddresses={false}
+                />
+            </div>
+            
+            {/* Фильтр Дом */}
+            <div className="flex-shrink-0">
+                <MunicipalDropdownFilter 
+                    item={'Дом'} 
+                    data={filterData} 
+                    func={handleFilterChange}
+                    filterType={'house_address'} 
+                    isFiltersReset={filtersResetFlag} 
+                    filters={filters}
+                    showAddresses={true}
+                />
+            </div>
+            
+            {/* Фильтр Статус */}
+            <div className="flex-shrink-0">
+                <DropdownFilter 
+                    item={'Статус'} 
+                    data={StatusFilters} 
+                    func={handleFilterChange}
+                    filterType={'status'} 
+                    isFiltersReset={filtersResetFlag} 
+                    filters={filters}
+                />
+            </div>
+            
+            {/* Фильтр Комнаты */}
+            <div className="flex-shrink-0">
+                <DropdownFilter 
+                    item={'Комнаты'} 
+                    data={rooms} 
+                    func={handleFilterChange}
+                    filterType={'room_count'} 
+                    isFiltersReset={filtersResetFlag} 
+                    filters={filters}
+                />
+            </div>
+            
+            {/* Фильтр Кол-во подборов (только для OldApart) */}
+            {apartType === 'OldApart' && (
+                <div className="flex-shrink-0">
+                    <DropdownFilter 
+                        item={'Кол-во подборов'} 
+                        data={matchCount} 
+                        func={handleFilterChange}
+                        filterType={'selection_count'} 
+                        isFiltersReset={filtersResetFlag} 
+                        filters={filters}
+                    />
+                </div>
+            )}
+            
+            {/* Чекбокс Очередники (только для OldApart) */}
+            {apartType === 'OldApart' && (
+                <div className="flex-shrink-0">
+                    <label className="font-medium flex items-center bg-white border border-dashed border-input hover:bg-gray-100 rounded-md px-3 h-8 cursor-pointer">
                         <input
                             type="checkbox"
                             checked={isQueueChecked}
@@ -98,29 +125,32 @@ export default function AllFilters({ handleFilterChange, rooms, matchCount, apar
                         Очередники
                     </label>
                 </div>
-            ) : null}
+            )}
+            
             {/* Кнопка "Сбросить фильтры" */}
-            <button
-                onClick={handleResetFilters}
-                className="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap text-sm font-medium hover:bg-gray-100 rounded-md px-3 h-8 border-dashed"
-            >
-                Сброс
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-x ml-2 h-4 w-4"
+            <div className="flex-shrink-0">
+                <button
+                    onClick={handleResetFilters}
+                    className="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap text-sm font-medium hover:bg-gray-100 rounded-md px-3 h-8 border-dashed"
                 >
-                    <path d="M18 6 6 18" />
-                    <path d="m6 6 12 12" />
-                </svg>
-            </button>
+                    Сброс
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-x ml-2 h-4 w-4"
+                    >
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                    </svg>
+                </button>
+            </div>
         </div>
     );
 }

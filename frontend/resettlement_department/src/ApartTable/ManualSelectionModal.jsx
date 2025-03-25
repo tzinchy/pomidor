@@ -31,6 +31,8 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
   const [thirdMaxArea, setThirdMaxArea] = useState(""); 
   const [minFloor, setMinFloor] = useState("");
   const [maxFloor, setMaxFloor] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [localSearchQuery, setLocalSearchQuery] = useState(""); // Локальное состояние для поиска
 
   // Состояние для хранения выбранных фильтров
   const [selectedFilters, setSelectedFilters] = useState({
@@ -74,6 +76,8 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
     setThirdMaxArea("");
     setMinFloor("");
     setMaxFloor("");
+    setSearchQuery("");
+    setLocalSearchQuery("");
   };
 
   useEffect(() => {
@@ -112,6 +116,13 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
   
     setIsFiltering(true);
     let filtered = data;
+  
+    // Фильтрация по searchQuery (apart_number)
+    if (searchQuery) {
+      filtered = filtered.filter((item) => {
+        return item.apart_number?.toLowerCase().includes(searchQuery.toLowerCase());
+      });
+    }
   
     // Фильтрация по full_living_area (firstMinArea/firstMaxArea)
     if (firstMinArea || firstMaxArea) {
@@ -155,6 +166,7 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
       });
     }
 
+    // Фильтрация по этажу
     if (minFloor || maxFloor) {
       filtered = filtered.filter((item) => {
         const floor = parseFloat(item.floor);
@@ -168,6 +180,7 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
       });
     }
   
+    // Фильтрация по выбранным значениям в dropdown
     Object.entries(filters).forEach(([filterType, selectedValues]) => {
       if (selectedValues.length > 0) {
         const filterKey = filterType.toLowerCase();
@@ -179,7 +192,9 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
   
     setFilteredApartments(filtered);
     setIsFiltering(false);
-  }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor]);
+  }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor, searchQuery]);
+  
+  const isEmptyResults = !isLoading && !isFiltering && !error && filteredApartments.length === 0;
 
   // Колонки для таблицы
   const columns = useMemo(
@@ -283,7 +298,7 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
 
 return (
   <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white rounded-lg p-6 w-full max-w-6xl max-h-[90vh] flex flex-col">
+    <div className="bg-gray-50 rounded-lg p-6 w-full max-w-6xl max-h-[90vh] flex flex-col">
       {/* Заголовок и кнопка закрытия */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Ручной подбор</h2>
@@ -295,19 +310,49 @@ return (
         </button>
       </div>
 
-      <div className="mb-4">
+      <div className="flex justify-between items-center mb-4">
         <button
           onClick={handleManualMatching}
           disabled={isSubmitting}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 mr-2"
+          className="bg-white border px-4 py-2 rounded hover:bg-gray-100 mr-2"
         >
           {isSubmitting ? "Отправка..." : "Подобрать"}
         </button>
         <button
           onClick={() => setFilterWindow(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className=""
         >
-          Фильтры
+          <div className="relative">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="filter-icon"
+            >
+              <path
+                d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z"
+                stroke="url(#filterGradient)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <defs>
+                <linearGradient
+                  id="filterGradient"
+                  x1="2"
+                  y1="3"
+                  x2="22"
+                  y2="3"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor="#3B82F6" />
+                  <stop offset="1" stopColor="#8B5CF6" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
         </button>
       </div>
 
@@ -319,9 +364,40 @@ return (
       )}
       {error && <div className="text-center text-red-500 py-4">{error}</div>}
 
+      {/* Сообщение, если нет результатов */}
+      {isEmptyResults && (
+        <div className="bg-white p-8 text-center rounded-lg">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#9CA3AF"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mx-auto mb-4"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+          <h3 className="text-lg font-medium text-gray-500 mb-2">Ничего не найдено</h3>
+          <p className="text-gray-400">Попробуйте изменить параметры фильтрации</p>
+          <button
+            onClick={handleResetFilters}
+            className="mt-4 px-4 py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors"
+          >
+            Сбросить фильтры
+          </button>
+        </div>
+      )}
+
       {/* Таблица с собственным скроллом */}
       {!isLoading && !isFiltering && !error && (
-        <div className="overflow-auto scrollbar-custom">
+        <div className="bg-white overflow-auto scrollbar-custom">
           <table className="w-full table-fixed">
             <thead className="sticky top-0 backdrop-blur-md">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -444,6 +520,9 @@ return (
       setMaxFloor={setMaxFloor}
       minFloor={minFloor}
       maxFloor={maxFloor}
+      setSearchQuery={setSearchQuery}
+      localSearchQuery={localSearchQuery}
+      setLocalSearchQuery={setLocalSearchQuery}
     />
   </div>
 );

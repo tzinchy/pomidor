@@ -103,6 +103,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   useEffect(() => {
     setFilteredApartments(data);
     setFilterData(getFilteData(data));
+    console.log(data);
   }, [data]);
   
   const handleFilterChange = useCallback((filterType, selectedValues) => {
