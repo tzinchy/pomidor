@@ -175,7 +175,7 @@ def check_token():
     """
     conn_params = {
         "dbname": settings.project_management_setting.DB_NAME,
-        "user": settings.project_management_setting.DB_NAME,
+        "user": settings.project_management_setting.DB_USER,
         "password": settings.project_management_setting.DB_PASSWORD,
         "host": settings.project_management_setting.DB_HOST,
         "port": settings.project_management_setting.DB_PORT,    }
@@ -1581,7 +1581,7 @@ def get_kpu_xlsx_df(start_date, end_date, category, layout_id):
     start = datetime.now()
 
     key = generate_key()
-    token = get_cookie()
+    token = check_token()
     url1, url2 = start_kpu_xlsx(key, layout_id, None, category, decl_date=[start_date, end_date])
 
     print(url2)
@@ -1653,7 +1653,7 @@ def get_resurs_xlsx_df(layout_id):
     start = datetime.now()
 
     key = generate_key()
-    token = get_cookie()
+    token = check_token()
     url1, url2 = start_resurs_xlsx(key, layout_id)
 
     print(url2)
@@ -1725,7 +1725,7 @@ def get_orders_xlsx_df(start_date, end_date, layout_id):
     start = datetime.now()
 
     key = generate_key()
-    token = get_cookie()
+    token = check_token()
     url1, url2 = start_kpu_xlsx(key, layout_id, decl_date=[start_date, end_date])
 
     print(url2)

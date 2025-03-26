@@ -36,7 +36,7 @@ async def log_requests(request: Request, call_next):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    logger.error(f"!!! Error in {request.url.path}: {str(exc)}")
+    logger.error(f"!!! Error in {request.url.path}: {str(exc)}", context=True)
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal Server Error"},
