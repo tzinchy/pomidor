@@ -13,12 +13,14 @@ class HistoryRepository:
             logger.query(query=query, params=None)
             result = await session.execute(text(query))
             rows = result.fetchall() 
-            return [row._asdict() for row in rows]  
-
+            return [row._mapping() for row in rows]  
+        
     async def cancell_history(self, history_id: int):
         async with self.db() as session:
             query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/CancellHistory.sql")
-            result = await session.execute(text(query), {"history_id": history_id})
+            params = {"history_id": history_id}
+            logger.query(query, params)
+            result = await session.execute(text(query), params)
             await session.commit()
             if result.fetchone()[0] == "done":
                 return "cancell succes"
