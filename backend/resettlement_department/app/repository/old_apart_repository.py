@@ -1,16 +1,14 @@
 from sqlalchemy import text
 from schema.apartment import ApartTypeSchema
 import logging
-from utils.sql_reader import read_sql_query
+from utils.sql_reader import async_read_sql_query
 from core.config import RECOMMENDATION_FILE_PATH
-from handlers.httpexceptions import SomethingWrong
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Optional
 import json
 from sqlalchemy.orm import sessionmaker
-
-logger = logging.getLogger(__name__)
-
+from handlers.httpexceptions import NotFoundException, SomethingWrong
+from utils.logger import log_query, log_info
 
 class OldApartRepository:
     def __init__(self, session_maker: sessionmaker):
@@ -23,10 +21,11 @@ class OldApartRepository:
                         FROM old_apart
                         ORDER BY district'''
                 result = await session.execute(text(query))
+                log_query(query=query, params=None)
                 return [row[0] for row in result if row[0] is not None]
             except Exception as error:
-                print(f"Error executing query: {error}")
-                raise
+                logging.error(error)
+                raise NotFoundException(error)
 
     async def get_municipal_district(
         self, districts: list[str]
@@ -46,12 +45,9 @@ class OldApartRepository:
         """
         async with self.db() as session:
             try:
-                logger.info(f"Executing query: {query}")
-                logger.info(f"Params: {params}")
                 result = await session.execute(text(query), params)
                 return [row[0] for row in result if row[0] is not None]
             except Exception as error:
-                logger.error(f"Error executing query: {error}")
                 raise
 
     async def get_house_addresses(
@@ -72,12 +68,9 @@ class OldApartRepository:
         """
         async with self.db() as session:
             try:
-                logger.info(f"Executing query: {query}")
-                logger.info(f"Params: {params}")
                 result = await session.execute(text(query), params)
                 return [row[0] for row in result if row[0] is not None]
             except Exception as error:
-                logger.error(f"Error executing query: {error}")
                 raise
 
     async def get_district_chain(self):
@@ -178,18 +171,15 @@ class OldApartRepository:
 
         where_clause = " AND ".join(conditions)
 
-        query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/OldApartTable.sql")
+        query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/OldApartTable.sql")
  
         query = f"{query} WHERE {where_clause}"
         async with self.db() as session:
             try:
-                logger.info(f"Executing query: {query}")
-                logger.info(f"Params: {params}")
                 result = await session.execute(text(query), params)
 
                 return [row._mapping for row in result]
             except Exception as error:
-                logger.error(f"Error executing query: {error}")
                 print(error)
                 raise SomethingWrong
             
@@ -197,11 +187,10 @@ class OldApartRepository:
 
         query_params = {"apart_id": apart_id}
 
-        query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/OldApartById.sql")
+        query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/OldApartById.sql")
 
         async with self.db() as session:
             try:
-                logger.info(f"Executing query: {query}")
                 result = await session.execute(text(query), query_params)
                 data = result.fetchall()
                 if not data:
@@ -209,28 +198,18 @@ class OldApartRepository:
 
                 return [row._mapping for row in data][0]
             except Exception as error:
-                logger.error(f"Error executing query: {error}")
                 print(error)
-                raise SomethingWrong
+                raise SomethingWrong(error)
 
-    async def get_house_address_with_room_count(self, apart_type):
-        if apart_type == "NewApartment":
-            query = read_sql_query(
-                f"{RECOMMENDATION_FILE_PATH}/AvaliableNewApartAddress.sql"
-            )
-        elif apart_type == "OldApart":
-            query = read_sql_query(
-                f"{RECOMMENDATION_FILE_PATH}/AvaliableOldApartAddress.sql"
-            )
-        else:
-            raise ValueError("Invalid apartment type")
-
+    async def get_house_address_with_room_count(self):
+        query = await async_read_sql_query(
+            f"{RECOMMENDATION_FILE_PATH}/AvaliableOldApartAddress.sql"
+        )
         async with self.db() as session:
             try:
                 result = await session.execute(text(query))
                 return result.fetchall()
             except Exception as e:
-                logger.error(f"Error executing query: {e}")
                 raise SomethingWrong
 
     async def switch_apartment(self, first_apart_id, second_apart_id):
@@ -252,7 +231,6 @@ class OldApartRepository:
                     return {"message": "No rows affected"}
 
             except Exception as e:
-                logger.error(f"Error switching apartments: {e}")
                 raise SomethingWrong
 
     async def manual_matching(self, old_apart_id, new_apart_ids):
@@ -318,7 +296,7 @@ class OldApartRepository:
 
     async def get_void_aparts_for_apartment(self, apart_id):
         async with self.db() as session:
-            query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/VoidAparts.sql")
+            query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/VoidAparts.sql")
             result = await session.execute(text(query), {"apart_id": apart_id})
             return [row._mapping for row in result]
 
@@ -343,7 +321,7 @@ class OldApartRepository:
         async with self.db() as session:
             try:
                 query = text(
-                    read_sql_query(
+                    await async_read_sql_query(
                         f"{RECOMMENDATION_FILE_PATH}/UpdateOfferStatusForNewApart.sql"
                     )
                 )

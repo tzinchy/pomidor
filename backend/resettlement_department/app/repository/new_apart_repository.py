@@ -1,14 +1,10 @@
 from sqlalchemy import text
 from core.config import RECOMMENDATION_FILE_PATH
 from sqlalchemy.orm import sessionmaker
-from utils.sql_reader import read_sql_query
+from utils.sql_reader import async_read_sql_query
 from schema.apartment import ApartTypeSchema
 from handlers.httpexceptions import SomethingWrong
-import logging
-
-
-logger = logging.getLogger(__name__)
-
+from utils.logger import log_query, log_info
 
 class NewApartRepository:
     def __init__(self, session_maker: sessionmaker):
@@ -21,6 +17,7 @@ class NewApartRepository:
                         FROM new_apart
                         ORDER BY district"""
                 result = await session.execute(text(query))
+                log_query(query, params=None)
                 return [row[0] for row in result if row[0] is not None]
             except Exception as error:
                 print(error)
@@ -44,6 +41,7 @@ class NewApartRepository:
             try:
                 print(f"Executing query: {query}")
                 print(f"Params: {params}")
+                log_query(query, params=params)
                 result = await session.execute(text(query), params)
                 return [row[0] for row in result if row[0] is not None]
             except Exception as error:
@@ -187,29 +185,25 @@ class NewApartRepository:
 
         where_clause = " AND ".join(conditions)
 
-        query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartTable.sql")
+        query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartTable.sql")
 
         query = f"{query} WHERE {where_clause}"
         async with self.db() as session:
             try:
-                logger.info(f"Executing query: {query}")
-                logger.info(f"Params: {params}")
                 result = await session.execute(text(query), params)
 
                 return [row._mapping for row in result]
             except Exception as error:
-                logger.error(f"Error executing query: {error}")
                 print(error)
                 raise SomethingWrong
             
     async def get_apartment_by_id(self, apart_id: int) -> dict:
         query_params = {"apart_id": apart_id}
 
-        query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartById.sql")
+        query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartById.sql")
 
         async with self.db() as session:
             try:
-                logger.info(f"Executing query: {query}")
                 result = await session.execute(text(query), query_params)
                 data = result.fetchall()
                 if not data:
@@ -217,13 +211,12 @@ class NewApartRepository:
 
                 return [row._mapping for row in data][0]
             except Exception as error:
-                logger.error(f"Error executing query: {error}")
                 print(error)
                 raise SomethingWrong
 
 
     async def get_house_address_with_room_count(self):
-        query = read_sql_query(
+        query = await async_read_sql_query(
             f"{RECOMMENDATION_FILE_PATH}/AvaliableNewApartAddress.sql"
         )
         async with self.db() as session:
@@ -231,7 +224,6 @@ class NewApartRepository:
                 result = await session.execute(text(query))
                 return result.fetchall()
             except Exception as e:
-                logger.error(f"Error executing query: {e}")
                 raise SomethingWrong
 
     
@@ -278,3 +270,5 @@ class NewApartRepository:
             except Exception as error:
                 print(error)
                 raise SomethingWrong
+            
+

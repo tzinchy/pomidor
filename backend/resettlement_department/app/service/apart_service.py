@@ -100,13 +100,9 @@ class ApartService:
 
     async def get_house_address_with_room_count(self, apart_type: str):
         if apart_type == ApartTypeSchema.OLD: 
-            result = await self.new_apart_repository.get_house_address_with_room_count(
-                apart_type
-            )
+            result = await self.old_apart_repository.get_house_address_with_room_count()
         elif apart_type == ApartTypeSchema.NEW: 
-            result = await self.old_apart_repository.get_house_address_with_room_count(
-                apart_type
-            )
+            result = await self.new_apart_repository.get_house_address_with_room_count()
         formatted_result = []
         for address, room_counts in result:
             room_details = ", ".join(

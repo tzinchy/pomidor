@@ -1,18 +1,10 @@
 import requests
 import os
-import logging
 import openpyxl
 import pandas as pd
 from repository.database import get_db_connection
 from datetime import datetime
 
-
-# Настраиваем логирование
-logging.basicConfig(
-    filename='app_container.log',          # Имя файла, куда будут записываться логи
-    level=logging.INFO,                    # Уровень логирования (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    format='%(asctime)s - %(levelname)s - %(message)s',  # Формат сообщений
-)
 
 def upload_container(history_id, file_path):
     """
@@ -23,7 +15,7 @@ def upload_container(history_id, file_path):
     """
     url = "http://webspd.mlc.gov/SpdRemote/spdremotemvc/MassStart/Parse"
     login, password = "GabitovDS", "21v1DF43!!!!"
-    logging.info('Начало загрузки файла')
+    print('Начало загрузки файла')
 
     try:
         with open(file_path, "rb") as file:
@@ -33,25 +25,25 @@ def upload_container(history_id, file_path):
                 "reglamentId": "934",
                 "klassIndex": "801-402",
             }
-            logging.info(f'Файл для загрузки: {file_path}')
+            print(f'Файл для загрузки: {file_path}')
 
             # Файл для загрузки
             files = {
                 "file": (f"container_{history_id}.xlsx", file, 
                          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
             }
-            logging.info(f'Файл подготовлен: {files}')
+            print(f'Файл подготовлен: {files}')
 
             # Выполнение POST-запроса
             response = requests.post(url, data=data, files=files, auth=(login, password))
 
-            logging.info(f'Ответ сервера: {response.status_code}')
+            print(f'Ответ сервера: {response.status_code}')
             return response.status_code
     except FileNotFoundError:
-        logging.error(f"Файл {file_path} не найден.")
+        print(f"Файл {file_path} не найден.")
         return 404
     except Exception as e:
-        logging.error(f"Произошла ошибка: {e}")
+        print(f"Произошла ошибка: {e}")
         return 500
 
 def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_selected_addresses=None, old_selected_addresses=None,
@@ -198,7 +190,7 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
 
     # Сохраняем файл
     wb.save(output_path)
-    logging.info(f"Excel файл '{output_path}' создан.")
+    print(f"Excel файл '{output_path}' создан.")
     connection.close()
 
     # Загружаем файл на сервер
