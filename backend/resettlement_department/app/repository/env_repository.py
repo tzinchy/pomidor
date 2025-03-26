@@ -1,7 +1,8 @@
 from sqlalchemy import text
+from sqlalchemy.orm import sessionmaker
 
 class EnvRepository:
-    def __init__(self, session_maker):
+    def __init__(self, session_maker : sessionmaker):
         self.db = session_maker
 
     async def get_env_history(self):
