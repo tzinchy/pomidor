@@ -64,6 +64,3 @@ class AppLogger:
 
 logger = AppLogger()
 
-log_query = logger.query
-log_error = logger.error
-log_info = logger.info
