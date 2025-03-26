@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.v1.router import router
 import time
 from fastapi.responses import JSONResponse
-from utils.logger import logger
+from core.logger import logger
 
 
 
@@ -36,7 +36,7 @@ async def log_requests(request: Request, call_next):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    logger.error(f"!!! Error in {request.url.path}: {str(exc)}", exc_info=True)
+    logger.error(f"!!! Error in {request.url.path}: {str(exc)}")
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal Server Error"},

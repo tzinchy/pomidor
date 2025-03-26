@@ -825,7 +825,7 @@ def insert_data_to_old_apart(df):
               lambda x: 1 if re.search(r"-01-", str(x)) else 0
         ).astype("Int64")
 
-        # df['district'] = df['district'].map(district_mapping).fillna(df['district'])
+        df['district'] = df['district'].map(district_mapping).fillna(df['district'])
 
         df = df.replace({np.nan: None})
 
