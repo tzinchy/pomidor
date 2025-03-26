@@ -8,7 +8,7 @@ from typing import Optional
 import json
 from sqlalchemy.orm import sessionmaker
 from handlers.httpexceptions import NotFoundException, SomethingWrong
-from utils.logger import log_query, log_info
+from core.logger import logger
 
 class OldApartRepository:
     def __init__(self, session_maker: sessionmaker):
@@ -21,7 +21,7 @@ class OldApartRepository:
                         FROM old_apart
                         ORDER BY district'''
                 result = await session.execute(text(query))
-                log_query(query=query, params=None)
+                logger.query(query=query, params=None)
                 return [row[0] for row in result if row[0] is not None]
             except Exception as error:
                 logging.error(error)

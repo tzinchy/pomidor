@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from utils.sql_reader import async_read_sql_query
 from schema.apartment import ApartTypeSchema
 from handlers.httpexceptions import SomethingWrong
-from utils.logger import log_query, log_info
+from core.logger import logger
 
 class NewApartRepository:
     def __init__(self, session_maker: sessionmaker):
@@ -17,7 +17,7 @@ class NewApartRepository:
                         FROM new_apart
                         ORDER BY district"""
                 result = await session.execute(text(query))
-                log_query(query, params=None)
+                logger.query(query, params=None)
                 return [row[0] for row in result if row[0] is not None]
             except Exception as error:
                 print(error)
@@ -41,7 +41,7 @@ class NewApartRepository:
             try:
                 print(f"Executing query: {query}")
                 print(f"Params: {params}")
-                log_query(query, params=params)
+                logger.query(query, params=params)
                 result = await session.execute(text(query), params)
                 return [row[0] for row in result if row[0] is not None]
             except Exception as error:
