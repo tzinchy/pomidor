@@ -777,7 +777,7 @@ def insert_data_to_old_apart(df):
                 "КПУ_Состояние": "rsm_status",
             }
         columns_db = list(columns_name.values())
-        columns_db ['is_queue'] = None
+        columns_db ['is_queue'] = 0
         # Удаляем строки с пустыми ID
         #df = df.dropna(subset=["affair_id"])
         df.rename(

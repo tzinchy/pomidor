@@ -26,6 +26,7 @@ WITH ranked_apartments AS (
         offer o USING (affair_id)
     LEFT JOIN
         status ON o.status_id = status.status_id
+    where rsm_status != 'снято'
 )
 SELECT *
 FROM ranked_apartments
