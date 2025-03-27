@@ -326,6 +326,7 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         new_apart_df['full_living_area'] = new_apart_df['full_living_area'].fillna(0)
         new_apart_df['total_living_area'] = new_apart_df['total_living_area'].fillna(0)
         new_apart_df['living_area'] = new_apart_df['living_area'].fillna(0)
+
         # Заменяем NaN на None (для PostgreSQL)
         new_apart_df = new_apart_df.replace({np.nan: None})
 
@@ -742,38 +743,38 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
         cursor.close()
         connection.close()
 
-def insert_data_to_old_apart(df):
+def insert_data_to_old_apart(df: pd.DataFrame):
     try:
         global district_mapping
         connection = None
 
         columns_name = {
-                "Идентификатор дела": "affair_id",
-                "КПУ_Дело_№ полный(новый)": "kpu_number",
-                "КПУ_ФИО": "fio",
-                "КПУ_Заявитель_Фамилия": "surname",
-                "КПУ_Заявитель_Имя": "firstname",
-                "КПУ_Заявитель_Отчество": "lastname",
-                "КПУ_Чел.в семье": "people_in_family",
-                "КПУ_Направление_код": "category",
-                "КПУ_кадастровый_номер_адреса": "cad_num",
-                "КПУ_Примечание": "notes",
-                "Адрес_Округ": "district",
-                "Адрес_Район": "municipal_district",
-                "Адрес_Короткий": "house_address",
-                "Адрес_№ кв": "apart_number",
-                "К_Комн": "room_count",
-                "К_Этаж": "floor",
-                "К_Общ": "total_living_area",
-                "К_Жил": "living_area",
-                "КПУ_Чел.в деле": "people_v_dele",
-                "КПУ_Чел.учете": "people_uchet",
-                "К_Общ(б/л)": "full_living_area",
-                "К_Тип_Кв": "apart_type",
-                "КПУ_Др. напр. откр.": "kpu_another",
-                "КПУ_Вид засел.": "type_of_settlement",
-                "КПУ_Состояние": "rsm_status",
-            }
+            "Идентификатор дела": "affair_id",
+            "КПУ_Дело_№ полный(новый)": "kpu_number",
+            "КПУ_ФИО": "fio",
+            "КПУ_Заявитель_Фамилия": "surname",
+            "КПУ_Заявитель_Имя": "firstname",
+            "КПУ_Заявитель_Отчество": "lastname",
+            "КПУ_Чел.в семье": "people_in_family",
+            "КПУ_Направление_код": "category",
+            "КПУ_кадастровый_номер_адреса": "cad_num",
+            "КПУ_Примечание": "notes",
+            "Адрес_Округ": "district",
+            "Адрес_Район": "municipal_district",
+            "Адрес_Короткий": "house_address",
+            "Адрес_№ кв": "apart_number",
+            "К_Комн": "room_count",
+            "К_Этаж": "floor",
+            "К_Общ": "total_living_area",
+            "К_Жил": "living_area",
+            "КПУ_Чел.в деле": "people_v_dele",
+            "КПУ_Чел.учете": "people_uchet",
+            "К_Общ(б/л)": "full_living_area",
+            "К_Тип_Кв": "apart_type",
+            "КПУ_Др. напр. откр.": "kpu_another",
+            "КПУ_Вид засел.": "type_of_settlement",
+            "КПУ_Состояние": "rsm_status",
+        }
         columns_db = list(columns_name.values())
         columns_db.append('is_queue')
         df.rename(
@@ -782,7 +783,6 @@ def insert_data_to_old_apart(df):
         )
         # Удаляем строки с пустыми ID
         df = df.dropna(subset=["affair_id"])
-
 
         df["affair_id"] = df["affair_id"].astype("Int64")
         df["people_in_family"] = df["people_in_family"].astype("Int64")
@@ -803,6 +803,11 @@ def insert_data_to_old_apart(df):
         df['district'] = df['district'].map(district_mapping).fillna(df['district'])
 
         df = df.replace({np.nan: None})
+        df["full_living_area"] = df["full_living_area"].replace({None: 0})
+        df["living_area"] = df["living_area"].replace({None: 0})
+        df["room_count"] = df["room_count"].replace({None: 0})
+        df["people_v_dele"] = df["people_v_dele"].replace({None: 0})
+        df["total_living_area"] = df["total_living_area"].replace({None: 0})
 
         df = df[columns_db]
 
@@ -883,5 +888,131 @@ def insert_data_to_old_apart(df):
         print(333)
         if connection:
             print(444)
+            connection.close()
+        return out
+    
+def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
+    try:
+        global district_mapping
+        connection = None
+        columns_name = {
+            "Сл.инф_APART_ID":	"new_apart_id",
+            "Адрес_Округ": "district",
+            "Адрес_Мун.округ": "municipal_district",
+            "Адрес_Короткий": "house_address",
+            "Адрес_№ кв": "apart_number",
+            "К_Этаж": "floor",
+            "К_Комн": "room_count",
+            "Площадь общая": "total_living_area",
+            "Площадь общая(б/л)": "full_living_area",
+            "Площадь жилая": "living_area",
+            "Сл.инф_UNOM": "building_id",  # ???
+            "Сл.инф_UNKV": "un_kv",
+            "К_Тип.пл": "apart_type",
+            "Распорядитель_Название": "owner",
+            "РСМ_Кад номер, квартира": "apart_kad_number",
+            "РСМ, Кад номер, комната": "room_kad_number",
+            # "К_Инв/к": None,
+            # "К_№ подъезда": None,
+        }
+        new_apart_df.rename(
+            columns=columns_name,
+            inplace=True,
+        )
+        columns_db = list(columns_name.values())
+        new_apart_df = new_apart_df[columns_db]
+        new_apart_df = new_apart_df.dropna(subset=["new_apart_id"])
+
+        new_apart_df["new_apart_id"] = new_apart_df["new_apart_id"].astype("Int64")
+        new_apart_df["floor"] = new_apart_df["floor"].astype("Int64")
+        new_apart_df["total_living_area"] = new_apart_df["total_living_area"].astype(float)
+        new_apart_df["full_living_area"] = new_apart_df["full_living_area"].astype(float)
+        new_apart_df["living_area"] = new_apart_df["living_area"].astype(float)
+        new_apart_df["building_id"] = new_apart_df["building_id"].astype("Int64")
+        new_apart_df["un_kv"] = new_apart_df["un_kv"].astype("Int64")
+        new_apart_df["room_count"] = new_apart_df["room_count"].astype("Int64")
+
+        new_apart_df['district'] = new_apart_df['district'].map(district_mapping).fillna(new_apart_df['district'])
+
+        # Заменяем NaN на None (для PostgreSQL)
+        new_apart_df = new_apart_df.replace({np.nan: None})
+        new_apart_df["full_living_area"] = new_apart_df["full_living_area"].replace({None: 0})
+        new_apart_df["living_area"] = new_apart_df["living_area"].replace({None: 0})
+        new_apart_df["room_count"] = new_apart_df["room_count"].replace({None: 0})
+        new_apart_df["total_living_area"] = new_apart_df["total_living_area"].replace({None: 0})
+
+        # Преобразуем в список кортежей для вставки
+        args = new_apart_df.itertuples(index=False, name=None)
+        args_str = ",".join(
+            "({})".format(
+                ", ".join(
+                    "'{}'".format(x.replace("'", "''"))
+                    if isinstance(x, str)
+                    else "NULL"
+                    if x is None
+                    else str(x)
+                    for x in arg
+                )
+            )
+            for arg in args
+        )
+
+        connection = psycopg2.connect(
+            host=settings.project_management_setting.DB_HOST,
+            user=settings.project_management_setting.DB_USER,
+            password=settings.project_management_setting.DB_PASSWORD,
+            port=settings.project_management_setting.DB_PORT,
+            database=settings.project_management_setting.DB_NAME
+        )
+
+        insert_data_sql = f"""
+            INSERT INTO public.new_apart (
+                {", ".join(columns_db)}
+            )
+            VALUES 
+                {args_str}
+            ON CONFLICT (new_apart_id) 
+            DO UPDATE SET 
+            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
+            updated_at = NOW()
+        """
+        set_env_true_sql = """
+            UPDATE env.data_updates
+            SET success = True,
+            updated_at = NOW()
+            WHERE name = 'new_aparts_resource'
+        """
+        out = 0
+        with connection:
+            with connection.cursor() as cursor:
+                print(-3)
+                cursor.execute(insert_data_sql)
+                print(-2)
+                cursor.execute(set_env_true_sql)
+                print(-1)
+    except Exception as e:
+        out = e
+        print(e)
+        if not connection:
+            print(111)
+            connection = psycopg2.connect(
+                host=settings.project_management_setting.DB_HOST,
+                user=settings.project_management_setting.DB_USER,
+                password=settings.project_management_setting.DB_PASSWORD,
+                port=settings.project_management_setting.DB_PORT,
+                database=settings.project_management_setting.DB_NAME
+            )
+        with connection:
+            with connection.cursor() as cursor:
+                print(222)
+                set_env_false_sql = """
+                    UPDATE env.data_updates
+                    SET success = False,
+                    updated_at = NOW()
+                    WHERE name = 'new_aparts_resource'
+                """
+                cursor.execute(set_env_false_sql)
+    finally:
+        if connection:
             connection.close()
         return out
