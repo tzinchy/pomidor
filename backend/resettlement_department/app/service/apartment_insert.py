@@ -746,7 +746,6 @@ def insert_data_to_old_apart(df):
     try:
         global district_mapping
         connection = None
-        cursor = None
 
         columns_name = {
                 "Идентификатор дела": "affair_id",
@@ -823,16 +822,14 @@ def insert_data_to_old_apart(df):
             for arg in args
         )
 
-        connection  =  psycopg2.connect(
+        connection = psycopg2.connect(
             host=settings.project_management_setting.DB_HOST,
             user=settings.project_management_setting.DB_USER,
             password=settings.project_management_setting.DB_PASSWORD,
             port=settings.project_management_setting.DB_PORT,
             database=settings.project_management_setting.DB_NAME
         )
-        cursor = connection.cursor()
-
-        sql = f"""
+        insert_data_sql = f"""
             INSERT INTO public.old_apart (
                 {", ".join(columns_db)}
             )
@@ -843,23 +840,48 @@ def insert_data_to_old_apart(df):
             {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
             updated_at = NOW()
         """
-        print("000")
-        cursor.execute(sql)
-        connection.commit()
-
-        # Обновляем статус успешного выполнения в отдельной транзакции
-        cursor.execute(
-            """UPDATE env.data_updates
-                SET success = True,
-                updated_at = NOW()
-                WHERE name = 'old_aparts_kpu'
-            """
-        )
-        connection.commit()
-
-        ds = 1
+        set_env_true_sql = """
+            UPDATE env.data_updates
+            SET success = True,
+            updated_at = NOW()
+            WHERE name = 'old_aparts_kpu'
+        """
+        out = 0
+        with connection:
+            with connection.cursor() as cursor:
+                print(-3)
+                cursor.execute(insert_data_sql)
+                print(-2)
+                cursor.execute(set_env_true_sql)
+                print(-1)
     except Exception as e:
-        return e
-
-
-
+        out = e
+        print(e)
+        print(000)
+        # NOTE: Здесь можно либо использовать старый connection в случае, если он есть (текущий вариант),
+        #       либо закрывать старый connection и открывать новый всегда
+        if not connection:
+            print(111)
+            connection = psycopg2.connect(
+                host=settings.project_management_setting.DB_HOST,
+                user=settings.project_management_setting.DB_USER,
+                password=settings.project_management_setting.DB_PASSWORD,
+                port=settings.project_management_setting.DB_PORT,
+                database=settings.project_management_setting.DB_NAME
+            )
+        with connection:
+            with connection.cursor() as cursor:
+                print(222)
+                set_env_false_sql = """
+                    UPDATE env.data_updates
+                    SET success = False,
+                    updated_at = NOW()
+                    WHERE name = 'old_aparts_kpu'
+                """
+                cursor.execute(set_env_false_sql)
+    finally:
+        print(333)
+        if connection:
+            print(444)
+            connection.close()
+        return out
