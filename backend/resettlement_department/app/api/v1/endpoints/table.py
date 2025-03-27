@@ -31,9 +31,9 @@ async def get_areas(
 @router.get("/house_addresses")
 async def get_house_addresses(
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
-    municipal_district: List[str] = Query(..., description="Список областей"),
+    municipal_districts: Optional[List[str]] = Query(...),
 ):
-    return await apartment_service.get_house_addresses(apart_type, municipal_district)
+    return await apartment_service.get_house_addresses(apart_type, municipal_districts)
 
 @router.get("/apartments")
 async def get_apartments(

@@ -169,12 +169,12 @@ class OldApartRepository:
             
     async def get_apartment_by_id(self, apart_id: int) -> dict:
 
-        query_params = {"apart_id": apart_id}
+        params = {"apart_id": apart_id}
 
         query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/OldApartById.sql")
 
         async with self.db() as session:
-            result = await session.execute(text(query), query_params)
+            result = await session.execute(text(query), params)
             data = result.fetchall()
             if not data:
                 raise ValueError(f"Apartment with ID {apart_id} not found")
@@ -212,9 +212,18 @@ class OldApartRepository:
                 raise error
             
     async def manual_matching(self, old_apart_id, new_apart_ids):
-        try:
-            async with self.db() as session:
+        async with self.db() as session:
+            try:
                 aparts = {}
+                type_of_user = await session.execute(text(
+                    '''SELECT is_queue FROM old_apart WHERE affair_id = :old_apart_id LIMIT 1;'''
+                ), {'old_apart_id' : old_apart_id})
+                is_queue = type_of_user.fetchone()[0]
+                if is_queue == 0: 
+                    if len(new_apart_ids)!=1:
+                        session.rollback()
+                        raise Exception
+                print('а выполнение уде тут')
                 check_exist = await session.execute(text('''
                     SELECT 1 FROM offer WHERE affair_id = :old_apart_id LIMIT 1;
                 '''), {'old_apart_id' : old_apart_id})
@@ -267,9 +276,9 @@ class OldApartRepository:
 
                 await session.commit()
                 return {"status": "done"}
-        except Exception as error:
-            await session.rollback()
-            raise error
+            except Exception as error:
+                await session.rollback()
+                raise error
    
 
     async def get_void_aparts_for_apartment(self, apart_id):
