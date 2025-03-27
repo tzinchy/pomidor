@@ -748,7 +748,6 @@ def insert_data_to_old_apart(df):
         connection = None
         cursor = None
 
-
         columns_name = {
                 "Идентификатор дела": "affair_id",
                 "КПУ_Дело_№ полный(новый)": "kpu_number",
@@ -777,13 +776,14 @@ def insert_data_to_old_apart(df):
                 "КПУ_Состояние": "rsm_status",
             }
         columns_db = list(columns_name.values())
-        columns_db ['is_queue'] = 0
-        # Удаляем строки с пустыми ID
-        #df = df.dropna(subset=["affair_id"])
+        columns_db.append('is_queue')
         df.rename(
             columns=columns_name,
             inplace=True,
         )
+        # Удаляем строки с пустыми ID
+        df = df.dropna(subset=["affair_id"])
+
 
         df["affair_id"] = df["affair_id"].astype("Int64")
         df["people_in_family"] = df["people_in_family"].astype("Int64")
@@ -859,50 +859,7 @@ def insert_data_to_old_apart(df):
 
         ds = 1
     except Exception as e:
-        print(e)
-        print("111")
-        ds = e
-        status_updated = False
-        try:
-            if connection:
-                print("222")
-                connection.rollback()  # Сброс состояния транзакции
-                # Создаем новый курсор для обновления статуса
-                print("333")
-                cursor.execute(
-                    """UPDATE env.data_updates
-                        SET success = False,
-                        updated_at = NOW()
-                        WHERE name = 'old_aparts_kpu'
-                    """
-                )
-                connection.commit()
-                status_updated = True
-        except Exception as status_error:
-            print('ERROR updating status:', status_error)
-        if not status_updated:
-            # Попытка переподключиться, если соединение было потеряно
-            print("444")
-            try:
-                new_conn = psycopg2.connect(
-                    host=settings.project_management_setting.DB_HOST,
-                    user=settings.project_management_setting.DB_USER,
-                    password=settings.project_management_setting.DB_PASSWORD,
-                    port=settings.project_management_setting.DB_PORT,
-                    database=settings.project_management_setting.DB_NAME
-                )
-                with new_conn.cursor() as new_cursor:
-                    new_cursor.execute(
-                        """UPDATE env.data_updates
-                            SET success = False,
-                            updated_at = NOW()
-                            WHERE name = 'old_aparts_kpu'
-                        """
-                    )
-                    new_conn.commit()
-                new_conn.close()
-            except Exception as fallback_error:
-                print('Fallback update failed:', fallback_error)
-    finally:
-        connection.close()
-        return ds
+        return e
+
+
+
