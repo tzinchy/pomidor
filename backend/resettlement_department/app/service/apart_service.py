@@ -186,7 +186,7 @@ class ApartService:
 
     async def set_notes(self, apart_id: int, notes: str, apart_type: str):
         if apart_type == ApartTypeSchema.OLD:
-            return await self.new_apart_repository.set_notes(apart_id, notes=notes)
+            return await self.old_apart_repository.set_notes(apart_id, notes=notes)
         elif apart_type == ApartTypeSchema.NEW: 
             return await self.new_apart_repository.set_notes(apart_id=apart_id, notes=notes)
         else:
