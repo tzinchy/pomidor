@@ -67,7 +67,7 @@ def insert_data_to_old(df):
                 "409863": "people_in_family",
                 "409864": "category",
                 "409865": "cad_num",
-                "409866": "notes",
+                "409866": "rsm_notes",
                 "409867": "district",
                 "409868": "municipal_district",
                 "409869": "house_address",
@@ -116,7 +116,7 @@ def insert_data_to_old(df):
                 "lastname",
                 "people_in_family",
                 "cad_num",
-                "notes",
+                "rsm_notes",
                 "district",
                 "municipal_district",
                 "house_address",
@@ -173,7 +173,7 @@ def insert_data_to_old(df):
         cursor.execute(f"""
             INSERT INTO public.old_apart (
                 affair_id, kpu_number, fio, surname, firstname, lastname, 
-                people_in_family, cad_num, notes, district, municipal_district, house_address, 
+                people_in_family, cad_num, rsm_notes, district, municipal_district, house_address, 
                 apart_number, room_count, floor, full_living_area, living_area, people_v_dele, 
                 people_uchet, total_living_area, apart_type, category, kpu_another, is_queue, type_of_settlement, rsm_status
             )
@@ -188,7 +188,7 @@ def insert_data_to_old(df):
                 lastname = EXCLUDED.lastname,
                 people_in_family = EXCLUDED.people_in_family,
                 cad_num = EXCLUDED.cad_num,
-                notes = EXCLUDED.notes,
+                rsm_notes = EXCLUDED.rsm_notes,
                 district = EXCLUDED.district,
                 municipal_district = EXCLUDED.municipal_district,
                 house_address = EXCLUDED.house_address,
@@ -510,7 +510,7 @@ def insert_offer(offer_df: pd.DataFrame):
         cursor.execute(f"""
         INSERT INTO public.offer (
             offer_id, sentence_date, give_date, answer_date, 
-            sentence_number, selection_action, conditions, notes, claim, 
+            sentence_number, selection_action, conditions, rsm_notes, claim, 
             subject_id, object_id, status_id
         )
         VALUES
@@ -523,7 +523,7 @@ def insert_offer(offer_df: pd.DataFrame):
             sentence_number = EXCLUDED.sentence_number,
             selection_action = EXCLUDED.selection_action,
             conditions = EXCLUDED.conditions,
-            notes = EXCLUDED.notes,
+            rsm_notes = EXCLUDED.rsm_notes,
             claim = EXCLUDED.claim,
             subject_id = EXCLUDED.subject_id,
             object_id = EXCLUDED.object_id,
@@ -661,7 +661,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
             # Фильтрация колонок
             old_apart_required = [
                 "affair_id", "kpu_number", "fio", "surname", "firstname", "lastname",
-                "people_in_family", "category", "cad_num", "notes", "documents", "district",
+                "people_in_family", "category", "cad_num", "rsm_notes", "documents", "district",
                 "house_address", "apart_number", "room_count", "floor", "full_living_area",
                 "living_area", "people_v_dele", "people_uchet", "total_living_area", "apart_type",
                 "manipulation_notes", "municipal_district", "is_special_needs_marker", "min_floor",
@@ -758,7 +758,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
             "КПУ_Чел.в семье": "people_in_family",
             "КПУ_Направление_код": "category",
             "КПУ_кадастровый_номер_адреса": "cad_num",
-            "КПУ_Примечание": "notes",
+            "КПУ_Примечание": "rsm_notes",
             "Адрес_Округ": "district",
             "Адрес_Район": "municipal_district",
             "Адрес_Короткий": "house_address",
