@@ -906,15 +906,16 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             "Площадь общая": "total_living_area",
             "Площадь общая(б/л)": "full_living_area",
             "Площадь жилая": "living_area",
-            "Сл.инф_UNOM": "building_id",  # ???
+            "Сл.инф_UNOM": "building_id",  
             "Сл.инф_UNKV": "un_kv",
             "К_Тип.пл": "apart_type",
             "Распорядитель_Название": "owner",
             "РСМ_Кад номер, квартира": "apart_kad_number",
             "РСМ, Кад номер, комната": "room_kad_number",
-            # "К_Инв/к": None,
-            # "К_№ подъезда": None,
+            "К_Инв/к": "for_special_needs_marker",
+            "К_№ подъезда": "entrance_number",
         }
+        print(new_apart_df.columns)
         new_apart_df.rename(
             columns=columns_name,
             inplace=True,
@@ -922,7 +923,10 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
         columns_db = list(columns_name.values())
         new_apart_df = new_apart_df[columns_db]
         new_apart_df = new_apart_df.dropna(subset=["new_apart_id"])
-
+        special_needs_mapping = {"да": 1, "нет": 0}
+        new_apart_df["for_special_needs_marker"] = (
+            new_apart_df["for_special_needs_marker"].map(special_needs_mapping).fillna(0)
+        )
         new_apart_df["new_apart_id"] = new_apart_df["new_apart_id"].astype("Int64")
         new_apart_df["floor"] = new_apart_df["floor"].astype("Int64")
         new_apart_df["total_living_area"] = new_apart_df["total_living_area"].astype(float)
@@ -934,7 +938,6 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
 
         new_apart_df['district'] = new_apart_df['district'].map(district_mapping).fillna(new_apart_df['district'])
 
-        # Заменяем NaN на None (для PostgreSQL)
         new_apart_df = new_apart_df.replace({np.nan: None})
         new_apart_df["full_living_area"] = new_apart_df["full_living_area"].replace({None: 0})
         new_apart_df["living_area"] = new_apart_df["living_area"].replace({None: 0})

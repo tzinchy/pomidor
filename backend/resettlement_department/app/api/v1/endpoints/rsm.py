@@ -1,5 +1,5 @@
-from RSM.RSM import get_kpu_xlsx_df, get_kurs_living_space
-from service.apartment_insert import new_apart_insert, insert_data_to_old_apart
+from RSM.RSM import get_kpu_xlsx_df, get_resurs_xlsx_df, get_orders_xlsx_df
+from service.apartment_insert import insert_data_to_new_apart, insert_data_to_old_apart
 from fastapi import APIRouter
 from datetime import datetime, time
 from io import BytesIO
@@ -42,13 +42,13 @@ def from_rsm_get_old_apart() -> None:
 @router.patch("/get_new_apart", description='Для обновления ресурса с РСМ')
 def from_rsm_get_new_apart() -> dict:
     layout_id = 21744
-    df = get_kurs_living_space([999, 99999999], layout_id)
+    df = get_resurs_xlsx_df(layout_id)
     if df.empty:
         return {"status": "error", "message": "Нет данных для вставки"}
     
     output = BytesIO()
     output.seek(0)
-    result = new_apart_insert(df)
+    result = insert_data_to_new_apart(df)
     return {"status": "success", "inserted": result}
 
 @router.post("/upload-file/")
