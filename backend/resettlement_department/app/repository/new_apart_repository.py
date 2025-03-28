@@ -84,12 +84,17 @@ class NewApartRepository:
     async def set_notes(self, apart_id: int, notes: str):
         async with self.db() as session:
             try:
+                notes_list = notes.split(';')
+                rsm_note = notes_list.pop(0)
+                notes = ";".join(notes_list)
                 await session.execute(
                     text("""
-                    UPDATE new_apart SET notes = :notes 
+                    UPDATE new_apart 
+                    SET rsm_notes = :rsm_note,
+                        notes = :notes
                     WHERE new_apart_id = :apart_id
                     """),
-                    {"notes": notes, "apart_id": apart_id},
+                    {"rsm_note": rsm_note, "notes": notes, "apart_id": apart_id},
                 )
                 await session.commit()
                 return {"status": "done"}
