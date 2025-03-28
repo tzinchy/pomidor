@@ -13,7 +13,7 @@ class HistoryRepository:
             logger.query(query=query, params=None)
             result = await session.execute(text(query))
             rows = result.fetchall() 
-            return [row._mapping() for row in rows]  
+            return [row._mapping for row in rows]  
         
     async def cancell_history(self, history_id: int):
         async with self.db() as session:
@@ -60,4 +60,4 @@ class HistoryRepository:
                 )
             )
             rows = result.fetchall()
-            return [row._asdict() for row in rows]
+            return [row.mapping for row in rows]
