@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import psycopg2
 from core.config import settings
-from service.apartment_insert import format_datetime_columns
 
 
 def df_date_to_string(df: pd.DataFrame, columns):
@@ -12,7 +11,7 @@ def df_date_to_string(df: pd.DataFrame, columns):
 
 
 def insert_data_to_extract_decisions(extract_df: pd.DataFrame):
-    # try:
+    try:
         connection = None
         columns_name = {
             "КПУ_Дело_Идентификатор": "case_id",
@@ -32,6 +31,11 @@ def insert_data_to_extract_decisions(extract_df: pd.DataFrame):
             columns=columns_name,
             inplace=True,
         )
+
+        # TODO: По тз это поле может повторятся, но так быть не должно и это костыль
+        #       Когда выгрузка починится это надо убрать
+        extract_df = extract_df.drop_duplicates("extract_id")
+
         columns_db = list(columns_name.values())
         extract_df = extract_df[columns_db]
         extract_df = extract_df.dropna(subset=["extract_id"])
@@ -45,8 +49,8 @@ def insert_data_to_extract_decisions(extract_df: pd.DataFrame):
         extract_df = extract_df.replace({np.nan: None})
 
         extract_df = df_date_to_string(extract_df, 
-                               ["decision_date", "extract_date", "cancel_date", "legal_cancel_date", "extract_draft_date"]
-                               )
+            ["decision_date", "extract_date", "cancel_date", "legal_cancel_date", "extract_draft_date"]
+        )
         extract_df = extract_df.replace({'None': None})
 
         # Преобразуем в список кортежей для вставки
@@ -89,10 +93,10 @@ def insert_data_to_extract_decisions(extract_df: pd.DataFrame):
             with connection.cursor() as cursor:
                 print(-3)
                 cursor.execute(insert_data_sql)
-    # except Exception as e:
-    #     out = e
-    #     print(e)
-    # finally:
+    except Exception as e:
+        out = e
+        print(e)
+    finally:
         if connection:
             connection.close()
         return out
