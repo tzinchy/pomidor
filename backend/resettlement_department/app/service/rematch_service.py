@@ -16,6 +16,7 @@ def get_db_connection():
 
 def rematch(apart_ids):
     print(apart_ids)
+    cant_offer_aparts_raise_ids = {}
     for apart_id in apart_ids:
         try:
             with get_db_connection() as conn:
