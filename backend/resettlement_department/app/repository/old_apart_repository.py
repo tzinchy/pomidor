@@ -413,8 +413,8 @@ class OldApartRepository:
             try:
                 await session.execute(
                     text("""
-                    UPDATE new_apart SET notes = :notes 
-                    WHERE new_apart_id = :apart_id
+                    UPDATE old_apart SET notes = :notes 
+                    WHERE affair_id = :apart_id
                     """),
                     {"notes": notes, "apart_id": apart_id},
                 )
