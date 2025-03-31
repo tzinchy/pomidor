@@ -21,7 +21,7 @@ def rematch(apart_ids):
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-
+                
                 # Запрос для получения данных старой квартиры
                 apart_query = """
                     SELECT affair_id, room_count, full_living_area, total_living_area, living_area, 
@@ -120,6 +120,6 @@ def rematch(apart_ids):
         except Exception as e:
             print(f"Ошибка при обработке apart_id {apart_id}: {e}")
             conn.rollback()
-            raise SomethingWrong
+            raise e
 
     return None
