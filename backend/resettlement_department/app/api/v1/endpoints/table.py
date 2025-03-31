@@ -87,7 +87,7 @@ async def get_entrance_number_new_apart(
     house_address: str = Query(
         None, description="Адрес дома"
     ),
-    apart_number: str = Query(
+    apart_number: int = Query(
         None, description="Номер квартиры"
     )
 ):
