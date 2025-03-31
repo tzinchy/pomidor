@@ -34,7 +34,7 @@ joined_aparts AS (
                 'answer_date', o.answer_date :: DATE,
                 'decline_reason_notes', dr.notes
             ) ORDER BY sentence_date DESC, answer_date DESC, o.created_at ASC, o.updated_at ASC
-        ) AS old_apartments
+        ) AS offers
     FROM 
         unnset_offer o
     LEFT JOIN 
@@ -59,7 +59,7 @@ SELECT
     new_apart.living_area,
     new_apart.room_count,
     new_apart.type_of_settlement,
-    joined_aparts.old_apartments
+    joined_aparts.offers
 FROM new_apart  
 LEFT JOIN joined_aparts USING (new_apart_id) 
 WHERE new_apart_id = :apart_id

@@ -185,6 +185,7 @@ class OldApartRepository:
         query = await async_read_sql_query(
             f"{RECOMMENDATION_FILE_PATH}/AvaliableOldApartAddress.sql"
         )
+        print(query)
         async with self.db() as session:
             result = await session.execute(text(query))
             return result.fetchall()
