@@ -25,6 +25,7 @@ export default function ApartDetails({
     setIsDetailsVisible(false);
     setSelectedRow(false);
   }
+  console.log('apartmentDetails', apartmentDetails);
 
   const table = apartType === "OldApart" ? "new_apartments" : "old_apartments";
 
@@ -136,13 +137,15 @@ export default function ApartDetails({
                           apartmentDetails={apartmentDetails}
                           newApartId={offerKeys[0]}
                         />
-                        <DeclineResonsCell 
-                          props={offerKeys.length > 0 ? value[offerKeys[0]] : value} 
-                          newApartId={offerKeys[0]} 
-                          apartmentDetails={apartmentDetails}
-                          selectedRowId={selectedRowId}
-                          fetchApartmentDetails={fetchApartmentDetails}
-                        />
+                        {apartType === 'OldApart' && (
+                          <DeclineResonsCell 
+                            props={offerKeys.length > 0 ? value[offerKeys[0]] : value} 
+                            newApartId={offerKeys[0]} 
+                            apartmentDetails={apartmentDetails}
+                            selectedRowId={selectedRowId}
+                            fetchApartmentDetails={fetchApartmentDetails}
+                          />
+                        )}
                       </tr>
 
                       {/* Дополнительные строки, если есть несколько offers */}
@@ -165,13 +168,15 @@ export default function ApartDetails({
                               apartmentDetails={apartmentDetails}
                               newApartId={key}
                             />
-                            <DeclineResonsCell 
-                              props={offerKeys.length > 0 ? value[key] : value} 
-                              newApartId={key} 
-                              apartmentDetails={apartmentDetails}
-                              selectedRowId={selectedRowId}
-                              fetchApartmentDetails={fetchApartmentDetails}
-                            />
+                            {apartType === 'OldApart' && (
+                              <DeclineResonsCell 
+                                props={offerKeys.length > 0 ? value[key] : value} 
+                                newApartId={key} 
+                                apartmentDetails={apartmentDetails}
+                                selectedRowId={selectedRowId}
+                                fetchApartmentDetails={fetchApartmentDetails}
+                              />
+                            )}
                           </tr>
                         ))}
                     </React.Fragment>
