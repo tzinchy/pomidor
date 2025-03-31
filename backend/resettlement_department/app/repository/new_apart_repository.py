@@ -1,8 +1,9 @@
-from sqlalchemy import text
 from core.config import RECOMMENDATION_FILE_PATH
+from schema.apartment import ApartTypeSchema
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 from utils.sql_reader import async_read_sql_query
-from schema.apartment import ApartTypeSchema
+
 
 class NewApartRepository:
     def __init__(self, session_maker: sessionmaker):
@@ -249,5 +250,44 @@ class NewApartRepository:
             except Exception as error:
                 session.rollback()
                 raise error
+            
+    async def get_entrance_number(self, address, apart_number):
+        async with self.db() as session:
+            # TODO: В базе задвоение записей идет поэтому пока беру ту что новее
+            result = await session.execute(
+                text("""
+                SELECT entrance_number
+                FROM public.new_apart
+                WHERE house_address = :address AND apart_number = :apart_number
+                ORDER BY updated_at DESC
+                LIMIT 1
+                """),
+                {"address": address, "apart_number": apart_number}
+            )
+            entrance_number = result.fetchone()
+            return entrance_number._mapping
+        
+    async def update_entrance_number_for_many(self, new_apart_ids, entrance_number):
+        async with self.db() as session:
+            try:
+                result = await session.execute(
+                    text(f"""
+                        UPDATE public.new_apart
+                        SET entrance_number = :entrance_number
+                        WHERE new_apart_id IN ({", ".join(map(str, new_apart_ids))})
+                    """),
+                    {"entrance_number": entrance_number}
+                )
+            except Exception as e:
+                session.rollback()
+                raise e
+            else:
+                await session.commit()
+                return result.rowcount
+
+
+
+
+
             
 

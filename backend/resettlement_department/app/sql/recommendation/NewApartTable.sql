@@ -25,6 +25,7 @@ ranked_apartments AS (
         na.living_area, 
         na.room_count, 
         na.type_of_settlement, 
+        na.entrance_number,
         CASE WHEN na.notes IS NULL THEN na.rsm_notes ELSE na.rsm_notes || ';' || na.notes END AS notes,
         na.new_apart_id,
         s.status AS status,
