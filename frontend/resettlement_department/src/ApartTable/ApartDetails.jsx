@@ -16,10 +16,10 @@ export default function ApartDetails({
   fetchApartments,
   lastSelectedAddres,
   lastSelectedMunicipal,
-  fetchApartmentDetails={fetchApartmentDetails}
+  fetchApartmentDetails,
+  getFilteData
 }) {
   const [isManualSelectionOpen, setIsManualSelectionOpen] = useState(false); // Состояние для модального окна
-  console.log('apartmentDetails', apartmentDetails);
 
   function handleClose() {
     setIsDetailsVisible(false);
@@ -88,12 +88,17 @@ export default function ApartDetails({
               : ""}
           </p>
         </div>
-        <button
-                onClick={() => setIsManualSelectionOpen(true)}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              >
-                Ручной подбор
-              </button>
+        {apartType === "OldApart" && (
+          <button
+            onClick={() => setIsManualSelectionOpen(true)}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Ручной подбор
+          </button>
+        )}
+        {apartType === 'OldApart' && (
+          <a target="_blank" rel="noreferrer" href={`http://webrsm.mlc.gov:5222/ObjectCard?ObjId=${apartmentDetails.affair_id}&RegisterViewId=KursKpu&isVertical=true&useMasterPage=true`}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg></a>
+        )}
         <button
           className="h-10 w-10 p-0 border border-gray-300 rounded-full flex items-center justify-center"
           onClick={handleClose}
@@ -114,7 +119,7 @@ export default function ApartDetails({
                   return (
                     <React.Fragment key={index}>
                       {/* Основная строка */}
-                      <tr className={`bg-white border-b transition-colors ${hasMultipleOffers ? 'border-t-2 border-t-red-200' : ''}`}>
+                      <tr className={`bg-white transition-colors ${hasMultipleOffers ? 'border-b-2 border-b-gray-200' : 'border-b-2 border-b-red-200'}`}>
                         <td>
                           <DetailsAdressCell props={offerKeys.length > 0 ? value[offerKeys[0]] : value} />
                         </td>
@@ -132,18 +137,18 @@ export default function ApartDetails({
                           newApartId={offerKeys[0]}
                         />
                         <DeclineResonsCell 
-                        props={offerKeys.length > 0 ? value[offerKeys[0]] : value} 
-                        newApartId={offerKeys[0]} 
-                        apartmentDetails={apartmentDetails}
-                        selectedRowId={selectedRowId}
-                        fetchApartmentDetails={fetchApartmentDetails}
+                          props={offerKeys.length > 0 ? value[offerKeys[0]] : value} 
+                          newApartId={offerKeys[0]} 
+                          apartmentDetails={apartmentDetails}
+                          selectedRowId={selectedRowId}
+                          fetchApartmentDetails={fetchApartmentDetails}
                         />
                       </tr>
 
                       {/* Дополнительные строки, если есть несколько offers */}
                       {hasMultipleOffers &&
                         offerKeys.slice(1).map((key, subIndex) => (
-                          <tr key={`${index}-${subIndex}`} className={`bg-white border-b transition-colors ${key === offerKeys[offerKeys.length-1] ? 'border-b-2 border-b-red-200' : '' }`}>
+                          <tr key={`${index}-${subIndex}`} className={`bg-white border-b-2 transition-colors ${key === offerKeys[offerKeys.length-1] ? 'border-b-2 border-b-red-200' : '' }`}>
                             <td>
                               <DetailsAdressCell props={value[key]} />
                             </td>
@@ -174,15 +179,16 @@ export default function ApartDetails({
                 })}
               </tbody>
             </table>
-
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={handleCancelMatching}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Отменить подборы
-              </button>
-            </div>
+            {apartType === "OldApart" && (
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={handleCancelMatching}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                >
+                  Отменить подборы
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="relative flex flex-col place-items-center py-4 text-gray-500">
@@ -214,6 +220,7 @@ export default function ApartDetails({
         onClose={() => setIsManualSelectionOpen(false)}
         apartmentId={apartmentDetails.affair_id}
         fetchApartments={fetchApartments}
+        getFilteData={getFilteData}
       />
     </div>
   );

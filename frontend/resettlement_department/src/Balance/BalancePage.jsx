@@ -51,7 +51,7 @@ export default function BalancePage() {
               <SubmitButton onResponse={handleResponse} type={'last'} />
             </div>
 
-            <FileUploader />
+            <FileUploader link={`/fisrt_matching/upload-file/`}/>
           </div>
         </DropdownProvider>
 

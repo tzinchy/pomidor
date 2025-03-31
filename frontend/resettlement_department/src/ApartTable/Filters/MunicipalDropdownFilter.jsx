@@ -14,6 +14,13 @@ export default function MunicipalDropdownFilter({
     const [searchQuery, setSearchQuery] = useState("");
     const container = useRef(null);
 
+    // Инициализация выбранных значений из filters[filterType]
+    useEffect(() => {
+        if (filters[filterType] && filters[filterType].length > 0) {
+            setSelectedValues(filters[filterType]);
+        }
+    }, [filters, filterType]);
+
     useEffect(() => {
         if (isFiltersReset) {
             setSelectedValues([]);
@@ -66,6 +73,10 @@ export default function MunicipalDropdownFilter({
                     ) {
                         return false;
                     }
+                    // Фильтрация по searchQuery для municipal, если showAddresses === false
+                    if (!showAddresses && !municipal.toLowerCase().includes(searchQuery.toLowerCase())) {
+                        return false;
+                    }
                     return true;
                 })
                 .map(([municipal, addresses]) => ({
@@ -76,7 +87,7 @@ export default function MunicipalDropdownFilter({
                         )
                         : addresses,
                 }))
-                .filter(({ addresses }) => addresses.length > 0);
+                .filter(({ addresses }) => showAddresses ? addresses.length > 0 : true);
 
             return {
                 district,
@@ -219,25 +230,27 @@ export default function MunicipalDropdownFilter({
                                                         className="flex items-center text-sm p-2 hover:bg-gray-100 rounded-md cursor-pointer"
                                                         onClick={() => toggleValue(address)}
                                                     >
-                                                        <div className={`w-4 h-4 border rounded-sm mr-2 flex items-center justify-center ${
-                                                            isSelected(address) ? 'bg-blue-500 border-blue-500' : 'border-gray-400'
-                                                        }`}>
-                                                            {isSelected(address) && (
-                                                                <svg
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                    width="16"
-                                                                    height="16"
-                                                                    viewBox="0 0 24 24"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    strokeWidth="2"
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    className="lucide lucide-check text-white"
-                                                                >
-                                                                    <path d="M20 6 9 17l-5-5"></path>
-                                                                </svg>
-                                                            )}
+                                                        <div
+                                                            className={`mr-2 flex h-4 w-4 items-center justify-center rounded-sm border ${
+                                                                isSelected(address)
+                                                                    ? "text-primary-foreground border-black"
+                                                                    : "opacity-60 [&_svg]:invisible"
+                                                            }`}
+                                                        >
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                width="24"
+                                                                height="24"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                className="lucide lucide-check h-4 w-4"
+                                                            >
+                                                                <path d="M20 6 9 17l-5-5"></path>
+                                                            </svg>
                                                         </div>
                                                         <span>{address}</span>
                                                     </div>
