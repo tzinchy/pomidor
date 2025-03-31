@@ -86,12 +86,9 @@ async def switch_apartments(
 async def get_entrance_number_new_apart(
     house_address: str = Query(
         None, description="Адрес дома"
-    ),
-    apart_number: str = Query(
-        None, description="Номер квартиры"
     )
 ):
-    return await apartment_service.get_entrance_number_new_apart(house_address, apart_number)
+    return await apartment_service.get_entrance_ranges(house_address)
 
 @router.patch("/set_entrance_number_for_many")
 async def set_entrance_number_for_many(

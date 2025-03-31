@@ -217,8 +217,8 @@ class ApartService:
             notes,
         )
     
-    async def get_entrance_number_new_apart(self, address, apart_number):
-        entrance_number = await self.new_apart_repository.get_entrance_number(address, apart_number)
+    async def get_entrance_ranges(self, address):
+        entrance_number = await self.new_apart_repository.get_entrance_ranges(address)
         if not entrance_number:
             raise NotFoundException
         return entrance_number

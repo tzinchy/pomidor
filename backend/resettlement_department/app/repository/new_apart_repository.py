@@ -3,7 +3,7 @@ from schema.apartment import ApartTypeSchema
 from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 from utils.sql_reader import async_read_sql_query
-
+import json
 
 class NewApartRepository:
     def __init__(self, session_maker: sessionmaker):
@@ -251,21 +251,32 @@ class NewApartRepository:
                 session.rollback()
                 raise error
             
-    async def get_entrance_number(self, address, apart_number):
+    async def get_entrance_ranges(self, address):
         async with self.db() as session:
-            # TODO: В базе задвоение записей идет поэтому пока беру ту что новее
             result = await session.execute(
                 text("""
-                SELECT entrance_number
-                FROM public.new_apart
-                WHERE house_address = :address AND apart_number = :apart_number
-                ORDER BY updated_at DESC
-                LIMIT 1
+                    WITH numbered_entrances AS (
+                        SELECT 
+                            entrance_number,
+                            CONCAT(MIN(apart_number), '-', MAX(apart_number)) AS apart_range
+                        FROM 
+                            public.new_apart
+                        WHERE 
+                            house_address = :address
+                        GROUP BY 
+                            entrance_number
+                        ORDER BY 
+                            entrance_number
+                    )
+                    SELECT 
+                        json_object_agg(entrance_number, apart_range) AS result
+                    FROM 
+                        numbered_entrances
                 """),
-                {"address": address, "apart_number": apart_number}
+                {"address": address}
             )
-            entrance_number = result.fetchone()
-            return entrance_number._mapping
+            row = result.fetchone()
+            return row[0] if row else {}
         
     async def update_entrance_number_for_many(self, new_apart_ids, entrance_number):
         async with self.db() as session:
