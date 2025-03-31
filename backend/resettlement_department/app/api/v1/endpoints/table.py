@@ -31,9 +31,9 @@ async def get_areas(
 @router.get("/house_addresses")
 async def get_house_addresses(
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
-    municipal_district: List[str] = Query(..., description="Список областей"),
+    municipal_districts: Optional[List[str]] = Query(...),
 ):
-    return await apartment_service.get_house_addresses(apart_type, municipal_district)
+    return await apartment_service.get_house_addresses(apart_type, municipal_districts)
 
 @router.get("/apartments")
 async def get_apartments(
@@ -59,16 +59,6 @@ async def get_apartments(
     is_queue: bool = None,
     is_private: bool = None
 ):
-    """
-    Получить отфильтрованный список квартир с возможностью фильтрации по:
-    - Типу квартир (обязательный параметр)
-    - Адресам домов
-    - Районам
-    - Муниципальным округам
-    - Этажу
-    - Диапазону площадей
-    - Количеству комнат
-    """
     try:
         return await apartment_service.get_apartments(
             apart_type=apart_type,
@@ -93,6 +83,3 @@ async def switch_apartments(
 ):
     await apartment_service.switch_apartment(first_apart_id, second_apart_id)
 
-@router.get('/get_district_chain')
-async def get_district_chain(apart_type: ApartTypeSchema = Query(..., description='Тип апартаментов')):
-    return await apartment_service.get_district_chain(apart_type)

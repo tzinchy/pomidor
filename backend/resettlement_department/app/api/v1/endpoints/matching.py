@@ -42,7 +42,6 @@ async def start_matching(requirements: MatchingSchema):
 @router.post("/upload-file/")
 async def upload_file(file: UploadFile = File(...)):
     try:
-        # Создаем папку если ее нет
         folders = [Path("manual_download")]
 
         for folder in folders:
@@ -50,12 +49,10 @@ async def upload_file(file: UploadFile = File(...)):
 
         content = await file.read()
 
-        # Сохраняем в manual_download
         manual_path = Path("manual_download") / file.filename
         with open(manual_path, "wb") as f:
             f.write(content)
 
-        # Обработка данных
         new_apart = pd.read_excel(BytesIO(content), sheet_name="new_apart")
         old_apart = pd.read_excel(BytesIO(content), sheet_name="old_apart")
         cin = pd.read_excel(BytesIO(content), sheet_name="cin")

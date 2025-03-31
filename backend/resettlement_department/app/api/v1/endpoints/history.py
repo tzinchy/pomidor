@@ -9,13 +9,6 @@ import os
 from service.container_service import generate_excel_from_two_dataframes
 from pathlib import Path
 
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
-
 router = APIRouter(tags=["History"])
 
 
@@ -64,7 +57,6 @@ def container(history_id: int):
 
         # Проверяем, существует ли файл
         if not os.path.exists(file_path):
-            logging.error(f"Файл {file_path} не найден!")
             raise HTTPException(status_code=404, detail="Файл не найден!")
 
         # Возвращаем файл как ответ
@@ -74,7 +66,6 @@ def container(history_id: int):
             filename=f"container_{history_id}.xlsx",
         )
     except Exception as e:
-        logging.error(f"Ошибка: {e}")
         return {"error": str(e)}
     
 @router.patch("/approve/{history_id}")

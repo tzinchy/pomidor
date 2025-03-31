@@ -1,14 +1,8 @@
 from sqlalchemy import text
 from core.config import RECOMMENDATION_FILE_PATH
 from sqlalchemy.orm import sessionmaker
-from utils.sql_reader import read_sql_query
+from utils.sql_reader import async_read_sql_query
 from schema.apartment import ApartTypeSchema
-from handlers.httpexceptions import SomethingWrong
-import logging
-
-
-logger = logging.getLogger(__name__)
-
 
 class NewApartRepository:
     def __init__(self, session_maker: sessionmaker):
@@ -16,15 +10,12 @@ class NewApartRepository:
 
     async def get_districts(self) -> list[str]:
         async with self.db() as session:
-            try:
-                query = """SELECT DISTINCT district 
-                        FROM new_apart
-                        ORDER BY district"""
-                result = await session.execute(text(query))
-                return [row[0] for row in result if row[0] is not None]
-            except Exception as error:
-                print(error)
-                raise
+            query = """SELECT DISTINCT district 
+                    FROM new_apart
+                    ORDER BY district"""
+            result = await session.execute(text(query))
+            return [row[0] for row in result if row[0] is not None]
+
 
     async def get_municipal_district(self, districts: list[str]) -> list[str]:
         params = {}
@@ -41,38 +32,33 @@ class NewApartRepository:
             ORDER BY municipal_district
         """
         async with self.db() as session:
-            try:
-                print(f"Executing query: {query}")
-                print(f"Params: {params}")
-                result = await session.execute(text(query), params)
-                return [row[0] for row in result if row[0] is not None]
-            except Exception as error:
-                print(f"Error executing query: {error}")
-                raise AttributeError
+            result = await session.execute(text(query), params)
+            return [row[0] for row in result if row[0] is not None]
 
-    async def get_house_addresses(self, municipal_districts: list[str]) -> list[str]:
+
+    async def get_house_addresses(self, municipal_districts: list[str] | None = None) -> list[str]:
         params = {}
-        placeholders = []
-        for i, municipal in enumerate(municipal_districts):
-            key = f"municipal_{i}"
-            placeholders.append(f":{key}")
-            params[key] = municipal
-        placeholders_str = ", ".join(placeholders)
-        query = f"""
+        query = """
             SELECT DISTINCT house_address
             FROM new_apart
-            WHERE municipal_district IN ({placeholders_str})
-            ORDER BY house_address
         """
+        
+        # Если переданы муниципальные районы, добавляем условие WHERE
+        if municipal_districts:
+            placeholders = []
+            for i, municipal in enumerate(municipal_districts):
+                key = f"municipal_{i}"
+                placeholders.append(f":{key}")
+                params[key] = municipal
+            placeholders_str = ", ".join(placeholders)
+            query += f" WHERE municipal_district IN ({placeholders_str})"
+        
+        query += " ORDER BY house_address"
+        
         async with self.db() as session:
-            try:
-                print(f"Executing query: {query}")
-                print(f"Params: {params}")
-                result = await session.execute(text(query), params)
-                return [row[0] for row in result if row[0] is not None]
-            except Exception as error:
-                print(f"Error executing query: {error}")
-                raise
+            result = await session.execute(text(query), params)
+            return [row[0] for row in result if row[0] is not None]
+
 
     async def get_district_chain(self):
         async with self.db() as session:
@@ -98,18 +84,23 @@ class NewApartRepository:
     async def set_notes(self, apart_id: int, notes: str):
         async with self.db() as session:
             try:
+                notes_list = notes.split(';')
+                rsm_note = notes_list.pop(0)
+                notes = ";".join(notes_list)
                 await session.execute(
                     text("""
-                    UPDATE new_apart SET notes = :notes 
+                    UPDATE new_apart 
+                    SET rsm_notes = :rsm_note,
+                        notes = :notes
                     WHERE new_apart_id = :apart_id
                     """),
-                    {"notes": notes, "apart_id": apart_id},
+                    {"rsm_note": rsm_note, "notes": notes, "apart_id": apart_id},
                 )
                 await session.commit()
                 return {"status": "done"}
-            except Exception as e:
-                print(e)
-                raise AttributeError
+            except Exception as error:
+                session.rollback()
+                raise error
 
     async def get_apartments(
         self,
@@ -187,54 +178,36 @@ class NewApartRepository:
 
         where_clause = " AND ".join(conditions)
 
-        query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartTable.sql")
+        query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartTable.sql")
 
         query = f"{query} WHERE {where_clause}"
         async with self.db() as session:
-            try:
-                logger.info(f"Executing query: {query}")
-                logger.info(f"Params: {params}")
-                result = await session.execute(text(query), params)
+            result = await session.execute(text(query), params)
+            return [row._mapping for row in result]
 
-                return [row._mapping for row in result]
-            except Exception as error:
-                logger.error(f"Error executing query: {error}")
-                print(error)
-                raise SomethingWrong
+
             
     async def get_apartment_by_id(self, apart_id: int) -> dict:
         query_params = {"apart_id": apart_id}
 
-        query = read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartById.sql")
+        query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartById.sql")
 
         async with self.db() as session:
-            try:
-                logger.info(f"Executing query: {query}")
-                result = await session.execute(text(query), query_params)
-                data = result.fetchall()
-                if not data:
-                    raise ValueError(f"Apartment with ID {apart_id} not found")
+            result = await session.execute(text(query), query_params)
+            data = result.fetchall()
+            if not data:
+                raise ValueError(f"Apartment with ID {apart_id} not found")
 
-                return [row._mapping for row in data][0]
-            except Exception as error:
-                logger.error(f"Error executing query: {error}")
-                print(error)
-                raise SomethingWrong
-
+            return [row._mapping for row in data][0]
 
     async def get_house_address_with_room_count(self):
-        query = read_sql_query(
+        query = await async_read_sql_query(
             f"{RECOMMENDATION_FILE_PATH}/AvaliableNewApartAddress.sql"
         )
         async with self.db() as session:
-            try:
-                result = await session.execute(text(query))
-                return result.fetchall()
-            except Exception as e:
-                logger.error(f"Error executing query: {e}")
-                raise SomethingWrong
+            result = await session.execute(text(query))
+            return result.fetchall()
 
-    
     async def set_private_for_new_aparts(self, new_apart_ids, status: bool = True):
         async with self.db() as session:
             try:
@@ -254,10 +227,8 @@ class NewApartRepository:
                 await session.execute(query, params)
                 await session.commit()
             except Exception as error:
-                print(error)
-                raise SomethingWrong(
-                    "Something went wrong while updating the apartments."
-                )
+                session.rollback()
+                raise error
             
     async def cancell_matching_apart(self, apart_id):
         async with self.db() as session:
@@ -276,5 +247,7 @@ class NewApartRepository:
                 await session.commit()
                 return result
             except Exception as error:
-                print(error)
-                raise SomethingWrong
+                session.rollback()
+                raise error
+            
+

@@ -2,7 +2,8 @@ from typing import Optional, List
 from repository.old_apart_repository import OldApartRepository
 from repository.new_apart_repository import NewApartRepository
 from schema.apartment import ApartTypeSchema
-
+from fastapi import HTTPException, status
+from handlers.httpexceptions import NotFoundException
 
 class ApartService:
     def __init__(
@@ -14,24 +15,30 @@ class ApartService:
         self.new_apart_repository = new_apart_repositroy
 
     async def get_district(self, apart_type: str):
-        if apart_type == ApartTypeSchema.OLD:
-            return await self.old_apart_repository.get_districts()
-        elif apart_type == ApartTypeSchema.NEW:
-            return await self.old_apart_repository.get_districts()
-        else:
-            raise AttributeError
+        try:
+            if apart_type == ApartTypeSchema.OLD:
+                return await self.old_apart_repository.get_districts()
+            elif apart_type == ApartTypeSchema.NEW:
+                return await self.new_apart_repository.get_districts()
+            else:
+                raise NotFoundException
+        except Exception as error: 
+            raise HTTPException(detail=error, status_code=status.HTTP_409_CONFLICT)
 
     async def get_municipal_districts(self, apart_type: str, districts: List[str]):
-        if apart_type == ApartTypeSchema.OLD:
-            return await self.old_apart_repository.get_municipal_district(
-                districts=districts
-            )
-        elif apart_type == ApartTypeSchema.NEW:
-            return await self.new_apart_repository.get_municipal_district(
-                districts=districts
-            )
-        else:
-            raise AttributeError
+        try:
+            if apart_type == ApartTypeSchema.OLD:
+                return await self.old_apart_repository.get_municipal_district(
+                    districts=districts
+                )
+            elif apart_type == ApartTypeSchema.NEW:
+                return await self.new_apart_repository.get_municipal_district(
+                    districts=districts
+                )
+            else:
+                raise NotFoundException
+        except Exception as error:
+            raise HTTPException(detail=error, status_code=status.HTTP_409_CONFLICT)
 
     async def get_house_addresses(
         self, apart_type: str, municipal_districts: List[str]
@@ -45,7 +52,7 @@ class ApartService:
                 municipal_districts
             )
         else:
-            raise AttributeError
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     async def get_apartments(
         self,
@@ -90,7 +97,7 @@ class ApartService:
                 is_private=is_private,
             )
         else:
-            raise AttributeError
+            raise NotFoundException
 
     async def get_apartment_by_id(self, apart_id: int, apart_type: str):
         if apart_type == ApartTypeSchema.OLD:
@@ -100,13 +107,9 @@ class ApartService:
 
     async def get_house_address_with_room_count(self, apart_type: str):
         if apart_type == ApartTypeSchema.OLD: 
-            result = await self.new_apart_repository.get_house_address_with_room_count(
-                apart_type
-            )
+            result = await self.old_apart_repository.get_house_address_with_room_count()
         elif apart_type == ApartTypeSchema.NEW: 
-            result = await self.old_apart_repository.get_house_address_with_room_count(
-                apart_type
-            )
+            result = await self.new_apart_repository.get_house_address_with_room_count()
         formatted_result = []
         for address, room_counts in result:
             room_details = ", ".join(
@@ -117,7 +120,7 @@ class ApartService:
 
     async def switch_apartment(self, first_apart_id: int, second_apart_id: int):
         return await self.old_apart_repository.switch_apartment(
-            first_apart_id, second_apart_id
+            first_apart_id=first_apart_id, second_apart_id=second_apart_id
         )
 
     async def manual_matching(self, old_apart_id: int, new_apart_ids: List[int]):
@@ -127,7 +130,7 @@ class ApartService:
 
     async def get_void_aparts_for_apartment(self, apartmentd_id: int):
         return await self.old_apart_repository.get_void_aparts_for_apartment(
-            apartmentd_id
+            apart_id=apartmentd_id
         )
 
     async def cancell_matching_for_apart(self, apart_id: int, apart_type: str):
@@ -140,7 +143,7 @@ class ApartService:
                 apart_id=apart_id
             )
         else: 
-            raise AttributeError
+            raise NotFoundException
 
     async def update_status_for_apart(
         self, apart_id: int, new_apart_id: int, status: str, apart_type: str
@@ -150,7 +153,7 @@ class ApartService:
                 apart_id=apart_id, new_apart_id=new_apart_id, status=status
             )
         else:
-            raise AttributeError
+            raise NotFoundException
 
     async def set_private_for_new_aparts(
         self, new_aparts: List[int], status: bool = True
@@ -183,11 +186,11 @@ class ApartService:
 
     async def set_notes(self, apart_id: int, notes: str, apart_type: str):
         if apart_type == ApartTypeSchema.OLD:
-            return await self.new_apart_repository.set_notes(apart_id, notes=notes)
+            return await self.old_apart_repository.set_notes(apart_id, notes=notes)
         elif apart_type == ApartTypeSchema.NEW: 
             return await self.new_apart_repository.set_notes(apart_id=apart_id, notes=notes)
         else:
-            raise AttributeError
+            raise NotFoundException
 
     async def get_decline_reason(self, decline_reason_id):
         return await self.old_apart_repository.get_decline_reason(decline_reason_id)

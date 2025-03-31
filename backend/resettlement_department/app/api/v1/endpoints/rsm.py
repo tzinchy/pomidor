@@ -1,5 +1,5 @@
-from RSM.RSM import get_kpu, get_kurs_living_space
-from service.apartment_insert import insert_data_to_old, new_apart_insert, insert_data_to_old_apart
+from RSM.RSM import get_kpu_xlsx_df, get_resurs_xlsx_df, get_orders_xlsx_df
+from service.apartment_insert import insert_data_to_new_apart, insert_data_to_old_apart
 from fastapi import APIRouter
 from datetime import datetime, time
 from io import BytesIO
@@ -26,25 +26,29 @@ async def get_update_info():
 
 @router.patch("/get_old_apart", description='Для обновления старых квартир с РСМ')
 def from_rsm_get_old_apart() -> None:
-    category = [70, 91]
+    category = [70, 97]
     layout_id = 22223
     start_date = datetime(2017, 1, 1, 0, 0, 0)
     end_date = datetime.combine(datetime.now().date(), time(23, 59, 59))
-    df = get_kpu(start_date, end_date, 1, category, layout_id)
-    result = insert_data_to_old(df)
+    df = get_kpu_xlsx_df(start_date, end_date, category, layout_id)
+
+    result = insert_data_to_old_apart(df)
+
+    if isinstance(result, Exception):
+        raise result
     return {result}
 
 
 @router.patch("/get_new_apart", description='Для обновления ресурса с РСМ')
 def from_rsm_get_new_apart() -> dict:
     layout_id = 21744
-    df = get_kurs_living_space([999, 99999999], layout_id)
+    df = get_resurs_xlsx_df(layout_id)
     if df.empty:
         return {"status": "error", "message": "Нет данных для вставки"}
     
     output = BytesIO()
     output.seek(0)
-    result = new_apart_insert(df)
+    result = insert_data_to_new_apart(df)
     return {"status": "success", "inserted": result}
 
 @router.post("/upload-file/")
