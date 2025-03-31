@@ -774,7 +774,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
             "КПУ_Др. напр. откр.": "kpu_another",
             "КПУ_Вид засел.": "type_of_settlement",
             "КПУ_Состояние": "rsm_status",
-            "К_Инв/к": "is_special_needs_marker",
+            "К_Инв/к": "is_special_needs_marker"
         }
         columns_db = list(columns_name.values())
         columns_db.append('is_queue')

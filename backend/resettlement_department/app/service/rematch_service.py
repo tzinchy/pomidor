@@ -1,7 +1,9 @@
 import psycopg2
 from core.config import settings
-from handlers.httpexceptions import SomethingWrong, HTTPException
+from repository.database import project_managment_session
+from handlers.httpexceptions import  HTTPException
 from fastapi import status
+
 
 
 def get_db_connection():
@@ -14,27 +16,49 @@ def get_db_connection():
     )
 
 
-def rematch(apart_ids):
+async def rematch(apart_ids):
     print(apart_ids)
     cant_offer_aparts_raise_ids = {}
     for apart_id in apart_ids:
         try:
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                
-                # Запрос для получения данных старой квартиры
+            async with project_managment_session() as session:
                 apart_query = """
-                    SELECT affair_id, room_count, full_living_area, total_living_area, living_area, 
-                    is_special_needs_marker, is_queue, queue_square, new_house_addresses, rank, 
-                    (SELECT MAX(rank) FROM public.new_apart WHERE new_apart_id::text IN 
-                    (SELECT key FROM public.offer, LATERAL json_each_text(new_aparts::json) AS j(key, value) WHERE affair_id = %s)) AS new_apart_rank
-                    FROM public.old_apart
-                    JOIN history USING(history_id)
-                    WHERE affair_id = %s
+                with unnst_max_rank AS (
+                select affair_id, (key)::bigint as new_apart_id, value->>'status_id' as status_id from public.offer, jsonb_each(new_aparts)
+                where (value->>'status_id')::integer != 1  
+                ),
+                unnst_join AS (
+                SELECT 
+                affair_id,
+                new_apart_id,
+                room_count, 
+                max(rank) as max_rank
+                FROM unnst_max_rank
+                join new_apart using (new_apart_id)
+                group by affair_id, new_apart_id, room_count,status_id
+                ),
+				build_max_rank_json AS (
+                SELECT affair_id, jsonb_object_agg(room_count::integer, max_rank) max_rank_by_room_count from unnst_join
+				where affair_id = 902915
+                group by affair_id)
+				SELECT 
+				build_max_rank_json.affair_id,
+                room_count, 
+                full_living_area,
+                total_living_area,
+                living_area, 
+                is_special_needs_marker, 
+                is_queue,
+                queue_square,
+                new_house_addresses, 
+                rank, 
+				max_rank_by_room_count
+				FROM build_max_rank_json 
+				JOIN old_apart USING (affair_id)
+				JOIN history USING (history_id)
                 """
-                cursor.execute(apart_query, (apart_id, apart_id))
-                aparts = cursor.fetchall()
-
+                apart_info = session.execute(apart_query)
+        """
                 if aparts:
                     apart = aparts[0]
                     # Подготовка параметров для поиска новой квартиры

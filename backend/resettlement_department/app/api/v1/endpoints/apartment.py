@@ -9,7 +9,7 @@ from schema.apartment import (
     SetNotesSchema,
 )
 from schema.status import StatusUpdate
-from service.rematch_service import rematch
+from service.test import rematch
 from depends import apartment_service
 
 router = APIRouter(prefix="/tables/apartment", tags=["Apartment Action"])
@@ -56,8 +56,8 @@ async def cancell_matching_for_apart(
 
 
 @router.post("/rematch")
-def rematch_for_family(rematch_list: RematchSchema):
-    res = rematch(rematch_list.apartment_ids)
+async def rematch_for_family(rematch_list: RematchSchema):
+    res = await rematch(rematch_list.apartment_ids)
     return {"res": res}
 
 

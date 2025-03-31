@@ -29,7 +29,6 @@ def match_new_apart_to_family_batch(
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
-                # Запрос для "старых квартир" (потребностей семей)
                 family_query = """
                         SELECT 
                         o.affair_id, 
@@ -59,7 +58,7 @@ def match_new_apart_to_family_batch(
                             FROM  offer
                         ) 
                 """
-
+                
                 old_apart_query_params = []
 
                 # Дополнительные фильтры
