@@ -27,8 +27,6 @@ export default function ApartDetails({
   }
   console.log('apartmentDetails', apartmentDetails);
 
-  const table = apartType === "OldApart" ? "new_apartments" : "old_apartments";
-
   // Функция для отмены подборов
   const handleCancelMatching = async () => {
     if (!apartmentDetails?.affair_id) {

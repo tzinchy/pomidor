@@ -55,15 +55,15 @@ export default function AllFilters({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[103] flex bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-[105] flex bg-black bg-opacity-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-6xl max-h-[50%] flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold">Фильтры</h2>
                     <button
-                    onClick={() => {setIsOpen(!isOpen)}}
-                    className="text-gray-500 hover:text-gray-700"
-                    >
-                    <span className="text-2xl">×</span>
+                        onClick={() => {setIsOpen(!isOpen)}}
+                        className="text-gray-500 hover:text-gray-700"
+                        >
+                        <span className="text-2xl">×</span>
                     </button>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">

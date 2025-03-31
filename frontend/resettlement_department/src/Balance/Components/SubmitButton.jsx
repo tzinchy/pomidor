@@ -5,9 +5,21 @@ import { HOSTLINK } from '../..';
 const SubmitButton = ({ onResponse, type }) => {
   const { selectedItems } = useDropdown();
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const handleSubmit = async () => {
     try {
+      // Проверяем, есть ли выбранные элементы
+      const hasSelectedItems = Object.values(selectedItems).some(
+        items => items && items.length > 0
+      );
+      
+      if (!hasSelectedItems) {
+        setErrorMessage('Пожалуйста, выберите хотя бы один пункт');
+        return;
+      }
+      
+      setErrorMessage(null);
       setLoading(true);
       
       const requestBody = {
@@ -76,6 +88,11 @@ const SubmitButton = ({ onResponse, type }) => {
       >
         {loading ? 'Отправка данных...' : (type == 'last' ? 'Подобрать последнее' : 'Подобрать данные')}
       </button>
+      {errorMessage && (
+        <div className="mt-2 text-red-500 text-sm">
+          {errorMessage}
+        </div>
+      )}
     </div>
   );
 };
