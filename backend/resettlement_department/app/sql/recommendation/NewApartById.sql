@@ -20,16 +20,16 @@ joined_aparts AS (
         JSONB_OBJECT_AGG( 
             o.affair_id::text,
             JSONB_BUILD_OBJECT( 
-                'house_address', na.house_address,
-                'apart_number', na.apart_number,
-                'district', na.district,
-                'municipal_district', na.municipal_district,
-                'full_living_area', na.full_living_area,
-                'total_living_area', na.total_living_area,
-                'living_area', na.living_area,
-                'room_count', na.room_count,
-                'type_of_settlement', na.type_of_settlement,
-                'notes', na.notes,
+                'house_address', oa.house_address,
+                'apart_number', oa.apart_number,
+                'district', oa.district,
+                'municipal_district', oa.municipal_district,
+                'full_living_area', oa.full_living_area,
+                'total_living_area', oa.total_living_area,
+                'living_area', oa.living_area,
+                'room_count', oa.room_count,
+                'type_of_settlement', oa.type_of_settlement,
+                'notes', oa.notes,
                 'status', s.status,
                 'sentence_date', o.sentence_date::DATE,
                 'answer_date', o.answer_date::DATE,
@@ -42,8 +42,9 @@ joined_aparts AS (
         new_apart na ON o.new_apart_id = na.new_apart_id
     LEFT JOIN 
         status s ON o.status_id = s.status_id
-    LEFT JOIN 
+    LEFT JOIN
         decline_reason dr ON o.decline_reason_id = dr.decline_reason_id  
+	LEFT JOIN old_apart  oa USING (affair_id)
     WHERE 
         o.new_apart_id IS NOT NULL  
     GROUP BY 
@@ -69,7 +70,7 @@ SELECT
     ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL) AS offers
 FROM new_apart  
 LEFT JOIN joined_aparts USING (new_apart_id)
-WHERE new_apart_id = :apart_id
+where new_apart_id = :apart_id
 GROUP BY 
     joined_aparts.offer_id,
     new_apart.new_apart_id, 
