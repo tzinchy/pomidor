@@ -1,9 +1,11 @@
-from typing import Optional, List
-from repository.old_apart_repository import OldApartRepository
-from repository.new_apart_repository import NewApartRepository
-from schema.apartment import ApartTypeSchema
+from typing import List, Optional
+
 from fastapi import HTTPException, status
 from handlers.httpexceptions import NotFoundException
+from repository.new_apart_repository import NewApartRepository
+from repository.old_apart_repository import OldApartRepository
+from schema.apartment import ApartTypeSchema
+
 
 class ApartService:
     def __init__(
@@ -214,4 +216,14 @@ class ApartService:
             apartment_layout,
             notes,
         )
+    
+    async def get_entrance_ranges(self, address):
+        entrance_number = await self.new_apart_repository.get_entrance_ranges(address)
+        if not entrance_number:
+            raise NotFoundException
+        return entrance_number
+    
+    async def set_entrance_number_for_many(self, new_apart_ids, entrance_number):
+        affected_rows = await self.new_apart_repository.update_entrance_number_for_many(new_apart_ids, entrance_number)
+        return {"affected_rows": affected_rows, "status": "done"}
 

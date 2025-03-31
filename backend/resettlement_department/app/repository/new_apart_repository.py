@@ -1,8 +1,9 @@
-from sqlalchemy import text
 from core.config import RECOMMENDATION_FILE_PATH
+from schema.apartment import ApartTypeSchema
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 from utils.sql_reader import async_read_sql_query
-from schema.apartment import ApartTypeSchema
+import json
 
 class NewApartRepository:
     def __init__(self, session_maker: sessionmaker):
@@ -249,5 +250,55 @@ class NewApartRepository:
             except Exception as error:
                 session.rollback()
                 raise error
+            
+    async def get_entrance_ranges(self, address):
+        async with self.db() as session:
+            result = await session.execute(
+                text("""
+                    WITH numbered_entrances AS (
+                        SELECT 
+                            entrance_number,
+                            CONCAT(MIN(apart_number), '-', MAX(apart_number)) AS apart_range
+                        FROM 
+                            public.new_apart
+                        WHERE 
+                            house_address = :address
+                        GROUP BY 
+                            entrance_number
+                        ORDER BY 
+                            entrance_number
+                    )
+                    SELECT 
+                        json_object_agg(entrance_number, apart_range) AS result
+                    FROM 
+                        numbered_entrances
+                """),
+                {"address": address}
+            )
+            row = result.fetchone()
+            return row[0] if row else {}
+        
+    async def update_entrance_number_for_many(self, new_apart_ids, entrance_number):
+        async with self.db() as session:
+            try:
+                result = await session.execute(
+                    text(f"""
+                        UPDATE public.new_apart
+                        SET entrance_number = :entrance_number
+                        WHERE new_apart_id IN ({", ".join(map(str, new_apart_ids))})
+                    """),
+                    {"entrance_number": entrance_number}
+                )
+            except Exception as e:
+                session.rollback()
+                raise e
+            else:
+                await session.commit()
+                return result.rowcount
+
+
+
+
+
             
 
