@@ -27,19 +27,9 @@ export default function TryFilters({
     minFloor,
     maxFloor,
     setSearchQuery,
-    localSearchQuery, 
-    setLocalSearchQuery
+    searchQuery
 }){
 
-
-    useEffect(() => {
-        // Добавляем задержку для поиска (debounce)
-        const timer = setTimeout(() => {
-            setSearchQuery(localSearchQuery);
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [localSearchQuery, setSearchQuery]);
 
     if (!isOpen) return null;
 
@@ -179,14 +169,14 @@ export default function TryFilters({
                             <div className="relative">
                                 <input
                                     type="text"
-                                    value={localSearchQuery}
-                                    onChange={(e) => setLocalSearchQuery(e.target.value)}
+                                    value={searchQuery} // Используем searchQuery напрямую
+                                    onChange={(e) => setSearchQuery(e.target.value)} // Обновляем состояние в родителе
                                     placeholder="Поиск по номеру квартиры"
                                     className="w-[250px] px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
-                                {localSearchQuery && (
+                                {searchQuery && (
                                     <button
-                                        onClick={() => setLocalSearchQuery("")}
+                                        onClick={() => setSearchQuery("")} // Сбрасываем поиск в родителе
                                         className="relative right-5 text-gray-400 hover:text-gray-600"
                                     >
                                         <svg

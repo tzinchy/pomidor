@@ -88,12 +88,14 @@ export default function ApartDetails({
               : ""}
           </p>
         </div>
-        <button
-          onClick={() => setIsManualSelectionOpen(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Ручной подбор
-        </button>
+        {apartType === "OldApart" && (
+          <button
+            onClick={() => setIsManualSelectionOpen(true)}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Ручной подбор
+          </button>
+        )}
         <button
           className="h-10 w-10 p-0 border border-gray-300 rounded-full flex items-center justify-center"
           onClick={handleClose}
@@ -132,11 +134,11 @@ export default function ApartDetails({
                           newApartId={offerKeys[0]}
                         />
                         <DeclineResonsCell 
-                        props={offerKeys.length > 0 ? value[offerKeys[0]] : value} 
-                        newApartId={offerKeys[0]} 
-                        apartmentDetails={apartmentDetails}
-                        selectedRowId={selectedRowId}
-                        fetchApartmentDetails={fetchApartmentDetails}
+                          props={offerKeys.length > 0 ? value[offerKeys[0]] : value} 
+                          newApartId={offerKeys[0]} 
+                          apartmentDetails={apartmentDetails}
+                          selectedRowId={selectedRowId}
+                          fetchApartmentDetails={fetchApartmentDetails}
                         />
                       </tr>
 
@@ -174,15 +176,16 @@ export default function ApartDetails({
                 })}
               </tbody>
             </table>
-
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={handleCancelMatching}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Отменить подборы
-              </button>
-            </div>
+            {apartType === "OldApart" && (
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={handleCancelMatching}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                >
+                  Отменить подборы
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="relative flex flex-col place-items-center py-4 text-gray-500">

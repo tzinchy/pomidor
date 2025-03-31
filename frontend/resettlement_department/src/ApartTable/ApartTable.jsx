@@ -35,17 +35,28 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [sorting, setSorting] = useState([]);
   const tableContainerRef = useRef(null);
   const [filteredApartments, setFilteredApartments] = useState(data);
-  const [rooms, setRooms] = useState([]);
   const [matchCount, setMatchCount] = useState([]);
   const [selectedRowId, setSelectedRowId] = useState();
+
+  const [rooms, setRooms] = useState([]);
   const [filtersResetFlag, setFiltersResetFlag] = useState(false);
   const [isQueueChecked, setIsQueueChecked] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [filterData, setFilterData] = useState([]);
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
+  const [isOpen, setIsOpen] = useState(false);
+  const [firstMinArea, setFirstMinArea] = useState("");
+  const [firstMaxArea, setFirstMaxArea] = useState("");
+  const [secondMinArea, setSecondMinArea] = useState(""); 
+  const [secondMaxArea, setSecondMaxArea] = useState(""); 
+  const [thirdMinArea, setThirdMinArea] = useState(""); 
+  const [thirdMaxArea, setThirdMaxArea] = useState(""); 
+  const [minFloor, setMinFloor] = useState("");
+  const [maxFloor, setMaxFloor] = useState("");
+  const [searchApartQuery, setSearchApartQuery] = useState("");
+  const [searchFioQuery, setSearchFioQuery] = useState("");
+  const [searchNotesQuery, setSearchNotesQuery] = useState("");
+  const [typeOfSettlement, setTypeOfSettlement] = useState([]);
+  const [minPeople, setMinPeople] = useState([]);
+  const [maxPeople, setMaxPeople] = useState([]);
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -60,11 +71,25 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     };
   }, [data]);
 
+  // Получаем уникальные строковые значения
+  const getUniqueStringValues = useMemo(() => {
+    if (!data) return [];
+
+    return (x) => {
+      return [...new Set(
+        data
+          .map(apartment => apartment[x]?.toString().trim()) // Преобразуем в строку и обрезаем пробелы
+          .filter(value => value && value !== 'undefined') // Фильтруем пустые и undefined значения
+      )].sort((a, b) => a.localeCompare(b)); // Сортируем по алфавиту
+    };
+  }, [data]);
+
 
   // Обновляем rooms при изменении filteredApartments
   useEffect(() => {
     setRooms(getUniqueValues('room_count'));
     setMatchCount(getUniqueValues('selection_count'));
+    setTypeOfSettlement(getUniqueStringValues('type_of_settlement'));
   }, [getUniqueValues]);
 
 
@@ -129,18 +154,103 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   // Применение всех фильтров к данным
   useEffect(() => {
-      if (!data || data.length === 0) return;
+    if (!data || data.length === 0) return;
 
-      let filtered = data;
+    let filtered = data;
 
-      if (searchQuery) {
-        filtered = filtered.filter((item) => {
-            // Проверяем поисковый запрос по нескольким полям
-            return (
-                item.house_address?.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-        });
+    if (searchApartQuery) {
+      filtered = filtered.filter((item) => {
+          return (
+              item.apart_number?.toLowerCase().includes(searchApartQuery.toLowerCase())
+          );
+      });
     }
+
+    if (searchFioQuery) {
+      filtered = filtered.filter((item) => {
+          return (
+              item.fio?.toLowerCase().includes(searchFioQuery.toLowerCase())
+          );
+      });
+    }
+
+    if (searchNotesQuery) {
+      filtered = filtered.filter((item) => {
+          return (
+              item.notes?.toLowerCase().includes(searchNotesQuery.toLowerCase())
+          );
+      });
+    }
+
+    // Фильтрация по full_living_area (firstMinArea/firstMaxArea)
+    if (firstMinArea || firstMaxArea) {
+      filtered = filtered.filter((item) => {
+        const area = parseFloat(item.full_living_area);
+        const min = parseFloat(firstMinArea);
+        const max = parseFloat(firstMaxArea);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && area >= min;
+        if (!isNaN(max)) valid = valid && area <= max;
+        return valid;
+      });
+    }
+  
+    // Фильтрация по total_living_area (secondMinArea/secondMaxArea)
+    if (secondMinArea || secondMaxArea) {
+      filtered = filtered.filter((item) => {
+        const area = parseFloat(item.total_living_area);
+        const min = parseFloat(secondMinArea);
+        const max = parseFloat(secondMaxArea);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && area >= min;
+        if (!isNaN(max)) valid = valid && area <= max;
+        return valid;
+      });
+    }
+  
+    // Фильтрация по living_area (thirdMinArea/thirdMaxArea)
+    if (thirdMinArea || thirdMaxArea) {
+      filtered = filtered.filter((item) => {
+        const area = parseFloat(item.living_area);
+        const min = parseFloat(thirdMinArea);
+        const max = parseFloat(thirdMaxArea);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && area >= min;
+        if (!isNaN(max)) valid = valid && area <= max;
+        return valid;
+      });
+    }
+
+    // Фильтрация по этажу
+    if (minFloor || maxFloor) {
+      filtered = filtered.filter((item) => {
+        const floor = parseFloat(item.floor);
+        const min = parseFloat(minFloor);
+        const max = parseFloat(maxFloor);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && floor >= min;
+        if (!isNaN(max)) valid = valid && floor <= max;
+        return valid;
+      });
+    }
+    
+    if (minPeople || maxPeople) {
+      filtered = filtered.filter((item) => {
+        const people = parseFloat(item.people_v_dele);
+        const min = parseFloat(minPeople);
+        const max = parseFloat(maxPeople);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && people >= min;
+        if (!isNaN(max)) valid = valid && people <= max;
+        return valid;
+      });
+    }
+    
 
       // Применяем каждый фильтр
       Object.entries(filters).forEach(([filterType, selectedValues]) => {
@@ -162,7 +272,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       });
 
       setFilteredApartments(filtered);
-  }, [data, filters, searchQuery]);
+  }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor, minPeople, maxPeople, searchApartQuery, searchFioQuery, searchNotesQuery]);
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
@@ -317,6 +427,20 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     setFilters({});
     setIsQueueChecked(false);
     setFiltersResetFlag(prev => !prev); // Инвертируем флаг
+    setFirstMinArea("");
+    setFirstMaxArea("");
+    setSecondMinArea("");
+    setSecondMaxArea("");
+    setThirdMinArea("");
+    setThirdMaxArea("");
+    setMinFloor("");
+    setMaxFloor("");
+    setSearchApartQuery("");
+    setSearchFioQuery("");
+    setSearchNotesQuery("");
+    setTypeOfSettlement("");
+    setMinPeople("");
+    setMaxPeople("");
   };
 
   const changeApartType= (apType) => {
@@ -335,6 +459,43 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   return (
     <div className='bg-neutral-100'>
       <div className={`${/*collapsed ? 'ml-[25px]' : 'ml-[260px]'*/''} flex flex-wrap items-center mb-2 justify-between`}>
+      <button
+          onClick={() => setIsOpen(!isOpen)}
+          className=""
+        >
+          <div className="relative">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="filter-icon"
+            >
+              <path
+                d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z"
+                stroke="url(#filterGradient)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <defs>
+                <linearGradient
+                  id="filterGradient"
+                  x1="2"
+                  y1="3"
+                  x2="22"
+                  y2="3"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor="#3B82F6" />
+                  <stop offset="1" stopColor="#8B5CF6" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </button>
+
         <AllFilters 
           handleFilterChange={handleFilterChange} 
           rooms={rooms} 
@@ -344,9 +505,37 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           handleResetFilters={handleResetFilters}
           isQueueChecked={isQueueChecked}
           setIsQueueChecked={setIsQueueChecked}
-          setSearchQuery={handleSearchChange}
           filters={filters}
           filterData={filterData}
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          setFirstMinArea={setFirstMinArea}
+          setFirstMaxArea={setFirstMaxArea}
+          firstMinArea={firstMinArea}
+          firstMaxArea={firstMaxArea}
+          setSecondMinArea={setSecondMinArea}
+          setSecondMaxArea={setSecondMaxArea}
+          secondMinArea={secondMinArea}
+          secondMaxArea={secondMaxArea}
+          setThirdMinArea={setThirdMinArea}
+          setThirdMaxArea={setThirdMaxArea}
+          thirdMinArea={thirdMinArea}
+          thirdMaxArea={thirdMaxArea}
+          setMinFloor={setMinFloor}
+          setMaxFloor={setMaxFloor}
+          minFloor={minFloor}
+          maxFloor={maxFloor}
+          setSearchApartQuery={setSearchApartQuery}
+          searchApartQuery={searchApartQuery}
+          setSearchFioQuery={setSearchFioQuery}
+          searchFioQuery={searchFioQuery}
+          setSearchNotesQuery={setSearchNotesQuery}
+          searchNotesQuery={searchNotesQuery}
+          typeOfSettlement={typeOfSettlement}
+          minPeople={minPeople}
+          setMinPeople={setMinPeople}
+          maxPeople={maxPeople} 
+          setMaxPeople={setMaxPeople}
         />
         
         <div className='flex items-center'>
@@ -430,6 +619,36 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           </div>
         ) : (
           <div className="flex flex-1 overflow-hidden">
+            {filteredApartments.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-md border p-8">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#9CA3AF"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mx-auto mb-4"
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  <line x1="11" y1="8" x2="11" y2="14"></line>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+                <h3 className="text-lg font-medium text-gray-500 mb-2">Ничего не найдено</h3>
+                <p className="text-gray-400 mb-4">Попробуйте изменить параметры фильтрации</p>
+                <button
+                  onClick={handleResetFilters}
+                  className="px-4 py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  Сбросить фильтры
+                </button>
+              </div>
+          ) : (
+            <div className="flex flex-1 overflow-hidden">
             {/* Таблица */}
             <div
               className={` rounded-md h-full transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
@@ -600,6 +819,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                 </div>
               </div>
             )}
+          </div>)}
           </div>
         )}
       </div>

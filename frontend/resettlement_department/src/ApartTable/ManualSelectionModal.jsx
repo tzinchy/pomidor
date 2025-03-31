@@ -32,7 +32,6 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
   const [minFloor, setMinFloor] = useState("");
   const [maxFloor, setMaxFloor] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [localSearchQuery, setLocalSearchQuery] = useState(""); // Локальное состояние для поиска
 
   // Состояние для хранения выбранных фильтров
   const [selectedFilters, setSelectedFilters] = useState({
@@ -77,7 +76,6 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
     setMinFloor("");
     setMaxFloor("");
     setSearchQuery("");
-    setLocalSearchQuery("");
   };
 
   useEffect(() => {
@@ -103,6 +101,7 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
       setData(result);
       setFilteredApartments(result);
       setFiltersData(getFilteData(result));
+      console.log(result);
     } catch (error) {
       console.error("Ошибка:", error);
       setError("Не удалось загрузить данные. Попробуйте снова.");
@@ -110,6 +109,13 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Применяем поиск с задержкой
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!data || data.length === 0) return;
@@ -521,8 +527,7 @@ return (
       minFloor={minFloor}
       maxFloor={maxFloor}
       setSearchQuery={setSearchQuery}
-      localSearchQuery={localSearchQuery}
-      setLocalSearchQuery={setLocalSearchQuery}
+      searchQuery={searchQuery}
     />
   </div>
 );

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { RefreshCcw } from "lucide-react";
 import { HOSTLINK } from "../..";
 import { RiskIcon } from "../../PloshadkiTable/Table/Icons";
+import FileUploader from "../../Balance/Components/FileUploader";
 
 export default function UpdateDataButton() {
     const [isModalOpen, setModalOpen] = useState(false);
@@ -85,7 +86,7 @@ export default function UpdateDataButton() {
                                 </tbody>
                             </table>
                         </div>
-                        
+                        <FileUploader link={`/rsm/upload-file/`}/>
                         <button
                             className="mt-4 px-4 py-2 justify-self-center bg-gray-500 text-white rounded hover:bg-gray-600"
                             onClick={() => setModalOpen(false)}

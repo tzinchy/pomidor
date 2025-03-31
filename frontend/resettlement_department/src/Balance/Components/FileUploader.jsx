@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { HOSTLINK } from '../..';
 
-const FileUploader = () => {
+const FileUploader = ({link}) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
@@ -38,7 +38,7 @@ const FileUploader = () => {
     formData.append('file', selectedFile);
 
     try {
-      const response = await fetch(`${HOSTLINK}/fisrt_matching/upload-file/`, {
+      const response = await fetch(`${HOSTLINK}${link}`, {
         method: 'POST',
         body: formData,
       });
