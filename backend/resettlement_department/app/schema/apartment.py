@@ -79,7 +79,8 @@ class OldApartTableSchema(BaseApartmentTableSchema):
 
 class NewApartTableSchema(BaseApartmentTableSchema):
     new_apart_id : Optional[int] = None,
-    is_private : Optional[str] = None
+    is_private : Optional[str] = None,
+    apart_number: Optional[int] = None
 
 class SetNotesSchema(BaseModel):
     notes : Optional[str] = None
