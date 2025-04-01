@@ -34,7 +34,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
     try:
         connection = None
         columns_name = {
-            "КПУ_Дело_Идентификатор": "old_apart_id",
+            "КПУ_Дело_Идентификатор": "affair_id",
             "Идентификатор выписки": "order_id",
             "Выписка_Решение_Д": "decision_date",
             "Выписка_Решение №": "decision_number",
@@ -48,7 +48,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
             "Дата создания проекта выписки": "order_draft_date",
             "Выписка_Статья учета": "accounting_article",
             "Выписка_причина предоставления": "legal_reason",
-            "КПУ_Вид обеспечения": "collateral_type",
+            "Выписка_Серия": "collateral_type",
         }
         order_df.rename(
             columns=columns_name,
@@ -60,7 +60,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
 
         order_df = order_df.groupby("order_id").agg(concat_area_id_agg).reset_index()
         order_df = order_df[columns_db]
-        order_df["old_apart_id"] = order_df["old_apart_id"].astype("Int64")
+        order_df["affair_id"] = order_df["affair_id"].astype("Int64")
         order_df["order_id"] = order_df["order_id"].astype("Int64")
         order_df["is_cancelled"] = order_df["is_cancelled"].astype(bool)
 
