@@ -94,7 +94,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         out = 0
         with connection:
             with connection.cursor() as cursor:
-                print(-3)
+                print("DEBUG: Data is inserted")
                 cursor.execute(insert_data_sql)
     except Exception as e:
         out = e
