@@ -105,9 +105,20 @@ async def rematch(apart_ids):
                     declined['decline_info']['max_rank'] = max_ranks[room_count]
             
             print(apart_info)
+            print('\n')
             print(declined_aparts)
+            print('\n')
             print(approved_aparts)
             for declined in declined_aparts:
+                decline_reason = declined['decline_info']
+                decline_reason = {
+                    'rank' : apart_info.get('rank'),
+                    'full_living_area' : apart_info.get('full_living_area'),
+                    'total_living_area' : apart_info.get('total_living_area'),
+                    'living_area' : apart_info.get('living_area'),
+                    'new_house_addresses' : apart_info.get('new_house_addresses')
+                }
+                print(decline_reason)
                 new_apart_query = '''SELECT new_apart_id, room_count, full_living_area, total_living_area, living_area, rank 
                         FROM public.new_apart
                         WHERE new_apart_id::text NOT IN 
