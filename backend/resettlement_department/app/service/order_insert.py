@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import pandas as pd
 import psycopg2
@@ -8,6 +10,24 @@ def df_date_to_string(df: pd.DataFrame, columns):
     for col in columns:
         df[col] = df[col].astype(str)
     return df
+
+# Эта агрегирующая функция для датафрейма выписки.
+# Она принимает датафрейм, где колонка area_id не словарь,
+# затем объединяет повторяющиеся и неповторяющиеся значения в словарь
+# NaN значения эта штука должна не трогать
+def concat_area_id_agg(series: pd.Series):
+    if series.name != "area_id":
+        return series.iloc[0]
+    if len(series) > 1:
+        out = {}
+        for i, v in enumerate(series):
+            if pd.notna(v):
+                out[str(i)] = int(v)
+        if not out:
+            return None
+        return out
+    else:
+        return series.apply(lambda x: {"0": int(x)} if pd.notna(x) else x)
 
 
 def insert_data_to_order_decisions(order_df: pd.DataFrame):
@@ -35,17 +55,13 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
             inplace=True,
         )
 
-        # TODO: По тз это поле может повторятся, но так быть не должно и это костыль
-        #       Когда выгрузка починится это надо убрать
-        order_df = order_df.drop_duplicates("order_id")
-
         columns_db = list(columns_name.values())
-        order_df = order_df[columns_db]
         order_df = order_df.dropna(subset=["order_id"])
 
+        order_df = order_df.groupby("order_id").agg(concat_area_id_agg).reset_index()
+        order_df = order_df[columns_db]
         order_df["old_apart_id"] = order_df["old_apart_id"].astype("Int64")
         order_df["order_id"] = order_df["order_id"].astype("Int64")
-        order_df["area_id"] = order_df["area_id"].astype("Int64")
         order_df["is_cancelled"] = order_df["is_cancelled"].astype(bool)
 
         # Заменяем NaN на None (для PostgreSQL)
@@ -61,10 +77,9 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         args_str = ",".join(
             "({})".format(
                 ", ".join(
-                    "'{}'".format(x.replace("'", "''"))
-                    if isinstance(x, str)
-                    else "NULL"
-                    if x is None
+                    "'{}'".format(x.replace("'", "''")) if isinstance(x, str)
+                    else "NULL" if x is None
+                    else "'{}'".format(json.dumps(x).replace("'", "''")) if isinstance(x, dict)
                     else str(x)
                     for x in arg
                 )
