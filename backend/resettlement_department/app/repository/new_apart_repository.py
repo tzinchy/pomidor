@@ -257,9 +257,9 @@ class NewApartRepository:
                 text("""
                     WITH numbered_entrances AS (
                         SELECT 
-                            entrance_number,
+                            COALESCE(entrance_number::text, 'unknown') as entrance_number,
                             CONCAT(MIN(apart_number), '-', MAX(apart_number)) AS apart_range
-                        FROM 
+                        FROM
                             public.new_apart
                         WHERE 
                             house_address = :address
@@ -269,9 +269,14 @@ class NewApartRepository:
                             entrance_number
                     )
                     SELECT 
-                        json_object_agg(entrance_number, apart_range) AS result
+                        json_object_agg(
+                            entrance_number::text, 
+                            apart_range
+                        ) AS result
                     FROM 
                         numbered_entrances
+                    WHERE
+                        entrance_number IS NOT NULL
                 """),
                 {"address": address}
             )
