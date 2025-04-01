@@ -26,6 +26,9 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
             "Выписка_Аннулирование_Причина": "cancel_reason",
             "Выписка_ид_площади": "area_id",
             "Дата создания проекта выписки": "order_draft_date",
+            "Выписка_Статья учета": "accounting_article",
+            "Выписка_причина предоставления": "legal_reason",
+            "КПУ_Вид обеспечения": "collateral_type",
         }
         order_df.rename(
             columns=columns_name,
