@@ -74,6 +74,7 @@ async def change_status(
         )
         return {"message": "Status updated successfully"}
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
