@@ -116,10 +116,10 @@ export default function DropdownButton({ placeholder = "Выберите адр�
           ...item,
           sections: sections.map(s => ({
             section: s,
-            range: ranges[s] || [
-              availableSections[id]?.[s]?.min || '',
-              availableSections[id]?.[s]?.max || ''
-            ]
+            range: ranges[s] || {
+              from: availableSections[id]?.[s]?.min || '',
+              to: availableSections[id]?.[s]?.max || ''
+            }
           }))
         };
       });

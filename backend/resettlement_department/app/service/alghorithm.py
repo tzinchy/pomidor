@@ -131,7 +131,6 @@ def match_new_apart_to_family_batch(
                 new_apart_query_params = []
 
                 # Обрабатываем адреса с диапазонами квартир
-                print('AAAAAAAAAAAA', new_selected_addresses)
                 if new_selected_addresses and len(new_selected_addresses) > 0:
                     address_conditions = []
                     
@@ -144,12 +143,21 @@ def match_new_apart_to_family_batch(
                         
                         for section_data in sections:
                             section = section_data['section']
-                            min_apart = section_data['range'][0]
-                            max_apart = section_data['range'][1]
+                            range_data = section_data['range']
+                            
+                            # Обрабатываем разные форматы range (как объект или массив)
+                            if isinstance(range_data, dict):
+                                min_apart = int(range_data.get('from', 0))
+                                max_apart = int(range_data.get('to', 0))
+                            elif isinstance(range_data, list) and len(range_data) >= 2:
+                                min_apart = int(range_data[0])
+                                max_apart = int(range_data[1])
+                            else:
+                                continue  # Пропускаем некорректные данные
                             
                             # Добавляем условие для номера квартиры в диапазоне
                             section_conditions.append(
-                                f"(na.house_address = %s AND na.apart_number BETWEEN %s AND %s)"
+                                "(na.house_address = %s AND na.apart_number BETWEEN %s AND %s)"
                             )
                             new_apart_query_params.extend([address, min_apart, max_apart])
                         
@@ -291,6 +299,8 @@ def match_new_apart_to_family_batch(
                             break
 
                 # Если записи не существует, вставляем новую запись в таблицу history
+                new_addresses = [item['address'] for item in new_selected_addresses]
+                print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n --adresa', new_addresses, new_selected_addresses)
                 if not record_exists:
                     cursor.execute(
                         """
@@ -301,7 +311,7 @@ def match_new_apart_to_family_batch(
                         VALUES(%s, %s)
                         RETURNING history_id
                     """,
-                        (old_selected_addresses, new_selected_addresses),
+                        (old_selected_addresses, new_selected_addresses['address']),
                     )
                     last_history_id = cursor.fetchone()[0]
                     conn.commit()

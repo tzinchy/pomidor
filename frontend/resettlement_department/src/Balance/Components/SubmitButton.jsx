@@ -13,7 +13,7 @@ const SubmitButton = ({ onResponse, type }) => {
       const requestBody = {
         "old_apartment_house_address": [],
         "new_apartment_house_address": [],
-        "is_date": type == 'last' ? true : false
+        "is_date": type === 'last' ? true : false
       };
       console.log('selectedItemsselectedItemsselectedItems', selectedItems)
       
@@ -24,7 +24,7 @@ const SubmitButton = ({ onResponse, type }) => {
         if (dropdownId.includes('old_apartment_house_address')) {
           requestBody["old_apartment_house_address"] = [...requestBody["old_apartment_house_address"], ...addresses];
         } else if (dropdownId.includes('new_apartment_house_address')) {
-          requestBody["new_apartment_house_address"] = [...requestBody["new_apartment_house_address"], ...new_addresses];
+          requestBody["new_apartment_house_address"] = [...requestBody["new_apartment_house_address"], selectedItems["new_apartment_house_address"]];
         }
       });
       
@@ -63,7 +63,7 @@ const SubmitButton = ({ onResponse, type }) => {
             : 'hover:bg-gray-50 bg-white'
         }`}
       >
-        {loading ? 'Отправка данных...' : (type == 'last' ? 'Подобрать последнее' : 'Подобрать данные')}
+        {loading ? 'Отправка данных...' : (type === 'last' ? 'Подобрать последнее' : 'Подобрать данные')}
       </button>
     </div>
   );

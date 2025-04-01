@@ -31,7 +31,7 @@ class MatchingSchema(BaseModel):
     old_apartment_house_address: List[str] = None
     new_apartment_district: List[str] = None
     new_apartment_municipal_district: List[str] = None
-    new_apartment_house_address: List[List[int]] = None 
+    new_apartment_house_address: Optional[List] = None 
     is_date : bool = None
 
 class RematchSchema(BaseModel):
