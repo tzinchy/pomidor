@@ -109,7 +109,7 @@ def match_new_apart_to_family_batch(
                 print('FAMILY QUERY', len(old_aparts), family_query, old_apart_query_params)
                 if not old_aparts:
                     return ("No old apartments found.")
-                # Запрос для новых квартир
+                # Запрос для новых квартир с учетом диапазонов
                 new_apart_query = """
                 SELECT 
                     na.new_apart_id, 
@@ -130,10 +130,38 @@ def match_new_apart_to_family_batch(
 
                 new_apart_query_params = []
 
-                if new_selected_addresses:
-                    new_apart_query += " AND house_address IN %s"
-                    new_apart_query_params.append(tuple(new_selected_addresses))
+                # Обрабатываем адреса с диапазонами квартир
+                print('AAAAAAAAAAAA', new_selected_addresses)
+                if new_selected_addresses and len(new_selected_addresses) > 0:
+                    address_conditions = []
+                    
+                    for address_data in new_selected_addresses:
+                        address = address_data['address']
+                        sections = address_data.get('sections', [])
+                        
+                        # Для каждого адреса создаем условия по секциям и диапазонам
+                        section_conditions = []
+                        
+                        for section_data in sections:
+                            section = section_data['section']
+                            min_apart = section_data['range'][0]
+                            max_apart = section_data['range'][1]
+                            
+                            # Добавляем условие для номера квартиры в диапазоне
+                            section_conditions.append(
+                                f"(na.house_address = %s AND na.apart_number BETWEEN %s AND %s)"
+                            )
+                            new_apart_query_params.extend([address, min_apart, max_apart])
+                        
+                        # Объединяем условия для секций через OR
+                        if section_conditions:
+                            address_conditions.append(f"({' OR '.join(section_conditions)})")
+                    
+                    # Объединяем условия для адресов через OR
+                    if address_conditions:
+                        new_apart_query += " AND (" + " OR ".join(address_conditions) + ")"
 
+                # Остальные условия (районы, муниципальные округа, дата)
                 if new_selected_districts:
                     new_apart_query += " AND district IN %s"
                     new_apart_query_params.append(tuple(new_selected_districts))
@@ -145,10 +173,10 @@ def match_new_apart_to_family_batch(
                 if date:
                     new_apart_query += " AND updated_at = (SELECT MAX(updated_at) FROM public.new_apart)"
 
+                # Сортировка
                 new_apart_query += " ORDER BY room_count ASC, (full_living_area + living_area), floor, living_area ASC, full_living_area ASC, total_living_area ASC"
-                
-                cursor.execute(new_apart_query, new_apart_query_params)
 
+                cursor.execute(new_apart_query, new_apart_query_params)
                 new_aparts = cursor.fetchall()
                 #print(new_aparts)
                 #print('FAMILY QUERY', len(new_aparts), new_apart_query, new_apart_query_params)

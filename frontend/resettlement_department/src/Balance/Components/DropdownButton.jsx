@@ -76,7 +76,7 @@ export default function DropdownButton({ placeholder = "Выберите адр�
     );
   }, [addresses, searchQuery]);
 
-  // Обработчик выбора секции
+  // Обработчик выбора секции с немедленным обновлением
   const toggleSectionSelection = (itemId, section) => {
     setSelectedSections(prev => {
       const newSelection = { ...prev };
@@ -91,13 +91,47 @@ export default function DropdownButton({ placeholder = "Выберите адр�
         }
       } else {
         newSelection[itemId].add(section);
+        
+        // Инициализируем диапазон, если его нет
+        setSectionRanges(prevRanges => {
+          const newRanges = { ...prevRanges };
+          if (!newRanges[itemId]) newRanges[itemId] = {};
+          if (!newRanges[itemId][section]) {
+            newRanges[itemId][section] = {
+              from: availableSections[itemId]?.[section]?.min || '',
+              to: availableSections[itemId]?.[section]?.max || ''
+            };
+          }
+          return newRanges;
+        });
       }
+      
+      // Обновляем выбранные элементы сразу после изменения
+      const selectedItems = Array.from(localSelectedItems).map(id => {
+        const item = addresses.find(item => item.id === id);
+        const sections = newSelection[id] ? Array.from(newSelection[id]) : [];
+        const ranges = sectionRanges[id] || {};
+        
+        return {
+          ...item,
+          sections: sections.map(s => ({
+            section: s,
+            range: ranges[s] || [
+              availableSections[id]?.[s]?.min || '',
+              availableSections[id]?.[s]?.max || ''
+            ]
+          }))
+        };
+      });
+      
+      console.log('selectedItems', selectedItems);
+      updateSelectedItems(id, selectedItems);
       
       return newSelection;
     });
   };
 
-  // Обновление диапазона квартир для секции
+  // Обновленный обработчик изменения диапазона
   const updateSectionRange = (itemId, section, field, value) => {
     setSectionRanges(prev => {
       const newRanges = { ...prev };
@@ -109,22 +143,10 @@ export default function DropdownButton({ placeholder = "Выберите адр�
         };
       }
       newRanges[itemId][section][field] = value;
-      return newRanges;
-    });
-  };
-
-  // Переключение видимости диапазонов для секции
-  const toggleSectionRangeVisibility = (itemId, section, e) => {
-    e.stopPropagation();
-    setSectionRanges(prev => {
-      const newRanges = { ...prev };
-      if (!newRanges[itemId]) newRanges[itemId] = {};
-      if (!newRanges[itemId][section]) {
-        newRanges[itemId][section] = { 
-          from: availableSections[itemId]?.[section]?.min || '',
-          to: availableSections[itemId]?.[section]?.max || '' 
-        };
-      }
+      
+      // Обновляем выбранные элементы после изменения диапазона
+      console.log('selectedItems', localSelectedItems);
+      
       return newRanges;
     });
   };
@@ -158,13 +180,11 @@ export default function DropdownButton({ placeholder = "Выберите адр�
           ...item,
           sections: sections.map(section => ({
             section,
-            range: ranges[section] || {
-              from: availableSections[id]?.[section]?.min || '',
-              to: availableSections[id]?.[section]?.max || ''
-            }
+            range: ranges[section] || [availableSections[id]?.[section]?.min || '', availableSections[id]?.[section]?.max || '']
           }))
         };
       });
+      console.log('selectedItems', selectedItems);
 
       updateSelectedItems(id, selectedItems);
       return newSet;
@@ -292,7 +312,7 @@ export default function DropdownButton({ placeholder = "Выберите адр�
                                 onClick={(e) => toggleSectionSelection(item.id, section)}
                               >
                                 <span className={`w-6 h-6 flex items-center justify-center border rounded-md mr-2 ${selectedSections[item.id]?.has(section) ? 'bg-blue-500 text-white border-blue-600' : 'bg-white border-gray-300'}`}>
-                                  {section}
+                                  {section === 'unknown' ? '-' : section}
                                 </span>
                                 <span className="text-sm">
                                   Квартиры: {range.min}-{range.max}

@@ -15,14 +15,16 @@ const SubmitButton = ({ onResponse, type }) => {
         "new_apartment_house_address": [],
         "is_date": type == 'last' ? true : false
       };
+      console.log('selectedItemsselectedItemsselectedItems', selectedItems)
       
       // Проходим по выбранным элементам и добавляем только адреса в соответствующие массивы
       Object.keys(selectedItems).forEach(dropdownId => {
         const addresses = selectedItems[dropdownId].map(item => item.address); // Получаем только адреса
+        const new_addresses = selectedItems[dropdownId].map(item => [item.address, item.sections.map(x => x.range)]); // Получаем только адреса
         if (dropdownId.includes('old_apartment_house_address')) {
           requestBody["old_apartment_house_address"] = [...requestBody["old_apartment_house_address"], ...addresses];
         } else if (dropdownId.includes('new_apartment_house_address')) {
-          requestBody["new_apartment_house_address"] = [...requestBody["new_apartment_house_address"], ...addresses];
+          requestBody["new_apartment_house_address"] = [...requestBody["new_apartment_house_address"], ...new_addresses];
         }
       });
       
