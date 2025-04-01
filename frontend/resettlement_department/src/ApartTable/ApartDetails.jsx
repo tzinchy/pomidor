@@ -26,7 +26,7 @@ export default function ApartDetails({
     setSelectedRow(false);
   }
 
-  const table = apartType === "OldApart" ? "new_apartments" : "old_apartments";
+  console.log('apartmentDetails', apartmentDetails);
 
   // Функция для отмены подборов
   const handleCancelMatching = async () => {
@@ -136,13 +136,15 @@ export default function ApartDetails({
                           apartmentDetails={apartmentDetails}
                           newApartId={offerKeys[0]}
                         />
-                        <DeclineResonsCell 
-                          props={offerKeys.length > 0 ? value[offerKeys[0]] : value} 
-                          newApartId={offerKeys[0]} 
-                          apartmentDetails={apartmentDetails}
-                          selectedRowId={selectedRowId}
-                          fetchApartmentDetails={fetchApartmentDetails}
-                        />
+                        {apartType === 'OldApart' && (
+                          <DeclineResonsCell 
+                            props={offerKeys.length > 0 ? value[offerKeys[0]] : value} 
+                            newApartId={offerKeys[0]} 
+                            apartmentDetails={apartmentDetails}
+                            selectedRowId={selectedRowId}
+                            fetchApartmentDetails={fetchApartmentDetails}
+                          />
+                        )}
                       </tr>
 
                       {/* Дополнительные строки, если есть несколько offers */}
@@ -165,13 +167,15 @@ export default function ApartDetails({
                               apartmentDetails={apartmentDetails}
                               newApartId={key}
                             />
-                            <DeclineResonsCell 
-                              props={offerKeys.length > 0 ? value[key] : value} 
-                              newApartId={key} 
-                              apartmentDetails={apartmentDetails}
-                              selectedRowId={selectedRowId}
-                              fetchApartmentDetails={fetchApartmentDetails}
-                            />
+                            {apartType === 'OldApart' && (
+                              <DeclineResonsCell 
+                                props={offerKeys.length > 0 ? value[key] : value} 
+                                newApartId={key} 
+                                apartmentDetails={apartmentDetails}
+                                selectedRowId={selectedRowId}
+                                fetchApartmentDetails={fetchApartmentDetails}
+                              />
+                            )}
                           </tr>
                         ))}
                     </React.Fragment>
