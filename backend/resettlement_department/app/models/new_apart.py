@@ -11,7 +11,7 @@ class NewApart(Base):
     district = Column(String)
     municipal_district = Column(String)
     house_address = Column(String)
-    apart_number = Column(String)
+    apart_number = Column(int)
     floor = Column(Integer)
     room_count = Column(Integer)
     full_living_area = Column(Numeric(10, 2))

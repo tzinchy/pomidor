@@ -315,10 +315,10 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         int_columns = ["new_apart_id", "building_id", "floor", "rsm_id", "room_count", "un_kv"]
         for column in int_columns:
             new_apart_df[column] = new_apart_df[column].astype(int)
-        new_apart_df['apart_number'] = new_apart_df['apart_number'].astype('str')
+        # new_apart_df['apart_number'] = new_apart_df['apart_number'].astype('str')
         new_apart_df['district'] = new_apart_df['district'].map(district_mapping).fillna(new_apart_df['district'])
         # Преобразование типов
-        # new_apart_df["apart_number"] = new_apart_df["apart_number"].astype("Int64")
+        new_apart_df["apart_number"] = new_apart_df["apart_number"].astype("Int64")
         special_needs_mapping = {"да": 1, "нет": 0}
         new_apart_df["for_special_needs_marker"] = (
             new_apart_df["for_special_needs_marker"].map(special_needs_mapping).fillna(0)
@@ -938,6 +938,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
         new_apart_df["full_living_area"] = new_apart_df["full_living_area"].astype(float)
         new_apart_df["living_area"] = new_apart_df["living_area"].astype(float)
         new_apart_df["building_id"] = new_apart_df["building_id"].astype("Int64")
+        new_apart_df["apart_number"] = new_apart_df["apart_number"].astype("Int64")
         new_apart_df["un_kv"] = new_apart_df["un_kv"].astype("Int64")
         new_apart_df["room_count"] = new_apart_df["room_count"].astype("Int64")
 
