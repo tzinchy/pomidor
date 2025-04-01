@@ -13,7 +13,7 @@ WITH ranked_apartments AS (
         room_count,
         type_of_settlement,
         status.status,
-        oa.notes,
+        CASE WHEN oa.notes IS NULL THEN oa.rsm_notes ELSE oa.rsm_notes || ';' || oa.notes END AS notes,
         affair_id,
         is_queue,
         is_special_needs_marker,
@@ -26,7 +26,6 @@ WITH ranked_apartments AS (
         offer o USING (affair_id)
     LEFT JOIN
         status ON o.status_id = status.status_id
-    where rsm_status != 'снято'
 )
 SELECT *
 FROM ranked_apartments

@@ -25,7 +25,8 @@ ranked_apartments AS (
         na.living_area, 
         na.room_count, 
         na.type_of_settlement, 
-        na.notes, 
+        na.entrance_number,
+        CASE WHEN na.notes IS NULL THEN na.rsm_notes ELSE na.rsm_notes || ';' || na.notes END AS notes,
         na.new_apart_id,
         s.status AS status,
         is_private,
@@ -34,8 +35,7 @@ ranked_apartments AS (
             PARTITION BY na.new_apart_id 
             ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC
         ) AS rn,
-        COUNT(o.affair_id) OVER (PARTITION BY na.new_apart_id) AS selection_count, 
-        na.notes
+        COUNT(o.affair_id) OVER (PARTITION BY na.new_apart_id) AS selection_count
     FROM 
         new_apart na
     LEFT JOIN 

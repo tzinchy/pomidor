@@ -10,51 +10,51 @@ def df_date_to_string(df: pd.DataFrame, columns):
     return df
 
 
-def insert_data_to_extract_decisions(extract_df: pd.DataFrame):
+def insert_data_to_order_decisions(order_df: pd.DataFrame):
     try:
         connection = None
         columns_name = {
-            "КПУ_Дело_Идентификатор": "case_id",
-            "Идентификатор выписки": "extract_id",
+            "КПУ_Дело_Идентификатор": "old_apart_id",
+            "Идентификатор выписки": "order_id",
             "Выписка_Решение_Д": "decision_date",
             "Выписка_Решение №": "decision_number",
-            "Выписка_Д": "extract_date",
+            "Выписка_Д": "order_date",
             "Выписка_Аннулирована": "is_cancelled",
             "Выписка_Аннулирование_Дата": "cancel_date",
             "Выписка_Аннулирование_Дата_РД": "legal_cancel_date",
-            "Выписка_Аннулирование_Номер_РД": "legal_extract_id",
+            "Выписка_Аннулирование_Номер_РД": "legal_order_id",
             "Выписка_Аннулирование_Причина": "cancel_reason",
             "Выписка_ид_площади": "area_id",
-            "Дата создания проекта выписки": "extract_draft_date",
+            "Дата создания проекта выписки": "order_draft_date",
         }
-        extract_df.rename(
+        order_df.rename(
             columns=columns_name,
             inplace=True,
         )
 
         # TODO: По тз это поле может повторятся, но так быть не должно и это костыль
         #       Когда выгрузка починится это надо убрать
-        extract_df = extract_df.drop_duplicates("extract_id")
+        order_df = order_df.drop_duplicates("order_id")
 
         columns_db = list(columns_name.values())
-        extract_df = extract_df[columns_db]
-        extract_df = extract_df.dropna(subset=["extract_id"])
+        order_df = order_df[columns_db]
+        order_df = order_df.dropna(subset=["order_id"])
 
-        extract_df["case_id"] = extract_df["case_id"].astype("Int64")
-        extract_df["extract_id"] = extract_df["extract_id"].astype("Int64")
-        extract_df["area_id"] = extract_df["area_id"].astype("Int64")
-        extract_df["is_cancelled"] = extract_df["is_cancelled"].astype(bool)
+        order_df["old_apart_id"] = order_df["old_apart_id"].astype("Int64")
+        order_df["order_id"] = order_df["order_id"].astype("Int64")
+        order_df["area_id"] = order_df["area_id"].astype("Int64")
+        order_df["is_cancelled"] = order_df["is_cancelled"].astype(bool)
 
         # Заменяем NaN на None (для PostgreSQL)
-        extract_df = extract_df.replace({np.nan: None})
+        order_df = order_df.replace({np.nan: None})
 
-        extract_df = df_date_to_string(extract_df, 
-            ["decision_date", "extract_date", "cancel_date", "legal_cancel_date", "extract_draft_date"]
+        order_df = df_date_to_string(order_df, 
+            ["decision_date", "order_date", "cancel_date", "legal_cancel_date", "order_draft_date"]
         )
-        extract_df = extract_df.replace({'None': None})
+        order_df = order_df.replace({'None': None})
 
         # Преобразуем в список кортежей для вставки
-        args = extract_df.itertuples(index=False, name=None)
+        args = order_df.itertuples(index=False, name=None)
         args_str = ",".join(
             "({})".format(
                 ", ".join(
@@ -78,12 +78,12 @@ def insert_data_to_extract_decisions(extract_df: pd.DataFrame):
         )
 
         insert_data_sql = f"""
-            INSERT INTO public.extract_decisions (
+            INSERT INTO public.order_decisions (
                 {", ".join(columns_db)}
             )
             VALUES 
                 {args_str}
-            ON CONFLICT (extract_id) 
+            ON CONFLICT (order_id) 
             DO UPDATE SET 
             {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
             updated_at = NOW()

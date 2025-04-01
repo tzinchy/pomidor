@@ -774,6 +774,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
             "КПУ_Др. напр. откр.": "kpu_another",
             "КПУ_Вид засел.": "type_of_settlement",
             "КПУ_Состояние": "rsm_status",
+            "К_Инв/к": "is_special_needs_marker"
         }
         columns_db = list(columns_name.values())
         columns_db.append('is_queue')
@@ -783,6 +784,10 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         )
         # Удаляем строки с пустыми ID
         df = df.dropna(subset=["affair_id"])
+        special_needs_mapping = {"да": 1, "нет": 0}
+        df["is_special_needs_marker"] = (
+            df["is_special_needs_marker"].map(special_needs_mapping).fillna(0)
+        )
 
         df["affair_id"] = df["affair_id"].astype("Int64")
         df["people_in_family"] = df["people_in_family"].astype("Int64")

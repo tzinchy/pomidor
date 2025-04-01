@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Query, HTTPException, Body
+from typing import List, Literal, Optional
+
 from depends import apartment_service
-from schema.apartment import (
-    ApartTypeSchema,
-)
-from typing import Optional, List, Literal
+from fastapi import APIRouter, Body, HTTPException, Query
+from schema.apartment import ApartTypeSchema
 
 router = APIRouter(prefix="/tables", tags=["Table and Tree"])
 
@@ -83,3 +82,17 @@ async def switch_apartments(
 ):
     await apartment_service.switch_apartment(first_apart_id, second_apart_id)
 
+@router.get("/get_entrance_ranges")
+async def get_entrance_number_new_apart(
+    house_address: str = Query(
+        None, description="Адрес дома"
+    )
+):
+    return await apartment_service.get_entrance_ranges(house_address)
+
+@router.patch("/set_entrance_number_for_many")
+async def set_entrance_number_for_many(
+    new_apart_ids: List[int] = Body(..., description="Список new_apart_id"),
+    entrance_number: int = Body(..., description="Номер подъезда")
+):
+    return await apartment_service.set_entrance_number_for_many(new_apart_ids, entrance_number)

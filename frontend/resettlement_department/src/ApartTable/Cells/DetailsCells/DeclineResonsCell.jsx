@@ -11,7 +11,6 @@ export default function DeclineResonsCell({ props, newApartId, apartmentDetails,
   const [apartment_layout, setApartment_layout] = useState(value.apartment_layout);
   const [notes, setNotes] = useState(value.notes);
   const [showRejectModal, setShowRejectModal] = useState(false);
-  console.log('decline_reason_id', props.decline_reason_id);
 
   // Синхронизация состояний с value при изменении value
   useEffect(() => {
