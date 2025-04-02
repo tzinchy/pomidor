@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Dict
 from enum import Enum
 
 
@@ -31,7 +31,7 @@ class MatchingSchema(BaseModel):
     old_apartment_house_address: List[str] = None
     new_apartment_district: List[str] = None
     new_apartment_municipal_district: List[str] = None
-    new_apartment_house_address: List[str] = None 
+    new_apartment_house_address: Optional[List] = None 
     is_date : bool = None
 
 class RematchSchema(BaseModel):
@@ -79,7 +79,8 @@ class OldApartTableSchema(BaseApartmentTableSchema):
 
 class NewApartTableSchema(BaseApartmentTableSchema):
     new_apart_id : Optional[int] = None,
-    is_private : Optional[str] = None
+    is_private : Optional[str] = None,
+    apart_number: Optional[int] = None
 
 class SetNotesSchema(BaseModel):
     notes : Optional[str] = None

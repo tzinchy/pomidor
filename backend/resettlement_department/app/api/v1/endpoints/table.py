@@ -82,7 +82,7 @@ async def switch_apartments(
 ):
     await apartment_service.switch_apartment(first_apart_id, second_apart_id)
 
-@router.get("/get_entrance_number_new_apart")
+@router.get("/get_entrance_ranges")
 async def get_entrance_number_new_apart(
     house_address: str = Query(
         None, description="Адрес дома"

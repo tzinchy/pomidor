@@ -315,10 +315,10 @@ def new_apart_insert(new_apart_df: pd.DataFrame):
         int_columns = ["new_apart_id", "building_id", "floor", "rsm_id", "room_count", "un_kv"]
         for column in int_columns:
             new_apart_df[column] = new_apart_df[column].astype(int)
-        new_apart_df['apart_number'] = new_apart_df['apart_number'].astype('str')
+        # new_apart_df['apart_number'] = new_apart_df['apart_number'].astype('str')
         new_apart_df['district'] = new_apart_df['district'].map(district_mapping).fillna(new_apart_df['district'])
         # Преобразование типов
-        # new_apart_df["apart_number"] = new_apart_df["apart_number"].astype("Int64")
+        new_apart_df["apart_number"] = new_apart_df["apart_number"].astype("Int64")
         special_needs_mapping = {"да": 1, "нет": 0}
         new_apart_df["for_special_needs_marker"] = (
             new_apart_df["for_special_needs_marker"].map(special_needs_mapping).fillna(0)
@@ -774,7 +774,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
             "КПУ_Др. напр. откр.": "kpu_another",
             "КПУ_Вид засел.": "type_of_settlement",
             "КПУ_Состояние": "rsm_status",
-            "К_Инв/к": "is_special_needs_marker",
+            "К_Инв/к": "is_special_needs_marker"
         }
         columns_db = list(columns_name.values())
         columns_db.append('is_queue')
@@ -859,19 +859,17 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         out = 0
         with connection:
             with connection.cursor() as cursor:
-                print(-3)
+                print("DEBUG: Connection is open")
                 cursor.execute(insert_data_sql)
-                print(-2)
+                print("DEBUG: Data to old_apart is inserted")
                 cursor.execute(set_env_true_sql)
-                print(-1)
+                print("DEBUG: Env is set to true")
     except Exception as e:
         out = e
         print(e)
-        print(000)
-        # NOTE: Здесь можно либо использовать старый connection в случае, если он есть (текущий вариант),
-        #       либо закрывать старый connection и открывать новый всегда
+        print("DEBUG: Exception occurred")
         if not connection:
-            print(111)
+            print("DEBUG: Connection is None. Creating new one")
             connection = psycopg2.connect(
                 host=settings.project_management_setting.DB_HOST,
                 user=settings.project_management_setting.DB_USER,
@@ -881,7 +879,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
             )
         with connection:
             with connection.cursor() as cursor:
-                print(222)
+                print("DEBUG: Connection is open in except block")
                 set_env_false_sql = """
                     UPDATE env.data_updates
                     SET success = False,
@@ -890,9 +888,9 @@ def insert_data_to_old_apart(df: pd.DataFrame):
                 """
                 cursor.execute(set_env_false_sql)
     finally:
-        print(333)
+        print("DEBUG: finally block")
         if connection:
-            print(444)
+            print("DEBUG: connection found and closed")
             connection.close()
         return out
     
@@ -920,7 +918,6 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             "К_Инв/к": "for_special_needs_marker",
             "К_№ подъезда": "entrance_number",
         }
-        print(new_apart_df.columns)
         new_apart_df.rename(
             columns=columns_name,
             inplace=True,
@@ -938,6 +935,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
         new_apart_df["full_living_area"] = new_apart_df["full_living_area"].astype(float)
         new_apart_df["living_area"] = new_apart_df["living_area"].astype(float)
         new_apart_df["building_id"] = new_apart_df["building_id"].astype("Int64")
+        new_apart_df["apart_number"] = new_apart_df["apart_number"].astype("Int64")
         new_apart_df["un_kv"] = new_apart_df["un_kv"].astype("Int64")
         new_apart_df["room_count"] = new_apart_df["room_count"].astype("Int64")
 
@@ -993,16 +991,17 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
         out = 0
         with connection:
             with connection.cursor() as cursor:
-                print(-3)
+                print("DEBUG: Connection is open")
                 cursor.execute(insert_data_sql)
-                print(-2)
+                print("DEBUG: Data to new_apart is inserted")
                 cursor.execute(set_env_true_sql)
-                print(-1)
+                print("DEBUG: Env is set to true")
     except Exception as e:
         out = e
         print(e)
+        print("DEBUG: Exception occurred")
         if not connection:
-            print(111)
+            print("DEBUG: Connection is None. Creating new one")
             connection = psycopg2.connect(
                 host=settings.project_management_setting.DB_HOST,
                 user=settings.project_management_setting.DB_USER,
@@ -1012,7 +1011,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             )
         with connection:
             with connection.cursor() as cursor:
-                print(222)
+                print("DEBUG: Connection is open in except block")
                 set_env_false_sql = """
                     UPDATE env.data_updates
                     SET success = False,
