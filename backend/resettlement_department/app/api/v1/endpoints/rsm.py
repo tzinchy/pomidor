@@ -90,7 +90,7 @@ async def from_rsm_get_orders():
     end_date = datetime.combine(datetime.now().date(), time(23, 59, 59))
     order_decisions = get_orders_xlsx_df(layout_id=layout_id, start_date=start_date, end_date=end_date)
     # order_decisions = pd.read_excel('/Users/macbook/work/backend/resettlement_department/app/orderdta.xlsx')
-    order_decisions.to_excel('orderdta.xlsx')
+    # order_decisions.to_excel('orderdta.xlsx')
     if order_decisions.empty:
        return {"status": "error", "message": "Нет данных для вставки"}
 
