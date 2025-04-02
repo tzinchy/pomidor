@@ -25,7 +25,6 @@ export default function ApartDetails({
     setIsDetailsVisible(false);
     setSelectedRow(false);
   }
-
   console.log('apartmentDetails', apartmentDetails);
 
   // Функция для отмены подборов

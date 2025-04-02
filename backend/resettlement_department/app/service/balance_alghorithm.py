@@ -55,7 +55,7 @@ def save_views_to_excel(
                                 new_apart.house_address, 
                                 new_apart.rank
                             FROM new_apart 
-                            WHERE 1=1
+                            WHERE rank is not NULL
                         """
                         print('all okay')
                         
@@ -66,6 +66,7 @@ def save_views_to_excel(
                             query_old_ranked += " AND old_apart.house_address IN %s"
                             params_old.append(tuple(old_selected_addresses))
                         if new_selected_addresses:
+                            print('new_selected_addresses', new_selected_addresses)
                             query_new_ranked += " AND new_apart.house_address IN %s"
                             params_new.append(tuple(new_selected_addresses))
 
