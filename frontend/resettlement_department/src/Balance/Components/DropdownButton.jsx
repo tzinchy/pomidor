@@ -11,6 +11,7 @@ export default function DropdownButton({ placeholder = "Выберите адр�
   const [error, setError] = useState(null);
   const [apartmentRanges, setApartmentRanges] = useState({});
   const [expandedItems, setExpandedItems] = useState(new Set());
+  const [selectedSections, setSelectedSections] = useState({});
   const dropdownRef = useRef(null);
   const { updateSelectedItems } = useDropdown();
 
@@ -82,6 +83,32 @@ export default function DropdownButton({ placeholder = "Выберите адр�
     });
   };
 
+  // Обработчик выбора секции
+  const toggleSectionSelection = (itemId, section) => {
+    setSelectedSections(prev => {
+      const newSelection = { ...prev };
+      if (!newSelection[itemId]) {
+        newSelection[itemId] = new Set();
+      }
+      
+      if (newSelection[itemId].has(section)) {
+        newSelection[itemId].delete(section);
+        if (newSelection[itemId].size === 0) {
+          delete newSelection[itemId];
+        }
+      } else {
+        newSelection[itemId].add(section);
+      }
+      
+      return newSelection;
+    });
+  };
+
+  // Проверка выбрана ли секция
+  const isSectionSelected = (itemId, section) => {
+    return selectedSections[itemId]?.has(section) || false;
+  };
+
   // Переключение видимости диапазонов для адреса
   const toggleRangeVisibility = (itemId, e) => {
     e.stopPropagation();
@@ -115,12 +142,13 @@ export default function DropdownButton({ placeholder = "Выберите адр�
         newSet.has(itemId) ? newSet.delete(itemId) : newSet.add(itemId);
       }
 
-      // Обновляем выбранные элементы с учетом диапазонов квартир
+      // Обновляем выбранные элементы
       const selectedItems = Array.from(newSet).map(id => {
         const item = addresses.find(item => item.id === id);
         return {
           ...item,
-          apartmentRanges: apartmentRanges[id] || []
+          apartmentRanges: apartmentRanges[id] || [],
+          selectedSections: selectedSections[id] ? Array.from(selectedSections[id]) : []
         };
       });
 
@@ -139,7 +167,8 @@ export default function DropdownButton({ placeholder = "Выберите адр�
         const item = addresses.find(item => item.id === id);
         return {
           ...item,
-          apartmentRanges: apartmentRanges[id] || []
+          apartmentRanges: apartmentRanges[id] || [],
+          selectedSections: selectedSections[id] ? Array.from(selectedSections[id]) : []
         };
       });
 
@@ -147,6 +176,9 @@ export default function DropdownButton({ placeholder = "Выберите адр�
       return newSet;
     });
   };
+
+  // Секции для выбора
+  const sections = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   return (
     <div className="relative w-[40%]" ref={dropdownRef}>
@@ -222,39 +254,62 @@ export default function DropdownButton({ placeholder = "Выберите адр�
 
                 {type === 'new_apartment' && expandedItems.has(item.id) && (
                   <div className="px-4 py-2 bg-gray-50 border-t">
-                    {apartmentRanges[item.id]?.map((range, rangeIndex) => (
-                      <div key={rangeIndex} className="flex items-center mb-2">
-                        <input
-                          type="text"
-                          placeholder="От"
-                          value={range.from}
-                          onChange={(e) => updateApartmentRange(item.id, rangeIndex, 'from', e.target.value)}
-                          className="w-20 px-2 py-1 border rounded-md mr-2"
-                        />
-                        <span className="mr-2">—</span>
-                        <input
-                          type="text"
-                          placeholder="До"
-                          value={range.to}
-                          onChange={(e) => updateApartmentRange(item.id, rangeIndex, 'to', e.target.value)}
-                          className="w-20 px-2 py-1 border rounded-md mr-2"
-                        />
-                        <button
-                          onClick={() => removeApartmentRange(item.id, rangeIndex)}
-                          className="px-2 py-1 border border-dashed border-gray-300 text-black rounded-md hover:bg-red-100 hover:border-red-400 ml-2 transition-all duration-200"
-                        >
-                          -
-                        </button>
+                    {/* Блок с выбором секций */}
+                    <div className="mb-3">
+                      <p className="text-sm text-gray-600 mb-1">Выберите секции:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {sections.map(section => (
+                          <button
+                            key={section}
+                            onClick={() => toggleSectionSelection(item.id, section)}
+                            className={`w-8 h-8 flex items-center justify-center border rounded-md transition-colors
+                              ${isSectionSelected(item.id, section) 
+                                ? 'bg-blue-500 text-white border-blue-600' 
+                                : 'bg-white hover:bg-gray-100 border-gray-300'}`}
+                          >
+                            {section}
+                          </button>
+                        ))}
                       </div>
-                    ))}
-                    <div className="flex mt-2">
-                      <button
-                        onClick={() => addApartmentRange(item.id)}
-                        className="px-3 py-1 border border-dashed border-gray-300 text-black rounded-md hover:bg-green-100 hover:border-green-400 transition-all duration-200"
-                      >
-                        +
-                      </button>
                     </div>
+
+                    {/* Блок с диапазонами квартир */}
+                    <div className="mb-2">
+                      <p className="text-sm text-gray-600 mb-1">Укажите диапазоны квартир:</p>
+                      {apartmentRanges[item.id]?.map((range, rangeIndex) => (
+                        <div key={rangeIndex} className="flex items-center mb-2">
+                          <input
+                            type="text"
+                            placeholder="От"
+                            value={range.from}
+                            onChange={(e) => updateApartmentRange(item.id, rangeIndex, 'from', e.target.value)}
+                            className="w-20 px-2 py-1 border rounded-md mr-2 focus:ring-1 focus:ring-blue-300 focus:border-blue-300"
+                          />
+                          <span className="mr-2 text-gray-500">—</span>
+                          <input
+                            type="text"
+                            placeholder="До"
+                            value={range.to}
+                            onChange={(e) => updateApartmentRange(item.id, rangeIndex, 'to', e.target.value)}
+                            className="w-20 px-2 py-1 border rounded-md mr-2 focus:ring-1 focus:ring-blue-300 focus:border-blue-300"
+                          />
+                          <button
+                            onClick={() => removeApartmentRange(item.id, rangeIndex)}
+                            className="px-2 py-1 border border-dashed border-gray-300 text-gray-500 rounded-md hover:bg-red-50 hover:text-red-500 hover:border-red-300 transition-colors"
+                          >
+                            Удалить
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Кнопка добавления нового диапазона */}
+                    <button
+                      onClick={() => addApartmentRange(item.id)}
+                      className="px-3 py-1 text-sm border border-dashed border-gray-300 text-gray-500 rounded-md hover:bg-green-50 hover:text-green-500 hover:border-green-300 transition-colors"
+                    >
+                      + Добавить диапазон
+                    </button>
                   </div>
                 )}
               </div>
