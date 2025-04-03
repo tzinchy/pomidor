@@ -83,7 +83,7 @@ async def upload_file2(file: UploadFile = File(...)):
         await file.close()
 
 
-@router.post("/get_orders")
+@router.get("/get_orders")
 async def from_rsm_get_orders():
     layout_id = 22262
     start_date = datetime(2017, 1, 1, 0, 0, 0)
