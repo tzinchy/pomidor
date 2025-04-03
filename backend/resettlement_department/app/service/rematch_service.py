@@ -120,7 +120,8 @@ async def rematch(apart_ids):
                 if decline_reason.get('min_floor') == 0 and decline_reason.get('max_rank') == 0:
                     floor_condition = 'AND True'
                 else: 
-                    floor_condition = f'AND floor BETWEEN {decline_reason.get('min_floor')} and {decline_reason.get('max_rank')}'
+                    floor_condition = f"AND floor BETWEEN {decline_reason.get('min_floor')} and {decline_reason.get('max_rank')}"
+
                 new_apart_query = f'''SELECT new_apart_id
                         FROM public.new_apart
                         WHERE new_apart_id::text NOT IN 
@@ -181,7 +182,7 @@ async def rematch(apart_ids):
                 print(approved_aparts)
             else:
                 cant_offer_aparts_raise_ids[apart_info.get('affair_id')] = 'Не нашлось подходящих квартир'
-
+    print(cant_offer_aparts_raise_ids)
     return cant_offer_aparts_raise_ids
 
 
