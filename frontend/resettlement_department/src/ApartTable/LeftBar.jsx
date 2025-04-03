@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar, Menu } from 'react-pro-sidebar';
 
 function LeftBar({
@@ -34,46 +34,57 @@ function LeftBar({
       };
 
     const handleAddressToggle = (address, municipal) => {
-      const newSelectedAddresses = selectedAddresses.includes(address)
-        ? selectedAddresses.filter(addr => addr !== address)
-        : [...selectedAddresses, address];
-      
-      setSelectedAddresses(newSelectedAddresses);
-      
-      // Передаем выбранные адреса и текущий муниципалитет в fetchApartments
-      fetchApartments(newSelectedAddresses.length > 0 ? newSelectedAddresses : null, municipal);
-      setRowSelection({});
+      setSelectedAddresses(prev => {
+        // Создаем новый массив адресов
+        const newSelectedAddresses = prev.includes(address)
+          ? prev.filter(addr => addr !== address) // Удаляем адрес, если он уже был выбран
+          : [...prev, address]; // Добавляем адрес, если его не было
+        
+        // Вызываем fetchApartments с новым списком адресов
+        fetchApartments(newSelectedAddresses.length > 0 ? newSelectedAddresses : null, null);
+        setRowSelection({});
+        
+        return newSelectedAddresses;
+      });
     };
+
+    useEffect(() => {
+      setLastSelectedAddres(selectedAddresses);
+    }, [selectedAddresses])
 
     const handleMunicipalClick = (municipal) => {
       toggleExpand(municipal);
       setLastSelectedMunicipal(municipal);
       setLastSelectedAddres(null);
       setCurrentMunicipal(municipal);
-      setSelectedAddresses([]); // Сбрасываем выбранные адреса при смене муниципалитета
+      //setSelectedAddresses([]); // Сбрасываем выбранные адреса
       fetchHouseAddresses(municipal);
       fetchApartments(null, municipal);
       setRowSelection({});
     };
 
+    const resetSelection = () => {
+      setIsDetailsVisible(false); 
+      setSelectedRow(false); 
+      setLoading(true); 
+      setFilters({}); 
+      setRowSelection({});
+      setSelectedAddresses([]);
+    };
+
     return (
-      <div className="relative h-[100vh-1rem]s ">
+      <div className="relative h-[100vh-1rem]s">
         {/* Основной контейнер сайдбара */}
         <div className={`fixed h-[calc(100vh-1rem)] transition-all duration-300 bg-white rounded-lg overflow-hidden z-[100] ${collapsed ? 'w-0' : ''}`}>
-          <Sidebar collapsed={collapsed} className={`transition-all duration-300 h-[calc(100vh-1rem)] w-[270px] `} >
+          <Sidebar collapsed={collapsed} className={`transition-all duration-300 h-[calc(100vh-1rem)] w-[270px]`}>
             <Menu>
               {!collapsed && (
                 <>
                   <div className="flex justify-around mb-4">
                     <button
                       onClick={() => {
-                        setIsDetailsVisible(false); 
-                        setSelectedRow(false); 
-                        setApartType("OldApart"); 
-                        setLoading(true); 
-                        setFilters({}); 
-                        setRowSelection({});
-                        setSelectedAddresses([]);
+                        resetSelection();
+                        setApartType("OldApart");
                       }}
                       className={`p-8 py-4 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
@@ -81,24 +92,17 @@ function LeftBar({
                     </button>
                     <button
                       onClick={() => {
-                        setIsDetailsVisible(false); 
-                        setSelectedRow(false); 
-                        setApartType("NewApartment"); 
-                        setLoading(true); 
-                        setFilters({}); 
-                        setRowSelection({});
-                        setSelectedAddresses([]);
+                        resetSelection();
+                        setApartType("NewApartment");
                       }}
-                      className={`p-8 py-4 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
+                      className={`p-8 py-4 rounded-md ${apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Ресурс
                     </button>
                   </div>
 
-                  {/* ======== Дерево район → муниципалитет → адрес ======== */}
-                  <div
-                    className="h-full pr-2 bg-white"
-                  >
+                  {/* Дерево район → муниципалитет → адрес */}
+                  <div className="h-full pr-2 bg-white">
                     <ul>
                       {districts.map((district) => {
                         const isDistOpen = expandedNodes[district] ?? false;
@@ -110,7 +114,6 @@ function LeftBar({
                               onClick={(e) => {
                                 e.preventDefault();
                                 toggleExpand(district);
-
                                 if (!municipalDistricts[district]) {
                                   fetchMunicipalDistricts(district);
                                 }
@@ -125,17 +128,11 @@ function LeftBar({
                                 stroke="currentColor"
                                 className="h-4 w-4 me-1"
                                 style={{
-                                  transform: isDistOpen
-                                    ? "rotate(90deg)"
-                                    : "rotate(0deg)",
+                                  transform: isDistOpen ? "rotate(90deg)" : "rotate(0deg)",
                                   transition: "transform 0.2s",
                                 }}
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                                />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                               </svg>
                               {district}
                             </a>
@@ -162,32 +159,19 @@ function LeftBar({
                                         stroke="currentColor"
                                         className="h-4 w-4 me-1"
                                         style={{
-                                          transform: isMunOpen
-                                            ? "rotate(90deg)"
-                                            : "rotate(0deg)",
+                                          transform: isMunOpen ? "rotate(90deg)" : "rotate(0deg)",
                                           transition: "transform 0.2s",
                                         }}
                                       >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                                        />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                       </svg>
                                       {municipal}
                                     </a>
 
                                     {/* Список адресов */}
-                                    <ul
-                                      className={`ml-4 !visible ${
-                                        isMunOpen ? "" : "hidden"
-                                      }`}
-                                    >
+                                    <ul className={`ml-4 !visible ${isMunOpen ? "" : "hidden"}`}>
                                       {houseAddresses[municipal]?.map((address) => (
-                                        <li
-                                          key={address}
-                                          className="px-2"
-                                        >
+                                        <li key={address} className="px-2">
                                           <label className="flex items-center px-2 cursor-pointer">
                                             <input
                                               type="checkbox"
@@ -216,7 +200,7 @@ function LeftBar({
         </div>
         <button
           onClick={handleToggleSidebar}
-          className={`fixed top-1/2 left-14 z-[101] w-8 h-8  rounded-full flex items-center justify-center shadow-md transition-transform duration-300 ${
+          className={`fixed top-1/2 left-14 z-[101] w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-transform duration-300 ${
             collapsed ? '' : 'translate-x-80'
           }`}
           style={{
@@ -233,11 +217,7 @@ function LeftBar({
               collapsed ? '' : 'rotate-180'
             }`}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 12l-6 6m0-12l6 6"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12l-6 6m0-12l6 6" />
           </svg>
         </button>
       </div>

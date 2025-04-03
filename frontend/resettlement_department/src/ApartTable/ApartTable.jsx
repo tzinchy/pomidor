@@ -651,11 +651,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             <div className="flex flex-1 overflow-hidden">
             {/* Таблица */}
             <div
-              className={` rounded-md h-full transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
+              className={` rounded-md h-[calc(100vh-3.67rem)] transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
             >
               <div
                 ref={tableContainerRef}
-                className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} overflow-auto rounded-md border h-[calc(100vh-1rem)] w-[calc(100% - 25px)] transition-all ease-in-out scrollbar-custom`}
+                className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} overflow-auto rounded-md border h-full w-[calc(100% - 25px)] transition-all ease-in-out scrollbar-custom`}
               >
                 <table className="text-sm w-full border-collapse backdrop-blur-md sticky top-0 z-30">
                   <thead className="border-b z-10 backdrop-blur-md shadow z-10">
