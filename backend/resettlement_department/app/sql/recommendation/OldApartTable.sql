@@ -26,7 +26,7 @@ WITH ranked_apartments AS (
         offer o USING (affair_id)
     LEFT JOIN
         status ON oa.status_id = status.status_id
-    
+
 )
 SELECT *
 FROM ranked_apartments
