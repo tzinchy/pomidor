@@ -38,7 +38,7 @@ export default function ApartPage() {
   useEffect(() => {
     resetFilters();
     fetchDistricts();
-    fetchAllAparts();
+    //fetchAllAparts();
   }, [apartType]);
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export default function ApartPage() {
       const response = await axios.get(`${HOSTLINK}/tables/house_addresses`, {
         params: {
           apart_type: apartType,
-          municipal_district: [municipal]
+          municipal_districts: [municipal]
         },
         paramsSerializer
       });
@@ -166,7 +166,7 @@ export default function ApartPage() {
       <Aside />
       <main className="relative flex flex-1 flex-col gap-4 p-2 sm:pl-16 bg-neutral-100">
         <div className="flex flex-col lg:flex-row text-gray-800 relative min-h-[98vh]">
-          {/*<LeftBar
+          <LeftBar
             apartType={apartType}
             setApartType={setApartType}
             APART_TYPES={APART_TYPES}
@@ -187,7 +187,7 @@ export default function ApartPage() {
             setLastSelectedAddres={setLastSelectedAddres}
             setFilters={setFilters}
             setRowSelection={setRowSelection}
-          />*/}
+          />
 
           <div className="flex-1 overflow-auto">
             <ApartTable 

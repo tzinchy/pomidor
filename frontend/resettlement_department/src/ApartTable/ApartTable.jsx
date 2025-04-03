@@ -457,8 +457,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   
 
   return (
-    <div className='bg-neutral-100'>
-      <div className={`${/*collapsed ? 'ml-[25px]' : 'ml-[260px]'*/''} flex flex-wrap items-center mb-2 justify-between`}>
+    <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
+      <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
       <button
           onClick={() => setIsOpen(!isOpen)}
           className=""
@@ -540,7 +540,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         
         <div className='flex items-center'>
 
-          <div className="flex justify-around">
+          {/*<div className="flex justify-around">
             <button
               onClick={() => changeApartType('OldApart')}
               className={`px-4 py-2 mr-2 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
@@ -553,7 +553,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             >
               Ресурс
             </button>
-          </div>
+          </div>*/}
 
           {apartType === 'OldApart' ? (
             <Menu as="div" className="relative inline-block text-left z-[102]">
@@ -605,7 +605,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           <p className='ml-8 mr-2 text-gray-400'>{filteredApartments.length}</p>
         </div>
       </div>
-      <div className="relative flex flex-col lg:flex-row h-[calc(100vh-4rem)] w-full transition-all duration-300">
+      <div className="relative flex flex-col lg:flex-row  w-full transition-all duration-300">
         {loading ? (
           <div className="flex flex-1 justify-center h-64">
             <div className="relative flex flex-col place-items-center py-4 text-gray-500">
@@ -655,7 +655,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             >
               <div
                 ref={tableContainerRef}
-                className={`${/*collapsed ? 'ml-[25px]' : 'ml-[260px]'*/''} overflow-auto rounded-md border h-[calc(100vh-1rem)] w-[calc(100% - 25px)] transition-all ease-in-out scrollbar-custom`}
+                className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} overflow-auto rounded-md border h-[calc(100vh-1rem)] w-[calc(100% - 25px)] transition-all ease-in-out scrollbar-custom`}
               >
                 <table className="text-sm w-full border-collapse backdrop-blur-md sticky top-0 z-30">
                   <thead className="border-b z-10 backdrop-blur-md shadow z-10">
