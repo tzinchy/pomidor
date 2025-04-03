@@ -181,7 +181,7 @@ async def rematch(apart_ids):
                 print(approved_aparts)
             else:
                 cant_offer_aparts_raise_ids[apart_info.get('affair_id')] = 'Не нашлось подходящих квартир'
-
+    print(cant_offer_aparts_raise_ids)
     return cant_offer_aparts_raise_ids
 
 
