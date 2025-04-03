@@ -44,7 +44,8 @@ export default function AllFilters({
     maxPeople,
     setMaxPeople,
 }) {
-    const StatusFilters = ['Не подобрано', "Согласие", 'Отказ', "Суд", "Фонд компенсация", "Фонд докупка", "Ожидание", 'Ждёт одобрения'];
+    const emptyStatus = apartType === 'OldApart' ? 'Не подобрано' : "Свободна";
+    const StatusFilters = [emptyStatus, "Согласие", 'Отказ', "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", 'Ждёт одобрения', "МФР (вне района)", "МФР Компенсация (вне района)"];
 
     const handleQueueChange = (e) => {
         const isChecked = e.target.checked;

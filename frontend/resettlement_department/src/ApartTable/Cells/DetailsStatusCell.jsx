@@ -28,12 +28,12 @@ export default function DetailsStatusCell({
 
   const colors = {
     "Ждёт одобрения": "bg-blue-100 text-blue-500",
-    Ожидание: "bg-yellow-100 text-amber-600",
-    Согласие: "bg-green-100 text-emerald-600",
-    Отказ: "bg-red-100  text-red-700 ",
-    Суд: "bg-red-300 text-white",
-    "Фонд компенсация": "bg-violet-200 text-violet-500",
-    "Фонд докупка": "bg-violet-200 text-violet-500",
+    'Ожидание': "bg-yellow-100 text-amber-600",
+    'Согласие': "bg-green-100 text-emerald-600",
+    'Отказ': "bg-red-100  text-red-700 ",
+    'Суд': "bg-red-300 text-white",
+    "МФР Компенсация": "bg-violet-200 text-violet-500",
+    "МФР Докупка": "bg-violet-200 text-violet-500",
   };
 
   const toggleDropdown = () => setIsOpen(!isOpen);

@@ -254,21 +254,24 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
       // Применяем каждый фильтр
       Object.entries(filters).forEach(([filterType, selectedValues]) => {
-          if (selectedValues.length > 0) {
-              const filterKey = filterType.toLowerCase();
+        if (selectedValues.length > 0) {
+            const filterKey = filterType.toLowerCase();
 
-              filtered = filtered.filter((item) => {
-                  // Проверяем наличие "Не подобрано" в выбранных значениях
-                  const hasNotMatched = selectedValues.includes("Не подобрано");
-                  // Проверяем обычные значения статусов
-                  const hasRegularStatus = selectedValues.some(
-                      (val) => val !== "Не подобрано" && item[filterKey] === val
-                  );
+            filtered = filtered.filter((item) => {
+                // Проверяем наличие специальных значений в выбранных значениях
+                const hasSpecialValues = selectedValues.some(
+                    val => val === "Не подобрано" || val === "Свободна"
+                );
+                
+                // Проверяем обычные значения статусов
+                const hasRegularStatus = selectedValues.some(
+                    (val) => val !== "Не подобрано" && val !== "Свободна" && item[filterKey] === val
+                );
 
-                  // Если выбран "Не подобрано" - проверяем на null, иначе проверяем обычные статусы
-                  return (hasNotMatched && item[filterKey] === null) || hasRegularStatus;
-              });
-          }
+                // Если выбраны специальные значения - проверяем на null, иначе проверяем обычные статусы
+                return (hasSpecialValues && item[filterKey] === null) || hasRegularStatus;
+            });
+        }
       });
 
       setFilteredApartments(filtered);

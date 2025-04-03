@@ -24,6 +24,7 @@ function LeftBar({
   }) {
 
     const [selectedAddresses, setSelectedAddresses] = useState([]);
+    const [selectedMunicipals, setSelectedMunicipals] = useState([]);
     const [currentMunicipal, setCurrentMunicipal] = useState(null);
 
     const toggleExpand = (key) => {
@@ -31,17 +32,33 @@ function LeftBar({
           ...prev,
           [key]: !prev[key],
         }));
-      };
+    };
+
+    const handleMunicipalToggle = (municipal) => {
+      setSelectedMunicipals(prev => {
+        const newSelectedMunicipals = prev.includes(municipal)
+          ? prev.filter(m => m !== municipal)
+          : [...prev, municipal];
+        
+        // Если выбираем муниципалитет, загружаем его адреса
+        if (!prev.includes(municipal)) {
+          fetchHouseAddresses(municipal);
+        }
+        
+        // Загружаем квартиры для выбранных муниципалитетов
+        
+        setRowSelection({});
+        
+        return newSelectedMunicipals;
+      });
+    };
 
     const handleAddressToggle = (address, municipal) => {
       setSelectedAddresses(prev => {
-        // Создаем новый массив адресов
         const newSelectedAddresses = prev.includes(address)
-          ? prev.filter(addr => addr !== address) // Удаляем адрес, если он уже был выбран
-          : [...prev, address]; // Добавляем адрес, если его не было
+          ? prev.filter(addr => addr !== address)
+          : [...prev, address];
         
-        // Вызываем fetchApartments с новым списком адресов
-        fetchApartments(newSelectedAddresses.length > 0 ? newSelectedAddresses : null, null);
         setRowSelection({});
         
         return newSelectedAddresses;
@@ -50,18 +67,17 @@ function LeftBar({
 
     useEffect(() => {
       setLastSelectedAddres(selectedAddresses);
-    }, [selectedAddresses])
+    }, [selectedAddresses]);
 
-    const handleMunicipalClick = (municipal) => {
-      toggleExpand(municipal);
-      setLastSelectedMunicipal(municipal);
-      setLastSelectedAddres(null);
-      setCurrentMunicipal(municipal);
-      //setSelectedAddresses([]); // Сбрасываем выбранные адреса
-      fetchHouseAddresses(municipal);
-      fetchApartments(null, municipal);
-      setRowSelection({});
-    };
+    useEffect(() => {
+      setLastSelectedMunicipal(selectedMunicipals);
+    }, [selectedMunicipals]);
+
+    useEffect(() => {
+      if (selectedAddresses.length > 0 || selectedMunicipals.length > 0) {
+        fetchApartments(selectedAddresses, selectedMunicipals);
+      }
+    }, [selectedMunicipals, selectedAddresses]);
 
     const resetSelection = () => {
       setIsDetailsVisible(false); 
@@ -70,11 +86,11 @@ function LeftBar({
       setFilters({}); 
       setRowSelection({});
       setSelectedAddresses([]);
+      setSelectedMunicipals([]);
     };
 
     return (
       <div className="relative h-[100vh-1rem]s">
-        {/* Основной контейнер сайдбара */}
         <div className={`fixed h-[calc(100vh-1rem)] transition-all duration-300 bg-white rounded-lg overflow-hidden z-[100] ${collapsed ? 'w-0' : ''}`}>
           <Sidebar collapsed={collapsed} className={`transition-all duration-300 h-[calc(100vh-1rem)] w-[270px]`}>
             <Menu>
@@ -101,14 +117,12 @@ function LeftBar({
                     </button>
                   </div>
 
-                  {/* Дерево район → муниципалитет → адрес */}
                   <div className="h-full pr-2 bg-white">
                     <ul>
                       {districts.map((district) => {
                         const isDistOpen = expandedNodes[district] ?? false;
                         return (
                           <li key={district} className="mb-2">
-                            {/* Шапка района */}
                             <a
                               href="#"
                               onClick={(e) => {
@@ -137,38 +151,44 @@ function LeftBar({
                               {district}
                             </a>
 
-                            {/* Список муниципалитетов */}
                             <ul className={`ml-4 !visible ${isDistOpen ? "" : "hidden"}`}>
                               {municipalDistricts[district]?.map((municipal) => {
                                 const isMunOpen = expandedNodes[municipal] ?? false;
                                 return (
                                   <li key={municipal} className="mb-2">
-                                    <a
-                                      href="#"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        handleMunicipalClick(municipal);
-                                      }}
-                                      className="flex items-center px-2"
-                                    >
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth="2.5"
-                                        stroke="currentColor"
-                                        className="h-4 w-4 me-1"
-                                        style={{
-                                          transform: isMunOpen ? "rotate(90deg)" : "rotate(0deg)",
-                                          transition: "transform 0.2s",
+                                    <label className="flex items-center px-2 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedMunicipals.includes(municipal)}
+                                        onChange={() => handleMunicipalToggle(municipal)}
+                                        className="mr-2 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                                      />
+                                      <div 
+                                        className="flex items-center flex-1"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          toggleExpand(municipal);
+                                          //handleMunicipalToggle(municipal)
                                         }}
                                       >
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                      </svg>
-                                      {municipal}
-                                    </a>
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          strokeWidth="2.5"
+                                          stroke="currentColor"
+                                          className="h-4 w-4 me-1"
+                                          style={{
+                                            transform: isMunOpen ? "rotate(90deg)" : "rotate(0deg)",
+                                            transition: "transform 0.2s",
+                                          }}
+                                        >
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                        {municipal}
+                                      </div>
+                                    </label>
 
-                                    {/* Список адресов */}
                                     <ul className={`ml-4 !visible ${isMunOpen ? "" : "hidden"}`}>
                                       {houseAddresses[municipal]?.map((address) => (
                                         <li key={address} className="px-2">
