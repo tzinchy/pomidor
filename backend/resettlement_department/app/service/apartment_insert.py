@@ -1,11 +1,11 @@
-import psycopg2
-import pandas as pd
-import numpy as np
-from datetime import datetime
-from core.config import settings
 import re
-from psycopg2.extras import execute_values
+from datetime import datetime
 
+import numpy as np
+import pandas as pd
+import psycopg2
+from core.config import settings
+from psycopg2.extras import execute_values
 
 district_mapping = {
     "Восточный АО": "ВАО",
@@ -896,6 +896,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
     
 def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
     try:
+        print(new_apart_df.columns)
         global district_mapping
         connection = None
         columns_name = {
@@ -917,6 +918,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             "РСМ, Кад номер, комната": "room_kad_number",
             "К_Инв/к": "for_special_needs_marker",
             "К_№ подъезда": "entrance_number",
+            "Идентификатор площади": "area_id",
         }
         new_apart_df.rename(
             columns=columns_name,
@@ -929,15 +931,13 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
         new_apart_df["for_special_needs_marker"] = (
             new_apart_df["for_special_needs_marker"].map(special_needs_mapping).fillna(0)
         )
-        new_apart_df["new_apart_id"] = new_apart_df["new_apart_id"].astype("Int64")
-        new_apart_df["floor"] = new_apart_df["floor"].astype("Int64")
+
+        int_columns = ["new_apart_id", "floor", "building_id", "apart_number", "un_kv", "room_count", "area_id"]
+        for col in int_columns:
+            new_apart_df[col] = new_apart_df[col].astype("Int64")
         new_apart_df["total_living_area"] = new_apart_df["total_living_area"].astype(float)
         new_apart_df["full_living_area"] = new_apart_df["full_living_area"].astype(float)
         new_apart_df["living_area"] = new_apart_df["living_area"].astype(float)
-        new_apart_df["building_id"] = new_apart_df["building_id"].astype("Int64")
-        new_apart_df["apart_number"] = new_apart_df["apart_number"].astype("Int64")
-        new_apart_df["un_kv"] = new_apart_df["un_kv"].astype("Int64")
-        new_apart_df["room_count"] = new_apart_df["room_count"].astype("Int64")
 
         new_apart_df['district'] = new_apart_df['district'].map(district_mapping).fillna(new_apart_df['district'])
 
