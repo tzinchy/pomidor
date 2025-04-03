@@ -27,7 +27,7 @@ FROM (
         SELECT 1
         FROM clear_data
         WHERE clear_data.affair_id = old_apart.affair_id
-    )
+    ) and rsm_status <> 'снято'
     GROUP BY house_address, room_count
     ORDER BY room_count
 ) AS subquery

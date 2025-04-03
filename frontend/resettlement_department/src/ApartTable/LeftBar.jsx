@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Sidebar, Menu } from 'react-pro-sidebar';
 
 function LeftBar({
@@ -23,12 +23,38 @@ function LeftBar({
     setRowSelection
   }) {
 
+    const [selectedAddresses, setSelectedAddresses] = useState([]);
+    const [currentMunicipal, setCurrentMunicipal] = useState(null);
+
     const toggleExpand = (key) => {
         setExpandedNodes((prev) => ({
           ...prev,
           [key]: !prev[key],
         }));
       };
+
+    const handleAddressToggle = (address, municipal) => {
+      const newSelectedAddresses = selectedAddresses.includes(address)
+        ? selectedAddresses.filter(addr => addr !== address)
+        : [...selectedAddresses, address];
+      
+      setSelectedAddresses(newSelectedAddresses);
+      
+      // Передаем выбранные адреса и текущий муниципалитет в fetchApartments
+      fetchApartments(newSelectedAddresses.length > 0 ? newSelectedAddresses : null, municipal);
+      setRowSelection({});
+    };
+
+    const handleMunicipalClick = (municipal) => {
+      toggleExpand(municipal);
+      setLastSelectedMunicipal(municipal);
+      setLastSelectedAddres(null);
+      setCurrentMunicipal(municipal);
+      setSelectedAddresses([]); // Сбрасываем выбранные адреса при смене муниципалитета
+      fetchHouseAddresses(municipal);
+      fetchApartments(null, municipal);
+      setRowSelection({});
+    };
 
     return (
       <div className="relative h-[100vh-1rem]s ">
@@ -40,13 +66,29 @@ function LeftBar({
                 <>
                   <div className="flex justify-around mb-4">
                     <button
-                      onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("OldApart"); setLoading(true); setFilters({}); setRowSelection({});}}
+                      onClick={() => {
+                        setIsDetailsVisible(false); 
+                        setSelectedRow(false); 
+                        setApartType("OldApart"); 
+                        setLoading(true); 
+                        setFilters({}); 
+                        setRowSelection({});
+                        setSelectedAddresses([]);
+                      }}
                       className={`p-8 py-4 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Семьи
                     </button>
                     <button
-                      onClick={() => {setIsDetailsVisible(false); setSelectedRow(false); setApartType("NewApartment"); setLoading(true); setFilters({}); setRowSelection({});}}
+                      onClick={() => {
+                        setIsDetailsVisible(false); 
+                        setSelectedRow(false); 
+                        setApartType("NewApartment"); 
+                        setLoading(true); 
+                        setFilters({}); 
+                        setRowSelection({});
+                        setSelectedAddresses([]);
+                      }}
                       className={`p-8 py-4 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Ресурс
@@ -66,17 +108,15 @@ function LeftBar({
                             <a
                               href="#"
                               onClick={(e) => {
-                                e.preventDefault(); // убираем переход по ссылке
+                                e.preventDefault();
                                 toggleExpand(district);
 
-                                // Ленивая загрузка муниципальных округов
                                 if (!municipalDistricts[district]) {
                                   fetchMunicipalDistricts(district);
                                 }
                               }}
                               className="flex items-center px-2"
                             >
-                              {/* Стрелка, поворачиваем при раскрытии */}
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
@@ -110,12 +150,7 @@ function LeftBar({
                                       href="#"
                                       onClick={(e) => {
                                         e.preventDefault();
-                                        toggleExpand(municipal);
-                                        setLastSelectedMunicipal(municipal);
-                                        setLastSelectedAddres(null);
-                                        fetchHouseAddresses(municipal);
-                                        fetchApartments(null, municipal);
-                                        setRowSelection({});
+                                        handleMunicipalClick(municipal);
                                       }}
                                       className="flex items-center px-2"
                                     >
@@ -153,19 +188,15 @@ function LeftBar({
                                           key={address}
                                           className="px-2"
                                         >
-                                          <a
-                                            href="#"
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              // По клику грузим квартиры этого адреса
-                                              setLastSelectedAddres(address);
-                                              fetchApartments([address], municipal);
-                                              setRowSelection({});
-                                            }}
-                                            className="flex items-center px-2"
-                                          >
-                                            {address}
-                                          </a>
+                                          <label className="flex items-center px-2 cursor-pointer">
+                                            <input
+                                              type="checkbox"
+                                              checked={selectedAddresses.includes(address)}
+                                              onChange={() => handleAddressToggle(address, municipal)}
+                                              className="mr-2 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                                            />
+                                            <span>{address}</span>
+                                          </label>
                                         </li>
                                       ))}
                                     </ul>
