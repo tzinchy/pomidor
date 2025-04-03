@@ -9,7 +9,7 @@ from schema.apartment import (
     SetNotesSchema,
 )
 from schema.status import StatusUpdate
-from service.test import rematch
+from service.rematch_service import rematch
 from depends import apartment_service
 
 router = APIRouter(prefix="/tables/apartment", tags=["Apartment Action"])

@@ -56,6 +56,7 @@ class OldApartRepository:
             WHERE municipal_district IN ({placeholders_str})
             ORDER BY house_address
         """
+        print(query, params)
         async with self.db() as session:
             result = await session.execute(text(query), params)
             return [row[0] for row in result if row[0] is not None]
