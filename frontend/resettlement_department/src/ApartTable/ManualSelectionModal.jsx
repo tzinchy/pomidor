@@ -11,7 +11,7 @@ import AdressCell from "./Cells/AdressCell";
 import PloshCell from "./Cells/PloshCell";
 import TryFilters from "./Filters/TryFilters";
 
-export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fetchApartments, getFilteData }) {
+export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fetchApartments, getFilteData, lastSelectedAddres, lastSelectedMunicipal }) {
   const [data, setData] = useState([]); // Состояние для данных таблицы
   const [filteredApartments, setFilteredApartments] = useState([]); // Отфильтрованные данные
   const [isLoading, setIsLoading] = useState(false); // Состояние для загрузки
@@ -296,7 +296,7 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
     } finally {
       setIsSubmitting(false);
       setRowSelection({}); // Сбрасываем выбор
-      fetchApartments();
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
     }
   };
 

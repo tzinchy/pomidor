@@ -254,21 +254,24 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
       // Применяем каждый фильтр
       Object.entries(filters).forEach(([filterType, selectedValues]) => {
-          if (selectedValues.length > 0) {
-              const filterKey = filterType.toLowerCase();
+        if (selectedValues.length > 0) {
+            const filterKey = filterType.toLowerCase();
 
-              filtered = filtered.filter((item) => {
-                  // Проверяем наличие "Не подобрано" в выбранных значениях
-                  const hasNotMatched = selectedValues.includes("Не подобрано");
-                  // Проверяем обычные значения статусов
-                  const hasRegularStatus = selectedValues.some(
-                      (val) => val !== "Не подобрано" && item[filterKey] === val
-                  );
+            filtered = filtered.filter((item) => {
+                // Проверяем наличие специальных значений в выбранных значениях
+                const hasSpecialValues = selectedValues.some(
+                    val => val === "Не подобрано" || val === "Свободна"
+                );
+                
+                // Проверяем обычные значения статусов
+                const hasRegularStatus = selectedValues.some(
+                    (val) => val !== "Не подобрано" && val !== "Свободна" && item[filterKey] === val
+                );
 
-                  // Если выбран "Не подобрано" - проверяем на null, иначе проверяем обычные статусы
-                  return (hasNotMatched && item[filterKey] === null) || hasRegularStatus;
-              });
-          }
+                // Если выбраны специальные значения - проверяем на null, иначе проверяем обычные статусы
+                return (hasSpecialValues && item[filterKey] === null) || hasRegularStatus;
+            });
+        }
       });
 
       setFilteredApartments(filtered);
@@ -651,11 +654,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             <div className="flex flex-1 overflow-hidden">
             {/* Таблица */}
             <div
-              className={` rounded-md h-full transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
+              className={` rounded-md h-[calc(100vh-3.67rem)] transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
             >
               <div
                 ref={tableContainerRef}
-                className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} overflow-auto rounded-md border h-[calc(100vh-1rem)] w-[calc(100% - 25px)] transition-all ease-in-out scrollbar-custom`}
+                className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} overflow-auto rounded-md border h-full w-[calc(100% - 25px)] transition-all ease-in-out scrollbar-custom`}
               >
                 <table className="text-sm w-full border-collapse backdrop-blur-md sticky top-0 z-30">
                   <thead className="border-b z-10 backdrop-blur-md shadow z-10">
