@@ -121,7 +121,6 @@ async def rematch(apart_ids):
                     floor_condition = 'AND True'
                 else: 
                     floor_condition = f"AND floor BETWEEN {decline_reason.get('min_floor')} and {decline_reason.get('max_rank')}"
-
                 new_apart_query = f'''SELECT new_apart_id
                         FROM public.new_apart
                         WHERE new_apart_id::text NOT IN 

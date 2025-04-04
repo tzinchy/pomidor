@@ -224,6 +224,8 @@ export default function ApartDetails({
         apartmentId={apartmentDetails.affair_id}
         fetchApartments={fetchApartments}
         getFilteData={getFilteData}
+        lastSelectedAddres={lastSelectedAddres}
+        lastSelectedMunicipal={lastSelectedMunicipal}
       />
     </div>
   );
