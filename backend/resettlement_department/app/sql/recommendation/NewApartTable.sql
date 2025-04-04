@@ -41,7 +41,7 @@ ranked_apartments AS (
     LEFT JOIN 
         clr_dt as o on o.new_apart_id = na.new_apart_id
     LEFT JOIN 
-        status s ON o.status_id = s.status_id
+        status s ON na.status_id = s.status_id
 )
 SELECT *
 FROM ranked_apartments
