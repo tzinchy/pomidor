@@ -238,3 +238,7 @@ class ApartService:
     async def set_consent_for_old_apart(self, affair_ids):
         await self.old_apart_repository.set_consent(affair_ids)
         return {"status": "done"}
+    
+    async def set_status_for_new_apart(self, new_apart_ids, status):
+        affected_rows = await self.new_apart_repository.update_status(new_apart_ids, status)
+        return {"status": "done", "affected_rows": affected_rows}

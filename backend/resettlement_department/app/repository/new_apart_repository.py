@@ -300,10 +300,23 @@ class NewApartRepository:
             else:
                 await session.commit()
                 return result.rowcount
-
-
-
-
-
+    
+    async def update_status(self, new_apart_ids, status):
+        async with self.db() as session:
+            try:
+                result = await session.execute(
+                    text(
+                        f"""
+                        UPDATE new_apart
+                        SET status_id = (SELECT status_id FROM status WHERE status = '{status.value}')
+                        WHERE new_apart_id IN ({", ".join(new_apart_ids)})
+                        """
+                    )
+                )
+                return result.rowcount
+            except Exception as e:
+                await session.rollback()
+                raise e
+            finally:
+                await session.commit()
             
-
