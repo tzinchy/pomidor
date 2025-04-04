@@ -1,16 +1,16 @@
-from fastapi import APIRouter, Query, HTTPException, Body
+from depends import apartment_service
+from fastapi import APIRouter, Body, HTTPException, Query
 from schema.apartment import (
     ApartTypeSchema,
-    RematchSchema,
+    DeclineReasonSchema,
     ManualMatchingSchema,
+    RematchSchema,
+    SetNotesSchema,
     SetPrivateStatusSchema,
     SetPrivateStatusSchemaWithValue,
-    DeclineReasonSchema,
-    SetNotesSchema,
 )
 from schema.status import StatusUpdate
 from service.rematch_service import rematch
-from depends import apartment_service
 
 router = APIRouter(prefix="/tables/apartment", tags=["Apartment Action"])
 
@@ -102,11 +102,15 @@ async def set_notes(
 ):
     return await apartment_service.set_notes(apart_id, notes.notes, apart_type)
 
+
 @router.patch("/set_private")
-async def set_private_for_new_aparts(set_private_status: SetPrivateStatusSchemaWithValue):
+async def set_private_for_new_aparts(
+    set_private_status: SetPrivateStatusSchemaWithValue,
+):
     return await apartment_service.set_private_for_new_aparts(
         set_private_status.new_apart_ids, status=set_private_status.is_private
     )
+
 
 @router.patch("/set_private_true")
 async def set_private_for_new_aparts_true(new_aparts_ids: SetPrivateStatusSchema):
@@ -136,3 +140,7 @@ async def update_declined_reason(
         notes=decline_reason.notes,
     )
 
+
+@router.post("/set_consent")
+async def set_consent(affair_ids: list[str]):
+    return await apartment_service.set_consent_for_old_apart(affair_ids)

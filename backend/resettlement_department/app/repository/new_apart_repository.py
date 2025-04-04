@@ -295,7 +295,7 @@ class NewApartRepository:
                     {"entrance_number": entrance_number}
                 )
             except Exception as e:
-                session.rollback()
+                await session.rollback()
                 raise e
             else:
                 await session.commit()
