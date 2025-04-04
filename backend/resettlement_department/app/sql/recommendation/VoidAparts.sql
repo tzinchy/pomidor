@@ -34,7 +34,7 @@ ranked_apartments AS (
 		for_special_needs_marker,
         ROW_NUMBER() OVER (
             PARTITION BY na.new_apart_id 
-            ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at ASC
+            ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at DESC
         ) AS rn
     FROM 
         new_apart na
