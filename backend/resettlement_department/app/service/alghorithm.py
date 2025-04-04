@@ -767,6 +767,7 @@ def match_new_apart_to_family_batch(
                                         (df_new_apart["total_living_area"] >= old_apart["total_living_area"]) &
                                         (df_new_apart["living_area"] >= old_apart["living_area"]) &
                                         (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"]) &
+                                        (df_new_apart["status_id"] not in (12, 13)) &
                                         ((df_new_apart["full_living_area"] - sap["full_living_area"]) <= delta[i])
                                     ].sort_values(by="floor", ascending=True)
 
@@ -778,6 +779,7 @@ def match_new_apart_to_family_batch(
                                             (df_new_apart["full_living_area"] >= old_apart["full_living_area"])  &
                                             (df_new_apart["total_living_area"] >= old_apart["total_living_area"]) &
                                             (df_new_apart["living_area"] >= old_apart["living_area"]) &
+                                            (df_new_apart["status_id"] not in (12, 13)) &
                                             (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"])
                                         ]
 
@@ -803,6 +805,7 @@ def match_new_apart_to_family_batch(
                                     (df_new_apart["total_living_area"] >= old_apart["total_living_area"])  &
                                     (df_new_apart["living_area"] >= old_apart["living_area"])  &
                                     (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"])  &
+                                    (df_new_apart["status_id"] not in (12, 13)) &
                                     (df_new_apart["floor"] >= (old_apart["min_floor"])) & 
                                     (df_new_apart["floor"] <= (old_apart["max_floor"]))
                                 ]
@@ -815,6 +818,7 @@ def match_new_apart_to_family_batch(
                                         (df_new_apart["full_living_area"] >= old_apart["full_living_area"]) & 
                                         (df_new_apart["total_living_area"] >= old_apart["total_living_area"]) & 
                                         (df_new_apart["living_area"] >= old_apart["living_area"]) & 
+                                        (df_new_apart["status_id"] not in (12, 13)) &
                                         (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"]) &
                                         floor_condition
                                     ]
@@ -825,6 +829,7 @@ def match_new_apart_to_family_batch(
                                             (df_new_apart["full_living_area"] >= old_apart["full_living_area"]) &
                                             (df_new_apart["total_living_area"] >= old_apart["total_living_area"]) &
                                             (df_new_apart["living_area"] >= old_apart["living_area"])&
+                                            (df_new_apart["status_id"] not in (12, 13)) &
                                             (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"])
                                             ]
 

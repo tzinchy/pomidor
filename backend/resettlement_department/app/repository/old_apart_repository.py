@@ -489,5 +489,40 @@ class OldApartRepository:
             except Exception as error:
                 await session.rollback()
                 raise error
+            
+            
+    async def set_consent(self, old_apart_ids):
+        async with self.db() as session:
+            try:
+                await session.execute(
+                    text(f"""
+                        UPDATE offer
+                        SET
+                            status_id = 1,
+                            new_aparts = (
+                                SELECT
+                                    COALESCE(jsonb_object_agg(key, jsonb_set(value, '{{status_id}}', '1'::jsonb)), '{{}}'::jsonb)
+                                FROM
+                                    jsonb_each(COALESCE(offer.new_aparts, '{{}}'::jsonb))
+                            ),
+                            updated_at = NOW()
+                        WHERE
+                            offer_id IN (
+                                SELECT
+                                    MAX(offer_id)
+                                FROM
+                                    offer
+                                WHERE
+                                    affair_id IN ({", ".join(old_apart_ids)})
+                                GROUP BY
+                                    affair_id
+                            )
+                    """),
+                )
+            except Exception as e:
+                await session.rollback()
+                raise e
+            else:
+                await session.commit()
 
 

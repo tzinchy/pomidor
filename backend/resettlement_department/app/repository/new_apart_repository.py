@@ -295,15 +295,29 @@ class NewApartRepository:
                     {"entrance_number": entrance_number}
                 )
             except Exception as e:
-                session.rollback()
+                await session.rollback()
                 raise e
             else:
                 await session.commit()
                 return result.rowcount
-
-
-
-
-
+    
+    async def update_status(self, new_apart_ids: list[str], status):
+        async with self.db() as session:
+            try:
+                id_placeholder = ", ".join(new_apart_ids)
+                result = await session.execute(
+                    text(
+                        f"""
+                        UPDATE new_apart
+                        SET status_id = (SELECT status_id FROM status WHERE status = '{status}')
+                        WHERE new_apart_id IN ({id_placeholder})
+                        """
+                    )
+                )
+                return result.rowcount
+            except Exception as e:
+                await session.rollback()
+                raise e
+            finally:
+                await session.commit()
             
-
