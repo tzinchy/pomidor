@@ -137,6 +137,7 @@ async def rematch(apart_ids):
                         AND new_apart_id::text NOT IN 
                             (SELECT key FROM public.offer, json_each_text(new_aparts::json) AS j(key, value) 
                             WHERE affair_id = :apart_id)
+                        AND status_id NOT IN (12, 13)
                         {approved_apart_list_and_awaited_condition}
                         {floor_condition}
                         ORDER BY rank, (full_living_area + living_area) 
@@ -161,6 +162,7 @@ async def rematch(apart_ids):
                                 (SELECT key FROM public.offer, json_each_text(new_aparts::json) AS j(key, value) 
                                 WHERE affair_id = :apart_id)
                             {approved_apart_list_and_awaited_condition}
+                            AND status_id NOT IN (12, 13)
                             ORDER BY rank, (full_living_area + living_area) 
                             LIMIT 1'''
                     res = await session.execute(text(new_apart_query), decline_reason)
@@ -174,7 +176,7 @@ async def rematch(apart_ids):
                     text("""
                     INSERT INTO offer (affair_id, new_aparts, status_id) 
                     VALUES (:apart_id, (:aparts)::jsonb, 7);
-                """),
+                    """),
                     {"apart_id": apart_info.get('affair_id'), "aparts": aparts_json},
                 )
                 await session.commit()
