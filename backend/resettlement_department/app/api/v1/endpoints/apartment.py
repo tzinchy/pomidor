@@ -81,9 +81,9 @@ async def change_status(
 @router.post("/change_status_for_new_apart")
 async def change_status_for_new_apart(
     new_apart_ids: list[str] = Body(..., description="Список new_apart_id"),
-    new_status: Status = Query(..., description="Доступные статусы"),
+    new_status: Status = Body(..., description="Доступные статусы"),
 ):
-    return await apartment_service.set_status_for_new_apart(new_apart_ids, new_status)
+    return await apartment_service.set_status_for_new_apart(new_apart_ids, new_status.value)
 
 
 @router.post("/{apart_id}/{new_apart_id}/set_decline_reason")
