@@ -24,7 +24,7 @@ class ApartService:
                 return await self.new_apart_repository.get_districts()
             else:
                 raise NotFoundException
-        except Exception as error: 
+        except Exception as error:
             raise HTTPException(detail=error, status_code=status.HTTP_409_CONFLICT)
 
     async def get_municipal_districts(self, apart_type: str, districts: List[str]):
@@ -103,14 +103,18 @@ class ApartService:
 
     async def get_apartment_by_id(self, apart_id: int, apart_type: str):
         if apart_type == ApartTypeSchema.OLD:
-            return await self.old_apart_repository.get_apartment_by_id(apart_id=apart_id)
-        elif apart_type == ApartTypeSchema.NEW: 
-            return await self.new_apart_repository.get_apartment_by_id(apart_id=apart_id)
+            return await self.old_apart_repository.get_apartment_by_id(
+                apart_id=apart_id
+            )
+        elif apart_type == ApartTypeSchema.NEW:
+            return await self.new_apart_repository.get_apartment_by_id(
+                apart_id=apart_id
+            )
 
     async def get_house_address_with_room_count(self, apart_type: str):
-        if apart_type == ApartTypeSchema.OLD: 
+        if apart_type == ApartTypeSchema.OLD:
             result = await self.old_apart_repository.get_house_address_with_room_count()
-        elif apart_type == ApartTypeSchema.NEW: 
+        elif apart_type == ApartTypeSchema.NEW:
             result = await self.new_apart_repository.get_house_address_with_room_count()
         formatted_result = []
         for address, room_counts in result:
@@ -136,21 +140,21 @@ class ApartService:
         )
 
     async def cancell_matching_for_apart(self, apart_id: int, apart_type: str):
-        if apart_type == ApartTypeSchema.OLD: 
+        if apart_type == ApartTypeSchema.OLD:
             return await self.old_apart_repository.cancell_matching_apart(
                 apart_id=apart_id
             )
-        elif apart_type == ApartTypeSchema.NEW: 
+        elif apart_type == ApartTypeSchema.NEW:
             return await self.new_apart_repository.cancell_matching_apart(
                 apart_id=apart_id
             )
-        else: 
+        else:
             raise NotFoundException
 
     async def update_status_for_apart(
         self, apart_id: int, new_apart_id: int, status: str, apart_type: str
     ):
-        if apart_type == ApartTypeSchema.OLD: 
+        if apart_type == ApartTypeSchema.OLD:
             return await self.old_apart_repository.update_status_for_apart(
                 apart_id=apart_id, new_apart_id=new_apart_id, status=status
             )
@@ -189,8 +193,10 @@ class ApartService:
     async def set_notes(self, apart_id: int, notes: str, apart_type: str):
         if apart_type == ApartTypeSchema.OLD:
             return await self.old_apart_repository.set_notes(apart_id, notes=notes)
-        elif apart_type == ApartTypeSchema.NEW: 
-            return await self.new_apart_repository.set_notes(apart_id=apart_id, notes=notes)
+        elif apart_type == ApartTypeSchema.NEW:
+            return await self.new_apart_repository.set_notes(
+                apart_id=apart_id, notes=notes
+            )
         else:
             raise NotFoundException
 
@@ -216,14 +222,19 @@ class ApartService:
             apartment_layout,
             notes,
         )
-    
+
     async def get_entrance_ranges(self, address):
         entrance_number = await self.new_apart_repository.get_entrance_ranges(address)
         if not entrance_number:
             raise NotFoundException
         return entrance_number
-    
+
     async def set_entrance_number_for_many(self, new_apart_ids, entrance_number):
-        affected_rows = await self.new_apart_repository.update_entrance_number_for_many(new_apart_ids, entrance_number)
+        affected_rows = await self.new_apart_repository.update_entrance_number_for_many(
+            new_apart_ids, entrance_number
+        )
         return {"affected_rows": affected_rows, "status": "done"}
 
+    async def set_consent_for_old_apart(self, affair_ids):
+        await self.old_apart_repository.set_consent(affair_ids)
+        return {"status": "done"}
