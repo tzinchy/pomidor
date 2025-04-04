@@ -9,14 +9,16 @@ const SubmitButton = ({ onResponse, type }) => {
 
   const handleSubmit = async () => {
     try {
-      // Проверяем, есть ли выбранные элементы
-      const hasSelectedItems = Object.values(selectedItems).some(
-        items => items && items.length > 0
-      );
-      
-      if (!hasSelectedItems) {
-        setErrorMessage('Пожалуйста, выберите хотя бы один пункт');
-        return;
+      // Пропускаем проверку выбранных элементов только для type === 'last'
+      if (type !== 'last') {
+        const hasSelectedItems = Object.values(selectedItems).some(
+          items => items && items.length > 0
+        );
+        
+        if (!hasSelectedItems) {
+          setErrorMessage('Пожалуйста, выберите хотя бы один пункт');
+          return;
+        }
       }
       
       setErrorMessage(null);
@@ -27,20 +29,19 @@ const SubmitButton = ({ onResponse, type }) => {
         "new_apartment_house_address": [],
         "is_date": type === 'last' ? true : false
       };
-      console.log('selectedItemsselectedItemsselectedItems', selectedItems)
       
-      // Проходим по выбранным элементам и добавляем только адреса в соответствующие массивы
-      Object.keys(selectedItems).forEach(dropdownId => {
-        const addresses = selectedItems[dropdownId].map(item => item.address); // Получаем только адреса
-        const new_addresses = selectedItems[dropdownId].map(item => [item.address, item.sections.map(x => x.range)]); // Получаем только адреса
-        if (dropdownId.includes('old_apartment_house_address')) {
-          requestBody["old_apartment_house_address"] = [...requestBody["old_apartment_house_address"], ...addresses];
-        } else if (dropdownId.includes('new_apartment_house_address')) {
-          requestBody["new_apartment_house_address"] = [...requestBody["new_apartment_house_address"], selectedItems["new_apartment_house_address"]];
-        }
-      });
-      
-      console.log(requestBody);
+      // Добавляем адреса только если type не 'last' или есть выбранные элементы
+      if (type !== 'last' || Object.values(selectedItems).some(items => items && items.length > 0)) {
+        Object.keys(selectedItems).forEach(dropdownId => {
+          const addresses = selectedItems[dropdownId].map(item => item.address);
+          
+          if (dropdownId.includes('old_apartment_house_address')) {
+            requestBody["old_apartment_house_address"] = [...requestBody["old_apartment_house_address"], ...addresses];
+          } else if (dropdownId.includes('new_apartment_house_address')) {
+            requestBody["new_apartment_house_address"] = [...requestBody["new_apartment_house_address"], selectedItems["new_apartment_house_address"]];
+          }
+        });
+      }
       
       const response = await fetch(`${HOSTLINK}/fisrt_matching/matching`, {
         method: 'POST',

@@ -225,7 +225,7 @@ class OldApartRepository:
                     if len(new_apart_ids)!=1:
                         session.rollback()
                         raise Exception
-                print('а выполнение уде тут')
+                print('а выполнение уже тут')
                 check_exist = await session.execute(text('''
                     SELECT 1 FROM offer WHERE affair_id = :old_apart_id LIMIT 1;
                 '''), {'old_apart_id' : old_apart_id})

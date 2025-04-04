@@ -50,7 +50,7 @@ export default function ApartDetails({
 
       const result = await response.json();
       console.log("Подборы отменены:", result.message);
-      fetchApartments();
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal,);
     } catch (error) {
       console.error("Ошибка:", error);
       alert("Не удалось отменить подборы. Попробуйте снова.");
