@@ -52,7 +52,7 @@ def match_new_apart_to_family_batch(
 						old_apart o 
                     LEFT JOIN 
                         family_member fm ON o.kpu_number = fm.kpu_number 
-                    WHERE 1=1 and
+                    WHERE o.rsm_status <> 'снято' and
                         o.affair_id NOT IN (
                             SELECT affair_id
                             FROM  offer
@@ -125,7 +125,10 @@ def match_new_apart_to_family_batch(
                     na.for_special_needs_marker                
                 FROM 
                     public.new_apart na
-                WHERE 1=1
+                WHERE new_apart_id::text NOT IN 
+                            (SELECT key FROM public.offer, 
+                            json_each_text(new_aparts::json) AS j(key, value) 
+                            WHERE (value::json->>'status_id')::int != 2)
                 """
 
                 new_apart_query_params = []
@@ -147,6 +150,12 @@ def match_new_apart_to_family_batch(
                         address = address_data.get('address')
                         sections = address_data.get('sections', [])
                         
+                        # Если нет секций, добавляем просто условие по адресу
+                        if not sections:
+                            address_conditions.append("(na.house_address = %s)")
+                            new_apart_query_params.append(address)
+                            continue
+                            
                         # Для каждого адреса создаем условия по секциям и диапазонам
                         section_conditions = []
                         
@@ -182,7 +191,11 @@ def match_new_apart_to_family_batch(
                         # Объединяем условия для секций через OR
                         if section_conditions:
                             address_conditions.append(f"({' OR '.join(section_conditions)})")
-                    
+                        else:
+                            # Если были секции, но все оказались некорректными, все равно добавляем адрес
+                            address_conditions.append("(na.house_address = %s)")
+                            new_apart_query_params.append(address)
+
                     # Объединяем условия для адресов через OR
                     if address_conditions:
                         new_apart_query += " AND (" + " OR ".join(address_conditions) + ")"
@@ -203,7 +216,7 @@ def match_new_apart_to_family_batch(
                 new_apart_query += " ORDER BY room_count ASC, (full_living_area + living_area), floor, living_area ASC, full_living_area ASC, total_living_area ASC"
 
                 print("Final query:", new_apart_query)
-                print("Query params:", new_apart_query_params)
+                print("New Apart Query params:", new_apart_query_params)
 
                 cursor.execute(new_apart_query, new_apart_query_params)
                 new_aparts = cursor.fetchall()
