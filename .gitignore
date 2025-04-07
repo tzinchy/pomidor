@@ -1,6 +1,7 @@
 backend/.env 
 backend/__pycache__
 backend/.venv 
+build/*
 .env
 frontend/resettlement_department/.env 
 __pycache__ 
@@ -13,3 +14,5 @@ backend/service/__pycache__
 backend/auth/__pycache__
 ../../resettlement_department/app/app_container.log
 .DS_Store
+frontend/resettlement_department/build/
+frontend/resettlement_department/build1/
