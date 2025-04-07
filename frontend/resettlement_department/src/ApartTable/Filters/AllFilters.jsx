@@ -71,7 +71,7 @@ export default function AllFilters({
                     {/* Поиск (если раскомментировать) */}
                     {/*<SearchTry placeholder={'Поиск по адресу'} setSearchQuery={setSearchQuery} />*/}
                     
-                    {/* Фильтр АО */}
+                    {/* Фильтр АО 
                     <div className="flex-shrink-0">
                         <DropdownFilter 
                             item={'АО'} 
@@ -81,9 +81,9 @@ export default function AllFilters({
                             isFiltersReset={filtersResetFlag} 
                             filters={filters}
                         />
-                    </div>
+                    </div>*/}
                     
-                    {/* Фильтр Район */}
+                    {/* Фильтр Район 
                     <div className="flex-shrink-0">
                         <MunicipalDropdownFilter
                             item={'Район'} 
@@ -94,7 +94,7 @@ export default function AllFilters({
                             filters={filters}
                             showAddresses={false}
                         />
-                    </div>
+                    </div>*/}
                     
                     {/* Фильтр Дом */}
                     <div className="flex-shrink-0">
