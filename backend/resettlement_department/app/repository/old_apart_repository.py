@@ -5,6 +5,7 @@ from core.config import RECOMMENDATION_FILE_PATH
 from typing import Optional
 import json
 from sqlalchemy.orm import sessionmaker
+from typing import List
 
 class OldApartRepository:
     def __init__(self, session_maker: sessionmaker):
@@ -12,16 +13,13 @@ class OldApartRepository:
 
     async def get_districts(self) -> list[str]:
         async with self.db() as session:
-            query = '''SELECT DISTINCT district 
+            query = """SELECT DISTINCT district 
                     FROM old_apart
-                    ORDER BY district'''
+                    ORDER BY district"""
             result = await session.execute(text(query))
             return [row[0] for row in result if row[0] is not None]
 
-
-    async def get_municipal_district(
-        self, districts: list[str]
-    ) -> list[str]:
+    async def get_municipal_district(self, districts: list[str]) -> list[str]:
         params = {}
         placeholders = []
         for i, district in enumerate(districts):
@@ -35,14 +33,11 @@ class OldApartRepository:
             WHERE district IN ({placeholders_str})
             ORDER BY municipal_district
         """
-        async with self.db() as session:         
+        async with self.db() as session:
             result = await session.execute(text(query), params)
             return [row[0] for row in result if row[0] is not None]
 
-
-    async def get_house_addresses(
-        self, municipal_districts: list[str]
-    ) -> list[str]:
+    async def get_house_addresses(self, municipal_districts: list[str]) -> list[str]:
         params = {}
         placeholders = []
         for i, municipal in enumerate(municipal_districts):
@@ -60,7 +55,6 @@ class OldApartRepository:
         async with self.db() as session:
             result = await session.execute(text(query), params)
             return [row[0] for row in result if row[0] is not None]
-
 
     async def get_district_chain(self):
         async with self.db() as session:
@@ -97,7 +91,6 @@ class OldApartRepository:
         is_queue: bool = None,
         is_private: bool = None,
     ) -> list[dict]:
-
         if area_type not in ["full_living_area", "total_living_area", "living_area"]:
             raise ValueError(f"Invalid area type: {area_type}")
 
@@ -160,19 +153,22 @@ class OldApartRepository:
 
         where_clause = " AND ".join(conditions)
 
-        query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/OldApartTable.sql")
- 
+        query = await async_read_sql_query(
+            f"{RECOMMENDATION_FILE_PATH}/OldApartTable.sql"
+        )
+
         query = f"{query} WHERE {where_clause}"
         async with self.db() as session:
             result = await session.execute(text(query), params)
 
             return [row._mapping for row in result]
-            
-    async def get_apartment_by_id(self, apart_id: int) -> dict:
 
+    async def get_apartment_by_id(self, apart_id: int) -> dict:
         params = {"apart_id": apart_id}
 
-        query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/OldApartById.sql")
+        query = await async_read_sql_query(
+            f"{RECOMMENDATION_FILE_PATH}/OldApartById.sql"
+        )
 
         async with self.db() as session:
             result = await session.execute(text(query), params)
@@ -190,7 +186,6 @@ class OldApartRepository:
         async with self.db() as session:
             result = await session.execute(text(query))
             return result.fetchall()
-
 
     async def switch_apartment(self, first_apart_id, second_apart_id):
         query = "SELECT swap_new_aparts(:first_apart_id, :second_apart_id)"
@@ -210,26 +205,32 @@ class OldApartRepository:
                 else:
                     return {"message": "No rows affected"}
             except Exception as error:
-                session.rollback() 
+                session.rollback()
                 raise error
-            
+
     async def manual_matching(self, old_apart_id, new_apart_ids):
         async with self.db() as session:
             try:
                 aparts = {}
-                type_of_user = await session.execute(text(
-                    '''SELECT is_queue FROM old_apart WHERE affair_id = :old_apart_id LIMIT 1;'''
-                ), {'old_apart_id' : old_apart_id})
+                type_of_user = await session.execute(
+                    text(
+                        """SELECT is_queue FROM old_apart WHERE affair_id = :old_apart_id LIMIT 1;"""
+                    ),
+                    {"old_apart_id": old_apart_id},
+                )
                 is_queue = type_of_user.fetchone()[0]
-                if is_queue == 0: 
-                    if len(new_apart_ids)!=1:
+                if is_queue == 0:
+                    if len(new_apart_ids) != 1:
                         session.rollback()
                         raise Exception
-                print('а выполнение уже тут')
-                check_exist = await session.execute(text('''
+                print("а выполнение уже тут")
+                check_exist = await session.execute(
+                    text("""
                     SELECT 1 FROM offer WHERE affair_id = :old_apart_id LIMIT 1;
-                '''), {'old_apart_id' : old_apart_id})
-                
+                """),
+                    {"old_apart_id": old_apart_id},
+                )
+
                 if check_exist.fetchone() is not None:
                     check_approved_query = text("""
                         SELECT jsonb_object_agg(key::text, value) 
@@ -244,9 +245,7 @@ class OldApartRepository:
                     result = await session.execute(
                         check_approved_query, {"apart_id": old_apart_id}
                     )
-                    aparts = (
-                        result.scalar() or {}
-                    ) 
+                    aparts = result.scalar() or {}
                     await session.execute(
                         text("""
                         WITH last_offer AS (
@@ -281,11 +280,12 @@ class OldApartRepository:
             except Exception as error:
                 await session.rollback()
                 raise error
-   
 
     async def get_void_aparts_for_apartment(self, apart_id):
         async with self.db() as session:
-            query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/VoidAparts.sql")
+            query = await async_read_sql_query(
+                f"{RECOMMENDATION_FILE_PATH}/VoidAparts.sql"
+            )
             result = await session.execute(text(query), {"apart_id": apart_id})
             return [row._mapping for row in result]
 
@@ -304,9 +304,7 @@ class OldApartRepository:
                 session.rollback()
                 raise error
 
-    async def update_status_for_apart(
-        self, apart_id, new_apart_id, status
-    ):
+    async def update_status_for_apart(self, apart_id, new_apart_id, status):
         async with self.db() as session:
             try:
                 query = text(
@@ -413,7 +411,7 @@ class OldApartRepository:
     async def set_notes(self, apart_id: int, notes: str):
         async with self.db() as session:
             try:
-                notes_list = notes.split(';')
+                notes_list = notes.split(";")
                 rsm_note = notes_list.pop(0)
                 notes = ";".join(notes_list)
                 await session.execute(
@@ -489,19 +487,32 @@ class OldApartRepository:
             except Exception as error:
                 await session.rollback()
                 raise error
-            
-            
-    async def set_consent(self, old_apart_ids):
+
+    async def set_status_for_many(self, old_apart_ids: List[int], status: str):
         async with self.db() as session:
             try:
+                affair_ids = ', '.join(map(str, old_apart_ids))
                 await session.execute(
                     text(f"""
+                        WITH get_status_id AS (
+                            SELECT status_id FROM status WHERE status = :status
+                        )
                         UPDATE offer
                         SET
-                            status_id = 1,
+                            status_id = (select status_id FROM get_status_id),
                             new_aparts = (
                                 SELECT
-                                    COALESCE(jsonb_object_agg(key, jsonb_set(value, '{{status_id}}', '1'::jsonb)), '{{}}'::jsonb)
+                                    COALESCE(
+                                        jsonb_object_agg(
+                                            key, 
+                                            jsonb_set(
+                                                value, 
+                                                '{{status_id}}', 
+                                                to_jsonb((select status_id FROM get_status_id))
+                                            )
+                                        ), 
+                                        '{{}}'::jsonb
+                                    )
                                 FROM
                                     jsonb_each(COALESCE(offer.new_aparts, '{{}}'::jsonb))
                             ),
@@ -513,16 +524,13 @@ class OldApartRepository:
                                 FROM
                                     offer
                                 WHERE
-                                    affair_id IN ({", ".join(old_apart_ids)})
+                                    affair_id IN ({affair_ids})
                                 GROUP BY
                                     affair_id
                             )
-                    """),
+                    """), {'status': status},
                 )
+                await session.commit()
             except Exception as e:
                 await session.rollback()
                 raise e
-            else:
-                await session.commit()
-
-

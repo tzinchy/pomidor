@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
+from typing import Optional, List
 from enum import Enum
-
+from schema.status import Status
 
 class FamilyStructureSchema(BaseModel):
     affair_id: int = Field(..., description="ID дела")
@@ -43,9 +43,9 @@ class ManualMatchingSchema(BaseModel):
 class SetPrivateStatusSchema(BaseModel):
     new_apart_ids : List[int]
 
-class SetPrivateStatusSchemaWithValue(BaseModel):
-    new_apart_ids : List[int]
-    is_private : bool
+class SetStatusForNewAparts(BaseModel):
+    apart_ids : List[int]
+    status : Status
 
 class DeclineReasonSchema(BaseModel):
     min_floor: int = 0
@@ -56,7 +56,7 @@ class DeclineReasonSchema(BaseModel):
     notes: Optional[str] = None
 
 class BaseApartmentTableSchema(BaseModel):
-    offer_id : Optional[int] = None,
+    offer_id : Optional[int] = None,         
     house_address : Optional[str] = None,
     apart_number : Optional[str] = None,
     district: Optional[str] = None,

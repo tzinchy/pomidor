@@ -6,10 +6,9 @@ from schema.apartment import (
     ManualMatchingSchema,
     RematchSchema,
     SetNotesSchema,
-    SetPrivateStatusSchema,
-    SetPrivateStatusSchemaWithValue,
+    SetStatusForNewAparts
 )
-from schema.status import StatusUpdate, Status
+from schema.status import Status
 from service.rematch_service import rematch
 
 router = APIRouter(prefix="/tables/apartment", tags=["Apartment Action"])
@@ -65,7 +64,7 @@ async def rematch_for_family(rematch_list: RematchSchema):
 async def change_status(
     apart_id: int,
     new_apart_id: int,
-    new_status: StatusUpdate = Body(..., description="Доступные статусы"),
+    new_status: Status = Body(..., description="Доступные статусы"),
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
 ):
     try:
@@ -76,14 +75,16 @@ async def change_status(
     except Exception as e:
         print(e)
         raise HTTPException(status_code=400, detail=str(e))
-    
+
 
 @router.post("/change_status_for_new_apart")
 async def change_status_for_new_apart(
     new_apart_ids: list[int] = Body(..., description="Список new_apart_id"),
     new_status: Status = Body(..., description="Доступные статусы"),
 ):
-    return await apartment_service.set_status_for_new_apart(new_apart_ids, new_status.value)
+    return await apartment_service.set_status_for_new_apart(
+        new_apart_ids, new_status.value
+    )
 
 
 @router.post("/{apart_id}/{new_apart_id}/set_decline_reason")
@@ -110,30 +111,6 @@ async def set_notes(
 ):
     return await apartment_service.set_notes(apart_id, notes.notes, apart_type)
 
-
-@router.patch("/set_private")
-async def set_private_for_new_aparts(
-    set_private_status: SetPrivateStatusSchemaWithValue,
-):
-    return await apartment_service.set_private_for_new_aparts(
-        set_private_status.new_apart_ids, status=set_private_status.is_private
-    )
-
-
-@router.patch("/set_private_true")
-async def set_private_for_new_aparts_true(new_aparts_ids: SetPrivateStatusSchema):
-    return await apartment_service.set_private_for_new_aparts(
-        new_aparts_ids.new_apart_ids, status=True
-    )
-
-
-@router.patch("/set_private_false")
-async def set_private_for_new_aparts_false(new_apart_ids: SetPrivateStatusSchema):
-    return await apartment_service.set_private_for_new_aparts(
-        new_aparts=new_apart_ids.new_apart_ids, status=False
-    )
-
-
 @router.patch("/decline_reason/{decline_reason_id}/update_declined_reason")
 async def update_declined_reason(
     decline_reason_id: int, decline_reason: DeclineReasonSchema
@@ -148,7 +125,12 @@ async def update_declined_reason(
         notes=decline_reason.notes,
     )
 
-
-@router.post("/set_consent")
-async def set_consent(affair_ids: list[str]):
-    return await apartment_service.set_consent_for_old_apart(affair_ids)
+@router.patch("set_status_for_many")
+async def set_consent(
+    apart_ids_and_status : SetStatusForNewAparts,
+    apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
+):
+    print(apart_ids_and_status.apart_ids, apart_ids_and_status.status.value)
+    return await apartment_service.set_status_for_many(
+        apart_ids_and_status.apart_ids, apart_ids_and_status.status.value, apart_type
+    )

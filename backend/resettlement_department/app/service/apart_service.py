@@ -1,11 +1,11 @@
 from typing import List, Optional
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status as http_status
 from handlers.httpexceptions import NotFoundException
 from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
 from schema.apartment import ApartTypeSchema
-
+from schema.status import Status
 
 class ApartService:
     def __init__(
@@ -25,7 +25,7 @@ class ApartService:
             else:
                 raise NotFoundException
         except Exception as error:
-            raise HTTPException(detail=error, status_code=status.HTTP_409_CONFLICT)
+            raise HTTPException(detail=error, status_code=http_status.HTTP_409_CONFLICT)
 
     async def get_municipal_districts(self, apart_type: str, districts: List[str]):
         try:
@@ -40,7 +40,7 @@ class ApartService:
             else:
                 raise NotFoundException
         except Exception as error:
-            raise HTTPException(detail=error, status_code=status.HTTP_409_CONFLICT)
+            raise HTTPException(detail=error, status_code=http_status.HTTP_409_CONFLICT)
 
     async def get_house_addresses(
         self, apart_type: str, municipal_districts: List[str]
@@ -54,7 +54,7 @@ class ApartService:
                 municipal_districts
             )
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
 
     async def get_apartments(
         self,
@@ -235,10 +235,22 @@ class ApartService:
         )
         return {"affected_rows": affected_rows, "status": "done"}
 
-    async def set_consent_for_old_apart(self, affair_ids):
-        await self.old_apart_repository.set_consent(affair_ids)
-        return {"status": "done"}
-    
-    async def set_status_for_new_apart(self, new_apart_ids, status):
-        affected_rows = await self.new_apart_repository.update_status(new_apart_ids, status)
-        return {"status": "done", "affected_rows": affected_rows}
+    async def set_status_for_many(self, apart_ids, status, apart_type):
+        '''
+        Конкретно данный сервис проставляет статус в offer(в jsonb тоже)
+        Либо резервирует новые квартиры
+        '''
+        try: 
+            if apart_type == ApartTypeSchema.OLD:
+                affected_rows = await self.old_apart_repository.set_status_for_many(apart_ids, status=status)
+            elif apart_type == ApartTypeSchema.NEW:
+                print(Status.RESERVE.value, Status.PRIVATE.value)
+                if status in (Status.RESERVE.value, Status.PRIVATE.value):
+
+                    affected_rows = await self.new_apart_repository.set_private_or_reserve_status_for_new_aparts(apart_ids, status=status)
+                else:
+                    raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
+            return {"status": "done", "affected_rows": affected_rows}
+        except Exception as e: 
+            print(e)
+            

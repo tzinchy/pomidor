@@ -301,10 +301,10 @@ class NewApartRepository:
                 await session.commit()
                 return result.rowcount
     
-    async def update_status(self, new_apart_ids: list[int], status):
+    async def set_private_or_reserve_status_for_new_aparts(self, new_apart_ids: list[int], status):
         async with self.db() as session:
             try:
-                id_placeholder = ", ".join(map(str, new_apart_ids))
+                id_placeholder = ', '.join(map(str, new_apart_ids))
                 result = await session.execute(
                     text(
                         f"""
