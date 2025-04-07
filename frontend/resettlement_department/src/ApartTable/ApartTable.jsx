@@ -306,6 +306,31 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     }
   };
 
+  const setStatusForMany = async (status) => {
+    const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+    console.log('setStatusForMany', apartmentIds, status, apartType)
+    
+    try {
+      await axios.patch(
+        `${HOSTLINK}/tables/apartment/set_status_for_many`,
+        { 
+          apart_ids: apartmentIds,
+          status: status 
+        },
+        { 
+          headers: { 'Content-Type': 'application/json' },
+          params: {
+            apart_type: apartType
+          }
+        }
+      );
+      
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+    } catch (error) {
+      console.error("Error setting status:", error.response?.data);
+    }
+  };
+
   const handleNotesSave = async (rowData, newNotes) => {
     try {
       await axios.patch(
@@ -560,50 +585,105 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
           {apartType === 'OldApart' ? (
             <Menu as="div" className="relative inline-block text-left z-[102]">
-              <div>
-                <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
-                  <MenuIcon />
-                </Menu.Button>
-              </div>
-              <Transition
-                as={Fragment}
-                enter="transition ease-out duration-100"
-                enterFrom="transform opacity-0 scale-95"
-                enterTo="transform opacity-100 scale-100"
-                leave="transition ease-in duration-75"
-                leaveFrom="transform opacity-100 scale-100"
-                leaveTo="transform opacity-0 scale-95"
+            <div>
+              <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
+                <MenuIcon />
+              </Menu.Button>
+            </div>
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
+            >
+              <Menu.Items 
+                className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                static // Добавляем static чтобы меню не закрывалось при взаимодействии с вложенными элементами
               >
-                <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                  <div className="px-1 py-1">
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={rematch}
+                <div className="px-1 py-1">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={rematch}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Переподбор
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={switchAparts}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Поменять квартиры
+                      </button>
+                    )}
+                  </Menu.Item>
+                  
+                  {/* Подменю статусов */}
+                  <Menu>
+                    {({ open }) => (
+                      <div className="relative">
+                        <Menu.Button
                           className={`${
-                            active ? 'bg-gray-100' : ''
-                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                            open ? 'bg-gray-100' : ''
+                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center`}
                         >
-                          Переподбор
-                        </button>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={switchAparts}
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                          <span>Изменить статус</span>
+                        </Menu.Button>
+                        
+                        <Transition
+                          show={open}
+                          as={Fragment}
+                          enter="transition ease-out duration-100"
+                          enterFrom="transform opacity-0 scale-95"
+                          enterTo="transform opacity-100 scale-100"
+                          leave="transition ease-in duration-75"
+                          leaveFrom="transform opacity-100 scale-100"
+                          leaveTo="transform opacity-0 scale-95"
                         >
-                          Поменять квартиры
-                        </button>
-                      )}
-                    </Menu.Item>
-                  </div>
-                </Menu.Items>
-              </Transition>
-            </Menu>
+                          <Menu.Items 
+                            static
+                            className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
+                          >
+                            <div className="px-1 py-1">
+                              {["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)"].map((status) => (
+                                <Menu.Item key={status}>
+                                  {({ active }) => (
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setStatusForMany(status, apartType);
+                                      }}
+                                      className={`${
+                                        active ? 'bg-gray-100' : ''
+                                      } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                                    >
+                                      {status}
+                                    </button>
+                                  )}
+                                </Menu.Item>
+                              ))}
+                            </div>
+                          </Menu.Items>
+                        </Transition>
+                      </div>
+                    )}
+                  </Menu>
+                </div>
+              </Menu.Items>
+            </Transition>
+          </Menu>
           ) : null}
           <p className='ml-8 mr-2 text-gray-400'>{filteredApartments.length}</p>
         </div>
