@@ -334,7 +334,6 @@ def match_new_apart_to_family_batch(
 
                 # Если записи не существует, вставляем новую запись в таблицу history
                 new_addresses = [item['address'] for item in new_selected_addresses] if not date else new_selected_addresses
-                print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n --adresa', new_addresses, new_selected_addresses)
                 if not record_exists:
                     cursor.execute(
                         """
@@ -345,7 +344,7 @@ def match_new_apart_to_family_batch(
                         VALUES(%s, %s)
                         RETURNING history_id
                     """,
-                        (old_selected_addresses, new_addresses ),
+                        (old_selected_addresses, new_addresses),
                     )
                     last_history_id = cursor.fetchone()[0]
                     conn.commit()
