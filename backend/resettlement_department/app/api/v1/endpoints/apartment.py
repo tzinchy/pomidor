@@ -125,7 +125,7 @@ async def update_declined_reason(
         notes=decline_reason.notes,
     )
 
-@router.patch("set_status_for_many")
+@router.patch("/set_status_for_many")
 async def set_consent(
     apart_ids_and_status : SetStatusForNewAparts,
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
