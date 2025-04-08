@@ -40,7 +40,7 @@ def insert_data_to_offer(df: pd.DataFrame):
             "Исх. № предложения": "outgoing_offer_number",
             "Дата предложения": "offer_date",
         }
-        columns_db = ["offer_id", "affair_id", "new_aparts", "outgoing_offer_number", "offer_date"]
+        columns_db = ["affair_id", "new_aparts", "outgoing_offer_number", "offer_date"]
         columns_decline_name = {
             "Претензия": "notes",
         }
@@ -55,12 +55,10 @@ def insert_data_to_offer(df: pd.DataFrame):
         df["affair_id"] = df["affair_id"].astype("Int64")
         df["offer_id"] = df["offer_id"].astype("Int64")
         df["new_apart_id"] = df["new_apart_id"].astype("Int64")
-        df = df.dropna(subset=["offer_id", "affair_id", "new_apart_id"])
         df = df.replace({np.nan: None, "00:00:00": None})
         # Убрать combine_new_apart_id_and_decline_reason_id???
         # df["new_aparts"] = df.apply(combine_new_apart_id_and_decline_reason_id, axis=1)
 
-        df.drop_duplicates("offer_id", inplace=True)
         df.sort_values("offer_id", inplace=True)
 
         connection = psycopg2.connect(
@@ -170,7 +168,7 @@ def insert_data_to_offer(df: pd.DataFrame):
                 # with open("output.txt", "w") as f:
                 #     f.write("\n".join([create_temp_table, insert_into_temp_table, insert_into_offer]))
 
-        df = df[90000:]
+        df = df.sort_values('offer_id')
         cursor = connection.cursor()
         for _, row in tqdm(df.iterrows(), miniters=50):
             try:
@@ -231,10 +229,6 @@ def insert_data_to_offer(df: pd.DataFrame):
                     INSERT INTO public.offer (
                         {", ".join(columns_db)}
                     ) VALUES {"({})".format(",".join(values))}
-                    ON CONFLICT (offer_id) 
-                    DO UPDATE SET
-                        {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
-                        updated_at = NOW()
                 """)
                 connection.commit()
             except errors.ForeignKeyViolation:
@@ -307,5 +301,5 @@ def insert_data_to_offer(df: pd.DataFrame):
 
 
 if __name__ == "__main__":
-    df = pd.read_excel("/Users/arsenijkarpov/Downloads/Подбор квартир.xlsx")
+    df = pd.read_excel("/Users/macbook/Downloads/Подбор квартир.xlsx")
     insert_data_to_offer(df)
