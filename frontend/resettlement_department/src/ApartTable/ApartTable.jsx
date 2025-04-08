@@ -57,6 +57,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [typeOfSettlement, setTypeOfSettlement] = useState([]);
   const [minPeople, setMinPeople] = useState([]);
   const [maxPeople, setMaxPeople] = useState([]);
+
+  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)"] : ["Резерв", "Блок"];
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -583,7 +585,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             </button>
           </div>*/}
 
-          {apartType === 'OldApart' ? (
             <Menu as="div" className="relative inline-block text-left z-[102]">
             <div>
               <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
@@ -603,7 +604,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                 className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                 static // Добавляем static чтобы меню не закрывалось при взаимодействии с вложенными элементами
               >
-                <div className="px-1 py-1">
+                {apartType === 'OldApart' && (
+                  <div className="px-1 py-1">
                   <Menu.Item>
                     {({ active }) => (
                       <button
@@ -628,7 +630,9 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                       </button>
                     )}
                   </Menu.Item>
-                  
+                  </div>
+                )}
+                <div className="px-1 py-1">
                   {/* Подменю статусов */}
                   <Menu>
                     {({ open }) => (
@@ -656,7 +660,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                             className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
                           >
                             <div className="px-1 py-1">
-                              {["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)"].map((status) => (
+                              {statuses.map((status) => (
                                 <Menu.Item key={status}>
                                   {({ active }) => (
                                     <button
@@ -684,7 +688,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               </Menu.Items>
             </Transition>
           </Menu>
-          ) : null}
           <p className='ml-8 mr-2 text-gray-400'>{filteredApartments.length}</p>
         </div>
       </div>

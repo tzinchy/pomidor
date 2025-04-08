@@ -13,7 +13,7 @@ class Status(str, Enum):
     COMPENSATION_OUTSIDE_DISTRICT_FUND = "МФР Компенсация (вне района)"
     FREE = "Свободная"
     RESERVE = "Резерв"
-    PRIVATE = "Приватизация"
+    PRIVATE = "Блок"
 
 class StatusUpdate(BaseModel):
     new_status: Status
