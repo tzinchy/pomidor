@@ -46,7 +46,7 @@ joined_aparts AS (
     FROM 
         unnested_offer o
     LEFT JOIN 
-        new_apart na ON o.new_apart_id = na.new_apart_id
+        new_apart na ON o.new_apart_id = na.area_id
     LEFT JOIN 
         status s ON o.status_id = s.status_id
     LEFT JOIN 

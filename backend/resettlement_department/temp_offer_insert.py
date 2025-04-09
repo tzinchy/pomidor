@@ -55,10 +55,12 @@ def insert_data_to_offer(df: pd.DataFrame):
         df["affair_id"] = df["affair_id"].astype("Int64")
         df["offer_id"] = df["offer_id"].astype("Int64")
         df["new_apart_id"] = df["new_apart_id"].astype("Int64")
+        df = df.dropna(subset=["offer_id", "affair_id", "new_apart_id"])
         df = df.replace({np.nan: None, "00:00:00": None})
         # Убрать combine_new_apart_id_and_decline_reason_id???
         # df["new_aparts"] = df.apply(combine_new_apart_id_and_decline_reason_id, axis=1)
 
+        df.drop_duplicates("offer_id", inplace=True)
         df.sort_values("offer_id", inplace=True)
 
         connection = psycopg2.connect(
@@ -236,62 +238,6 @@ def insert_data_to_offer(df: pd.DataFrame):
             except Exception as e:
                 connection.rollback()
                 raise e
-
-        # for arg in args:
-        #     try:
-
-        #         cursor.execute(f"""
-        #             UPDATE offer
-        #             SET
-        #                 status_id = 2,
-        #                 new_aparts = (
-        #                     SELECT
-        #                         COALESCE(
-        #                             jsonb_object_agg(
-        #                                 key, 
-        #                                 jsonb_set(
-        #                                     value, 
-        #                                     '{{status_id}}', 
-        #                                     to_jsonb(2)
-        #                                 )
-        #                             ), 
-        #                             '{{}}'::jsonb
-        #                         )
-        #                     FROM
-        #                         jsonb_each(COALESCE(offer.new_aparts, '{{}}'::jsonb))
-        #                 ),
-        #                 updated_at = NOW()
-        #             WHERE
-        #                 offer_id IN (
-        #                     SELECT
-        #                         MAX(offer_id)
-        #                     FROM
-        #                         offer
-        #                     WHERE
-        #                         affair_id = {arg[1]}
-        #                     GROUP BY
-        #                         affair_id
-        #                 );
-
-        #             INSERT INTO public.offer (
-        #                 {", ".join(columns_db)}
-        #             ) VALUES {"({})".format(",".join(arg))}
-        #             ON CONFLICT (offer_id) 
-        #             DO UPDATE SET
-        #                 {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
-        #                 updated_at = NOW()
-        #         """)
-            #     connection.commit()
-            #     print(arg)
-            # except errors.ForeignKeyViolation:
-            #     connection.rollback()
-            # except Exception as e:
-            #     connection.rollback()
-            #     raise e
-
-                # cursor.execute(create_temp_table)
-                # cursor.execute(insert_into_temp_table)
-                # cursor.execute(insert_into_offer)
 
     except Exception as e:
         raise e
