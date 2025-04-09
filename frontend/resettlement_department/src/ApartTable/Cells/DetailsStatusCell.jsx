@@ -76,7 +76,7 @@ export default function DetailsStatusCell({
   // Остальной код без изменений
   const changeStatus = async (apartmentId, newStatus) => {
     try {
-      const url = `${HOSTLINK}/tables/apartment/${apartmentId}/${parseInt(newApartId)}/change_status?apart_type=OldApart`;
+      const url = `${HOSTLINK}/tables/apartment/${apartmentId}/${parseInt(newApartId)}/change_status?apart_type=${apartType}`;
       const response = await fetch(url, {
         method: "POST",
         headers: {
