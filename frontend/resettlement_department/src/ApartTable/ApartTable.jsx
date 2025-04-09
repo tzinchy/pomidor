@@ -57,6 +57,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [typeOfSettlement, setTypeOfSettlement] = useState([]);
   const [minPeople, setMinPeople] = useState([]);
   const [maxPeople, setMaxPeople] = useState([]);
+  const [filterStatuses, setFilterStatuses] = useState([]);
 
   const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)"] : ["Резерв", "Блок"];
   
@@ -76,13 +77,24 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   // Получаем уникальные строковые значения
   const getUniqueStringValues = useMemo(() => {
     if (!data) return [];
-
+  
     return (x) => {
       return [...new Set(
         data
-          .map(apartment => apartment[x]?.toString().trim()) // Преобразуем в строку и обрезаем пробелы
-          .filter(value => value && value !== 'undefined') // Фильтруем пустые и undefined значения
-      )].sort((a, b) => a.localeCompare(b)); // Сортируем по алфавиту
+          .map(apartment => {
+            // Получаем и обрабатываем значение свойства
+            let value = apartment[x]?.toString().trim();
+            
+            // Специальная обработка для статусов
+            if (x === "status" && !value) {
+              value = apartType === "OldApart" ? "Не подобрано" : "Свободна";
+            }
+            
+            return value;
+          })
+          // Фильтрация пустых и неопределенных значений
+          .filter(value => value && value !== "undefined")
+      )].sort((a, b) => a.localeCompare(b)); // Сортировка по алфавиту
     };
   }, [data]);
 
@@ -92,6 +104,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     setRooms(getUniqueValues('room_count'));
     setMatchCount(getUniqueValues('selection_count'));
     setTypeOfSettlement(getUniqueStringValues('type_of_settlement'));
+    setFilterStatuses(getUniqueStringValues('status'));
+    console.log('filterStatuses', filterStatuses);
   }, [getUniqueValues]);
 
 
@@ -355,6 +369,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             type="checkbox"
             checked={table.getIsAllRowsSelected()}
             onChange={table.getToggleAllRowsSelectedHandler()}
+            onClick={(e) => e.stopPropagation()}
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
@@ -363,6 +378,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             type="checkbox"
             checked={row.getIsSelected()}
             onChange={row.getToggleSelectedHandler()}
+            onClick={(e) => e.stopPropagation()}
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
@@ -566,6 +582,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           setMinPeople={setMinPeople}
           maxPeople={maxPeople} 
           setMaxPeople={setMaxPeople}
+          filterStatuses={filterStatuses}
         />
         
         <div className='flex items-center'>
