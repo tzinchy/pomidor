@@ -16,3 +16,4 @@ backend/auth/__pycache__
 .DS_Store
 frontend/resettlement_department/build/
 frontend/resettlement_department/build1/
+backend/resettlement_department/.vscode/settings.json

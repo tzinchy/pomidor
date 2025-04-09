@@ -900,7 +900,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
         global district_mapping
         connection = None
         columns_name = {
-            "Сл.инф_APART_ID":	"rsm_id",
+            "Сл.инф_APART_ID":	"rsm_apart_id",
             "Адрес_Округ": "district",
             "Адрес_Мун.округ": "municipal_district",
             "Адрес_Короткий": "house_address",
