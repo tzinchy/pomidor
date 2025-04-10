@@ -816,7 +816,6 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         df['district'] = df['district'].map(district_mapping).fillna(df['district'])
 
         df = df.replace({np.nan: None, "NaT": None})  # "None" получается в поле с датой
-        print(df["removal_date"])
         df["full_living_area"] = df["full_living_area"].replace({None: 0})
         df["living_area"] = df["living_area"].replace({None: 0})
         df["room_count"] = df["room_count"].replace({None: 0})
