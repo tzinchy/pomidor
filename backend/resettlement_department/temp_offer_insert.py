@@ -240,5 +240,13 @@ def update_new_apart_ids(df: pd.DataFrame):
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     df = pd.read_excel("/Users/arsenijkarpov/Downloads/Подбор квартир (1).xlsx")
     insert_data_to_offer(df)
+=======
+    df = pd.read_excel("/Users/macbook/Downloads/Telegram Desktop/Книга1.xlsx")
+    df['test'] = None
+    for i in df.itertuples():
+
+        print(i)
+>>>>>>> 0a493d2 (update query)
