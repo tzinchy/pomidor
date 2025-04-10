@@ -774,10 +774,14 @@ def insert_data_to_old_apart(df: pd.DataFrame):
             "КПУ_Др. напр. откр.": "kpu_another",
             "КПУ_Вид засел.": "type_of_settlement",
             "КПУ_Состояние": "rsm_status",
-            "К_Инв/к": "is_special_needs_marker"
+            "К_Инв/к": "is_special_needs_marker",
+            "КПУ_Снятие_Причина": "removal_reason",
+            "КПУ_снятие_сист_ дата": "removal_date",
+            "КПУ_Др. напр. закр.": "rsm_another_closed"
         }
         columns_db = list(columns_name.values())
         columns_db.append('is_queue')
+        columns_db.append('was_queue')
         df.rename(
             columns=columns_name,
             inplace=True,
@@ -799,15 +803,19 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         df["people_v_dele"] = df["people_v_dele"].astype("Int64")
         df["people_uchet"] = df["people_uchet"].astype("Int64")
         df["full_living_area"] = df["full_living_area"].astype(float)
+        df["removal_date"] = df["removal_date"].astype(str)
 
         # Добавляем колонку is_queue на основе регулярного выражения
         df["is_queue"] = df["kpu_another"].apply(
               lambda x: 1 if re.search(r"-01-", str(x)) else 0
         ).astype("Int64")
+        df["was_queue"] = df["rsm_another_closed"].apply(
+              lambda x: 1 if re.search(r"-01-", str(x)) else 0
+        ).astype("Int64")
 
         df['district'] = df['district'].map(district_mapping).fillna(df['district'])
 
-        df = df.replace({np.nan: None})
+        df = df.replace({np.nan: None, "NaT": None})  # "None" получается в поле с датой
         df["full_living_area"] = df["full_living_area"].replace({None: 0})
         df["living_area"] = df["living_area"].replace({None: 0})
         df["room_count"] = df["room_count"].replace({None: 0})
