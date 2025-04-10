@@ -18,16 +18,15 @@ def df_date_to_string(df: pd.DataFrame, columns):
 def concat_area_id_agg(series: pd.Series):
     if series.name != "area_id":
         return series.iloc[0]
-    if len(series) > 1:
-        out = {}
-        for i, v in enumerate(series):
-            if pd.notna(v):
-                out[str(i)] = int(v)
-        if not out:
-            return None
-        return out
+    
+    # Собираем уникальные area_id (игнорируя NaN)
+    unique_ids = set(series.dropna().astype(int).unique())
+    
+    if not unique_ids:
+        return None
     else:
-        return series.apply(lambda x: {"0": int(x)} if pd.notna(x) else x)
+        # Создаем словарь где ключи - это area_id, а значения - 1 (или можно использовать True)
+        return {str(area_id): {} for area_id in unique_ids}
 
 def insert_data_to_order_decisions(order_df: pd.DataFrame):
     try:
