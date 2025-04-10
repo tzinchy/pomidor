@@ -27,6 +27,11 @@ function LeftBar({
     const [selectedMunicipals, setSelectedMunicipals] = useState([]);
     const [currentMunicipal, setCurrentMunicipal] = useState(null);
 
+    const handleResetFilters = () => {
+      setSelectedAddresses([]);
+      setSelectedMunicipals([]);
+    }
+
     const toggleExpand = (key) => {
         setExpandedNodes((prev) => ({
           ...prev,
@@ -114,6 +119,30 @@ function LeftBar({
                       className={`p-8 py-4 rounded-md ${apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Ресурс
+                    </button>
+                  </div>
+
+                  <div className="flex-shrink-0 mt-2">
+                    <button
+                        onClick={handleResetFilters}
+                        className="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap text-sm font-medium hover:bg-gray-100 rounded-md px-3 h-8 border-dashed"
+                    >
+                        Сброс
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="lucide lucide-x ml-2 h-4 w-4"
+                        >
+                            <path d="M18 6 6 18" />
+                            <path d="m6 6 12 12" />
+                        </svg>
                     </button>
                   </div>
 
