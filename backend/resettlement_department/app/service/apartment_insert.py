@@ -782,6 +782,8 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         columns_db = list(columns_name.values())
         columns_db.append('is_queue')
         columns_db.append('was_queue')
+        columns_db.append('is_hidden')
+        columns_db.append('status_id')
         df.rename(
             columns=columns_name,
             inplace=True,
@@ -811,6 +813,23 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         ).astype("Int64")
         df["was_queue"] = df["rsm_another_closed"].apply(
               lambda x: 1 if re.search(r"-01-", str(x)) else 0
+        ).astype("Int64")
+        removal_reason_is_hidden = ["техническое снятие в АСУ", "Ошибочно введенная КПУ"]
+        df["is_hidden"] = df["removal_reason"].apply(
+              lambda x: 1 if x in removal_reason_is_hidden else 0
+        ).astype(bool)
+        removal_reason_14 = [
+            "Переселение. Жилое помещение свободно",
+            "п.2 смерть очередника",
+            "п.4 получение субсидии на приобретение жилья",
+            "Переселение. Денежная компенсация",
+            "п.1 выезд на постоянное место жительства в другую местность",
+            "п.2 признан ненуждающимся (без предоставления)",
+            "Реновация.Без предоставления",
+            "Реновация. Денежная компенсация",
+        ]
+        df["status_id"] = df["removal_reason"].apply(
+              lambda x: 14 if x in removal_reason_14 else None
         ).astype("Int64")
 
         df['district'] = df['district'].map(district_mapping).fillna(df['district'])
