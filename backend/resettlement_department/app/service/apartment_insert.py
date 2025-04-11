@@ -959,7 +959,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             new_apart_df["for_special_needs_marker"].map(special_needs_mapping).fillna(0)
         )
 
-        int_columns = ["new_apart_id", "floor", "building_id", "apart_number", "un_kv", "room_count", "area_id"]
+        int_columns = ["new_apart_id", "floor", "building_id", "apart_number", "un_kv", "room_count", "rsm_apart_id"]
         for col in int_columns:
             new_apart_df[col] = new_apart_df[col].astype("Int64")
         new_apart_df["total_living_area"] = new_apart_df["total_living_area"].astype(float)
