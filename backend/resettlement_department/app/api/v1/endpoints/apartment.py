@@ -6,9 +6,9 @@ from schema.apartment import (
     ManualMatchingSchema,
     RematchSchema,
     SetNotesSchema,
-    SetStatusForNewAparts
+    SetStatusForNewAparts,
 )
-from schema.status import Status
+from schema.status import Status, StatusUpdate
 from service.rematch_service import rematch
 
 router = APIRouter(prefix="/tables/apartment", tags=["Apartment Action"])
@@ -64,12 +64,13 @@ async def rematch_for_family(rematch_list: RematchSchema):
 async def change_status(
     apart_id: int,
     new_apart_id: int,
-    new_status: Status = Body(..., description="Доступные статусы"),
+    new_status: StatusUpdate = Body(...),
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
 ):
     try:
+        print(new_status.new_status.value)
         await apartment_service.update_status_for_apart(
-            apart_id, new_apart_id, new_status.new_status.value, apart_type
+            apart_id=apart_id, new_apart_id=new_apart_id, status=new_status.new_status.value, apart_type=apart_type
         )
         return {"message": "Status updated successfully"}
     except Exception as e:
@@ -82,7 +83,8 @@ async def change_status_for_new_apart(
     new_apart_ids: list[int] = Body(..., description="Список new_apart_id"),
     new_status: Status = Body(..., description="Доступные статусы"),
 ):
-    return await apartment_service.set_status_for_new_apart(
+    print(new_status)
+    return await apartment_service.update_status_for_apart(
         new_apart_ids, new_status.value
     )
 
