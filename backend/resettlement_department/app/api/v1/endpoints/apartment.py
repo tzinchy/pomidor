@@ -6,9 +6,9 @@ from schema.apartment import (
     ManualMatchingSchema,
     RematchSchema,
     SetNotesSchema,
-    SetStatusForNewAparts
+    SetStatusForNewAparts,
 )
-from schema.status import Status
+from schema.status import Status, StatusUpdate
 from service.rematch_service import rematch
 
 router = APIRouter(prefix="/tables/apartment", tags=["Apartment Action"])
@@ -64,7 +64,7 @@ async def rematch_for_family(rematch_list: RematchSchema):
 async def change_status(
     apart_id: int,
     new_apart_id: int,
-    new_status: Status = Body(..., description="Доступные статусы"),
+    new_status: Status,
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
 ):
     try:
