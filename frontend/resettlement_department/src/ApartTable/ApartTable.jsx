@@ -30,7 +30,7 @@ const MenuIcon = () => (
 
 const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, 
   fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters, rowSelection, setRowSelection,
-  setApartType, setLoading}) => {
+  setApartType, setLoading, setCollapsed}) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
   const tableContainerRef = useRef(null);
@@ -59,7 +59,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [maxPeople, setMaxPeople] = useState([]);
   const [filterStatuses, setFilterStatuses] = useState([]);
 
-  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)"] : ["Резерв", "Блок"];
+  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)"] : ["Резерв", "Блок", "Свободная"];
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -87,7 +87,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             
             // Специальная обработка для статусов
             if (x === "status" && !value) {
-              value = apartType === "OldApart" ? "Не подобрано" : "Свободна";
+              value = apartType === "OldApart" ? "Не подобрано" : "Свободная";
             }
             
             return value;
@@ -276,12 +276,12 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             filtered = filtered.filter((item) => {
                 // Проверяем наличие специальных значений в выбранных значениях
                 const hasSpecialValues = selectedValues.some(
-                    val => val === "Не подобрано" || val === "Свободна"
+                    val => val === "Не подобрано" || val === "Свободная"
                 );
                 
                 // Проверяем обычные значения статусов
                 const hasRegularStatus = selectedValues.some(
-                    (val) => val !== "Не подобрано" && val !== "Свободна" && item[filterKey] === val
+                    (val) => val !== "Не подобрано" && val !== "Свободная" && item[filterKey] === val
                 );
 
                 // Если выбраны специальные значения - проверяем на null, иначе проверяем обычные статусы
@@ -463,6 +463,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       setSelectedRowId(id);
     } else if (!visibility) {
       setSelectedRow(index);
+      setCollapsed(true);
       setIsDetailsVisible(true);
       fetchApartmentDetails(id);
       setSelectedRowId(id);
