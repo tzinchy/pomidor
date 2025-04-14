@@ -43,6 +43,7 @@ export default function AllFilters({
     setMinPeople,
     maxPeople,
     setMaxPeople,
+    filterStatuses,
 }) {
     const emptyStatus = apartType === 'OldApart' ? 'Не подобрано' : "Свободна";
     const StatusFilters = [emptyStatus, "Согласие", 'Отказ', "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", 'Ждёт одобрения', "МФР (вне района)", "МФР Компенсация (вне района)"];
@@ -113,7 +114,7 @@ export default function AllFilters({
                     <div className="flex-shrink-0">
                         <DropdownFilter 
                             item={'Статус'} 
-                            data={StatusFilters} 
+                            data={filterStatuses} 
                             func={handleFilterChange}
                             filterType={'status'} 
                             isFiltersReset={filtersResetFlag} 

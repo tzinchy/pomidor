@@ -128,7 +128,7 @@ def match_new_apart_to_family_batch(
                 WHERE new_apart_id::text NOT IN 
                             (SELECT key FROM public.offer, 
                             json_each_text(new_aparts::json) AS j(key, value) 
-                            WHERE (value::json->>'status_id')::int != 2) AND status_id NOT IN (12, 13) 
+                            WHERE (value::json->>'status_id')::int != 2) AND (na.status_id NOT IN (12, 13) or na.status_id is null)
                 """
 
                 new_apart_query_params = []
