@@ -79,7 +79,6 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
             port=settings.project_management_setting.DB_PORT,
             database=settings.project_management_setting.DB_NAME
         )
-        print(order_df.itertuples())
         for _, row in order_df.iterrows():
             with connection:
                 with connection.cursor() as cursor:

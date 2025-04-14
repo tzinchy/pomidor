@@ -244,13 +244,12 @@ class ApartService:
             if apart_type == ApartTypeSchema.OLD:
                 affected_rows = await self.old_apart_repository.set_status_for_many(apart_ids, status=status)
             elif apart_type == ApartTypeSchema.NEW:
-                print(Status.RESERVE.value, Status.PRIVATE.value)
-                if status in (Status.RESERVE.value, Status.PRIVATE.value):
-
+                if status in (Status.RESERVE.value, Status.PRIVATE.value, Status.FREE.value):
                     affected_rows = await self.new_apart_repository.set_private_or_reserve_status_for_new_aparts(apart_ids, status=status)
                 else:
                     raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
             return {"status": "done", "affected_rows": affected_rows}
         except Exception as e: 
             print(e)
+            raise  
             
