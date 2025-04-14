@@ -834,7 +834,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
 
         df['district'] = df['district'].map(district_mapping).fillna(df['district'])
 
-        df = df.replace({np.nan: None, "NaT": None})  # "None" получается в поле с датой
+        df = df.replace({np.nan: None, "NaT": None})  # "NaT" получается в поле с датой
         df["full_living_area"] = df["full_living_area"].replace({None: 0})
         df["living_area"] = df["living_area"].replace({None: 0})
         df["room_count"] = df["room_count"].replace({None: 0})
@@ -874,7 +874,8 @@ def insert_data_to_old_apart(df: pd.DataFrame):
                 {args_str}
             ON CONFLICT (affair_id) 
             DO UPDATE SET 
-            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
+            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db if col != "status_id")},
+            status_id = COALESCE(EXCLUDED.status_id, public.old_apart.status_id),
             updated_at = NOW()
         """
         set_env_true_sql = """
