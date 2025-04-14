@@ -64,13 +64,13 @@ async def rematch_for_family(rematch_list: RematchSchema):
 async def change_status(
     apart_id: int,
     new_apart_id: int,
-    new_status: Status,
+    new_status: StatusUpdate = Body(...),
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
 ):
     try:
-        print(new_status.value)
+        print(new_status.new_status.value)
         await apartment_service.update_status_for_apart(
-            apart_id=apart_id, new_apart_id=new_apart_id, status=new_status.value, apart_type=apart_type
+            apart_id=apart_id, new_apart_id=new_apart_id, status=new_status.new_status.value, apart_type=apart_type
         )
         return {"message": "Status updated successfully"}
     except Exception as e:
