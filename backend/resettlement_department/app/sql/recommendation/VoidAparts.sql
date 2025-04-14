@@ -10,7 +10,7 @@ WITH clr_dt AS (
         jsonb_each(new_aparts)
 ),
 apart_info AS (
-    SELECT history_id, room_count, is_queue, is_special_needs_marker
+    SELECT history_id, room_count, is_queue 
     FROM old_apart 
     WHERE affair_id = :apart_id
 ),
@@ -24,33 +24,35 @@ ranked_apartments AS (
         na.full_living_area,
         na.total_living_area, 
         na.living_area, 
-        na.room_count, 
+        na.room_count AS new_apart_room_count,  -- 💡 вот тут!
         na.type_of_settlement, 
         na.notes, 
         na.new_apart_id,
         na.history_id, 
         s.status AS status,
         o.status_id, 
-		for_special_needs_marker,
+        ai.room_count AS required_room_count,   -- 💡 и тут!
+        ai.is_queue,
         ROW_NUMBER() OVER (
             PARTITION BY na.new_apart_id 
-            ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at DESC
+            ORDER BY o.sentence_date DESC, o.answer_date DESC, na.created_at ASC
         ) AS rn
-    FROM 
-        new_apart na
-    LEFT JOIN 
-        clr_dt as o on o.new_apart_id = na.new_apart_id
-    LEFT JOIN 
-        status s ON o.status_id = s.status_id
-    WHERE na.new_apart_id NOT IN (SELECT new_apart_id FROM clr_dt where status_id <> 2)
+    FROM new_apart na
+    LEFT JOIN clr_dt o ON o.new_apart_id = na.new_apart_id
+    LEFT JOIN status s ON o.status_id = s.status_id
+    CROSS JOIN apart_info ai
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM clr_dt dt
+        WHERE dt.new_apart_id = na.new_apart_id
+    )
 )
 SELECT *
 FROM ranked_apartments
 WHERE 
     CASE 
-        WHEN (SELECT is_queue FROM apart_info) = 1 THEN TRUE
-        ELSE ranked_apartments.room_count = (SELECT room_count FROM apart_info)
+        WHEN is_queue = 1 THEN TRUE
+        ELSE new_apart_room_count = required_room_count
     END
-    AND (status_id IS NULL OR status_id = 2)
-    AND for_special_needs_marker = (SELECT is_special_needs_marker FROM apart_info) 
+    AND (status_id IS NULL OR status_id NOT IN (1,4,5,6,7))
 ORDER BY status;
