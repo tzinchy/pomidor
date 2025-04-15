@@ -7,6 +7,7 @@ from schema.apartment import (
     RematchSchema,
     SetNotesSchema,
     SetStatusForNewAparts,
+    SetSpecialNeedsSchema,
 )
 from schema.status import Status, StatusUpdate
 from service.rematch_service import rematch
@@ -135,4 +136,12 @@ async def set_consent(
     print(apart_ids_and_status.apart_ids, apart_ids_and_status.status.value)
     return await apartment_service.set_status_for_many(
         apart_ids_and_status.apart_ids, apart_ids_and_status.status.value, apart_type
+    )
+
+@router.patch("/set_special_needs_for_many")
+async def set_special_needs_for_many(
+    apart_ids_and_marker : SetSpecialNeedsSchema,
+):
+    return await apartment_service.set_special_needs_for_many(
+        apart_ids_and_marker.apart_ids, apart_ids_and_marker.is_special_needs_marker
     )
