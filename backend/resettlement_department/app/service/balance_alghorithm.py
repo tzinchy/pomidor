@@ -39,7 +39,7 @@ def save_views_to_excel(
                                 old_apart.house_address,
                                 old_apart.rank
                             FROM old_apart
-                            WHERE rsm_status <> 'снято' 
+                            WHERE (rsm_status <> 'снято' or rsm_status is null) and rank is not NULL 
                         """
 
                         query_new_ranked = """

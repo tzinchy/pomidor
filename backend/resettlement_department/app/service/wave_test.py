@@ -1,6 +1,7 @@
 def process_stages(data):
     """
-    Обрабатывает данные этапов и выводит их в консоль в правильном порядке
+    Обрабатывает данные этапов, собирает старые и новые адреса в отдельные массивы
+    и выводит их в консоль.
     
     Args:
         data (dict): Словарь с данными этапов в формате:
@@ -12,37 +13,46 @@ def process_stages(data):
                 ...
             }
     """
-    # Извлекаем все уникальные номера этапов
-    stage_numbers = set()
-    for key in data.keys():
-        if 'old_apartment' in key or 'new_apartment' in key:
-            # Извлекаем номер из ключа (последнее число в строке)
-            stage_num = int(key.split('_')[-1])
-            stage_numbers.add(stage_num)
+    old_addresses = []
+    new_addresses = []
     
-    # Сортируем номера этапов
-    sorted_stages = sorted(stage_numbers)
+    # Собираем все старые адреса
+    for key in sorted(data.keys()):
+        if key.startswith('old_apartment_house_address_'):
+            addresses = data[key]
+            if isinstance(addresses, list):
+                old_addresses.extend(addresses)
+            else:
+                old_addresses.append(addresses)
     
-    # Выводим данные по каждому этапу
-    for stage_num in sorted_stages:
-        old_key = f'old_apartment_house_address_{stage_num}'
-        new_key = f'new_apartment_house_address_{stage_num}'
-        
-        print(f"\n=== Этап {stage_num} ===")
-        print(f"Старый дом ({old_key}): {data.get(old_key, 'Нет данных')}")
-        print(f"Новый дом ({new_key}): {data.get(new_key, 'Нет данных')}")
+    # Собираем все новые адреса
+    for key in sorted(data.keys()):
+        if key.startswith('new_apartment_house_address_'):
+            addresses = data[key]
+            if isinstance(addresses, list):
+                new_addresses.extend(addresses)
+            else:
+                new_addresses.append(addresses)
     
-    print("\nОбработка завершена!")
+    # Выводим результаты
+    print("\n=== Все старые адреса ===")
+    print(old_addresses)
+    
+    print("\n=== Все новые адреса ===")
+    print(new_addresses)
+    
+    print(f"\nИтого: {len(old_addresses)} старых адресов и {len(new_addresses)} новых адресов")
 
 
 # Пример использования
 if __name__ == "__main__":
-    # Тестовые данные (такие же как в вашем примере)
+    # Тестовые данные
     test_data = {
-        'old_apartment_house_address_1': ['Данные старого дома 1'],
-        'new_apartment_house_address_1': ['Данные нового дома 1'],
-        'old_apartment_house_address_2': ['Данные старого дома 2'],
-        'new_apartment_house_address_2': ['Данные нового дома 2']
+        'old_apartment_house_address_1': ['ул. Ленина, 10'],
+        'new_apartment_house_address_1': ['ул. Пушкина, 15'],
+        'old_apartment_house_address_2': ['ул. Гагарина, 20', 'ул. Советская, 5'],
+        'new_apartment_house_address_2': ['ул. Садовая, 3'],
+        'some_other_data': ['Дополнительные данные']
     }
     
     process_stages(test_data)
