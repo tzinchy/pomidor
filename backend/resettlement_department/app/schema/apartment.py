@@ -47,6 +47,10 @@ class SetStatusForNewAparts(BaseModel):
     apart_ids : List[int]
     status : Status
 
+class SetSpecialNeedsSchema(BaseModel):
+    apart_ids : List[int]
+    is_special_needs_marker : int
+
 class DeclineReasonSchema(BaseModel):
     min_floor: int = 0
     max_floor: int = 0

@@ -1,11 +1,12 @@
-from sqlalchemy import text
-from schema.apartment import ApartTypeSchema
-from utils.sql_reader import async_read_sql_query
-from core.config import RECOMMENDATION_FILE_PATH
-from typing import Optional
 import json
+from typing import List, Optional
+
+from core.config import RECOMMENDATION_FILE_PATH
+from schema.apartment import ApartTypeSchema
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
-from typing import List
+from utils.sql_reader import async_read_sql_query
+
 
 class OldApartRepository:
     def __init__(self, session_maker: sessionmaker):
@@ -491,7 +492,7 @@ class OldApartRepository:
     async def set_status_for_many(self, old_apart_ids: List[int], status: str):
         async with self.db() as session:
             try:
-                affair_ids = ', '.join(map(str, old_apart_ids))
+                affair_ids = ", ".join(map(str, old_apart_ids))
                 await session.execute(
                     text(f"""
                         WITH get_status_id AS (
@@ -528,9 +529,30 @@ class OldApartRepository:
                                 GROUP BY
                                     affair_id
                             )
-                    """), {'status': status},
+                    """),
+                    {"status": status},
                 )
                 await session.commit()
+            except Exception as e:
+                await session.rollback()
+                raise e
+
+    async def set_special_needs_for_many(
+        self, old_apart_ids: List[int], is_special_needs_marker: int
+    ):
+        async with self.db() as session:
+            try:
+                affair_ids = ", ".join(map(str, old_apart_ids))
+                result = await session.execute(
+                    text(f"""
+                        UPDATE public.old_apart
+                        SET is_special_needs_marker=:is_special_needs_marker
+                        WHERE affair_id IN ({affair_ids})
+                    """),
+                    {"is_special_needs_marker": is_special_needs_marker},
+                )
+                await session.commit()
+                return result.rowcount
             except Exception as e:
                 await session.rollback()
                 raise e
