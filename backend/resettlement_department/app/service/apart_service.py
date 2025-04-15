@@ -1,11 +1,13 @@
 from typing import List, Optional
 
-from fastapi import HTTPException, status as http_status
+from fastapi import HTTPException
+from fastapi import status as http_status
 from handlers.httpexceptions import NotFoundException
 from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
 from schema.apartment import ApartTypeSchema
 from schema.status import Status
+
 
 class ApartService:
     def __init__(
@@ -251,5 +253,7 @@ class ApartService:
             return {"status": "done", "affected_rows": affected_rows}
         except Exception as e: 
             print(e)
-            raise  
-            
+            raise
+
+    async def set_special_needs_for_many(self, apart_ids, is_special_needs_marker):
+        await self.old_apart_repository.set_special_needs_for_many(apart_ids, is_special_needs_marker)
