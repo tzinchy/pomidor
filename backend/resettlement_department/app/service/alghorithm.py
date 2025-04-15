@@ -52,7 +52,7 @@ def match_new_apart_to_family_batch(
 						old_apart o 
                     LEFT JOIN 
                         family_member fm ON o.kpu_number = fm.kpu_number 
-                    WHERE o.rsm_status <> 'снято' and
+                    WHERE (o.rsm_status <> 'снято' or rsm_status is NULL) and
                         o.affair_id NOT IN (
                             SELECT affair_id
                             FROM  offer
