@@ -8,6 +8,7 @@ WITH unnested_offer AS (
         answer_date, 
         created_at, 
         updated_at,
+        order_id,
         (value->>'decline_reason_id')::integer AS decline_reason_id 
     FROM offer, 
     jsonb_each(new_aparts) AS each(key, value)
@@ -42,7 +43,10 @@ joined_aparts AS (
                     'notes', dr.notes
                 )
             )
-        ) AS new_apartments
+        ) AS new_apartments,
+        CASE WHEN o.order_id IS NOT NULL THEN
+            to_jsonb(od) - 'affair_id' - 'order_id' - 'created_at' - 'updated_at'
+        ELSE NULL END AS order
     FROM 
         unnested_offer o
     LEFT JOIN 
@@ -50,12 +54,14 @@ joined_aparts AS (
     LEFT JOIN 
         status s ON o.status_id = s.status_id
     LEFT JOIN 
-        decline_reason dr ON o.decline_reason_id = dr.decline_reason_id  
-    WHERE 
-        o.new_apart_id IS NOT NULL  
+        decline_reason dr ON o.decline_reason_id = dr.decline_reason_id
+    LEFT JOIN
+        order_decisions od ON o.order_id = od.order_id
     GROUP BY 
         o.offer_id,
-        o.affair_id
+        o.affair_id,
+        o.order_id,
+        od.*
 )
 SELECT 
     old_apart.affair_id, 
@@ -73,7 +79,7 @@ SELECT
     old_apart.people_v_dele,
     JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
-        joined_aparts.new_apartments
+        JSONB_BUILD_OBJECT('new_aparts', joined_aparts.new_apartments, 'order', joined_aparts.order)
         ORDER BY joined_aparts.offer_id
     ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL) AS offers
 FROM 
