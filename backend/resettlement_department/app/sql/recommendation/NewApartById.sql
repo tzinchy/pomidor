@@ -51,8 +51,7 @@ joined_aparts AS (
         o.offer_id,
         o.new_apart_id
 )
-SELECT 
-    joined_aparts.offer_id,
+SELECT
     new_apart.new_apart_id, 
     new_apart.house_address,
     new_apart.apart_number,
@@ -70,9 +69,8 @@ SELECT
     ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL) AS offers
 FROM new_apart  
 LEFT JOIN joined_aparts USING (new_apart_id)
-where new_apart_id = :apart_id
-GROUP BY 
-    joined_aparts.offer_id,
+WHERE new_apart_id = :apart_id
+GROUP BY
     new_apart.new_apart_id, 
     new_apart.house_address,
     new_apart.apart_number,
