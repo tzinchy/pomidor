@@ -4,7 +4,7 @@ from depends import history_service, env_service
 from schema.history import HistoryResponse
 from typing import List
 from service.balance_alghorithm import save_views_to_excel
-from schema.apartment import MatchingSchema
+from schema.apartment import MatchingSchema, BalanceSchema
 import os
 from service.container_service import generate_excel_from_two_dataframes
 from pathlib import Path
@@ -21,7 +21,7 @@ async def get_manual_history():
     return await history_service.get_manual_load_history()
 
 @router.post("/balance")
-async def balance(requirements: MatchingSchema = Body(...)):
+async def balance(requirements: BalanceSchema = Body(...)):
     try:
         # Создаем папки если их нет
         folders = [Path("upload")]
@@ -29,12 +29,10 @@ async def balance(requirements: MatchingSchema = Body(...)):
             folder.mkdir(parents=True, exist_ok=True)
 
         output_path = os.path.join(os.getcwd(), "././uploads", "matching_result.xlsx")
-        print(requirements.old_apartment_house_address)
         print("ТО ЧТО ВЫШЕ ЭТО ПАРАМЕТР")
         save_views_to_excel(
             output_path=output_path,
-            new_selected_addresses=requirements.new_apartment_house_address,
-            old_selected_addresses=requirements.old_apartment_house_address,
+            history_id=requirements.history_id,
             date=requirements.is_date,
         )
 

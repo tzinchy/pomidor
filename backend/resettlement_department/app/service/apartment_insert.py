@@ -616,17 +616,19 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
                     new_apart_df[col] = None
 
             new_apart_values = [tuple(row) for row in new_apart_df[new_apart_required].to_numpy()]
-            
-            execute_values(
-                cursor,
-                f"""INSERT INTO new_apart ({", ".join(new_apart_required)})
-                    VALUES %s
-                    ON CONFLICT (up_id)
-                    DO UPDATE SET 
-                        {", ".join([f"{col} = EXCLUDED.{col}" for col in new_apart_required if col != 'up_id'])},
-                        updated_at = NOW()""",
-                new_apart_values
-            )
+            try:
+                execute_values(
+                    cursor,
+                    f"""INSERT INTO new_apart ({", ".join(new_apart_required)})
+                        VALUES %s
+                        ON CONFLICT (up_id)
+                        DO UPDATE SET 
+                            {", ".join([f"{col} = EXCLUDED.{col}" for col in new_apart_required if col != 'up_id'])},
+                            updated_at = NOW()""",
+                    new_apart_values
+                )
+            except Exception as e:
+                print(e)
 
         # 3. Обработка old_apart
         if not old_apart_df.empty:
