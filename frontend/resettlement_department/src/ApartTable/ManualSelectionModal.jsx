@@ -234,6 +234,16 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
         size: 150, // Начальная ширина столбца
       },
       {
+        header: '№ Кв.',
+        accessorKey: 'apart_number',
+        enableSorting: true,
+        cell: ({ row }) => 
+          <div className="text-xs">
+            {row.original['apart_number']}
+          </div>,
+        size: 30,
+      },
+      {
         header: "Площадь, тип, этаж",
         accessorKey: "full_living_area",
         cell: ({ row }) => <PloshCell props={row.original} />,

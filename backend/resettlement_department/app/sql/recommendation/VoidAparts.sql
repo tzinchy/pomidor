@@ -24,7 +24,7 @@ ranked_apartments AS (
         na.full_living_area,
         na.total_living_area, 
         na.living_area, 
-        na.room_count AS new_apart_room_count,  -- 💡 вот тут!
+        na.room_count AS room_count,  -- 💡 вот тут!
         na.type_of_settlement, 
         na.notes, 
         na.new_apart_id,
@@ -52,7 +52,7 @@ FROM ranked_apartments
 WHERE 
     CASE 
         WHEN is_queue = 1 THEN TRUE
-        ELSE new_apart_room_count = required_room_count
+        ELSE room_count = required_room_count
     END
     AND (status_id IS NULL OR status_id NOT IN (1,4,5,6,7))
 ORDER BY status;

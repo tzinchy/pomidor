@@ -175,11 +175,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     let filtered = data;
 
     if (searchApartQuery) {
-      filtered = filtered.filter((item) => {
-          return (
-              item.apart_number?.toLowerCase().includes(searchApartQuery.toLowerCase())
-          );
-      });
+      filtered = filtered.filter((item) => 
+        apartType === 'OldApart'
+          ? item.apart_number?.toLowerCase().includes(searchApartQuery.toLowerCase())
+          : String(item.apart_number || '').toLowerCase().includes(searchApartQuery.toLowerCase())
+      );
     }
 
     if (searchFioQuery) {
@@ -382,15 +382,25 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
-        size: 20,
+        size: 30,
         enableSorting: false,
       },
       {
         header: 'Адрес',
-        accessorKey: 'apart_number',
+        accessorKey: 'house_address',
         enableSorting: true,
         cell: ({ row }) => <AdressCell props={row.original} />,
         size: 200,
+      },
+      {
+        header: '№ Кв.',
+        accessorKey: 'apart_number',
+        enableSorting: true,
+        cell: ({ row }) => 
+          <div className="text-xs">
+            {row.original['apart_number']}
+          </div>,
+        size: 60,
       },
       ...(apartType === 'OldApart' ? [{
         header: 'ФИО',
@@ -874,7 +884,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                               {row.getVisibleCells().map((cell) => (
                                 <td
                                   key={cell.id}
-                                  className="px-2 border-b border-gray-200 text-sm text-gray-700 truncate"
+                                  className={`px-2 border-b border-gray-200 text-xs text-gray-700 truncate`}
                                   style={{ width: `${cell.column.columnDef.size}px` }}
                                 >
                                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -893,7 +903,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             {/* ApartDetails */}
             {apartmentDetails && isDetailsVisible && (
               <div
-                className={`ml-2 bg-white fixed inset-0 lg:static lg:inset-auto lg:overflow-auto lg:rounded-md lg:border lg:h-[calc(100vh-1rem)] transition-all duration-300 ease-in-out z-50 min-w-[650px] max-w-[650px]`}
+                className={`ml-2 fixed inset-0 lg:static lg:inset-auto lg:overflow-auto lg:rounded-md lg:border transition-all duration-300 ease-in-out z-50 min-w-[650px] max-w-[650px]`}
               >
                 <div className="fixed inset-0 bg-opacity-50 lg:bg-transparent lg:relative">
                   <div
@@ -904,7 +914,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                       WebkitOverflowScrolling: 'touch', // Поддержка мобильных устройств
                     }}
                   >
-                    <div className="h-[calc(100vh-1rem)] flex flex-col">
+                    <div className="h-[calc(100vh-3.85rem)] flex flex-col">
                       <ApartDetails
                         apartmentDetails={apartmentDetails}
                         setIsDetailsVisible={setIsDetailsVisible}
