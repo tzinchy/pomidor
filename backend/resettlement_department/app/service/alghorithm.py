@@ -56,6 +56,7 @@ def match_new_apart_to_family_batch(
                         o.affair_id NOT IN (
                             SELECT affair_id
                             FROM  offer
+                            where status_id <> 2
                         ) 
                 """
                 

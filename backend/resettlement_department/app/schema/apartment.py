@@ -88,3 +88,8 @@ class NewApartTableSchema(BaseApartmentTableSchema):
 
 class SetNotesSchema(BaseModel):
     notes : Optional[str] = None
+
+
+class BalanceSchema(BaseModel):
+    history_id : int 
+    is_date : bool = None
