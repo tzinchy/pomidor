@@ -50,7 +50,7 @@ SELECT DISTINCT
         full_living_area,
         total_living_area, 
         living_area, 
-        new_apart_room_count,
+        room_count,
         type_of_settlement, 
         notes, 
         new_apart_id,
