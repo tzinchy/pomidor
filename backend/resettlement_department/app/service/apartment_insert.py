@@ -835,6 +835,8 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         ).astype("Int64")
 
         df['district'] = df['district'].map(district_mapping).fillna(df['district'])
+        forbidden_districts = ["ДЖП и ЖФ (Газетный пер.,1/12)", "Перовский р-н"]
+        df.drop(df[df["district"].isin(forbidden_districts)].index, inplace=True)
 
         df = df.replace({np.nan: None, "NaT": None})  # "NaT" получается в поле с датой
         df["full_living_area"] = df["full_living_area"].replace({None: 0})
