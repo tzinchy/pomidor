@@ -31,12 +31,14 @@ export default function ApartPage() {
   const [lastSelectedMunicipal, setLastSelectedMunicipal] = useState('');
   const [lastSelectedAddres, setLastSelectedAddres] = useState('');
   const [filters, setFilters] = useState({}); // Состояние для хранения фильтров
+  const [rowSelection, setRowSelection] = useState({});
 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     resetFilters();
     fetchDistricts();
+    //fetchAllAparts();
   }, [apartType]);
 
   useEffect(() => {
@@ -71,6 +73,20 @@ export default function ApartPage() {
     }
   };
 
+  const fetchAllAparts = async () => {
+    try {
+      const response = await axios.get(`${HOSTLINK}/tables/apartments`, {
+        params: { apart_type: apartType },
+        paramsSerializer
+      });
+      setApartments(response.data);
+      setLoading(false);
+      setIsDetailsVisible(false);
+    } catch (error) {
+      console.error("Error fetching districts:", error.response?.data);
+    }
+  };
+
   const fetchMunicipalDistricts = async (district) => {
     try {
       const response = await axios.get(`${HOSTLINK}/tables/municipal_district`, {
@@ -95,7 +111,7 @@ export default function ApartPage() {
       const response = await axios.get(`${HOSTLINK}/tables/house_addresses`, {
         params: {
           apart_type: apartType,
-          municipal_district: [municipal]
+          municipal_districts: [municipal]
         },
         paramsSerializer
       });
@@ -170,6 +186,7 @@ export default function ApartPage() {
             setLastSelectedMunicipal={setLastSelectedMunicipal}
             setLastSelectedAddres={setLastSelectedAddres}
             setFilters={setFilters}
+            setRowSelection={setRowSelection}
           />
 
           <div className="flex-1 overflow-auto">
@@ -189,6 +206,10 @@ export default function ApartPage() {
               fetchApartments={fetchApartments}
               filters={filters}
               setFilters={setFilters}
+              rowSelection={rowSelection} 
+              setRowSelection={setRowSelection}
+              setApartType={setApartType}
+              setLoading={setLoading}
             />
           </div>
         </div>

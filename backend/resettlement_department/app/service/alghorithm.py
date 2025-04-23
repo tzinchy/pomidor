@@ -29,7 +29,6 @@ def match_new_apart_to_family_batch(
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
-                # Запрос для "старых квартир" (потребностей семей)
                 family_query = """
                         SELECT 
                         o.affair_id, 
@@ -53,13 +52,14 @@ def match_new_apart_to_family_batch(
 						old_apart o 
                     LEFT JOIN 
                         family_member fm ON o.kpu_number = fm.kpu_number 
-                    WHERE 1=1 and
+                    WHERE (o.rsm_status <> 'снято' or rsm_status is NULL) and
                         o.affair_id NOT IN (
                             SELECT affair_id
                             FROM  offer
+                            where status_id <> 2
                         ) 
                 """
-
+                
                 old_apart_query_params = []
 
                 # Дополнительные фильтры
@@ -110,7 +110,7 @@ def match_new_apart_to_family_batch(
                 print('FAMILY QUERY', len(old_aparts), family_query, old_apart_query_params)
                 if not old_aparts:
                     return ("No old apartments found.")
-                # Запрос для новых квартир
+                # Запрос для новых квартир с учетом диапазонов
                 new_apart_query = """
                 SELECT 
                     na.new_apart_id, 
@@ -126,15 +126,82 @@ def match_new_apart_to_family_batch(
                     na.for_special_needs_marker                
                 FROM 
                     public.new_apart na
-                WHERE 1=1
+                WHERE new_apart_id::text NOT IN 
+                            (SELECT key FROM public.offer, 
+                            json_each_text(new_aparts::json) AS j(key, value) 
+                            WHERE (value::json->>'status_id')::int != 2) AND (na.status_id NOT IN (12, 13) or na.status_id is null)
                 """
 
                 new_apart_query_params = []
+                print('NEW_ADDRESSES --------------------------------------------------', new_selected_addresses)
 
-                if new_selected_addresses:
-                    new_apart_query += " AND house_address IN %s"
-                    new_apart_query_params.append(tuple(new_selected_addresses))
+                # Обрабатываем адреса с диапазонами квартир
+                if new_selected_addresses and len(new_selected_addresses) > 0:
+                    # Извлекаем данные из вложенного списка
+                    if isinstance(new_selected_addresses, list) and len(new_selected_addresses) > 0 and isinstance(new_selected_addresses[0], list):
+                        new_selected_addresses = new_selected_addresses[0]
+                    
+                    address_conditions = []
+                    
+                    for address_data in new_selected_addresses:
+                        # Проверяем, является ли address_data словарем
+                        if not isinstance(address_data, dict):
+                            continue
+                            
+                        address = address_data.get('address')
+                        sections = address_data.get('sections', [])
+                        
+                        # Если нет секций, добавляем просто условие по адресу
+                        if not sections:
+                            address_conditions.append("(na.house_address = %s)")
+                            new_apart_query_params.append(address)
+                            continue
+                            
+                        # Для каждого адреса создаем условия по секциям и диапазонам
+                        section_conditions = []
+                        
+                        for section_data in sections:
+                            if not isinstance(section_data, dict):
+                                continue
+                                
+                            section = section_data.get('section')
+                            range_data = section_data.get('range', {})
+                            
+                            # Обрабатываем разные форматы range (как объект или массив)
+                            if isinstance(range_data, dict):
+                                try:
+                                    min_apart = int(range_data.get('from', 0))
+                                    max_apart = int(range_data.get('to', 0))
+                                except (ValueError, TypeError):
+                                    continue  # Пропускаем некорректные данные
+                            elif isinstance(range_data, list) and len(range_data) >= 2:
+                                try:
+                                    min_apart = int(range_data[0])
+                                    max_apart = int(range_data[1])
+                                except (ValueError, TypeError):
+                                    continue  # Пропускаем некорректные данные
+                            else:
+                                continue  # Пропускаем некорректные данные
+                            
+                            # Добавляем условие для номера квартиры в диапазоне
+                            section_conditions.append(
+                                "(na.house_address = %s AND na.apart_number BETWEEN %s AND %s)"
+                            )
+                            new_apart_query_params.extend([address, min_apart, max_apart])
+                        
+                        # Объединяем условия для секций через OR
+                        if section_conditions:
+                            address_conditions.append(f"({' OR '.join(section_conditions)})")
+                        else:
+                            # Если были секции, но все оказались некорректными, все равно добавляем адрес
+                            address_conditions.append("(na.house_address = %s)")
+                            new_apart_query_params.append(address)
 
+                    # Объединяем условия для адресов через OR
+                    if address_conditions:
+                        new_apart_query += " AND (" + " OR ".join(address_conditions) + ")"
+
+                # Остальные условия (районы, муниципальные округа, дата)
                 if new_selected_districts:
                     new_apart_query += " AND district IN %s"
                     new_apart_query_params.append(tuple(new_selected_districts))
@@ -146,10 +213,13 @@ def match_new_apart_to_family_batch(
                 if date:
                     new_apart_query += " AND updated_at = (SELECT MAX(updated_at) FROM public.new_apart)"
 
+                # Сортировка
                 new_apart_query += " ORDER BY room_count ASC, (full_living_area + living_area), floor, living_area ASC, full_living_area ASC, total_living_area ASC"
-                
-                cursor.execute(new_apart_query, new_apart_query_params)
 
+                print("Final query:", new_apart_query)
+                print("New Apart Query params:", new_apart_query_params)
+
+                cursor.execute(new_apart_query, new_apart_query_params)
                 new_aparts = cursor.fetchall()
                 #print(new_aparts)
                 #print('FAMILY QUERY', len(new_aparts), new_apart_query, new_apart_query_params)
@@ -264,6 +334,7 @@ def match_new_apart_to_family_batch(
                             break
 
                 # Если записи не существует, вставляем новую запись в таблицу history
+                new_addresses = [item['address'] for item in new_selected_addresses] if not date else new_selected_addresses
                 if not record_exists:
                     cursor.execute(
                         """
@@ -274,7 +345,7 @@ def match_new_apart_to_family_batch(
                         VALUES(%s, %s)
                         RETURNING history_id
                     """,
-                        (old_selected_addresses, new_selected_addresses),
+                        (old_selected_addresses, new_addresses),
                     )
                     last_history_id = cursor.fetchone()[0]
                     conn.commit()

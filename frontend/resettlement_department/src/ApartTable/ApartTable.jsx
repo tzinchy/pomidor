@@ -1,4 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+import { Menu, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -12,21 +14,52 @@ import AdressCell from './Cells/AdressCell';
 import FamilyCell from './Cells/Fio';
 import PloshCell from './Cells/PloshCell';
 import StatusCell from './Cells/StatusCell';
-import Notes from './Cells/Notes';
+import NotesCell from './Cells/Notes';
 import ApartDetails from './ApartDetails';
 import { HOSTLINK } from '..';
 import AllFilters from './Filters/AllFilters';
 
+// Добавьте SVG для иконки меню
+const MenuIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-menu">
+    <line x1="4" y1="12" x2="20" y2="12" />
+    <line x1="4" y1="6" x2="20" y2="6" />
+    <line x1="4" y1="18" x2="20" y2="18" />
+  </svg>
+);
+
 const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, 
-  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters }) => {
+  fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters, rowSelection, setRowSelection,
+  setApartType, setLoading}) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
-  const [rowSelection, setRowSelection] = useState({});
   const tableContainerRef = useRef(null);
   const [filteredApartments, setFilteredApartments] = useState(data);
-  const [rooms, setRooms] = useState([]);
   const [matchCount, setMatchCount] = useState([]);
   const [selectedRowId, setSelectedRowId] = useState();
+
+  const [rooms, setRooms] = useState([]);
+  const [filtersResetFlag, setFiltersResetFlag] = useState(false);
+  const [isQueueChecked, setIsQueueChecked] = useState(false);
+  const [filterData, setFilterData] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [firstMinArea, setFirstMinArea] = useState("");
+  const [firstMaxArea, setFirstMaxArea] = useState("");
+  const [secondMinArea, setSecondMinArea] = useState(""); 
+  const [secondMaxArea, setSecondMaxArea] = useState(""); 
+  const [thirdMinArea, setThirdMinArea] = useState(""); 
+  const [thirdMaxArea, setThirdMaxArea] = useState(""); 
+  const [minFloor, setMinFloor] = useState("");
+  const [maxFloor, setMaxFloor] = useState("");
+  const [searchApartQuery, setSearchApartQuery] = useState("");
+  const [searchFioQuery, setSearchFioQuery] = useState("");
+  const [searchNotesQuery, setSearchNotesQuery] = useState("");
+  const [typeOfSettlement, setTypeOfSettlement] = useState([]);
+  const [minPeople, setMinPeople] = useState([]);
+  const [maxPeople, setMaxPeople] = useState([]);
+  const [filterStatuses, setFilterStatuses] = useState([]);
+
+  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)"] : ["Резерв", "Блок"];
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -41,16 +74,77 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     };
   }, [data]);
 
+  // Получаем уникальные строковые значения
+  const getUniqueStringValues = useMemo(() => {
+    if (!data) return [];
+  
+    return (x) => {
+      return [...new Set(
+        data
+          .map(apartment => {
+            // Получаем и обрабатываем значение свойства
+            let value = apartment[x]?.toString().trim();
+            
+            // Специальная обработка для статусов
+            if (x === "status" && !value) {
+              value = apartType === "OldApart" ? "Не подобрано" : "Свободна";
+            }
+            
+            return value;
+          })
+          // Фильтрация пустых и неопределенных значений
+          .filter(value => value && value !== "undefined")
+      )].sort((a, b) => a.localeCompare(b)); // Сортировка по алфавиту
+    };
+  }, [data]);
+
+
   // Обновляем rooms при изменении filteredApartments
   useEffect(() => {
     setRooms(getUniqueValues('room_count'));
-    setMatchCount(getUniqueValues('selection_count'))
+    setMatchCount(getUniqueValues('selection_count'));
+    setTypeOfSettlement(getUniqueStringValues('type_of_settlement'));
+    setFilterStatuses(getUniqueStringValues('status'));
+    console.log('filterStatuses', filterStatuses);
   }, [getUniqueValues]);
+
+
+  const getFilteData = (data) => {
+    if (!data) return {};
+  
+    const result = {};
+  
+    data.forEach(apartment => {
+      const { district, municipal_district, house_address } = apartment;
+  
+      if (!district || !municipal_district || !house_address) return;
+  
+      if (!result[district]) {
+        result[district] = {};
+      }
+  
+      if (!result[district][municipal_district]) {
+        result[district][municipal_district] = new Set();
+      }
+  
+      result[district][municipal_district].add(house_address);
+    });
+  
+    // Преобразуем Set в массив для удобства
+    for (const district in result) {
+      for (const municipal_district in result[district]) {
+        result[district][municipal_district] = Array.from(result[district][municipal_district]);
+      }
+    }
+  
+    return result;
+  };
 
   // 2. Добавляем эффект для синхронизации с исходными данными
   useEffect(() => {
-    console.log(data);
     setFilteredApartments(data);
+    setFilterData(getFilteData(data));
+    console.log(data);
   }, [data]);
   
   const handleFilterChange = useCallback((filterType, selectedValues) => {
@@ -76,31 +170,128 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   // Применение всех фильтров к данным
   useEffect(() => {
-      if (!data || data.length === 0) return;
+    if (!data || data.length === 0) return;
 
-      let filtered = data;
+    let filtered = data;
+
+    if (searchApartQuery) {
+      filtered = filtered.filter((item) => {
+          return (
+              item.apart_number?.toLowerCase().includes(searchApartQuery.toLowerCase())
+          );
+      });
+    }
+
+    if (searchFioQuery) {
+      filtered = filtered.filter((item) => {
+          return (
+              item.fio?.toLowerCase().includes(searchFioQuery.toLowerCase())
+          );
+      });
+    }
+
+    if (searchNotesQuery) {
+      filtered = filtered.filter((item) => {
+          return (
+              item.notes?.toLowerCase().includes(searchNotesQuery.toLowerCase())
+          );
+      });
+    }
+
+    // Фильтрация по full_living_area (firstMinArea/firstMaxArea)
+    if (firstMinArea || firstMaxArea) {
+      filtered = filtered.filter((item) => {
+        const area = parseFloat(item.full_living_area);
+        const min = parseFloat(firstMinArea);
+        const max = parseFloat(firstMaxArea);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && area >= min;
+        if (!isNaN(max)) valid = valid && area <= max;
+        return valid;
+      });
+    }
+  
+    // Фильтрация по total_living_area (secondMinArea/secondMaxArea)
+    if (secondMinArea || secondMaxArea) {
+      filtered = filtered.filter((item) => {
+        const area = parseFloat(item.total_living_area);
+        const min = parseFloat(secondMinArea);
+        const max = parseFloat(secondMaxArea);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && area >= min;
+        if (!isNaN(max)) valid = valid && area <= max;
+        return valid;
+      });
+    }
+  
+    // Фильтрация по living_area (thirdMinArea/thirdMaxArea)
+    if (thirdMinArea || thirdMaxArea) {
+      filtered = filtered.filter((item) => {
+        const area = parseFloat(item.living_area);
+        const min = parseFloat(thirdMinArea);
+        const max = parseFloat(thirdMaxArea);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && area >= min;
+        if (!isNaN(max)) valid = valid && area <= max;
+        return valid;
+      });
+    }
+
+    // Фильтрация по этажу
+    if (minFloor || maxFloor) {
+      filtered = filtered.filter((item) => {
+        const floor = parseFloat(item.floor);
+        const min = parseFloat(minFloor);
+        const max = parseFloat(maxFloor);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && floor >= min;
+        if (!isNaN(max)) valid = valid && floor <= max;
+        return valid;
+      });
+    }
+    
+    if (minPeople || maxPeople) {
+      filtered = filtered.filter((item) => {
+        const people = parseFloat(item.people_v_dele);
+        const min = parseFloat(minPeople);
+        const max = parseFloat(maxPeople);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && people >= min;
+        if (!isNaN(max)) valid = valid && people <= max;
+        return valid;
+      });
+    }
+    
 
       // Применяем каждый фильтр
       Object.entries(filters).forEach(([filterType, selectedValues]) => {
-          if (selectedValues.length > 0) {
-              const filterKey = filterType.toLowerCase();
+        if (selectedValues.length > 0) {
+            const filterKey = filterType.toLowerCase();
 
-              filtered = filtered.filter((item) => {
-                  // Проверяем наличие "Не подобрано" в выбранных значениях
-                  const hasNotMatched = selectedValues.includes("Не подобрано");
-                  // Проверяем обычные значения статусов
-                  const hasRegularStatus = selectedValues.some(
-                      (val) => val !== "Не подобрано" && item[filterKey] === val
-                  );
+            filtered = filtered.filter((item) => {
+                // Проверяем наличие специальных значений в выбранных значениях
+                const hasSpecialValues = selectedValues.some(
+                    val => val === "Не подобрано" || val === "Свободна"
+                );
+                
+                // Проверяем обычные значения статусов
+                const hasRegularStatus = selectedValues.some(
+                    (val) => val !== "Не подобрано" && val !== "Свободна" && item[filterKey] === val
+                );
 
-                  // Если выбран "Не подобрано" - проверяем на null, иначе проверяем обычные статусы
-                  return (hasNotMatched && item[filterKey] === null) || hasRegularStatus;
-              });
-          }
+                // Если выбраны специальные значения - проверяем на null, иначе проверяем обычные статусы
+                return (hasSpecialValues && item[filterKey] === null) || hasRegularStatus;
+            });
+        }
       });
 
       setFilteredApartments(filtered);
-  }, [data, filters]);
+  }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor, minPeople, maxPeople, searchApartQuery, searchFioQuery, searchNotesQuery]);
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
@@ -118,20 +309,54 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   const switchAparts = async () => {
     if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment')) return;
-    
     try {
       await axios.post(
         `${HOSTLINK}/tables/switch_aparts`,
-        {},
         {
-          params: {
-            first_apart_id: parseInt(Object.keys(rowSelection)[0]),
-            second_apart_id: parseInt(Object.keys(rowSelection)[1])
-          }
+          first_apart_id: parseInt(Object.keys(rowSelection)[0]),
+          second_apart_id: parseInt(Object.keys(rowSelection)[1])
         }
       );
     } catch (error) {
       console.error("Error ", error.response?.data);
+    }
+  };
+
+  const setStatusForMany = async (status) => {
+    const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+    console.log('setStatusForMany', apartmentIds, status, apartType)
+    
+    try {
+      await axios.patch(
+        `${HOSTLINK}/tables/apartment/set_status_for_many`,
+        { 
+          apart_ids: apartmentIds,
+          status: status 
+        },
+        { 
+          headers: { 'Content-Type': 'application/json' },
+          params: {
+            apart_type: apartType
+          }
+        }
+      );
+      
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+    } catch (error) {
+      console.error("Error setting status:", error.response?.data);
+    }
+  };
+
+  const handleNotesSave = async (rowData, newNotes) => {
+    try {
+      await axios.patch(
+        `${HOSTLINK}/apartment/${rowData.id}/notes`,
+        { notes: newNotes }
+      );
+      // Обновить данные таблицы после успешного сохранения
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+    } catch (error) {
+      console.error("Ошибка при сохранении:", error);
     }
   };
 
@@ -144,6 +369,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             type="checkbox"
             checked={table.getIsAllRowsSelected()}
             onChange={table.getToggleAllRowsSelectedHandler()}
+            onClick={(e) => e.stopPropagation()}
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
@@ -152,10 +378,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             type="checkbox"
             checked={row.getIsSelected()}
             onChange={row.getToggleSelectedHandler()}
+            onClick={(e) => e.stopPropagation()}
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
-        size: 10,
+        size: 20,
         enableSorting: false,
       },
       {
@@ -185,9 +412,15 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         size: 120,
       },
       {
-        header: 'Примечания',
-        accessorKey: 'notes',
-        cell: ({ row }) => <Notes props={row.original} />,
+        header: "Примечания",
+        accessorKey: "notes",
+        cell: ({ row }) => (
+          <NotesCell
+            props={row.original}
+            apartType={apartType}
+            onSave={(rowData, newNotes) => handleNotesSave(rowData, newNotes)}
+          />
+        ),
         size: 250,
       },
     ],
@@ -236,28 +469,246 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     }
   };
 
-  return (
-    <div className='bg-neutral-100'>
-      <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
-          <AllFilters handleFilterChange={handleFilterChange} rooms={rooms} matchCount={matchCount} apartType={apartType}/>
-        <div className='flex'>
-          <button 
-              onClick={rematch}
-              className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
-            >
-              Переподбор
-            </button>
+  const handleResetFilters = () => {
+    setFilters({});
+    setIsQueueChecked(false);
+    setFiltersResetFlag(prev => !prev); // Инвертируем флаг
+    setFirstMinArea("");
+    setFirstMaxArea("");
+    setSecondMinArea("");
+    setSecondMaxArea("");
+    setThirdMinArea("");
+    setThirdMaxArea("");
+    setMinFloor("");
+    setMaxFloor("");
+    setSearchApartQuery("");
+    setSearchFioQuery("");
+    setSearchNotesQuery("");
+    setTypeOfSettlement("");
+    setMinPeople("");
+    setMaxPeople("");
+  };
 
-            <button 
-              onClick={switchAparts}
-              className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded justify-center whitespace-nowrap text-sm font-medium mx-2 h-8"
+  const changeApartType= (apType) => {
+    if (apType !== apartType){
+      setIsDetailsVisible(false); 
+      setSelectedRow(false); 
+      setApartType(apType); 
+      setLoading(true); 
+      setFilters({}); 
+      setRowSelection({}); 
+      setFiltersResetFlag(prev => !prev);
+    }
+  }
+  
+
+  return (
+    <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
+      <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
+      <button
+          onClick={() => setIsOpen(!isOpen)}
+          className=""
+        >
+          <div className="relative">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="filter-icon"
             >
-              Поменять подобранные квартиры
+              <path
+                d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z"
+                stroke="url(#filterGradient)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <defs>
+                <linearGradient
+                  id="filterGradient"
+                  x1="2"
+                  y1="3"
+                  x2="22"
+                  y2="3"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor="#3B82F6" />
+                  <stop offset="1" stopColor="#8B5CF6" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </button>
+
+        <AllFilters 
+          handleFilterChange={handleFilterChange} 
+          rooms={rooms} 
+          matchCount={matchCount} 
+          apartType={apartType} 
+          filtersResetFlag={filtersResetFlag} 
+          handleResetFilters={handleResetFilters}
+          isQueueChecked={isQueueChecked}
+          setIsQueueChecked={setIsQueueChecked}
+          filters={filters}
+          filterData={filterData}
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          setFirstMinArea={setFirstMinArea}
+          setFirstMaxArea={setFirstMaxArea}
+          firstMinArea={firstMinArea}
+          firstMaxArea={firstMaxArea}
+          setSecondMinArea={setSecondMinArea}
+          setSecondMaxArea={setSecondMaxArea}
+          secondMinArea={secondMinArea}
+          secondMaxArea={secondMaxArea}
+          setThirdMinArea={setThirdMinArea}
+          setThirdMaxArea={setThirdMaxArea}
+          thirdMinArea={thirdMinArea}
+          thirdMaxArea={thirdMaxArea}
+          setMinFloor={setMinFloor}
+          setMaxFloor={setMaxFloor}
+          minFloor={minFloor}
+          maxFloor={maxFloor}
+          setSearchApartQuery={setSearchApartQuery}
+          searchApartQuery={searchApartQuery}
+          setSearchFioQuery={setSearchFioQuery}
+          searchFioQuery={searchFioQuery}
+          setSearchNotesQuery={setSearchNotesQuery}
+          searchNotesQuery={searchNotesQuery}
+          typeOfSettlement={typeOfSettlement}
+          minPeople={minPeople}
+          setMinPeople={setMinPeople}
+          maxPeople={maxPeople} 
+          setMaxPeople={setMaxPeople}
+          filterStatuses={filterStatuses}
+        />
+        
+        <div className='flex items-center'>
+
+          {/*<div className="flex justify-around">
+            <button
+              onClick={() => changeApartType('OldApart')}
+              className={`px-4 py-2 mr-2 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
+            >
+              Семьи
             </button>
+            <button
+              onClick={() => changeApartType('NewApartment')}
+              className={`px-4 py-2 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
+            >
+              Ресурс
+            </button>
+          </div>*/}
+
+            <Menu as="div" className="relative inline-block text-left z-[102]">
+            <div>
+              <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
+                <MenuIcon />
+              </Menu.Button>
+            </div>
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
+            >
+              <Menu.Items 
+                className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                static // Добавляем static чтобы меню не закрывалось при взаимодействии с вложенными элементами
+              >
+                {apartType === 'OldApart' && (
+                  <div className="px-1 py-1">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={rematch}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Переподбор
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={switchAparts}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Поменять квартиры
+                      </button>
+                    )}
+                  </Menu.Item>
+                  </div>
+                )}
+                <div className="px-1 py-1">
+                  {/* Подменю статусов */}
+                  <Menu>
+                    {({ open }) => (
+                      <div className="relative">
+                        <Menu.Button
+                          className={`${
+                            open ? 'bg-gray-100' : ''
+                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center`}
+                        >
+                          <span>Изменить статус</span>
+                        </Menu.Button>
+                        
+                        <Transition
+                          show={open}
+                          as={Fragment}
+                          enter="transition ease-out duration-100"
+                          enterFrom="transform opacity-0 scale-95"
+                          enterTo="transform opacity-100 scale-100"
+                          leave="transition ease-in duration-75"
+                          leaveFrom="transform opacity-100 scale-100"
+                          leaveTo="transform opacity-0 scale-95"
+                        >
+                          <Menu.Items 
+                            static
+                            className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
+                          >
+                            <div className="px-1 py-1">
+                              {statuses.map((status) => (
+                                <Menu.Item key={status}>
+                                  {({ active }) => (
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setStatusForMany(status, apartType);
+                                      }}
+                                      className={`${
+                                        active ? 'bg-gray-100' : ''
+                                      } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                                    >
+                                      {status}
+                                    </button>
+                                  )}
+                                </Menu.Item>
+                              ))}
+                            </div>
+                          </Menu.Items>
+                        </Transition>
+                      </div>
+                    )}
+                  </Menu>
+                </div>
+              </Menu.Items>
+            </Transition>
+          </Menu>
           <p className='ml-8 mr-2 text-gray-400'>{filteredApartments.length}</p>
         </div>
       </div>
-      <div className="relative flex flex-col lg:flex-row h-[calc(100vh-4rem)] w-full transition-all duration-300">
+      <div className="relative flex flex-col lg:flex-row  w-full transition-all duration-300">
         {loading ? (
           <div className="flex flex-1 justify-center h-64">
             <div className="relative flex flex-col place-items-center py-4 text-gray-500">
@@ -271,13 +722,43 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           </div>
         ) : (
           <div className="flex flex-1 overflow-hidden">
+            {filteredApartments.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-md border p-8">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#9CA3AF"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mx-auto mb-4"
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  <line x1="11" y1="8" x2="11" y2="14"></line>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+                <h3 className="text-lg font-medium text-gray-500 mb-2">Ничего не найдено</h3>
+                <p className="text-gray-400 mb-4">Попробуйте изменить параметры фильтрации</p>
+                <button
+                  onClick={handleResetFilters}
+                  className="px-4 py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  Сбросить фильтры
+                </button>
+              </div>
+          ) : (
+            <div className="flex flex-1 overflow-hidden">
             {/* Таблица */}
             <div
-              className={` rounded-md h-full transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[80vw]' : 'flex-grow'}`}
+              className={` rounded-md h-[calc(100vh-3.67rem)] transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
             >
               <div
                 ref={tableContainerRef}
-                className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} overflow-auto rounded-md border h-[calc(100vh-1rem)] w-[calc(100% - 25px)] transition-all ease-in-out scrollbar-custom`}
+                className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} overflow-auto rounded-md border h-full w-[calc(100% - 25px)] transition-all ease-in-out scrollbar-custom`}
               >
                 <table className="text-sm w-full border-collapse backdrop-blur-md sticky top-0 z-30">
                   <thead className="border-b z-10 backdrop-blur-md shadow z-10">
@@ -415,7 +896,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               >
                 <div className="fixed inset-0 bg-opacity-50 lg:bg-transparent lg:relative">
                   <div
-                    className={`fixed min-w-[650px] max-w-[650px] h-[calc(100vh-1rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+                    className={`fixed min-w-[40.5vw] max-w-[40.5vw] h-[calc(100vh-1rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
                       isDetailsVisible ? 'translate-x-0' : 'translate-x-full'
                     }`}
                     style={{
@@ -432,6 +913,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         fetchApartments={fetchApartments}
                         lastSelectedAddres={lastSelectedAddres}
                         lastSelectedMunicipal={lastSelectedMunicipal}
+                        fetchApartmentDetails={fetchApartmentDetails}
+                        getFilteData={getFilteData}
                         className="flex-1" // Оставляем для гибкости внутри компонента
                       />
                     </div>
@@ -439,6 +922,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                 </div>
               </div>
             )}
+          </div>)}
           </div>
         )}
       </div>
