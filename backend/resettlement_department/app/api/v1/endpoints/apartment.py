@@ -112,7 +112,7 @@ async def set_notes(
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
     notes: SetNotesSchema = None,
 ):
-    return await apartment_service.set_notes(apart_id, notes.notes, apart_type)
+    return await apartment_service.set_notes_for_many([apart_id], notes.notes, apart_type)
 
 @router.patch("/decline_reason/{decline_reason_id}/update_declined_reason")
 async def update_declined_reason(
@@ -145,3 +145,11 @@ async def set_special_needs_for_many(
     return await apartment_service.set_special_needs_for_many(
         apart_ids_and_marker.apart_ids, apart_ids_and_marker.is_special_needs_marker
     )
+
+@router.patch("/set_notes_for_many")
+async def set_notes_for_many(
+    apart_ids: list[int] = Body(..., description="Список apart_id"),
+    apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
+    notes: SetNotesSchema = None,
+):
+    return await apartment_service.set_notes_for_many(apart_ids, notes.notes, apart_type)
