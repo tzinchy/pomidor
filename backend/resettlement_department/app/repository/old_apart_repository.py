@@ -409,20 +409,21 @@ class OldApartRepository:
                 await session.rollback()
                 raise error
 
-    async def set_notes(self, apart_id: int, notes: str):
+    async def set_notes(self, apart_ids: list[int], notes: str):
         async with self.db() as session:
             try:
                 notes_list = notes.split(";")
                 rsm_note = notes_list.pop(0)
                 notes = ";".join(notes_list)
+                placeholder = ",".join(map(str, apart_ids))
                 await session.execute(
-                    text("""
+                    text(f"""
                     UPDATE old_apart 
                     SET rsm_notes = :rsm_note,
                         notes = :notes
-                    WHERE affair_id = :apart_id
+                    WHERE affair_id IN ({placeholder})
                     """),
-                    {"rsm_note": rsm_note, "notes": notes, "apart_id": apart_id},
+                    {"rsm_note": rsm_note, "notes": notes},
                 )
                 await session.commit()
                 return {"status": "done"}

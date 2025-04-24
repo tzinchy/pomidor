@@ -15,6 +15,7 @@ WITH clr_dt AS (
 ranked_apartments AS (
     SELECT 
         o.offer_id,
+        o.created_at::DATE,
         na.house_address, 
         na.apart_number, 
         na.district, 

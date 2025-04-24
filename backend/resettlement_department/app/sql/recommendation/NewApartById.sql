@@ -33,7 +33,8 @@ joined_aparts AS (
                 'status', s.status,
                 'sentence_date', o.sentence_date::DATE,
                 'answer_date', o.answer_date::DATE,
-                'decline_reason_id', o.decline_reason_id
+                'decline_reason_id', o.decline_reason_id,
+                'created_at', o.created_at::DATE
             )
         ) AS offers
     FROM 
