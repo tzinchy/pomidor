@@ -75,6 +75,47 @@ async def get_apartments(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@router.get("/apartments_one_json")
+async def get_apartments_one_json(
+    apart_type: ApartTypeSchema = Query(..., description="Тип квартиры"),
+    house_addresses: Optional[List[str]] = Query(
+        None, description="Список адресов домов"
+    ),
+    districts: Optional[List[str]] = Query(None, description="Фильтр по районам"),
+    municipal_districts: Optional[List[str]] = Query(
+        None, description="Фильтр по муниципальным округам"
+    ),
+    floor: Optional[int] = Query(None, description="Фильтр по этажу"),
+    min_area: Optional[float] = Query(None, description="Минимальная площадь"),
+    max_area: Optional[float] = Query(None, description="Максимальная площадь"),
+    area_type: Literal["full_living_area", "total_living_area", "living_area"] = Query(
+        "full_living_area", description="Тип площади для фильтрации"
+    ),
+    room_count: Optional[List[int]] = Query(
+        None,
+        description="Фильтр по количеству комнат (можно несколько значений)",
+        example=[1, 2, 3],
+    ),
+    is_queue: bool = None,
+    is_private: bool = None
+):
+    try:
+        return await apartment_service.get_apartments_one_json(
+            apart_type=apart_type,
+            house_addresses=house_addresses,
+            districts=districts,
+            municipal_districts=municipal_districts,
+            floor=floor,
+            min_area=min_area,
+            max_area=max_area,
+            area_type=area_type,
+            room_count=room_count,
+            is_queue=is_queue,
+            is_private=is_private,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.post("/switch_aparts")
 async def switch_apartments(
     first_apart_id: int = Body(..., description="ID первой квартиры"),
