@@ -192,12 +192,14 @@ class ApartService:
             notes=notes,
         )
 
-    async def set_notes(self, apart_id: int, notes: str, apart_type: str):
+    async def set_notes_for_many(
+        self, apart_ids: list[int], notes: str, apart_type: str
+    ):
         if apart_type == ApartTypeSchema.OLD:
-            return await self.old_apart_repository.set_notes(apart_id, notes=notes)
+            return await self.old_apart_repository.set_notes(apart_ids, notes=notes)
         elif apart_type == ApartTypeSchema.NEW:
             return await self.new_apart_repository.set_notes(
-                apart_id=apart_id, notes=notes
+                apart_ids=apart_ids, notes=notes
             )
         else:
             raise NotFoundException
@@ -238,22 +240,32 @@ class ApartService:
         return {"affected_rows": affected_rows, "status": "done"}
 
     async def set_status_for_many(self, apart_ids, status, apart_type):
-        '''
+        """
         Конкретно данный сервис проставляет статус в offer(в jsonb тоже)
         Либо резервирует новые квартиры
-        '''
-        try: 
+        """
+        try:
             if apart_type == ApartTypeSchema.OLD:
-                affected_rows = await self.old_apart_repository.set_status_for_many(apart_ids, status=status)
+                affected_rows = await self.old_apart_repository.set_status_for_many(
+                    apart_ids, status=status
+                )
             elif apart_type == ApartTypeSchema.NEW:
-                if status in (Status.RESERVE.value, Status.PRIVATE.value, Status.FREE.value):
-                    affected_rows = await self.new_apart_repository.set_private_or_reserve_status_for_new_aparts(apart_ids, status=status)
+                if status in (
+                    Status.RESERVE.value,
+                    Status.PRIVATE.value,
+                    Status.FREE.value,
+                ):
+                    affected_rows = await self.new_apart_repository.set_private_or_reserve_status_for_new_aparts(
+                        apart_ids, status=status
+                    )
                 else:
                     raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
             return {"status": "done", "affected_rows": affected_rows}
-        except Exception as e: 
+        except Exception as e:
             print(e)
             raise
 
     async def set_special_needs_for_many(self, apart_ids, is_special_needs_marker):
-        await self.old_apart_repository.set_special_needs_for_many(apart_ids, is_special_needs_marker)
+        await self.old_apart_repository.set_special_needs_for_many(
+            apart_ids, is_special_needs_marker
+        )
