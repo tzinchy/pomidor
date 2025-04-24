@@ -126,7 +126,7 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
     // Фильтрация по searchQuery (apart_number)
     if (searchQuery) {
       filtered = filtered.filter((item) => {
-        return item.apart_number?.toLowerCase().includes(searchQuery.toLowerCase());
+        return String(item.apart_number || '')?.toLowerCase().includes(searchQuery.toLowerCase());
       });
     }
   
