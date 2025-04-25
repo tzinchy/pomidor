@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional
 
-from depends import apartment_service
+from depends import apartment_service, order_service
 from fastapi import APIRouter, Body, HTTPException, Query
 from schema.apartment import ApartTypeSchema
 
@@ -145,3 +145,7 @@ async def old_apart():
 @router.get("/new_apart")
 async def new_apart():
     return await apartment_service.get_excel_new_apart()
+
+@router.get("/order_decisions")
+async def order_decisions():
+    return await order_service.get_excel_order()
