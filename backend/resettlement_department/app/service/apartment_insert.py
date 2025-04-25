@@ -1002,6 +1002,18 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             port=settings.project_management_setting.DB_PORT,
             database=settings.project_management_setting.DB_NAME
         )
+        existed_df = pd.read_sql("SELECT new_apart_id FROM public.new_apart", connection)
+        existed_apart_ids = existed_df["new_apart_id"]
+        rsm_apart_ids = new_apart_df["new_apart_id"]
+        deleted_rows_ids = existed_apart_ids[~existed_apart_ids.isin(rsm_apart_ids)].values
+        print("Найдено строк отсутствующих в рсм:", len(deleted_rows_ids))
+
+        placeholder = ",".join(deleted_rows_ids)
+        update_status_in_deleted_aparts = f"""
+        UPDATE new_apart
+        SET status_id = 15
+        WHERE new_apart_id IN ({placeholder})
+        """
 
         insert_data_sql = f"""
             INSERT INTO public.new_apart (
@@ -1021,6 +1033,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             WHERE name = 'new_aparts_resource'
         """
         out = 0
+        return
         with connection:
             with connection.cursor() as cursor:
                 print("DEBUG: Connection is open")
