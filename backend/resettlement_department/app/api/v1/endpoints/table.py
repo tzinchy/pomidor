@@ -137,3 +137,11 @@ async def set_entrance_number_for_many(
     entrance_number: int = Body(..., description="Номер подъезда")
 ):
     return await apartment_service.set_entrance_number_for_many(new_apart_ids, entrance_number)
+
+@router.get("/old_apart")
+async def old_apart():
+    return await apartment_service.get_excel_old_apart()
+
+@router.get("/new_apart")
+async def new_apart():
+    return await apartment_service.get_excel_new_apart()

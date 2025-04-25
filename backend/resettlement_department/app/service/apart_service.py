@@ -1,7 +1,10 @@
+import os
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import HTTPException
 from fastapi import status as http_status
+from fastapi.responses import FileResponse
 from handlers.httpexceptions import NotFoundException
 from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
@@ -318,3 +321,39 @@ class ApartService:
         await self.old_apart_repository.set_special_needs_for_many(
             apart_ids, is_special_needs_marker
         )
+
+    async def get_excel_old_apart(self):
+        try:
+            folders = [Path("uploads")]
+            for folder in folders:
+                folder.mkdir(parents=True, exist_ok=True)
+
+            output_path = os.path.join(os.getcwd(), "././uploads", "old_apart.xlsx")
+            print(output_path)
+            await self.old_apart_repository.get_excel_old_apart(output_path)
+
+            return FileResponse(
+                path=output_path,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                filename="old_apart.xlsx",
+            )
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def get_excel_new_apart(self):
+        try:
+            folders = [Path("uploads")]
+            for folder in folders:
+                folder.mkdir(parents=True, exist_ok=True)
+
+            output_path = os.path.join(os.getcwd(), "././uploads", "new_apart.xlsx")
+            print(output_path)
+            await self.new_apart_repository.get_excel_new_apart(output_path)
+
+            return FileResponse(
+                path=output_path,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                filename="new_apart.xlsx",
+            )
+        except Exception as e:
+            return {"error": str(e)}
