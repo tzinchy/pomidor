@@ -149,3 +149,7 @@ async def new_apart():
 @router.get("/order_decisions")
 async def order_decisions():
     return await order_service.get_excel_order()
+
+@router.get("/get_stat")
+async def get_stat():
+    return await order_service.get_stat()

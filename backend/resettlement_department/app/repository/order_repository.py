@@ -29,3 +29,23 @@ class OrderRepository:
         print(df)
         df.to_excel(filepath, index=False)
         print(f"Data successfully saved to {filepath}")
+    
+    async def get_stat(self):
+        query = text(
+            """
+            SELECT COUNT(*), 'кпу' FROM old_apart 
+            UNION 
+            SELECT COUNT(*), 'ресурс' FROM new_apart 
+            UNION 
+            SELECT COUNT(*), 'выписки' FROM order_decisions
+            UNION 
+            SELECT COUNT(*), 'подборы' FROM offer
+            ORDER BY 2
+            """
+        )
+        stat = {}
+        async with self.db() as session:
+            result = await session.execute(query)
+            for v, k in result:
+                stat[k] = v
+        return stat

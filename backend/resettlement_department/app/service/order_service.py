@@ -26,3 +26,6 @@ class OrderService:
             )
         except Exception as e:
             return {"error": str(e)}
+        
+    async def get_stat(self):
+        return await self.repository.get_stat()
