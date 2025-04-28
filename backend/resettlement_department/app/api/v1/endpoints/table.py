@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional
 
-from depends import apartment_service
+from depends import apartment_service, order_service
 from fastapi import APIRouter, Body, HTTPException, Query
 from schema.apartment import ApartTypeSchema
 
@@ -137,3 +137,19 @@ async def set_entrance_number_for_many(
     entrance_number: int = Body(..., description="Номер подъезда")
 ):
     return await apartment_service.set_entrance_number_for_many(new_apart_ids, entrance_number)
+
+@router.get("/old_apart")
+async def old_apart():
+    return await apartment_service.get_excel_old_apart()
+
+@router.get("/new_apart")
+async def new_apart():
+    return await apartment_service.get_excel_new_apart()
+
+@router.get("/order_decisions")
+async def order_decisions():
+    return await order_service.get_excel_order()
+
+@router.get("/get_stat")
+async def get_stat():
+    return await order_service.get_stat()
