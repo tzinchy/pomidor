@@ -1,5 +1,7 @@
 from typing import List, Literal, Optional
 
+from fastapi.responses import FileResponse
+
 from depends import apartment_service, order_service
 from fastapi import APIRouter, Body, HTTPException, Query
 from schema.apartment import ApartTypeSchema
@@ -140,15 +142,39 @@ async def set_entrance_number_for_many(
 
 @router.get("/old_apart")
 async def old_apart():
-    return await apartment_service.get_excel_old_apart()
+    result = await apartment_service.get_excel_old_apart()
+    if filepath := result.get("filepath"):
+        return FileResponse(
+            path=filepath,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            filename="old_apart.xlsx",
+        )
+    else:
+        return result
 
 @router.get("/new_apart")
 async def new_apart():
-    return await apartment_service.get_excel_new_apart()
+    result = await apartment_service.get_excel_new_apart()
+    if filepath := result.get("filepath"):
+        return FileResponse(
+            path=filepath,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            filename="new_apart.xlsx",
+        )
+    else:
+        return result
 
 @router.get("/order_decisions")
 async def order_decisions():
-    return await order_service.get_excel_order()
+    result = await order_service.get_excel_order()
+    if filepath := result.get("filepath"):
+        return FileResponse(
+            path=filepath,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            filename="order_decisions.xlsx",
+        )
+    else:
+        return result
 
 @router.get("/get_stat")
 async def get_stat():
