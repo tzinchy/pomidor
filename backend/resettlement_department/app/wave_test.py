@@ -37,6 +37,8 @@ def wave_matching(
         a = {}
         delta = {1: 1.5, 2: 3, 3: 5, 4: 6.5, 5: 8, 6: 9.5, 7: 11, 8: 12.5}
 
+        print("df_old_apart['room_count'].max()", df_old_apart['room_count'].max(), df_new_apart['room_count'].max())
+
         for i in range(1, (df_old_apart['room_count'].max() if df_old_apart['room_count'].max() > df_new_apart['room_count'].max() else df_new_apart['room_count'].max()) + 1):
             if (((old_apart_ranks[i] if old_apart_ranks.get(i) is not None else  0) > (max_rank_by_room_count[i] if max_rank_by_room_count.get(i) is not None else  0)) 
             or ((old_apart_count[i] if old_apart_count.get(i) is not None else  0) > (new_apart_count[i] if new_apart_count.get(i) is not None else  0))):
@@ -54,65 +56,12 @@ def wave_matching(
                         ) if old_apart["min_floor"] or old_apart["max_floor"] else True
                     )
 
-                    if (old_apart["is_queue"] == 1):
-                        suitable_aparts = df_new_apart[
-                            (df_new_apart["full_living_area"]>= old_apart["queue_square"])& 
-                            (df_new_apart["full_living_area"]<= old_apart["queue_square"] + 9)& 
-                            (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
-                            (df_new_apart["total_living_area"]>= old_apart["total_living_area"])& 
-                            (df_new_apart["living_area"]>= old_apart["living_area"])& 
-                            (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"])& 
-                            (df_new_apart["floor"] >= (old_apart["min_floor"]))&
-                            (df_new_apart["floor"]<= (old_apart["max_floor"]))
-                        ]
-
-                        # Проверка наличия подходящих квартир
-                        if suitable_aparts.empty:
-                            suitable_aparts = df_new_apart[
-                                (df_new_apart["full_living_area"] >= old_apart["queue_square"])&
-                                (df_new_apart["full_living_area"]<= old_apart["queue_square"] + 9)&
-                                (df_new_apart["full_living_area"]>= old_apart["full_living_area"])& 
-                                (df_new_apart["total_living_area"]>= old_apart["total_living_area"])& 
-                                (df_new_apart["living_area"]>= old_apart["living_area"])& 
-                                (df_new_apart["for_special_needs_marker"]== old_apart["is_special_needs_marker"])
-                                & floor_condition
-                            ]
-
-                            if suitable_aparts.empty:
-                                suitable_aparts = df_new_apart[
-                                    (df_new_apart["full_living_area"]>= old_apart["queue_square"])&
-                                    (df_new_apart["full_living_area"]<= old_apart["queue_square"] + 9)& 
-                                    (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
-                                    (df_new_apart["total_living_area"]>= old_apart["total_living_area"])&
-                                    (df_new_apart["living_area"]>= old_apart["living_area"])&
-                                    (df_new_apart["for_special_needs_marker"]== old_apart["is_special_needs_marker"])
-                                ]
-                                if suitable_aparts.empty:
-                                    cannot_offer_to_insert.append((old_apart_id,))
-                                else:
-                                    suitable_apart = suitable_aparts.iloc[0]
-                                    new_apart_id = int(suitable_apart["new_apart_id"])
-                                    old_apart_list.append(old_apart_id)
-                                    df_new_apart = df_new_apart[df_new_apart["new_apart_id"]!= new_apart_id]
-                            else:
-                                suitable_apart = suitable_aparts.iloc[0]
-                                new_apart_id = int(suitable_apart["new_apart_id"])
-                                old_apart_list.append(old_apart_id)
-                                df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
-                        else:
-                            suitable_apart = suitable_aparts.iloc[0]
-                            new_apart_id = int(suitable_apart["new_apart_id"])
-                            old_apart_list.append(old_apart_id)
-                            df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
-                        continue
-
-                    # Условие для даты "Дата покупки"
-                    elif (
+                
+                    if (
                         old_apart["buying_date"] is not None and old_apart["buying_date"] > datetime.strptime("2017-08-01", "%Y-%m-%d").date()
                         and not (old_apart["min_floor"] or old_apart["max_floor"])
                     ):
                         s = df_new_apart[
-                            (df_new_apart["full_living_area"]>= old_apart["queue_square"])&
                             (df_new_apart["room_count"]== old_apart["room_count"])&
                             (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
                             (df_new_apart["total_living_area"]>= old_apart["total_living_area"])&
@@ -124,7 +73,6 @@ def wave_matching(
                             sap = s.iloc[0]
 
                             suitable_aparts = df_new_apart[
-                                (df_new_apart["full_living_area"] >= old_apart["queue_square"])&
                                 (df_new_apart["room_count"]== old_apart["room_count"])& 
                                 (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
                                 (df_new_apart["total_living_area"]>= old_apart["total_living_area"])& 
@@ -136,7 +84,6 @@ def wave_matching(
                             # Если подходящих квартир нет, проверяем с условием floor_condition
                             if suitable_aparts.empty:
                                 suitable_aparts = df_new_apart[
-                                    (df_new_apart["full_living_area"]>= old_apart["queue_square"])& 
                                     (df_new_apart["room_count"]== old_apart["room_count"])& 
                                     (df_new_apart["full_living_area"]>= old_apart["full_living_area"])&
                                     (df_new_apart["total_living_area"]>= old_apart["total_living_area"])&
@@ -228,7 +175,6 @@ def wave_matching(
                         and not (old_apart["min_floor"] or old_apart["max_floor"])
                     ):
                         s = df_new_apart_second[
-                            (df_new_apart_second["full_living_area"]>= old_apart["queue_square"])& 
                             (df_new_apart_second["room_count"]== old_apart["room_count"])&
                             (df_new_apart_second["full_living_area"]>= old_apart["full_living_area"])& 
                             (df_new_apart_second["total_living_area"]>= old_apart["total_living_area"])& 
@@ -240,7 +186,6 @@ def wave_matching(
                             sap = s.iloc[0]
 
                             suitable_aparts = df_new_apart_second[
-                                (df_new_apart_second["full_living_area"] >= old_apart["queue_square"])& 
                                 (df_new_apart_second["room_count"] == old_apart["room_count"])& 
                                 (df_new_apart_second["full_living_area"]>= old_apart["full_living_area"])& 
                                 (df_new_apart_second["total_living_area"]>= old_apart["total_living_area"])&
@@ -252,7 +197,6 @@ def wave_matching(
                             # Если подходящих квартир нет, проверяем с условием floor_condition
                             if suitable_aparts.empty:
                                 suitable_aparts = df_new_apart_second[
-                                    (df_new_apart_second["full_living_area"] >= old_apart["queue_square"])& 
                                     (df_new_apart_second["room_count"]  == old_apart["room_count"])& 
                                     (df_new_apart_second["full_living_area"]>= old_apart["full_living_area"])& 
                                     (df_new_apart_second["total_living_area"]>= old_apart["total_living_area"])& 
@@ -284,7 +228,6 @@ def wave_matching(
                     else:
                         # Если "Дата покупки" <= 2017-08-01 или пустая, используем floor_condition
                         suitable_aparts = df_new_apart_second[
-                            (df_new_apart_second["full_living_area"]>= old_apart["queue_square"])& 
                             (df_new_apart_second["room_count"]  == old_apart["room_count"])& 
                             (df_new_apart_second["full_living_area"] >= old_apart["full_living_area"])& 
                             (df_new_apart_second["total_living_area"]>= old_apart["total_living_area"])& 
@@ -297,7 +240,6 @@ def wave_matching(
                         # Проверка наличия подходящих квартир
                         if suitable_aparts.empty:
                             suitable_aparts = df_new_apart_second[
-                                (df_new_apart_second["full_living_area"]>= old_apart["queue_square"])& 
                                 (df_new_apart_second["room_count"] == old_apart["room_count"])& 
                                 (df_new_apart_second["full_living_area"]>= old_apart["full_living_area"])& 
                                 (df_new_apart_second["total_living_area"]>= old_apart["total_living_area"])& 
@@ -307,7 +249,6 @@ def wave_matching(
                             ]
                             if suitable_aparts.empty:
                                 suitable_aparts = df_new_apart_second[
-                                    (df_new_apart_second["full_living_area"] >= old_apart["queue_square"])& 
                                     (df_new_apart_second["room_count"] == old_apart["room_count"])& 
                                     (df_new_apart_second["full_living_area"] >= old_apart["full_living_area"])& 
                                     (df_new_apart_second["total_living_area"] >= old_apart["total_living_area"])&
@@ -351,68 +292,11 @@ def wave_matching(
                         else True
                     )
 
-                    if (old_apart["is_queue"] == 1):
-                        suitable_aparts = df_new_apart[
-                            (df_new_apart["full_living_area"]>= old_apart["queue_square"])& 
-                            (df_new_apart["full_living_area"]<= old_apart["queue_square"] + 9)& 
-                            (df_new_apart["full_living_area"]>= old_apart["full_living_area"])& 
-                            (df_new_apart["total_living_area"]>= old_apart["total_living_area"])& 
-                            (df_new_apart["living_area"]>= old_apart["living_area"])& 
-                            (df_new_apart["for_special_needs_marker"]== old_apart["is_special_needs_marker"])& 
-                            (df_new_apart["floor"]>= (old_apart["min_floor"]))& 
-                            (df_new_apart["floor"]<= (old_apart["max_floor"]))
-                        ]
-
-                        # Проверка наличия подходящих квартир
-                        if suitable_aparts.empty:
-                            suitable_aparts = df_new_apart[
-                                (df_new_apart["full_living_area"]>= old_apart["queue_square"])& 
-                                (df_new_apart["full_living_area"]<= old_apart["queue_square"] + 9)& 
-                                (df_new_apart["full_living_area"]>= old_apart["full_living_area"])& 
-                                (df_new_apart["total_living_area"]>= old_apart["total_living_area"])& 
-                                (df_new_apart["living_area"]>= old_apart["living_area"])&
-                                (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"]) & floor_condition
-                            ]
-                            if suitable_aparts.empty:
-                                suitable_aparts = df_new_apart[
-                                    (df_new_apart["full_living_area"] >= old_apart["queue_square"])& 
-                                    (df_new_apart["full_living_area"] <= old_apart["queue_square"] + 9)& 
-                                    (df_new_apart["full_living_area"] >= old_apart["full_living_area"])&
-                                    (df_new_apart["total_living_area"] >= old_apart["total_living_area"])&
-                                    (df_new_apart["living_area"] >= old_apart["living_area"])&
-                                    (df_new_apart["for_special_needs_marker"] == old_apart["is_special_needs_marker"])
-                                ]
-
-                                if suitable_aparts.empty:
-                                    cannot_offer_to_insert.append((old_apart_id, ))
-
-                                else:
-                                    suitable_apart = suitable_aparts.iloc[0]
-                                    new_apart_id = int(suitable_apart["new_apart_id"])
-                                    df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
-                                    offers_to_insert.append((old_apart_id, new_apart_id,))
-
-                            else:
-                                suitable_apart = suitable_aparts.iloc[0]
-                                new_apart_id = int(suitable_apart["new_apart_id"])
-                                df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
-                                offers_to_insert.append((old_apart_id, new_apart_id,))
-
-                        else:
-                            suitable_apart = suitable_aparts.iloc[0]
-                            new_apart_id = int(suitable_apart["new_apart_id"])
-                            df_new_apart = df_new_apart[
-                                df_new_apart["new_apart_id"] != new_apart_id
-                            ]
-                            offers_to_insert.append((old_apart_id, new_apart_id,))
-                        continue
-
                     # Условие для даты "Дата покупки"
                     if (old_apart["buying_date"] is not None and old_apart["buying_date"] > datetime.strptime("2017-08-01", "%Y-%m-%d").date() 
                         and not (old_apart["min_floor"] or old_apart["max_floor"])
                     ):
                         s = df_new_apart[
-                            (df_new_apart["full_living_area"] >= old_apart["queue_square"]) &
                             (df_new_apart["room_count"] == old_apart["room_count"]) &
                             (df_new_apart["full_living_area"] >= old_apart["full_living_area"]) &
                             (df_new_apart["total_living_area"] >= old_apart["total_living_area"]) &
@@ -424,7 +308,6 @@ def wave_matching(
                             sap = s.iloc[0]
 
                             suitable_aparts = df_new_apart[
-                                (df_new_apart["full_living_area"]>= old_apart["queue_square"])
                                 (df_new_apart["room_count"] == old_apart["room_count"]) &
                                 (df_new_apart["full_living_area"] >= old_apart["full_living_area"]) &
                                 (df_new_apart["total_living_area"] >= old_apart["total_living_area"]) &
@@ -436,7 +319,6 @@ def wave_matching(
                             # Если подходящих квартир нет, проверяем с условием floor_condition
                             if suitable_aparts.empty:
                                 suitable_aparts = df_new_apart[
-                                    (df_new_apart["full_living_area"] >= old_apart["queue_square"]) &
                                     (df_new_apart["room_count"] == old_apart["room_count"])  &
                                     (df_new_apart["full_living_area"] >= old_apart["full_living_area"])  &
                                     (df_new_apart["total_living_area"] >= old_apart["total_living_area"]) &
@@ -460,7 +342,6 @@ def wave_matching(
                             cannot_offer_to_insert.append((old_apart_id,))
                     else:
                         suitable_aparts = df_new_apart[
-                            (df_new_apart["full_living_area"] >= old_apart["queue_square"]) &
                             (df_new_apart["room_count"] == old_apart["room_count"])  &
                             (df_new_apart["full_living_area"] >= old_apart["full_living_area"])  & 
                             (df_new_apart["total_living_area"] >= old_apart["total_living_area"])  &
@@ -473,7 +354,6 @@ def wave_matching(
                         # Проверка наличия подходящих квартир
                         if suitable_aparts.empty:
                             suitable_aparts = df_new_apart[
-                                (df_new_apart["full_living_area"] >= old_apart["queue_square"]) &
                                 (df_new_apart["room_count"] == old_apart["room_count"]) &
                                 (df_new_apart["full_living_area"] >= old_apart["full_living_area"]) & 
                                 (df_new_apart["total_living_area"] >= old_apart["total_living_area"]) & 
@@ -483,7 +363,6 @@ def wave_matching(
                             ]
                             if suitable_aparts.empty:
                                 suitable_aparts = df_new_apart[
-                                    (df_new_apart["full_living_area"] >= old_apart["queue_square"]) &
                                     (df_new_apart["room_count"] == old_apart["room_count"]) &
                                     (df_new_apart["full_living_area"] >= old_apart["full_living_area"]) &
                                     (df_new_apart["total_living_area"] >= old_apart["total_living_area"]) &
@@ -648,7 +527,7 @@ def df_for_aparts(cursor, old_selected_addresses=None, new_selected_addresses=No
         WHERE new_apart_id::text NOT IN 
                     (SELECT key FROM public.offer, 
                     json_each_text(new_aparts::json) AS j(key, value) 
-                    WHERE (value::json->>'status_id')::int != 2) AND (na.status_id NOT IN (12, 13) or na.status_id is null)
+                    WHERE (value::json->>'status_id')::int != 2) AND (na.status_id = 11 or na.status_id is null)
     """
 
     new_apart_query_params = []
@@ -732,208 +611,496 @@ def df_for_aparts(cursor, old_selected_addresses=None, new_selected_addresses=No
 
     return df_old_apart, df_new_apart
 
-
-
-
-def test_save_views_to_excel(
-    writer,  # Принимаем writer как параметр
-    history_id,
-    date=False,
-    stage_name=None,  # Добавляем имя этапа для уникальности листов
-):
-    """Модифицированная функция для работы в цикле"""
-    print('in func')
+def save_rank_view_to_excel(writer, history_id, stage_name=None, new_apart_adr=None, old_apart_adr=None, date=False):
+    """Функция для обработки и сохранения представления 'rank'"""
+    print('Обработка представления: rank')
     try:
-        views = ["rank", "new_apart_all", "res_of_rec", "where_not"]
+        # Создаем уникальное имя листа с учетом этапа
+        sheet_name = f"Ранг_{stage_name}" if stage_name else "Ранг"
+        
+        # Проверяем, существует ли уже такой лист
+        if sheet_name in writer.book.sheetnames:
+            return  # Пропускаем создание, если лист уже существует
+            
+        with get_db_connection() as conn:
+            query_old_ranked = """
+                SELECT
+                    old_apart.affair_id as old_apart_id,
+                    old_apart.room_count,
+                    old_apart.living_area,
+                    old_apart.is_special_needs_marker,
+                    old_apart.full_living_area,
+                    old_apart.total_living_area,
+                    old_apart.district,
+                    old_apart.municipal_district,
+                    old_apart.house_address,
+                    old_apart.rank
+                FROM old_apart
+                WHERE (rsm_status <> 'снято' or rsm_status is null)
+            """
+
+            query_new_ranked = """
+                SELECT 
+                    new_apart.new_apart_id, 
+                    new_apart.room_count, 
+                    new_apart.living_area, 
+                    new_apart.for_special_needs_marker, 
+                    new_apart.full_living_area, 
+                    new_apart.total_living_area, 
+                    new_apart.district, 
+                    new_apart.municipal_district, 
+                    new_apart.house_address, 
+                    new_apart.rank
+                FROM new_apart 
+                WHERE rank is not NULL
+            """
+            
+            query_old_ranked += f" AND old_apart.history_id = {history_id}"
+            query_new_ranked += f" AND new_apart.history_id = {history_id}"
+
+            if date:
+                query_old_ranked += " AND old_apart.created_at = (SELECT MAX(created_at) FROM old_apart)"
+                query_new_ranked += " AND new_apart.created_at = (SELECT MAX(created_at) FROM new_apart)"
+            
+            params = {}
+            if old_apart_adr:
+                query_old_ranked += " AND old_apart.house_address IN %(old_addresses)s"
+                params['old_addresses'] = tuple(old_apart_adr)
+
+            if new_apart_adr:
+                query_new_ranked += " AND new_apart.house_address IN %(new_addresses)s"
+                params['new_addresses'] = tuple(new_apart_adr)
+
+            df_old_ranked = pd.read_sql(query_old_ranked, conn, params=params)
+            df_new_ranked = pd.read_sql(query_new_ranked, conn, params=params)
+
+            max_rank_query = """
+                SELECT room_count, MAX(rank) as max_rank
+                FROM new_apart
+                GROUP BY room_count
+            """
+
+            max_rank_df = pd.read_sql(max_rank_query, conn)
+            max_rank_by_room_count = max_rank_df.set_index("room_count")["max_rank"].to_dict()
+
+            df_combined = pd.concat(
+                [
+                    df_old_ranked.assign(status="old"),
+                    df_new_ranked.assign(status="new"),
+                ],
+                ignore_index=True,
+            )
+
+            df_combined["Ранг"] = df_combined["rank"].astype(int)
+
+            df = (
+                df_combined.groupby(["room_count", "Ранг"])
+                .agg(
+                    Пот_ть=("old_apart_id", "count"),
+                    Ресурс=("new_apart_id", "count"),
+                )
+                .reset_index()
+            )
+
+            df["Баланс"] = df["Ресурс"] - df["Пот_ть"]
+
+            def add_totals(df, max_rank_by_room_count):
+                                # Инициализируем итоговые переменные
+                                total_potency = 0
+                                total_resource = 0
+                                total_balance = 0
+
+                                # Список для хранения новых строк
+                                new_rows = []
+                                previous_row = None
+                                start_rank = None
+
+                                for i in range(len(df)):
+                                    row = df.iloc[i].to_dict()
+                                    current_rank = row["Ранг"]
+                                    room_count = row["room_count"]
+                                    max_rank = max_rank_by_room_count.get(room_count, 0) + 1
+
+                                    if previous_row is not None:
+                                        # Проверяем, является ли previous_row['Ранг'] строкой с диапазоном или целым числом
+                                        if (
+                                            isinstance(previous_row["Ранг"], str)
+                                            and "-" in previous_row["Ранг"]
+                                        ):
+                                            previous_rank = int(
+                                                previous_row["Ранг"].split("-")[-1]
+                                            )
+                                        else:
+                                            previous_rank = previous_row["Ранг"]
+
+                                        # Проверяем, можно ли объединять строки
+                                        if (
+                                            (previous_row["Ресурс"] == 0)
+                                            and current_rank != max_rank
+                                            and previous_rank != max_rank
+                                        ):
+                                            # Объединяем строки, если хотя бы одна из них имеет Пот_ть = 0
+                                            previous_row["Пот_ть"] += row["Пот_ть"]
+                                            previous_row["Ресурс"] += row["Ресурс"]
+                                            previous_row["Баланс"] += row["Баланс"]
+                                            # Обновляем диапазон рангов
+                                            previous_row["Ранг"] = (
+                                                f"{start_rank}-{current_rank}"
+                                            )
+                                        else:
+                                            # Добавляем предыдущую строку в список новых строк, если она не None
+                                            if previous_row is not None:
+                                                new_rows.append(previous_row)
+
+                                            # Устанавливаем новую строку как предыдущую
+                                            previous_row = row
+                                            start_rank = (
+                                                current_rank  # Начало нового диапазона
+                                            )
+                                    else:
+                                        # Устанавливаем первую строку как предыдущую
+                                        previous_row = row
+                                        start_rank = current_rank
+
+                                # Не забываем добавить последнюю строку после цикла
+                                if previous_row is not None:
+                                    new_rows.append(previous_row)
+
+                                # Преобразуем список в DataFrame
+                                df_new = pd.DataFrame(new_rows)
+
+                                # Пересчитываем итоговые значения
+                                total_potency = df_new["Пот_ть"].sum()
+                                total_resource = df_new["Ресурс"].sum()
+                                total_balance = df_new["Баланс"].sum()
+
+                                # Создаем строку с итогами
+                                totals = pd.DataFrame(
+                                    [
+                                        {
+                                            "Ранг": "Итог",
+                                            "Пот_ть": total_potency,
+                                            "Ресурс": total_resource,
+                                            "Баланс": total_balance,
+                                        }
+                                    ]
+                                )
+
+                                # Добавляем строку с итогами в конец нового DataFrame
+                                df_with_totals = pd.concat(
+                                    [df_new, totals], ignore_index=True
+                                )
+                                
+                                return df_with_totals
+
+            result_data = []
+            for room in df["room_count"].unique():
+                room_df = df[df["room_count"] == room].copy()
+                grouped_df = add_totals(room_df, max_rank_by_room_count)
+                grouped_df["room_count"] = room
+                result_data.append(grouped_df)
+
+            df_grouped = pd.concat(result_data, ignore_index=True)
+
+            if not df_grouped.empty:
+                ws = writer.book.create_sheet(sheet_name)
+                current_row, current_col = 1, 1
+
+                header_font = Font(bold=True)
+                header_fill = PatternFill(
+                    start_color="FFFF99",
+                    end_color="FFFF99",
+                    fill_type="solid",
+                )
+                header_alignment = Alignment(horizontal="center")
+
+                for room in df_grouped["room_count"].unique():
+                    room_df = df_grouped[df_grouped["room_count"] == room][
+                        ["Ранг", "Пот_ть", "Ресурс", "Баланс"]
+                    ]
+                    ws.cell(
+                        row=current_row, column=current_col
+                    ).value = f"{room} комната(ы)"
+                    ws.cell(
+                        row=current_row, column=current_col
+                    ).font = header_font
+                    ws.cell(
+                        row=current_row, column=current_col
+                    ).alignment = header_alignment
+                    ws.merge_cells(
+                        start_row=current_row,
+                        start_column=current_col,
+                        end_row=current_row,
+                        end_column=current_col + 3,
+                    )
+                    current_row += 1
+
+                    for idx, col_name in enumerate(room_df.columns):
+                        cell = ws.cell(
+                            row=current_row, column=current_col + idx
+                        )
+                        cell.value = col_name
+                        cell.font = header_font
+                        cell.fill = header_fill
+                        cell.alignment = header_alignment
+
+                    current_row += 1
+
+                    for row in dataframe_to_rows(
+                        room_df, index=False, header=False
+                    ):
+                        for idx, value in enumerate(row):
+                            ws.cell(
+                                row=current_row, column=current_col + idx
+                            ).value = value
+                        current_row += 1
+
+                    current_row = 1
+                    current_col += len(room_df.columns) + 1
+    except Exception as e:
+        print(f"Ошибка при обработке представления 'rank': {e}")
+
+
+def save_other_views_to_excel(writer, history_id, stage_name=None, new_apart_adr=None, old_apart_adr=None):
+    """Функция для обработки и сохранения других представлений"""
+    try:
+        views = ["new_apart_all", "res_of_rec", "where_not"]
         with get_db_connection() as conn:
             for view in views:
                 print(f"Обработка представления: {view}")
                 try:
-                    if view == "rank":
-                        # Создаем уникальное имя листа с учетом этапа
-                        sheet_name = f"Ранг_{stage_name}" if stage_name else "Ранг"
+                    # Для других представлений добавляем stage_name к имени листа
+                    sheet_name = f"{view}_{stage_name}" if stage_name else view
+                    
+                    # Проверяем, существует ли уже такой лист
+                    if sheet_name in writer.book.sheetnames:
+                        continue
                         
-                        # Проверяем, существует ли уже такой лист
-                        if sheet_name in writer.book.sheetnames:
-                            continue  # Пропускаем создание, если лист уже существует
-                            
-                        query_old_ranked = """
-                            SELECT
-                                old_apart.affair_id as old_apart_id,
-                                old_apart.room_count,
-                                old_apart.living_area,
-                                old_apart.is_special_needs_marker,
-                                old_apart.full_living_area,
-                                old_apart.total_living_area,
-                                old_apart.district,
-                                old_apart.municipal_district,
-                                old_apart.house_address,
-                                old_apart.rank
-                            FROM old_apart
-                            WHERE (rsm_status <> 'снято' or rsm_status is null)
-                        """
+                    query_params = []
+                    query = f"SELECT * FROM public.{view}"
 
-                        query_new_ranked = """
-                            SELECT 
-                                new_apart.new_apart_id, 
-                                new_apart.room_count, 
-                                new_apart.living_area, 
-                                new_apart.for_special_needs_marker, 
-                                new_apart.full_living_area, 
-                                new_apart.total_living_area, 
-                                new_apart.district, 
-                                new_apart.municipal_district, 
-                                new_apart.house_address, 
-                                new_apart.rank
-                            FROM new_apart 
-                            WHERE rank is not NULL
-                        """
-                        
-                        query_old_ranked += f" AND old_apart.history_id = {history_id}"
-                        query_new_ranked += f" AND new_apart.history_id = {history_id}"
-
-                        if date:
-                            query_old_ranked += " AND old_apart.created_at = (SELECT MAX(created_at) FROM old_apart)"
-                            query_new_ranked += " AND new_apart.created_at = (SELECT MAX(created_at) FROM new_apart)"
-
-                        df_old_ranked = pd.read_sql(query_old_ranked, conn)
-                        df_new_ranked = pd.read_sql(query_new_ranked, conn)
-
-                        max_rank_query = """
-                            SELECT room_count, MAX(rank) as max_rank
-                            FROM new_apart
-                            GROUP BY room_count
-                        """
-
-                        max_rank_df = pd.read_sql(max_rank_query, conn)
-                        max_rank_by_room_count = max_rank_df.set_index("room_count")["max_rank"].to_dict()
-
-                        df_combined = pd.concat(
-                            [
-                                df_old_ranked.assign(status="old"),
-                                df_new_ranked.assign(status="new"),
-                            ],
-                            ignore_index=True,
-                        )
-
-                        df_combined["Ранг"] = df_combined["rank"].astype(int)
-
-                        df = (
-                            df_combined.groupby(["room_count", "Ранг"])
-                            .agg(
-                                Пот_ть=("old_apart_id", "count"),
-                                Ресурс=("new_apart_id", "count"),
-                            )
-                            .reset_index()
-                        )
-
-                        df["Баланс"] = df["Ресурс"] - df["Пот_ть"]
-
-                        def add_totals(df, max_rank_by_room_count):
-                            # ... (остальной код функции add_totals остается без изменений)
-                            pass
-
-                        result_data = []
-                        for room in df["room_count"].unique():
-                            room_df = df[df["room_count"] == room].copy()
-                            grouped_df = add_totals(room_df, max_rank_by_room_count)
-                            grouped_df["room_count"] = room
-                            result_data.append(grouped_df)
-
-                        df_grouped = pd.concat(result_data, ignore_index=True)
-
-                        if not df_grouped.empty:
-                            ws = writer.book.create_sheet(sheet_name)
-                            current_row, current_col = 1, 1
-
-                            header_font = Font(bold=True)
-                            header_fill = PatternFill(
-                                start_color="FFFF99",
-                                end_color="FFFF99",
-                                fill_type="solid",
-                            )
-                            header_alignment = Alignment(horizontal="center")
-
-                            for room in df_grouped["room_count"].unique():
-                                room_df = df_grouped[df_grouped["room_count"] == room][
-                                    ["Ранг", "Пот_ть", "Ресурс", "Баланс"]
-                                ]
-                                ws.cell(
-                                    row=current_row, column=current_col
-                                ).value = f"{room} комната(ы)"
-                                ws.cell(
-                                    row=current_row, column=current_col
-                                ).font = header_font
-                                ws.cell(
-                                    row=current_row, column=current_col
-                                ).alignment = header_alignment
-                                ws.merge_cells(
-                                    start_row=current_row,
-                                    start_column=current_col,
-                                    end_row=current_row,
-                                    end_column=current_col + 3,
-                                )
-                                current_row += 1
-
-                                for idx, col_name in enumerate(room_df.columns):
-                                    cell = ws.cell(
-                                        row=current_row, column=current_col + idx
-                                    )
-                                    cell.value = col_name
-                                    cell.font = header_font
-                                    cell.fill = header_fill
-                                    cell.alignment = header_alignment
-
-                                current_row += 1
-
-                                for row in dataframe_to_rows(
-                                    room_df, index=False, header=False
-                                ):
-                                    for idx, value in enumerate(row):
-                                        ws.cell(
-                                            row=current_row, column=current_col + idx
-                                        ).value = value
-                                    current_row += 1
-
-                                current_row = 1
-                                current_col += len(room_df.columns) + 1
-
+                    query += " WHERE 1=1 "
+                    if view == "new_apart_all":
+                            query += f" AND history_id = ({history_id})"
+                            if new_apart_adr:
+                                query += ' AND "Новый_адрес" in %s'
+                                query_params.append(tuple(new_apart_adr))
+                    elif view == 'where_not':
+                        if history_id:
+                            query += f' AND history_id = ({history_id})'
+                            if old_apart_adr:
+                                query += ' AND "Старый_адрес" in %s'
+                                query_params.append(tuple(old_apart_adr))
                     else:
-                        # Для других представлений также добавляем stage_name к имени листа
-                        sheet_name = f"{view}_{stage_name}" if stage_name else view
-                        
-                        # Проверяем, существует ли уже такой лист
-                        if sheet_name in writer.book.sheetnames:
-                            continue
+                        if history_id:
+                            query += f" AND id_истории_для_ресурса = {history_id}"
+                        if history_id:
+                            query += f' AND id_истории_для_кпу = {history_id}'
+                        if old_apart_adr:
+                                query += ' AND "Старый_адрес" in %s'
+                                query_params.append(tuple(old_apart_adr))
+                        if new_apart_adr:
+                                query += ' AND "Новый_адрес" in %s'
+                                query_params.append(tuple(new_apart_adr))
                             
-                        query_params = []
-                        query = f"SELECT * FROM public.{view}"
-
-                        query += " WHERE 1=1 "
-                        if view == "new_apart_all":
-                                query += f" AND history_id = ({history_id})"
-                        elif view == 'where_not':
-                            if history_id:
-                                query += f' AND history_id = ({history_id})'
-                        else:
-                            if history_id :
-                                query += f" AND id_истории_для_ресурса = {history_id}"
-                            if history_id:
-                                query += f' AND id_истории_для_кпу = {history_id}'
-                                
-                        print(f"Выполнение запроса для представления {view}")
-                        try:
-                            df = pd.read_sql(query, conn, params=query_params)
-                            df = df.dropna(how="all")
-                            df.to_excel(writer, sheet_name=sheet_name, index=False)
-                        except Exception as e:
-                            print(
-                                f"Ошибка выполнения запроса для представления {view}: {e}"
-                            )
+                    print(f"Выполнение запроса для представления {view}")
+                    try:
+                        df = pd.read_sql(query, conn, params=query_params if query_params else None)
+                        df = df.dropna(how="all")
+                        df.to_excel(writer, sheet_name=sheet_name, index=False)
+                    except Exception as e:
+                        print(
+                            f"Ошибка выполнения запроса для представления {view}: {e}"
+                        )
                 except Exception as e:
                     print(e)
     except Exception as e:
         print(f"Ошибка: {e}")
+
+def save_rank_view_to_excel_from_dfs(writer, df_old_apart, df_new_apart, stage_name=None):
+    """Функция для обработки и сохранения представления 'rank' из готовых DataFrame"""
+    print('Обработка представления: rank из DataFrame')
+    try:
+        # Создаем уникальное имя листа с учетом этапа
+        sheet_name = f"Ранг_{stage_name}" if stage_name else "Ранг"
+        
+        # Проверяем, существует ли уже такой лист
+        if sheet_name in writer.book.sheetnames:
+            return  # Пропускаем создание, если лист уже существует
+
+        # Фильтрация данных
+        df_old_ranked = df_old_apart[
+            (df_old_apart['rank'].notna())
+        ].copy()
+        
+        df_new_ranked = df_new_apart[
+            df_new_apart['rank'].notna()
+        ].copy()
+
+        # Проверка на пустые DataFrame перед конкатенацией
+        if df_old_ranked.empty and df_new_ranked.empty:
+            print("Нет данных для отображения")
+            return
+
+        # Объединение данных с явной обработкой пустых DF
+        dfs_to_concat = []
+        if not df_old_ranked.empty:
+            dfs_to_concat.append(df_old_ranked.assign(status="old"))
+        if not df_new_ranked.empty:
+            dfs_to_concat.append(df_new_ranked.assign(status="new"))
+
+        df_combined = pd.concat(dfs_to_concat, ignore_index=True)
+
+        # Преобразование rank в int с обработкой None
+        df_combined["Ранг"] = df_combined["rank"].fillna(0).astype(int)
+
+        # Группировка данных
+        df = (
+            df_combined.groupby(["room_count", "Ранг"])
+            .agg(
+                Пот_ть=("affair_id", lambda x: x.notna().sum()),
+                Ресурс=("new_apart_id", lambda x: x.notna().sum()),
+            )
+            .reset_index()
+        )
+
+        df["Баланс"] = df["Ресурс"] - df["Пот_ть"]
+
+        # Функция для группировки строк с одинаковым балансом
+        def add_totals(df, max_rank_by_room_count):
+            new_rows = []
+            previous_row = None
+            start_rank = None
+
+            for i in range(len(df)):
+                row = df.iloc[i].to_dict()
+                current_rank = row["Ранг"]
+                room_count = row["room_count"]
+                max_rank = max_rank_by_room_count.get(room_count, 0) + 1
+
+                if previous_row is not None:
+                    if (
+                        isinstance(previous_row["Ранг"], str)
+                        and "-" in previous_row["Ранг"]
+                    ):
+                        previous_rank = int(previous_row["Ранг"].split("-")[-1])
+                    else:
+                        previous_rank = previous_row["Ранг"]
+
+                    if (
+                        (previous_row["Ресурс"] == 0)
+                        and current_rank != max_rank
+                        and previous_rank != max_rank
+                    ):
+                        previous_row["Пот_ть"] += row["Пот_ть"]
+                        previous_row["Ресурс"] += row["Ресурс"]
+                        previous_row["Баланс"] += row["Баланс"]
+                        previous_row["Ранг"] = f"{start_rank}-{current_rank}"
+                    else:
+                        if previous_row is not None:
+                            new_rows.append(previous_row)
+                        previous_row = row
+                        start_rank = current_rank
+                else:
+                    previous_row = row
+                    start_rank = current_rank
+
+            if previous_row is not None:
+                new_rows.append(previous_row)
+
+            df_new = pd.DataFrame(new_rows)
+            total_potency = df_new["Пот_ть"].sum()
+            total_resource = df_new["Ресурс"].sum()
+            total_balance = df_new["Баланс"].sum()
+
+            totals = pd.DataFrame(
+                [
+                    {
+                        "Ранг": "Итог",
+                        "Пот_ть": total_potency,
+                        "Ресурс": total_resource,
+                        "Баланс": total_balance,
+                    }
+                ]
+            )
+
+            df_with_totals = pd.concat([df_new, totals], ignore_index=True)
+            return df_with_totals
+
+        # Расчет максимального ранга для каждой комнатности
+        max_rank_by_room_count = (
+            df_new_ranked.groupby("room_count")["rank"]
+            .max()
+            .fillna(0)
+            .astype(int)
+            .to_dict()
+        )
+
+        # Обработка данных по комнатностям
+        result_data = []
+        for room in df["room_count"].unique():
+            room_df = df[df["room_count"] == room].copy()
+            grouped_df = add_totals(room_df, max_rank_by_room_count)
+            grouped_df["room_count"] = room
+            result_data.append(grouped_df)
+
+        df_grouped = pd.concat(result_data, ignore_index=True)
+
+        # Запись в Excel
+        if not df_grouped.empty:
+            ws = writer.book.create_sheet(sheet_name)
+            ws.sheet_state = 'visible'  # Убедимся, что лист видим
+            
+            current_row, current_col = 1, 1
+
+            # Стили для заголовков
+            header_font = Font(bold=True)
+            header_fill = PatternFill(
+                start_color="FFFF99",
+                end_color="FFFF99",
+                fill_type="solid",
+            )
+            header_alignment = Alignment(horizontal="center")
+
+            for room in df_grouped["room_count"].unique():
+                room_df = df_grouped[df_grouped["room_count"] == room][
+                    ["Ранг", "Пот_ть", "Ресурс", "Баланс"]
+                ]
+                
+                # Заголовок комнатности
+                ws.cell(row=current_row, column=current_col).value = f"{int(room)} комната(ы)"
+                ws.cell(row=current_row, column=current_col).font = header_font
+                ws.cell(row=current_row, column=current_col).alignment = header_alignment
+                ws.merge_cells(
+                    start_row=current_row,
+                    start_column=current_col,
+                    end_row=current_row,
+                    end_column=current_col + 3,
+                )
+                current_row += 1
+
+                # Заголовки столбцов
+                for idx, col_name in enumerate(room_df.columns):
+                    cell = ws.cell(row=current_row, column=current_col + idx)
+                    cell.value = col_name
+                    cell.font = header_font
+                    cell.fill = header_fill
+                    cell.alignment = header_alignment
+
+                current_row += 1
+
+                # Данные
+                for row in dataframe_to_rows(room_df, index=False, header=False):
+                    for idx, value in enumerate(row):
+                        ws.cell(row=current_row, column=current_col + idx).value = value
+                    current_row += 1
+
+                current_row = 1
+                current_col += len(room_df.columns) + 1
+
+    except Exception as e:
+        print(f"Ошибка при обработке представления 'rank' из DataFrame: {e}")
+        raise
 
 
 def waves(data, cursor, conn):
@@ -1056,7 +1223,7 @@ def waves(data, cursor, conn):
 
     print("Ranking completed successfully")
     print('old_selected_addresses, new_selected_addresses', old_selected_addresses, new_selected_addresses)
-    new_selected_addresses_history = [x['address'] for x in new_selected_addresses]
+    new_selected_addresses_history = list({x['address'] for x in new_selected_addresses})
 
     cursor.execute(
         """
@@ -1111,6 +1278,14 @@ def waves(data, cursor, conn):
     # Создаем ExcelWriter перед циклом
     output_path = "результаты_сопоставления.xlsx"
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
+        new_addresses_all = [x['address'] for x in new_selected_addresses]
+        save_rank_view_to_excel(
+            writer=writer,
+            history_id=last_history_id,
+            stage_name='Общий',
+            new_apart_adr=new_addresses_all,
+            old_apart_adr=old_selected_addresses
+        )
         # Итерируем по всем возможным индексам
         for i in range(1, max_i + 1):
             old_key = f'old_apartment_house_address_{i}'
@@ -1141,15 +1316,16 @@ def waves(data, cursor, conn):
 
             if old_addresses and new_addresses:
                 df_old_apart_wave, df_new_apart_wave = df_for_aparts(cursor, old_addresses, new_addresses)
+                new_apart_adr = [x['address'] for x in new_addresses]
                 
                 wave_matching(df_new_apart_wave, df_old_apart_wave, cursor, conn)
                 
-                # Вызываем функцию сохранения в Excel для текущей итерации
-                test_save_views_to_excel(
-                    writer=writer,
-                    history_id=last_history_id,
-                    stage_name=f"Волна_{i}"  # Уникальное имя для листов этой итерации
-                )
+                save_rank_view_to_excel_from_dfs(writer=writer, df_old_apart=df_old_apart_wave, df_new_apart=df_new_apart_wave, stage_name=f"Волна_{i}")
+        save_other_views_to_excel(
+            writer=writer,
+            history_id=last_history_id,
+            stage_name='Общий'
+        )
 
     return None
 
@@ -1161,16 +1337,16 @@ if __name__ == "__main__":
     cursor = conn.cursor()
 
     test_data = {
-        'old_apartment_house_address_1': [{'address': 'Акулово пос., д.15'}],
+        'old_apartment_house_address_1': [{'address': 'Инженерная ул., д.20 кор.2'}, {'address': 'Стандартная ул., д.15 кор.2'}],
         'new_apartment_house_address_1': [{
-            'address': 'Нижегородская ул., д.11',
-            'sections': []
+            'address': 'Алтуфьевское шоссе, д. 53, корп. 1',
+            'sections': [{'section': '2', 'range': {'from': 162, 'to': 256}}, {'section': '5', 'range': {'from': 446, 'to': 606}}]
         }],
-        'old_apartment_house_address_2': [{'address': 'Антонова-Овсеенко ул., д.2 стр. 1'}],
+        'old_apartment_house_address_2': [{'address': 'Инженерная ул., д.30'}, {'address': 'Стандартная ул., д.19 кор.2'}],
         'new_apartment_house_address_2': [{
-            'address': 'Базовская ул., з/у 24/26',
-            'sections': []
-        }],
+            'address': 'Алтуфьевское шоссе, д. 53, корп. 1',
+            'sections': [{'section': '2', 'range': {'from': 162, 'to': 256}}, {'section': '5', 'range': {'from': 446, 'to': 606}}]
+        }]
     }
     
     result = waves(test_data, cursor, conn)
