@@ -24,7 +24,7 @@ async def get_manual_history():
 async def balance(requirements: BalanceSchema = Body(...)):
     try:
         # Создаем папки если их нет
-        folders = [Path("upload")]
+        folders = [Path("uploads")]
         for folder in folders:
             folder.mkdir(parents=True, exist_ok=True)
 

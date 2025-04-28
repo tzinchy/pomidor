@@ -1,7 +1,10 @@
+import os
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import HTTPException
 from fastapi import status as http_status
+from fastapi.responses import FileResponse
 from handlers.httpexceptions import NotFoundException
 from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
@@ -100,6 +103,55 @@ class ApartService:
                 is_queue=is_queue,
                 is_private=is_private,
             )
+        else:
+            raise NotFoundException
+
+    async def get_apartments_one_json(
+        self,
+        apart_type: str,
+        house_addresses: Optional[List[str]] = None,
+        districts: Optional[List[str]] = None,
+        municipal_districts: Optional[List[str]] = None,
+        floor: Optional[int] = None,
+        min_area: Optional[float] = None,
+        max_area: Optional[float] = None,
+        area_type: str = "full_living_area",
+        room_count: Optional[List[int]] = None,
+        is_queue: bool = None,
+        is_private: bool = None,
+    ):
+        if apart_type == ApartTypeSchema.OLD:
+            apart_list = await self.old_apart_repository.get_apartments(
+                apart_type=apart_type,
+                house_addresses=house_addresses,
+                districts=districts,
+                municipal_districts=municipal_districts,
+                floor=floor,
+                min_area=min_area,
+                max_area=max_area,
+                area_type=area_type,
+                room_count=room_count,
+                is_queue=is_queue,
+                is_private=is_private,
+            )
+            apart_dict = {str(apart["affair_id"]): apart for apart in apart_list}
+            return apart_dict
+        elif apart_type == ApartTypeSchema.NEW:
+            apart_list = await self.new_apart_repository.get_apartments(
+                apart_type=apart_type,
+                house_addresses=house_addresses,
+                districts=districts,
+                municipal_districts=municipal_districts,
+                floor=floor,
+                min_area=min_area,
+                max_area=max_area,
+                area_type=area_type,
+                room_count=room_count,
+                is_queue=is_queue,
+                is_private=is_private,
+            )
+            apart_dict = {str(apart["new_apart_id"]): apart for apart in apart_list}
+            return apart_dict
         else:
             raise NotFoundException
 
@@ -269,3 +321,39 @@ class ApartService:
         await self.old_apart_repository.set_special_needs_for_many(
             apart_ids, is_special_needs_marker
         )
+
+    async def get_excel_old_apart(self):
+        try:
+            folders = [Path("uploads")]
+            for folder in folders:
+                folder.mkdir(parents=True, exist_ok=True)
+
+            output_path = os.path.join(os.getcwd(), "././uploads", "old_apart.xlsx")
+            print(output_path)
+            await self.old_apart_repository.get_excel_old_apart(output_path)
+
+            return FileResponse(
+                path=output_path,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                filename="old_apart.xlsx",
+            )
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def get_excel_new_apart(self):
+        try:
+            folders = [Path("uploads")]
+            for folder in folders:
+                folder.mkdir(parents=True, exist_ok=True)
+
+            output_path = os.path.join(os.getcwd(), "././uploads", "new_apart.xlsx")
+            print(output_path)
+            await self.new_apart_repository.get_excel_new_apart(output_path)
+
+            return FileResponse(
+                path=output_path,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                filename="new_apart.xlsx",
+            )
+        except Exception as e:
+            return {"error": str(e)}
