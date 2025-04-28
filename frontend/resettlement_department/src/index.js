@@ -11,6 +11,8 @@ import BalancePage from './Balance/BalancePage';
 import HistoryPage from './History/HistoryPage';
 import LoginPage from './Auth/LoginPage';
 import PrivateRoute from './Auth/PrivateRoute';
+import ParentChildTable from './Test';
+import { data } from './MessegeData';
 
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement); 
@@ -35,6 +37,7 @@ root.render(
       <Route path="/balance" element={<BalancePage />} />
       <Route path="/history" element={<HistoryPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/test" element={<ParentChildTable data={data}/>} />
     </Routes>
   </BrowserRouter>
 );

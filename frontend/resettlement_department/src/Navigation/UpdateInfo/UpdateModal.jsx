@@ -7,6 +7,7 @@ import FileUploader from "../../Balance/Components/FileUploader";
 export default function UpdateDataButton() {
     const [isModalOpen, setModalOpen] = useState(false);
     const [updateHistory, setUpdateHistory] = useState([]);
+    const [statData, setStatData] = useState([]);
     const [loadingStates, setLoadingStates] = useState({
         need: false,
         resource: false,
@@ -95,11 +96,23 @@ export default function UpdateDataButton() {
         }
     };
 
+    const fetchStat = async () => {
+        try {
+            const response = await fetch(`${HOSTLINK}/tables/get_stat`);
+            if (!response.ok) throw new Error('Ошибка загрузки статистики');
+            const data = await response.json();
+            console.log('stat data', data);
+            setStatData(data);
+        } catch (err) {
+            console.log(err.message);
+        }
+    };
+
     return (
         <div className="flex flex-col items-center">
             <button
                 className="absolute bottom-5 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-                onClick={() => { setModalOpen(true); fetchAddresses(); }}
+                onClick={() => { setModalOpen(true); fetchAddresses(); fetchStat();}}
             >
                 <RefreshCcw size={24} />
             </button>
@@ -154,6 +167,32 @@ export default function UpdateDataButton() {
                             </button>
                         </div>
 
+                        <h3 className="text-md font-medium mb-2">Статистика записей:</h3>
+                        <div className="max-h-40 overflow-auto border rounded p-2 mb-4">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b">
+                                        <th className="text-left p-1"></th>
+                                        <th className="text-left p-1">Количество записей</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.keys(statData).length > 0 ? (
+                                        Object.entries(statData).map(([key, value]) => (
+                                            <tr key={key}>
+                                                <td className="p-1 capitalize">{key}</td>
+                                                <td className="p-1">{value.toLocaleString()}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="2" className="text-center text-gray-500 p-2">Данные загружаются...</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
                         <h3 className="text-md font-medium mb-2">Скачать файлы:</h3>
                         <div className="grid grid-cols-3 gap-2 items-center justify-items-center mb-4">
                             <button
@@ -162,7 +201,7 @@ export default function UpdateDataButton() {
                                         ? 'bg-gray-300 cursor-not-allowed' 
                                         : 'hover:bg-gray-50 bg-white'
                                 }`}
-                                onClick={() => handleDownload("oldApart", HOSTLINK+'/tables/old_apart')}
+                                onClick={() => handleDownload("oldApart", HOSTLINK+'/rsm/old_apart')}
                                 disabled={loadingStates.oldApart}
                             >
                                 {loadingStates.oldApart ? (
@@ -183,7 +222,7 @@ export default function UpdateDataButton() {
                                         ? 'bg-gray-300 cursor-not-allowed' 
                                         : 'hover:bg-gray-50 bg-white'
                                 }`}
-                                onClick={() => handleDownload("newApart", HOSTLINK+'/tables/new_apart')}
+                                onClick={() => handleDownload("newApart", HOSTLINK+'/rsm/new_apart')}
                                 disabled={loadingStates.newApart}
                             >
                                 {loadingStates.newApart ? (
@@ -204,7 +243,7 @@ export default function UpdateDataButton() {
                                         ? 'bg-gray-300 cursor-not-allowed' 
                                         : 'hover:bg-gray-50 bg-white'
                                 }`}
-                                onClick={() => handleDownload("orderDecisions", HOSTLINK+'/tables/order_decisions')}
+                                onClick={() => handleDownload("orderDecisions", HOSTLINK+'/rsm/order_decisions')}
                                 disabled={loadingStates.orderDecisions}
                             >
                                 {loadingStates.orderDecisions ? (
@@ -216,7 +255,7 @@ export default function UpdateDataButton() {
                                         Загрузка...
                                     </span>
                                 ) : (
-                                    "Выписки"
+                                    "Решения по заявкам"
                                 )}
                             </button>
                         </div>
