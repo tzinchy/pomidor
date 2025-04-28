@@ -6,32 +6,17 @@ export const DropdownProvider = ({ children }) => {
   const [selectedItems, setSelectedItems] = useState({});
 
   const updateSelectedItems = (dropdownId, items) => {
-    setSelectedItems(prev => ({ ...prev, [dropdownId]: items }));
-  };
-
-  const removeSelectedItems = (dropdownId) => {
-    setSelectedItems(prev => {
-      const newItems = { ...prev };
-      delete newItems[dropdownId];
-      return newItems;
-    });
+    setSelectedItems(prev => ({
+      ...prev,
+      [dropdownId]: items
+    }));
   };
 
   return (
-    <DropdownContext.Provider value={{ 
-      selectedItems, 
-      updateSelectedItems, 
-      removeSelectedItems 
-    }}>
+    <DropdownContext.Provider value={{ selectedItems, updateSelectedItems }}>
       {children}
     </DropdownContext.Provider>
   );
 };
 
-export const useDropdown = () => {
-  const context = useContext(DropdownContext);
-  if (!context) {
-    throw new Error('useDropdown must be used within a DropdownProvider');
-  }
-  return context;
-};
+export const useDropdown = () => useContext(DropdownContext);
