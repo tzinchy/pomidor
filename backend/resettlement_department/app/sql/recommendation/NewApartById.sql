@@ -63,6 +63,7 @@ SELECT
     new_apart.living_area,
     new_apart.room_count,
     new_apart.type_of_settlement,
+    new_apart.rank,
     JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
         joined_aparts.offers
@@ -81,4 +82,5 @@ GROUP BY
     new_apart.total_living_area,
     new_apart.living_area,
     new_apart.room_count,
-    new_apart.type_of_settlement
+    new_apart.type_of_settlement,
+    new_apart.rank;
