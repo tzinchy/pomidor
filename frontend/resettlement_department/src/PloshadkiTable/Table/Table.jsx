@@ -41,6 +41,7 @@ export default function Table({ filters, searchQuery }) {
         setData(fetchedData);
         setFilteredData(fetchedData);
         setDisplayData(fetchedData.slice(0, itemsPerPage));
+        console.log('fetchedData', fetchedData);
       });
   }, []);
 

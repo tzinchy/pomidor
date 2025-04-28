@@ -21,23 +21,7 @@ export function NavSvg(state) {
           <path d="M5.17175 13.2692V1H22.3904V8.80766" stroke="currentColor" strokeWidth="2"/>
           </svg>
         ),
-        'aparts': (<svg width="36" height="37" viewBox="0 0 36 37" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M13.5312 27.1947V16.6237C13.5312 16.458 13.6656 16.3237 13.8313 16.3237H22.1688C22.3344 16.3237 22.4688 16.458 22.4688 16.6237V27.1947" stroke="currentColor" strokeWidth="2"/>
-          <g filter="url(#filter0_d_269_889)">
-          <path d="M17.8275 1.94688L5.13097 10.6177C5.04912 10.6736 5.00016 10.7664 5.00016 10.8655L5 26.8947C5 27.0604 5.13432 27.1947 5.3 27.1947H30.7C30.8657 27.1947 31 27.0604 31 26.8947V10.8734C31 10.77 30.9467 10.6738 30.8589 10.619L26.9375 8.17051L18.1703 1.94995C18.068 1.87732 17.9312 1.87609 17.8275 1.94688Z" stroke="currentColor" strokeWidth="2" shapeRendering="crispEdges"/>
-          </g>
-          <defs>
-          <filter id="filter0_d_269_889" x="0" y="0.894531" width="36" height="35.3003" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-          <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-          <feOffset dy="4"/>
-          <feGaussianBlur stdDeviation="2"/>
-          <feComposite in2="hardAlpha" operator="out"/>
-          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_269_889"/>
-          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_269_889" result="shape"/>
-          </filter>
-          </defs>
-          </svg>
-        ),
+        'aparts': (<svg viewBox="0 0 24 24" width="32" height="31" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M2 22H22" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path> <path d="M2.94995 22L2.99995 9.96999C2.99995 9.35999 3.28995 8.78004 3.76995 8.40004L10.77 2.95003C11.49 2.39003 12.5 2.39003 13.23 2.95003L20.23 8.39003C20.72 8.77003 21 9.34999 21 9.96999V22" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinejoin="round"></path> <path d="M15.5 11H8.5C7.67 11 7 11.67 7 12.5V22H17V12.5C17 11.67 16.33 11 15.5 11Z" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path> <path d="M10 16.25V17.75" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path> <path d="M10.5 7.5H13.5" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path> </g></svg>),
         'balance': (<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M30 3.33325H9.99996C8.15901 3.33325 6.66663 4.82564 6.66663 6.66659V33.3333C6.66663 35.1742 8.15901 36.6666 9.99996 36.6666H30C31.8409 36.6666 33.3333 35.1742 33.3333 33.3333V6.66659C33.3333 4.82564 31.8409 3.33325 30 3.33325Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M13.3334 10H26.6667" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

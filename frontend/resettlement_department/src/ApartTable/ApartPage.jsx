@@ -210,6 +210,7 @@ export default function ApartPage() {
               setRowSelection={setRowSelection}
               setApartType={setApartType}
               setLoading={setLoading}
+              setCollapsed={setCollapsed}
             />
           </div>
         </div>

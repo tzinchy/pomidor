@@ -30,7 +30,7 @@ const MenuIcon = () => (
 
 const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, 
   fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters, rowSelection, setRowSelection,
-  setApartType, setLoading}) => {
+  setApartType, setLoading, setCollapsed}) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
   const tableContainerRef = useRef(null);
@@ -59,7 +59,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [maxPeople, setMaxPeople] = useState([]);
   const [filterStatuses, setFilterStatuses] = useState([]);
 
-  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)"] : ["Резерв", "Блок"];
+  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)"] : ["Резерв", "Блок", "Свободная"];
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -87,7 +87,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             
             // Специальная обработка для статусов
             if (x === "status" && !value) {
-              value = apartType === "OldApart" ? "Не подобрано" : "Свободна";
+              value = apartType === "OldApart" ? "Не подобрано" : "Свободная";
             }
             
             return value;
@@ -175,11 +175,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     let filtered = data;
 
     if (searchApartQuery) {
-      filtered = filtered.filter((item) => {
-          return (
-              item.apart_number?.toLowerCase().includes(searchApartQuery.toLowerCase())
-          );
-      });
+      filtered = filtered.filter((item) => 
+        apartType === 'OldApart'
+          ? item.apart_number?.toLowerCase().includes(searchApartQuery.toLowerCase())
+          : String(item.apart_number || '').toLowerCase().includes(searchApartQuery.toLowerCase())
+      );
     }
 
     if (searchFioQuery) {
@@ -271,22 +271,25 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       // Применяем каждый фильтр
       Object.entries(filters).forEach(([filterType, selectedValues]) => {
         if (selectedValues.length > 0) {
-            const filterKey = filterType.toLowerCase();
+          const filterKey = filterType.toLowerCase();
 
-            filtered = filtered.filter((item) => {
-                // Проверяем наличие специальных значений в выбранных значениях
-                const hasSpecialValues = selectedValues.some(
-                    val => val === "Не подобрано" || val === "Свободна"
-                );
-                
-                // Проверяем обычные значения статусов
-                const hasRegularStatus = selectedValues.some(
-                    (val) => val !== "Не подобрано" && val !== "Свободна" && item[filterKey] === val
-                );
-
-                // Если выбраны специальные значения - проверяем на null, иначе проверяем обычные статусы
-                return (hasSpecialValues && item[filterKey] === null) || hasRegularStatus;
-            });
+          filtered = filtered.filter((item) => {
+            // Проверяем все выбранные значения фильтра
+            for (const val of selectedValues) {
+                // Если это специальное значение ("Не подобрано" или "Свободная")
+                if (val === "Не подобрано" || val === "Свободная") {
+                    // Проверяем либо точное совпадение, либо null
+                    if (item[filterKey] === val || item[filterKey] === null) {
+                        return true;
+                    }
+                } 
+                // Для обычных значений
+                else if (item[filterKey] === val) {
+                    return true;
+                }
+            }
+            return false;
+          });
         }
       });
 
@@ -382,15 +385,25 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
-        size: 20,
+        size: 30,
         enableSorting: false,
       },
       {
         header: 'Адрес',
-        accessorKey: 'apart_number',
+        accessorKey: 'house_address',
         enableSorting: true,
         cell: ({ row }) => <AdressCell props={row.original} />,
         size: 200,
+      },
+      {
+        header: '№ Кв.',
+        accessorKey: 'apart_number',
+        enableSorting: true,
+        cell: ({ row }) => 
+          <div className="text-xs">
+            {row.original['apart_number']}
+          </div>,
+        size: 60,
       },
       ...(apartType === 'OldApart' ? [{
         header: 'ФИО',
@@ -463,6 +476,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       setSelectedRowId(id);
     } else if (!visibility) {
       setSelectedRow(index);
+      setCollapsed(true);
       setIsDetailsVisible(true);
       fetchApartmentDetails(id);
       setSelectedRowId(id);
@@ -873,7 +887,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                               {row.getVisibleCells().map((cell) => (
                                 <td
                                   key={cell.id}
-                                  className="px-2 border-b border-gray-200 text-sm text-gray-700 truncate"
+                                  className={`px-2 border-b border-gray-200 text-xs text-gray-700 truncate`}
                                   style={{ width: `${cell.column.columnDef.size}px` }}
                                 >
                                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -892,7 +906,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             {/* ApartDetails */}
             {apartmentDetails && isDetailsVisible && (
               <div
-                className={`ml-2 bg-white fixed inset-0 lg:static lg:inset-auto lg:overflow-auto lg:rounded-md lg:border lg:h-[calc(100vh-1rem)] transition-all duration-300 ease-in-out z-50 min-w-[650px] max-w-[650px]`}
+                className={`ml-2 fixed inset-0 lg:static lg:inset-auto lg:overflow-auto lg:rounded-md lg:border transition-all duration-300 ease-in-out z-50 min-w-[650px] max-w-[650px]`}
               >
                 <div className="fixed inset-0 bg-opacity-50 lg:bg-transparent lg:relative">
                   <div
@@ -903,7 +917,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                       WebkitOverflowScrolling: 'touch', // Поддержка мобильных устройств
                     }}
                   >
-                    <div className="h-[calc(100vh-1rem)] flex flex-col">
+                    <div className="h-[calc(100vh-3.85rem)] flex flex-col">
                       <ApartDetails
                         apartmentDetails={apartmentDetails}
                         setIsDetailsVisible={setIsDetailsVisible}
