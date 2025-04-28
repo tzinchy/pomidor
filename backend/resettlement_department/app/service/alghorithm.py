@@ -381,7 +381,6 @@ def match_new_apart_to_family_batch(
                 old_apart_ranks = df_old_apart.groupby("room_count")["rank"].max().to_dict()
                 old_apart_count = df_old_apart.groupby("room_count")["affair_id"].count().to_dict()
                 new_apart_count = df_new_apart.groupby("room_count")["new_apart_id"].count().to_dict()
-                
 
                 df_old_apart_reversed = df_old_apart.loc[::-1]
                 a = {}

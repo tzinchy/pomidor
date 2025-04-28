@@ -80,8 +80,10 @@ def save_views_to_excel(
                             """
 
                             max_rank_df = pd.read_sql(max_rank_query, conn)
+                            print('max_rank_df', max_rank_df)
 
                             max_rank_by_room_count = max_rank_df.set_index("room_count")["max_rank"].to_dict()
+                            print('max_rank_by_room_count', max_rank_by_room_count)
 
                             # Объединяем данные старых и новых квартир
                             df_combined = pd.concat(
