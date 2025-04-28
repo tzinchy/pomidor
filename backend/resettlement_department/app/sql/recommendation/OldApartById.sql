@@ -72,6 +72,7 @@ SELECT
     old_apart.type_of_settlement,
     old_apart.is_queue,
     old_apart.people_v_dele,
+    old_apart.rank,
     JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
         joined_aparts.new_apartments
@@ -95,4 +96,5 @@ GROUP BY
     old_apart.room_count,
     old_apart.type_of_settlement,
     old_apart.is_queue,
-    old_apart.people_v_dele;
+    old_apart.people_v_dele,
+    old_apart.rank;
