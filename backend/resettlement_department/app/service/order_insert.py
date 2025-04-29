@@ -214,7 +214,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
                         cursor.execute(insert_sql)
                         print(f"DEBUG: Inserted/updated order_id {row['article_code']} {row['order_id']}")
             except errors.ForeignKeyViolation:
-                print(f"ForeignKeyViolation {row["affair_id"]}")
+                print(f"ForeignKeyViolation {row['affair_id']}")
                 continue
         return 0
 
