@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import psycopg2
 from psycopg2 import errors
+from tqdm import tqdm
 from core.config import settings
 
 
@@ -178,7 +179,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         df_to_process = order_df[order_df[key_col].isin(ids_to_process)].copy()
         print(f"Запуск вставки/обновления для {len(df_to_process)} строк...")
 
-        for _, row in df_to_process.iterrows():
+        for _, row in tqdm(df_to_process.iterrows(), miniters=50, total=len(df_to_process)):
             # Если внешний ключ не найден пропускаем вставку
             try:
                 with connection:
