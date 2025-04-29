@@ -56,30 +56,6 @@ def insert_data_to_offer(df: pd.DataFrame):
         df = df.dropna(subset=["affair_id", "new_apart_id"])
         df = df.replace({np.nan: None, "00:00:00": None})
 
-        fake_affair_id = [
-            166637,
-            533442,
-            533486,
-            533677,
-            533720,
-            533744,
-            644552,
-            707343,
-            707866,
-            721202,
-            721214,
-            721225,
-            721231,
-            721278,
-            721289,
-            721310,
-            723662,
-            723910,
-            725676,
-            740501,
-        ]
-        df.drop(df[df["affair_id"].isin(fake_affair_id)].index, inplace=True)
-
         connection = psycopg2.connect(
             host=settings.project_management_setting.DB_HOST,
             user=settings.project_management_setting.DB_USER,
@@ -240,8 +216,5 @@ def update_new_apart_ids(df: pd.DataFrame):
 
 
 if __name__ == "__main__":
-    df = pd.read_excel("/Users/macbook/Downloads/Telegram Desktop/Книга1.xlsx")
-    df['test'] = None
-    for i in df.itertuples():
-
-        print(i)
+    df = pd.read_excel('/Users/arsenijkarpov/Downloads/Подбор квартир (2).xlsx')
+    insert_data_to_offer(df)

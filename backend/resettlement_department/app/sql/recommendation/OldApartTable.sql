@@ -1,6 +1,7 @@
 WITH ranked_apartments AS (
     SELECT
         offer_id,
+        o.created_at::DATE,
         house_address,
         apart_number,
         district,

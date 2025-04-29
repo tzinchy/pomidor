@@ -5,6 +5,7 @@ from core.config import RECOMMENDATION_FILE_PATH
 from schema.apartment import ApartTypeSchema
 from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
+import pandas as pd
 from utils.sql_reader import async_read_sql_query
 
 
@@ -409,20 +410,21 @@ class OldApartRepository:
                 await session.rollback()
                 raise error
 
-    async def set_notes(self, apart_id: int, notes: str):
+    async def set_notes(self, apart_ids: list[int], notes: str):
         async with self.db() as session:
             try:
                 notes_list = notes.split(";")
                 rsm_note = notes_list.pop(0)
                 notes = ";".join(notes_list)
+                placeholder = ",".join(map(str, apart_ids))
                 await session.execute(
-                    text("""
+                    text(f"""
                     UPDATE old_apart 
                     SET rsm_notes = :rsm_note,
                         notes = :notes
-                    WHERE affair_id = :apart_id
+                    WHERE affair_id IN ({placeholder})
                     """),
-                    {"rsm_note": rsm_note, "notes": notes, "apart_id": apart_id},
+                    {"rsm_note": rsm_note, "notes": notes},
                 )
                 await session.commit()
                 return {"status": "done"}
@@ -556,3 +558,24 @@ class OldApartRepository:
             except Exception as e:
                 await session.rollback()
                 raise e
+    
+    async def get_excel_old_apart(self, filepath):
+        query = text("SELECT * FROM public.old_apart")
+        results_list = []
+        column_names = []
+
+        async with self.db() as session:
+            result_proxy = await session.execute(query)
+            column_names = list(result_proxy.keys())
+            results_list = result_proxy.all()
+
+        if results_list:
+            df = pd.DataFrame(results_list, columns=column_names)
+        else:
+            df = pd.DataFrame([], columns=column_names)
+        df.drop(columns=["created_at", "updated_at"], inplace=True)
+
+        print("DataFrame created:")
+        print(df)
+        df.to_excel(filepath, index=False)
+        print(f"Data successfully saved to {filepath}")

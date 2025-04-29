@@ -33,6 +33,7 @@ joined_aparts AS (
                 'sentence_date', o.sentence_date::DATE,
                 'answer_date', o.answer_date::DATE,
                 'decline_reason_id', o.decline_reason_id,
+                'created_at', o.created_at::DATE,
                 'decline_reason', JSONB_BUILD_OBJECT(
                     'min_floor', dr.min_floor, 
                     'max_floor', dr.max_floor, 
@@ -71,6 +72,7 @@ SELECT
     old_apart.type_of_settlement,
     old_apart.is_queue,
     old_apart.people_v_dele,
+    old_apart.rank,
     JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
         joined_aparts.new_apartments
@@ -94,4 +96,5 @@ GROUP BY
     old_apart.room_count,
     old_apart.type_of_settlement,
     old_apart.is_queue,
-    old_apart.people_v_dele;
+    old_apart.people_v_dele,
+    old_apart.rank;

@@ -271,22 +271,25 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       // Применяем каждый фильтр
       Object.entries(filters).forEach(([filterType, selectedValues]) => {
         if (selectedValues.length > 0) {
-            const filterKey = filterType.toLowerCase();
+          const filterKey = filterType.toLowerCase();
 
-            filtered = filtered.filter((item) => {
-                // Проверяем наличие специальных значений в выбранных значениях
-                const hasSpecialValues = selectedValues.some(
-                    val => val === "Не подобрано" || val === "Свободная"
-                );
-                
-                // Проверяем обычные значения статусов
-                const hasRegularStatus = selectedValues.some(
-                    (val) => val !== "Не подобрано" && val !== "Свободная" && item[filterKey] === val
-                );
-
-                // Если выбраны специальные значения - проверяем на null, иначе проверяем обычные статусы
-                return (hasSpecialValues && item[filterKey] === null) || hasRegularStatus;
-            });
+          filtered = filtered.filter((item) => {
+            // Проверяем все выбранные значения фильтра
+            for (const val of selectedValues) {
+                // Если это специальное значение ("Не подобрано" или "Свободная")
+                if (val === "Не подобрано" || val === "Свободная") {
+                    // Проверяем либо точное совпадение, либо null
+                    if (item[filterKey] === val || item[filterKey] === null) {
+                        return true;
+                    }
+                } 
+                // Для обычных значений
+                else if (item[filterKey] === val) {
+                    return true;
+                }
+            }
+            return false;
+          });
         }
       });
 
