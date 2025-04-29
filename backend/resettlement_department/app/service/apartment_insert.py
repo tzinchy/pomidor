@@ -928,7 +928,6 @@ def insert_data_to_old_apart(df: pd.DataFrame):
     
 def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
     try:
-        print(new_apart_df.columns)
         global district_mapping
         connection = None
         columns_name = {
@@ -1002,6 +1001,19 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             port=settings.project_management_setting.DB_PORT,
             database=settings.project_management_setting.DB_NAME
         )
+        # нью апарт айди которые не найдены в выгрузке но есть в бд. временно закомментировано
+        # existed_df = pd.read_sql("SELECT new_apart_id FROM public.new_apart", connection)
+        # existed_apart_ids = existed_df["new_apart_id"]
+        # rsm_apart_ids = new_apart_df["new_apart_id"]
+        # deleted_rows_ids = existed_apart_ids[~existed_apart_ids.isin(rsm_apart_ids)].values
+        # print("Найдено строк отсутствующих в рсм:", len(deleted_rows_ids))
+
+        # placeholder = ",".join(deleted_rows_ids.astype(str))
+        # update_status_in_deleted_aparts = f"""
+        #     UPDATE new_apart
+        #     SET status_id = 14
+        #     WHERE new_apart_id IN ({placeholder})
+        # """
 
         insert_data_sql = f"""
             INSERT INTO public.new_apart (
@@ -1011,7 +1023,8 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
                 {args_str}
             ON CONFLICT (new_apart_id) 
             DO UPDATE SET 
-            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
+            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db if col != "status_id")},
+            status_id = COALESCE(EXCLUDED.status_id, public.new_apart.status_id),
             updated_at = NOW()
         """
         set_env_true_sql = """
@@ -1020,14 +1033,15 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             updated_at = NOW()
             WHERE name = 'new_aparts_resource'
         """
-        out = 0
         with connection:
             with connection.cursor() as cursor:
                 print("DEBUG: Connection is open")
                 cursor.execute(insert_data_sql)
+                # cursor.execute(update_status_in_deleted_aparts)
                 print("DEBUG: Data to new_apart is inserted")
                 cursor.execute(set_env_true_sql)
                 print("DEBUG: Env is set to true")
+        out = 0
     except Exception as e:
         out = e
         print(e)

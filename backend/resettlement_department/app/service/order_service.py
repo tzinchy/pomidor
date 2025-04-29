@@ -18,12 +18,7 @@ class OrderService:
             output_path = os.path.join(os.getcwd(), "././uploads", "order_decisions.xlsx")
             print(output_path)
             await self.repository.get_excel_order(output_path)
-
-            return FileResponse(
-                path=output_path,
-                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                filename="order_decisions.xlsx",
-            )
+            return {"filepath": output_path}
         except Exception as e:
             return {"error": str(e)}
         
