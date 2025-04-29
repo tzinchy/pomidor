@@ -903,14 +903,14 @@ if __name__ == "__main__":
     cursor = conn.cursor()
 
     test_data = {
-        'old_apartment_house_address_1': [{'address': 'Авиаторов ул. (г.Щербинка), д.20'}],
+        'old_apartment_house_address_1': [{'address': 'Амурская ул., д.66'}],
         'new_apartment_house_address_1': [{
-            'address': 'Академика Скрябина ул., д.3/1 кор.1',
+            'address': 'Авиаторов ул., д.5 кор.5',
             'sections': []
         }],
-        'old_apartment_house_address_2': [{'address': 'Авиаторов ул. (г.Щербинка), д.4'}],
+        'old_apartment_house_address_2': [{'address': 'Багрицкого ул., д.6 кор.1'}],
         'new_apartment_house_address_2': [{
-            'address': 'Академика Скрябина ул., д.3/1 кор.1',
+            'address': 'Авиационная ул., д.61/2',
             'sections': []
         }],
     }
