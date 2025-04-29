@@ -178,46 +178,47 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         df_to_process = order_df[order_df[key_col].isin(ids_to_process)].copy()
         print(f"Запуск вставки/обновления для {len(df_to_process)} строк...")
 
+        existed_affair_ids = pd.read_sql("SELECT affair_id FROM public.old_apart", connection)
+        existed_affair_ids = existed_affair_ids["affair_id"].astype("Int64")
+        df_to_process = df_to_process[df_to_process["affair_id"].isin(existed_affair_ids)]
+        print(f"После отсечения по внешнему ключу affair_id осталось {len(df_to_process)}")
+
         total = len(df_to_process)
         i = 1
         for _, row in df_to_process.iterrows():
-            print(f"Row {i := i + 1}; total {total}")
-            # Если внешний ключ не найден пропускаем вставку
-            try:
-                with connection:
-                    with connection.cursor() as cursor:
-                        # Подготовка значений для вставки
-                        values = []
-                        for col in columns_db:
-                            val = row[col]
-                            if isinstance(val, str):
-                                val = val.replace("'", "''")
-                                values.append(f"'{val}'")
-                            elif val is None:
-                                values.append("NULL")
-                            elif isinstance(val, (dict, list)):
-                                values.append(f"'{json.dumps(val)}'")
-                            else:
-                                values.append(str(val))
-                        
-                        # SQL для вставки/обновления
-                        insert_sql = f"""
-                            INSERT INTO public.order_decisions (
-                                {", ".join(columns_db)}
-                            ) VALUES (
-                                {", ".join(values)}
-                            )
-                            ON CONFLICT (order_id) 
-                            DO UPDATE SET 
-                                {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
-                                updated_at = NOW()
-                        """
-                        
-                        cursor.execute(insert_sql)
-                        print(f"DEBUG: Inserted/updated order_id {row['article_code']} {row['order_id']}")
-            except errors.ForeignKeyViolation:
-                print(f"ForeignKeyViolation {row['affair_id']}")
-                continue
+            print(f"Row {i}; total {total}")
+            i += 1
+            with connection:
+                with connection.cursor() as cursor:
+                    # Подготовка значений для вставки
+                    values = []
+                    for col in columns_db:
+                        val = row[col]
+                        if isinstance(val, str):
+                            val = val.replace("'", "''")
+                            values.append(f"'{val}'")
+                        elif val is None:
+                            values.append("NULL")
+                        elif isinstance(val, (dict, list)):
+                            values.append(f"'{json.dumps(val)}'")
+                        else:
+                            values.append(str(val))
+                    
+                    # SQL для вставки/обновления
+                    insert_sql = f"""
+                        INSERT INTO public.order_decisions (
+                            {", ".join(columns_db)}
+                        ) VALUES (
+                            {", ".join(values)}
+                        )
+                        ON CONFLICT (order_id) 
+                        DO UPDATE SET 
+                            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
+                            updated_at = NOW()
+                    """
+                    
+                    cursor.execute(insert_sql)
+                    print(f"DEBUG: Inserted/updated order_id {row['article_code']} {row['order_id']}")
         return 0
 
     except Exception as e:
