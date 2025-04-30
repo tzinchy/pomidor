@@ -1726,7 +1726,7 @@ def get_orders_xlsx_df(start_date, end_date, layout_id):
 
     key = generate_key()
     token = check_token()
-    url1, url2 = start_kpu_xlsx(key, layout_id, decl_date=[start_date, end_date])
+    url1, url2 = start_orders_xlsx(key, layout_id, decl_date=[start_date, end_date])
 
     print(url2)
 
