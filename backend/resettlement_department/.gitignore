@@ -1,7 +1,7 @@
 .venv
 .env
-__pycache__
-/__pycache__
+pycache
+/pycache
 uploads/
 app/uploads/
 ./uploads
@@ -17,3 +17,4 @@ app/.log
 app/logs
 app/logs/
 app/logs/app.log
+app/waves

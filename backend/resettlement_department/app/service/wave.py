@@ -6,6 +6,8 @@ import json
 from openpyxl.styles import PatternFill, Font, Alignment
 import pandas as pd
 from openpyxl.utils.dataframe import dataframe_to_rows
+import os
+from pathlib import Path
 
 def get_db_connection():
     return psycopg2.connect(
@@ -1275,8 +1277,12 @@ def waves(data, cursor, conn):
         # Извлекаем номера из ключей и находим максимальный
         max_i = max(int(key.split('_')[-1]) for key in matching_keys)
 
-    # Создаем ExcelWriter перед циклом
-    output_path = "результаты_сопоставления.xlsx"
+    folders = [Path("waves")]
+    for folder in folders:
+        folder.mkdir(parents=True, exist_ok=True)
+
+    output_path = os.path.join(os.getcwd(), "././uploads", "order_decisions.xlsx")
+
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
         new_addresses_all = [x['address'] for x in new_selected_addresses]
         save_rank_view_to_excel(
@@ -1295,16 +1301,16 @@ def waves(data, cursor, conn):
             
             # Получаем старые адреса
             old_addresses = []
-            if old_key in test_data:
-                old_addresses = [item['address'] for item in test_data[old_key] if 'address' in item]
+            if old_key in data:
+                old_addresses = [item['address'] for item in data[old_key] if 'address' in item]
                 print(f"Старые адреса ({old_key}): {', '.join(old_addresses)}")
             else:
                 print(f"Старые адреса ({old_key}): отсутствуют")
             
             # Получаем новые адреса
             new_addresses = []
-            if new_key in test_data:
-                new_addresses = test_data[new_key]  # Полный объект с секциями и диапазонами
+            if new_key in data:
+                new_addresses = data[new_key]  # Полный объект с секциями и диапазонами
                 print(f"Новые адреса ({new_key}):")
                 for addr in new_addresses:
                     print(f"  Адрес: {addr.get('address', 'Неизвестный адрес')}")
