@@ -1281,7 +1281,7 @@ def waves(data, cursor, conn):
     for folder in folders:
         folder.mkdir(parents=True, exist_ok=True)
 
-    output_path = os.path.join(os.getcwd(), "././uploads", "order_decisions.xlsx")
+    output_path = os.path.join(os.getcwd(), "././wave", "wave_result.xlsx")
 
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
         new_addresses_all = [x['address'] for x in new_selected_addresses]
