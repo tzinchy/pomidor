@@ -350,6 +350,25 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     }
   };
 
+  const setSpecialNeedsForMany = async (marker) => {
+    const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+    console.log('setSpecialNeedsForMany', apartmentIds, marker, apartType)
+    
+    try {
+      await axios.patch(
+        `${HOSTLINK}/tables/apartment/set_special_needs_for_many`,
+        { 
+          apart_ids: apartmentIds,
+          is_special_needs_marker: marker 
+        }
+      );
+      
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+    } catch (error) {
+      console.error("Error setting status:", error.response?.data);
+    }
+  };
+
   const handleNotesSave = async (rowData, newNotes) => {
     try {
       await axios.patch(
@@ -658,6 +677,30 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
                       >
                         Поменять квартиры
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={(e) => {setSpecialNeedsForMany(1)}}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Проставить инвалидность
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={(e) => {setSpecialNeedsForMany(0)}}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Снять инвалидность
                       </button>
                     )}
                   </Menu.Item>
