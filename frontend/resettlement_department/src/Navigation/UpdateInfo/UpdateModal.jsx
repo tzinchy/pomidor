@@ -224,7 +224,7 @@ export default function UpdateDataButton() {
                                         ? 'bg-gray-300 cursor-not-allowed' 
                                         : 'hover:bg-gray-50 bg-white'
                                 }`}
-                                onClick={() => handleDownload("oldApart", HOSTLINK+'/rsm/old_apart')}
+                                onClick={() => handleDownload("oldApart", HOSTLINK+'/tables/old_apart')}
                                 disabled={loadingStates.oldApart}
                             >
                                 {loadingStates.oldApart ? (
@@ -245,7 +245,7 @@ export default function UpdateDataButton() {
                                         ? 'bg-gray-300 cursor-not-allowed' 
                                         : 'hover:bg-gray-50 bg-white'
                                 }`}
-                                onClick={() => handleDownload("newApart", HOSTLINK+'/rsm/new_apart')}
+                                onClick={() => handleDownload("newApart", HOSTLINK+'/tables/new_apart')}
                                 disabled={loadingStates.newApart}
                             >
                                 {loadingStates.newApart ? (
@@ -266,7 +266,7 @@ export default function UpdateDataButton() {
                                         ? 'bg-gray-300 cursor-not-allowed' 
                                         : 'hover:bg-gray-50 bg-white'
                                 }`}
-                                onClick={() => handleDownload("orderDecisions", HOSTLINK+'/rsm/order_decisions')}
+                                onClick={() => handleDownload("orderDecisions", HOSTLINK+'/tables/order_decisions')}
                                 disabled={loadingStates.orderDecisions}
                             >
                                 {loadingStates.orderDecisions ? (
