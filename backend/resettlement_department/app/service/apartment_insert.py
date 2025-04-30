@@ -950,12 +950,18 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             "К_Инв/к": "for_special_needs_marker",
             "К_№ подъезда": "entrance_number",
             "Идентификатор площади": "new_apart_id",
+            "Идентификатор выписки": "order_id",
         }
         new_apart_df.rename(
             columns=columns_name,
             inplace=True,
         )
+        has_order_id = False
+        if "order_id" in new_apart_df.columns:
+            has_order_id = True
         columns_db = list(columns_name.values())
+        if not has_order_id:
+            columns_db.remove("order_id")
         new_apart_df = new_apart_df[columns_db]
         new_apart_df = new_apart_df.dropna(subset=["new_apart_id"])
         special_needs_mapping = {"да": 1, "нет": 0}
@@ -964,6 +970,8 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
         )
 
         int_columns = ["new_apart_id", "floor", "building_id", "apart_number", "un_kv", "room_count", "rsm_apart_id"]
+        if has_order_id:
+            new_apart_df["order_id"] = new_apart_df["order_id"].astype("Int64")
         for col in int_columns:
             new_apart_df[col] = new_apart_df[col].astype("Int64")
         new_apart_df["total_living_area"] = new_apart_df["total_living_area"].astype(float)

@@ -10,6 +10,7 @@ from RSM.RSM import get_kpu_xlsx_df, get_orders_xlsx_df, get_resurs_xlsx_df
 from schema.history import EnvStatResponse
 from service.apartment_insert import insert_data_to_new_apart, insert_data_to_old_apart
 from service.order_insert import insert_data_to_order_decisions
+from datetime import timedelta
 
 router = APIRouter(prefix="/rsm", tags=["RSM"])
 
@@ -29,7 +30,7 @@ def from_rsm_get_old_apart() -> None:
     category = [70, 97]
     layout_id = 22223
     start_date = datetime(2017, 1, 1, 0, 0, 0)
-    end_date = datetime.combine(datetime.now().date(), time(23, 59, 59))
+    end_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1) - timedelta(seconds=1)
     df = get_kpu_xlsx_df(start_date, end_date, category, layout_id)
 
     result = insert_data_to_old_apart(df)
@@ -91,6 +92,7 @@ async def from_rsm_get_orders():
     order_decisions = await run_in_threadpool(
         get_orders_xlsx_df, start_date, end_date, layout_id
         )
+    order_decisions.to_excel('order_data.xlsx')
 
     #order_decisions = pd.read_excel('/Users/macbook/work/backend/resettlement_department/app/orderdta.xlsx')
     #order_decisions.to_excel('orderdta.xlsx')

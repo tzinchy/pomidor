@@ -1,9 +1,11 @@
 import os
 from pathlib import Path
+import pandas as pd
 from typing import List, Optional
 
 from fastapi import HTTPException
 from fastapi import status as http_status
+from fastapi.concurrency import run_in_threadpool
 from handlers.httpexceptions import NotFoundException
 from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
@@ -328,8 +330,17 @@ class ApartService:
                 folder.mkdir(parents=True, exist_ok=True)
 
             output_path = os.path.join(os.getcwd(), "././uploads", "old_apart.xlsx")
-            print(output_path)
-            await self.old_apart_repository.get_excel_old_apart(output_path)
+            rows, cols = await self.old_apart_repository.get_excel_old_apart()
+            if rows:
+                df = pd.DataFrame(rows, columns=cols)
+            else:
+                df = pd.DataFrame([], columns=cols)
+            df.drop(columns=["created_at", "updated_at"], inplace=True)
+
+            print("DataFrame created:")
+            print(df)
+            await run_in_threadpool(df.to_excel, output_path, index=False)
+            print(f"Data successfully saved to {output_path}")
             return {"filepath": output_path}
         except Exception as e:
             return {"error": str(e)}
@@ -341,8 +352,17 @@ class ApartService:
                 folder.mkdir(parents=True, exist_ok=True)
 
             output_path = os.path.join(os.getcwd(), "././uploads", "new_apart.xlsx")
-            print(output_path)
-            await self.new_apart_repository.get_excel_new_apart(output_path)
+            rows, cols = await self.new_apart_repository.get_excel_new_apart()
+            if rows:
+                df = pd.DataFrame(rows, columns=cols)
+            else:
+                df = pd.DataFrame([], columns=cols)
+            df.drop(columns=["created_at", "updated_at"], inplace=True)
+
+            print("DataFrame created:")
+            print(df)
+            await run_in_threadpool(df.to_excel, output_path, index=False)
+            print(f"Data successfully saved to {output_path}")
             return {"filepath": output_path}
         except Exception as e:
             return {"error": str(e)}
