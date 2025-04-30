@@ -323,7 +323,7 @@ class NewApartRepository:
             finally:
                 await session.commit()
 
-    async def get_excel_new_apart(self, filepath):
+    async def get_excel_new_apart(self):
         query = text("SELECT * FROM public.new_apart")
         results_list = []
         column_names = []
@@ -332,14 +332,4 @@ class NewApartRepository:
             result_proxy = await session.execute(query)
             column_names = list(result_proxy.keys())
             results_list = result_proxy.all()
-
-        if results_list:
-            df = pd.DataFrame(results_list, columns=column_names)
-        else:
-            df = pd.DataFrame([], columns=column_names)
-        df.drop(columns=["created_at", "updated_at"], inplace=True)
-
-        print("DataFrame created:")
-        print(df)
-        df.to_excel(filepath, index=False)
-        print(f"Data successfully saved to {filepath}")
+        return results_list, column_names
