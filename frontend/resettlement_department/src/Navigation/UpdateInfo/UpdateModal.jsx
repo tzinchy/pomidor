@@ -7,6 +7,7 @@ import FileUploader from "../../Balance/Components/FileUploader";
 export default function UpdateDataButton() {
     const [isModalOpen, setModalOpen] = useState(false);
     const [updateHistory, setUpdateHistory] = useState([]);
+    const [statData, setStatData] = useState([]);
     const [loadingStates, setLoadingStates] = useState({
         need: false,
         resource: false,
@@ -22,6 +23,7 @@ export default function UpdateDataButton() {
                 ...prev,
                 [type === "Потребность" ? "need" : 
                  type === "Ресурс" ? "resource" :
+                 type === "Выписки" ? "orders" : // Добавлен тип для выписок
                  type === "oldApart" ? "oldApart" :
                  type === "newApart" ? "newApart" : "orderDecisions"]: true
             }));
@@ -39,6 +41,7 @@ export default function UpdateDataButton() {
                 ...prev,
                 [type === "Потребность" ? "need" : 
                  type === "Ресурс" ? "resource" :
+                 type === "Выписки" ? "orders" : // Добавлен тип для выписок
                  type === "oldApart" ? "oldApart" :
                  type === "newApart" ? "newApart" : "orderDecisions"]: false
             }));
@@ -95,11 +98,23 @@ export default function UpdateDataButton() {
         }
     };
 
+    const fetchStat = async () => {
+        try {
+            const response = await fetch(`${HOSTLINK}/tables/get_stat`);
+            if (!response.ok) throw new Error('Ошибка загрузки статистики');
+            const data = await response.json();
+            console.log('stat data', data);
+            setStatData(data);
+        } catch (err) {
+            console.log(err.message);
+        }
+    };
+
     return (
         <div className="flex flex-col items-center">
             <button
                 className="absolute bottom-5 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-                onClick={() => { setModalOpen(true); fetchAddresses(); }}
+                onClick={() => { setModalOpen(true); fetchAddresses(); fetchStat();}}
             >
                 <RefreshCcw size={24} />
             </button>
@@ -109,7 +124,7 @@ export default function UpdateDataButton() {
                     <div className="bg-white p-6 rounded-lg shadow-lg items-center justify-items-center w-[30%]">
                         <h2 className="text-lg font-semibold mb-4">Обновление данных</h2>
                         
-                        <div className="grid grid-cols-2 gap-4 items-center justify-items-center mb-4">
+                        <div className="grid grid-cols-3 gap-4 items-center justify-items-center mb-4">
                             <button
                                 className={`px-4 py-2 border items-center rounded-md justify-self-center ${
                                     loadingStates.need 
@@ -152,6 +167,53 @@ export default function UpdateDataButton() {
                                     "Ресурс"
                                 )}
                             </button>
+                            <button
+                                className={`px-4 py-2 border items-center rounded-md justify-self-center ${
+                                    loadingStates.orders 
+                                        ? 'bg-gray-300 cursor-not-allowed' 
+                                        : 'hover:bg-gray-50 bg-white'
+                                }`}
+                                onClick={() => handleUpdate("Выписки", HOSTLINK+"/rsm/get_orders")}
+                                disabled={loadingStates.orders}
+                            >
+                                {loadingStates.orders ? (
+                                    <span className="flex items-center">
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Обновление...
+                                    </span>
+                                ) : (
+                                    "Выписки"
+                                )}
+                            </button>
+                        </div>
+
+                        <h3 className="text-md font-medium mb-2">Статистика записей:</h3>
+                        <div className="max-h-40 overflow-auto border rounded p-2 mb-4">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b">
+                                        <th className="text-left p-1"></th>
+                                        <th className="text-left p-1">Количество записей</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.keys(statData).length > 0 ? (
+                                        Object.entries(statData).map(([key, value]) => (
+                                            <tr key={key}>
+                                                <td className="p-1 capitalize">{key}</td>
+                                                <td className="p-1">{value.toLocaleString()}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="2" className="text-center text-gray-500 p-2">Данные загружаются...</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
 
                         <h3 className="text-md font-medium mb-2">Скачать файлы:</h3>
@@ -162,7 +224,7 @@ export default function UpdateDataButton() {
                                         ? 'bg-gray-300 cursor-not-allowed' 
                                         : 'hover:bg-gray-50 bg-white'
                                 }`}
-                                onClick={() => handleDownload("oldApart", HOSTLINK+'/tables/old_apart')}
+                                onClick={() => handleDownload("oldApart", HOSTLINK+'/rsm/old_apart')}
                                 disabled={loadingStates.oldApart}
                             >
                                 {loadingStates.oldApart ? (
@@ -183,7 +245,7 @@ export default function UpdateDataButton() {
                                         ? 'bg-gray-300 cursor-not-allowed' 
                                         : 'hover:bg-gray-50 bg-white'
                                 }`}
-                                onClick={() => handleDownload("newApart", HOSTLINK+'/tables/new_apart')}
+                                onClick={() => handleDownload("newApart", HOSTLINK+'/rsm/new_apart')}
                                 disabled={loadingStates.newApart}
                             >
                                 {loadingStates.newApart ? (
@@ -204,7 +266,7 @@ export default function UpdateDataButton() {
                                         ? 'bg-gray-300 cursor-not-allowed' 
                                         : 'hover:bg-gray-50 bg-white'
                                 }`}
-                                onClick={() => handleDownload("orderDecisions", HOSTLINK+'/tables/order_decisions')}
+                                onClick={() => handleDownload("orderDecisions", HOSTLINK+'/rsm/order_decisions')}
                                 disabled={loadingStates.orderDecisions}
                             >
                                 {loadingStates.orderDecisions ? (
@@ -216,7 +278,7 @@ export default function UpdateDataButton() {
                                         Загрузка...
                                     </span>
                                 ) : (
-                                    "Выписки"
+                                    "Решения по заявкам"
                                 )}
                             </button>
                         </div>
