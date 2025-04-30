@@ -8,7 +8,6 @@ from utils.password_utils import get_password_hash
 
 
 class UserRepository:
-    @classmethod
     async def find_user_by_email(cls, email: EmailStr) -> dict | None:
         """Find user by email."""
         async with async_session_maker() as session:
@@ -23,7 +22,6 @@ class UserRepository:
             return {"user_id": row[0], "email": row[1], "name": row[2]} if row else None
         
 
-    @classmethod
     async def find_user_by_login(cls, name: str) -> dict | None:
         """Find user by email."""
         async with async_session_maker() as session:
@@ -37,7 +35,6 @@ class UserRepository:
             return {"user_id": row[0], "email": row[1], "name": row[2]} if row else None
 
 
-    @classmethod
     async def find_password_by_email(cls, email: EmailStr) -> str | None:
         """Get password hash by email."""
         async with async_session_maker() as session:
@@ -50,8 +47,7 @@ class UserRepository:
             row = result.fetchone()
             return row[0] if row else None
         
-    
-    @classmethod
+
     async def find_password_by_login(cls, name: str) -> str | None:
         """Get password hash by email."""
         async with async_session_maker() as session:
@@ -65,7 +61,6 @@ class UserRepository:
             return row[0] if row else None
         
     
-    @classmethod
     async def find_email_by_login(cls, name: str) -> str | None:
         """Get password hash by email."""
         async with async_session_maker() as session:
@@ -79,7 +74,6 @@ class UserRepository:
             return row[0] if row else None
 
 
-    @classmethod
     async def does_user_exist(cls, email: EmailStr) -> bool:
         """Check if a user exists by email."""
         async with async_session_maker() as session:
@@ -88,7 +82,6 @@ class UserRepository:
             return result.scalar() is not None
         
     
-    @classmethod
     async def does_user_exist_login(cls, name: str) -> bool:
         """Check if a user exists by email."""
         async with async_session_maker() as session:
@@ -97,7 +90,6 @@ class UserRepository:
             return result.scalar() is not None
 
 
-    @classmethod
     async def create_user(cls, email: EmailStr, name: str, password: str) -> None:
         """Create a new user."""
         async with async_session_maker() as session:
@@ -108,8 +100,6 @@ class UserRepository:
             await session.execute(query.params(email=email, name=name, password=password))
             await session.commit()
 
-
-    @staticmethod
     async def update_password(email: str, new_password: str) -> None:
         """Update a user's password."""
         async with async_session_maker() as session:
@@ -123,7 +113,6 @@ class UserRepository:
             await session.commit()
 
 
-    @classmethod
     async def find_user_data_for_jwt(cls, email: EmailStr) -> dict | None:
         """Get user data needed for JWT payload."""
         async with async_session_maker() as session:
