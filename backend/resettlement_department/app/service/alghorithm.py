@@ -26,6 +26,9 @@ def match_new_apart_to_family_batch(
     date=False,
     ochered=False,
 ):
+    if (new_selected_addresses is None or old_selected_addresses is None):
+        print('POPALSA SUKA')
+        return None
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
@@ -137,6 +140,7 @@ def match_new_apart_to_family_batch(
 
                 # Обрабатываем адреса с диапазонами квартир
                 if new_selected_addresses and len(new_selected_addresses) > 0:
+                    print(new_selected_addresses)
                     # Извлекаем данные из вложенного списка
                     if isinstance(new_selected_addresses, list) and len(new_selected_addresses) > 0 and isinstance(new_selected_addresses[0], list):
                         new_selected_addresses = new_selected_addresses[0]
