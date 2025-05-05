@@ -79,17 +79,6 @@ async def change_status(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/change_status_for_new_apart")
-async def change_status_for_new_apart(
-    new_apart_ids: list[int] = Body(..., description="Список new_apart_id"),
-    new_status: Status = Body(..., description="Доступные статусы"),
-):
-    print(new_status)
-    return await apartment_service.update_status_for_apart(
-        new_apart_ids, new_status.value
-    )
-
-
 @router.post("/{apart_id}/{new_apart_id}/set_decline_reason")
 async def set_cancell_reason(
     apart_id: int, new_apart_id: int, decline_reason: DeclineReasonSchema
@@ -112,6 +101,13 @@ async def set_notes(
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
     notes: SetNotesSchema = None,
 ):
+    """
+    Проставляет поле notes и rsm_notes.
+    Строка разбивается по ";".
+    Первый элемент идет в rsm_notes, остальные в notes
+
+    Можно использовать вместо этой ручки /tables/apartment/set_notes_for_many
+    """
     return await apartment_service.set_notes_for_many([apart_id], notes.notes, apart_type)
 
 @router.patch("/decline_reason/{decline_reason_id}/update_declined_reason")
@@ -142,6 +138,9 @@ async def set_consent(
 async def set_special_needs_for_many(
     apart_ids_and_marker : SetSpecialNeedsSchema,
 ):
+    """
+    Проставляет поле is_special_needs_marker. Это поле int и *не подвержено валидации*
+    """
     return await apartment_service.set_special_needs_for_many(
         apart_ids_and_marker.apart_ids, apart_ids_and_marker.is_special_needs_marker
     )
@@ -152,4 +151,9 @@ async def set_notes_for_many(
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
     notes: SetNotesSchema = None,
 ):
+    """
+    Проставляет поле notes и rsm_notes.
+    Строка разбивается по ";".
+    Первый элемент идет в rsm_notes, остальные в notes
+    """
     return await apartment_service.set_notes_for_many(apart_ids, notes.notes, apart_type)

@@ -28,18 +28,21 @@ async def balance(requirements: BalanceSchema = Body(...)):
         for folder in folders:
             folder.mkdir(parents=True, exist_ok=True)
 
-        output_path = os.path.join(os.getcwd(), "././uploads", "matching_result.xlsx")
-        print("ТО ЧТО ВЫШЕ ЭТО ПАРАМЕТР")
-        save_views_to_excel(
-            output_path=output_path,
-            history_id=requirements.history_id,
-            date=requirements.is_date,
-        )
+        uploads_folder = os.path.join(os.getcwd(), "././uploads")
+        file_name = f"matching_result_{requirements.history_id}.xlsx"
+        output_path = os.path.join(uploads_folder, file_name)
+        if file_name not in os.listdir(uploads_folder):
+            print("ТО ЧТО ВЫШЕ ЭТО ПАРАМЕТР")
+            save_views_to_excel(
+                output_path=output_path,
+                history_id=requirements.history_id,
+                date=requirements.is_date,
+            )
 
         return FileResponse(
             path=output_path,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            filename="matching_result.xlsx",
+            filename=output_path,
         )
     except Exception as e:
         return {"error": str(e)}

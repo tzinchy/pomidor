@@ -248,11 +248,19 @@ class ApartService:
     async def set_notes_for_many(
         self, apart_ids: list[int], notes: str, apart_type: str
     ):
+        """
+        Проставляет поле notes и rsm_notes.
+        Строка разбивается по ";".
+        Первый элемент идет в rsm_notes, остальные в notes
+        """
+        notes_list = notes.split(";")
+        rsm_note = notes_list.pop(0)
+        notes = ";".join(notes_list)
         if apart_type == ApartTypeSchema.OLD:
-            return await self.old_apart_repository.set_notes(apart_ids, notes=notes)
+            return await self.old_apart_repository.set_notes(apart_ids, notes=notes, rsm_note=rsm_note)
         elif apart_type == ApartTypeSchema.NEW:
             return await self.new_apart_repository.set_notes(
-                apart_ids=apart_ids, notes=notes
+                apart_ids=apart_ids, notes=notes, rsm_note=rsm_note
             )
         else:
             raise NotFoundException
