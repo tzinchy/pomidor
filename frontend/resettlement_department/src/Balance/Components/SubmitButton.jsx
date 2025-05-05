@@ -23,7 +23,13 @@ const SubmitButton = ({ onResponse, type }) => {
       
       setErrorMessage(null);
       setLoading(true);
-      
+
+       // Calculate total selected items
+       const totalSelected = Object.values(selectedItems).reduce(
+        (acc, items) => acc + (items ? items.length : 0), 
+        0
+      );
+
       const requestBody = {
         "old_apartment_house_address": [],
         "new_apartment_house_address": [],
@@ -38,18 +44,24 @@ const SubmitButton = ({ onResponse, type }) => {
           if (dropdownId.includes('old_apartment_house_address')) {
             requestBody["old_apartment_house_address"] = [...requestBody["old_apartment_house_address"], ...addresses];
           } else if (dropdownId.includes('new_apartment_house_address')) {
-            requestBody["new_apartment_house_address"] = [...requestBody["new_apartment_house_address"], selectedItems["new_apartment_house_address"]];
+            requestBody["new_apartment_house_address"] = [...requestBody["new_apartment_house_address"], selectedItems["new_apartment_house_address_1"]];
           }
         });
       }
       
-      const response = await fetch(`${HOSTLINK}/fisrt_matching/matching`, {
+      const response = totalSelected > 2 ? (await fetch(`${HOSTLINK}/wave/process_waves`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(selectedItems)
+      })) : (await fetch(`${HOSTLINK}/fisrt_matching/matching`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody)
-      });
+      }));
 
       if (!response.ok) {
         throw new Error(`Ошибка HTTP: ${response.status}`);
