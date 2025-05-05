@@ -3,7 +3,6 @@ import json
 import numpy as np
 import pandas as pd
 import psycopg2
-from psycopg2 import errors
 from core.config import settings
 
 
@@ -104,9 +103,15 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
             lambda x: str(x).split()[0] if pd.notna(x) and len(str(x).split()) > 0 else None
         )
         
+        # Формируем колонки для вставки
         columns_db = list(columns_name.values()) + ['article_code']
+
+        # Удаляем записи с пустым ID
         order_df = order_df.dropna(subset=["order_id"])
+
+        # Агрегируем по ID. Формируем словарь area_id
         order_df = order_df.groupby("order_id").agg(concat_area_id_agg).reset_index()
+        # После агрегации порядок колонок изменился и надо вернуть порядок
         order_df = order_df[columns_db]
         
         # Преобразование типов
@@ -129,7 +134,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
             database=settings.project_management_setting.DB_NAME
         )
 
-        # Загружаем только изменяющиеся значения
+        # Сверяемся с бд и загружаем только изменившиеся записи
         existed_df = pd.read_sql("SELECT * FROM public.order_decisions", connection)
         existed_df = existed_df[columns_db]
         existed_df = df_date_to_string(existed_df, date_columns)
@@ -178,6 +183,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         df_to_process = order_df[order_df[key_col].isin(ids_to_process)].copy()
         print(f"Запуск вставки/обновления для {len(df_to_process)} строк...")
 
+        # Удаляем записи с несуществующим внешним ключом
         existed_affair_ids = pd.read_sql("SELECT affair_id FROM public.old_apart", connection)
         existed_affair_ids = existed_affair_ids["affair_id"].astype("Int64")
         df_to_process = df_to_process[df_to_process["affair_id"].isin(existed_affair_ids)]
