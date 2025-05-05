@@ -79,20 +79,6 @@ async def change_status(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/change_status_for_new_apart", deprecated=True)
-async def change_status_for_new_apart(
-    new_apart_ids: list[int] = Body(..., description="Список new_apart_id"),
-    new_status: Status = Body(..., description="Доступные статусы"),
-):
-    """
-    Эта ручка сломана. Ее заменяет /tables/apartment/set_status_for_many
-    """
-    print(new_status)
-    return await apartment_service.set_status_for_many(
-        new_apart_ids, new_status.value
-    )
-
-
 @router.post("/{apart_id}/{new_apart_id}/set_decline_reason")
 async def set_cancell_reason(
     apart_id: int, new_apart_id: int, decline_reason: DeclineReasonSchema
