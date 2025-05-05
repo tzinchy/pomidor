@@ -35,6 +35,7 @@ dependencies = [
     "itsdangerous==2.2.0",
     "jinja2==3.1.4",
     "jwt-tapo44ek==1.0.5",
+    "lock>=2018.3.25.2110",
     "lxml>=5.3.1",
     "markdown-it-py==3.0.0",
     "markupsafe==3.0.2",

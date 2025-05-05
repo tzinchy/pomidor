@@ -1280,11 +1280,11 @@ def waves(data, cursor, conn):
         # Извлекаем номера из ключей и находим максимальный
         max_i = max(int(key.split('_')[-1]) for key in matching_keys)
 
-    folders = [Path("waves")]
+    folders = [Path("uploads")]
     for folder in folders:
         folder.mkdir(parents=True, exist_ok=True)
 
-    output_path = os.path.join(os.getcwd(), "././waves", f"wave_result_{last_history_id}.xlsx")
+    output_path = os.path.join(os.getcwd(), "././uploads", f"matching_result_{last_history_id}.xlsx.xlsx")
 
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
         new_addresses_all = [x['address'] for x in new_selected_addresses]
