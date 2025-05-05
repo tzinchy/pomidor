@@ -542,6 +542,9 @@ class OldApartRepository:
     async def set_special_needs_for_many(
         self, old_apart_ids: List[int], is_special_needs_marker: int
     ):
+        """
+        Обновляет поле is_special_needs_marker у old_apart
+        """
         async with self.db() as session:
             try:
                 affair_ids = ", ".join(map(str, old_apart_ids))

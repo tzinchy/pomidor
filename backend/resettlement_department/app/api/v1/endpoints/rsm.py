@@ -52,8 +52,14 @@ def from_rsm_get_new_apart() -> dict:
     result = insert_data_to_new_apart(df)
     return {"status": "success", "inserted": result}
 
-@router.post("/upload-file/")
+@router.post("/upload-file/", deprecated=True)
 async def upload_file2(file: UploadFile = File(...)):
+    """
+    Загружает файл в таблицу old_apart.
+
+    Эта функция не имеет практического применения
+    и может быть удалена.
+    """
     try:
         # Создаем папку если ее нет
         folders = [Path("manual_download")]

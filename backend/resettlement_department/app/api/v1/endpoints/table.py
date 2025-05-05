@@ -138,10 +138,16 @@ async def set_entrance_number_for_many(
     new_apart_ids: List[int] = Body(..., description="Список new_apart_id"),
     entrance_number: int = Body(..., description="Номер подъезда")
 ):
+    """
+    Проставляет поле entrance_number у new_apart
+    """
     return await apartment_service.set_entrance_number_for_many(new_apart_ids, entrance_number)
 
 @router.get("/old_apart")
 async def old_apart():
+    """
+    Выгрузка таблицы old_apart в Excel файл
+    """
     result = await apartment_service.get_excel_old_apart()
     if filepath := result.get("filepath"):
         return FileResponse(
@@ -154,6 +160,9 @@ async def old_apart():
 
 @router.get("/new_apart")
 async def new_apart():
+    """
+    Выгрузка таблицы new_apart в Excel файл
+    """
     result = await apartment_service.get_excel_new_apart()
     if filepath := result.get("filepath"):
         return FileResponse(
@@ -166,6 +175,9 @@ async def new_apart():
 
 @router.get("/order_decisions")
 async def order_decisions():
+    """
+    Выгрузка таблицы order_decisions в Excel файл
+    """
     result = await order_service.get_excel_order()
     if filepath := result.get("filepath"):
         return FileResponse(
