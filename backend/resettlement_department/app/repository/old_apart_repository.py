@@ -410,12 +410,9 @@ class OldApartRepository:
                 await session.rollback()
                 raise error
 
-    async def set_notes(self, apart_ids: list[int], notes: str):
+    async def set_notes(self, apart_ids: list[int], notes: str, rsm_note):
         async with self.db() as session:
             try:
-                notes_list = notes.split(";")
-                rsm_note = notes_list.pop(0)
-                notes = ";".join(notes_list)
                 placeholder = ",".join(map(str, apart_ids))
                 await session.execute(
                     text(f"""
