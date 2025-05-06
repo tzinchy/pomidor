@@ -42,13 +42,14 @@ const SubmitButton = ({ onResponse, type }) => {
           }
         });
       }
+      console.log('selectedItems', selectedItems);
       
-      const response = await fetch(`${HOSTLINK}/fisrt_matching/matching`, {
+      const response = await fetch(`${HOSTLINK}/wave/process_waves`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(selectedItems)
       });
 
       if (!response.ok) {
