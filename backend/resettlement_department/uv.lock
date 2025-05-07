@@ -598,6 +598,12 @@ wheels = [
 ]
 
 [[package]]
+name = "lock"
+version = "2018.3.25.2110"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ea/ee/4c7e9740d397abd62b48bfe82f77f57a8984da4f5ba0a3b64930b44ccd8f/lock-2018.3.25.2110.tar.gz", hash = "sha256:cc5ac770930493eed7a8cfd0cf2568a125faf112eb8aa6b6149b3e581523d0c7", size = 3049 }
+
+[[package]]
 name = "lxml"
 version = "5.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1119,6 +1125,7 @@ dependencies = [
     { name = "itsdangerous" },
     { name = "jinja2" },
     { name = "jwt-tapo44ek" },
+    { name = "lock" },
     { name = "lxml" },
     { name = "markdown-it-py" },
     { name = "markupsafe" },
@@ -1204,6 +1211,7 @@ requires-dist = [
     { name = "itsdangerous", specifier = "==2.2.0" },
     { name = "jinja2", specifier = "==3.1.4" },
     { name = "jwt-tapo44ek", specifier = "==1.0.5" },
+    { name = "lock", specifier = ">=2018.3.25.2110" },
     { name = "lxml", specifier = ">=5.3.1" },
     { name = "markdown-it-py", specifier = "==3.0.0" },
     { name = "markupsafe", specifier = "==3.0.2" },
