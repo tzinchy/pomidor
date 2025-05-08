@@ -23,3 +23,5 @@ class Settings:
     EMAIL_SERVER = os.environ['EMAIL_SERVER']
     EMAIL_PORT = os.environ['EMAIL_PORT']
     EMAIL_LOGIN = os.environ['EMAIL_LOGIN']
+
+print(Settings.EMAIL_PASSWORD, Settings.EMAIL_SENDER)

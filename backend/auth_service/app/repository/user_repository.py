@@ -1,130 +1,111 @@
-# app/repository/user_repository.py
-from repository.database import async_session_maker
 from pydantic import EmailStr
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
-from core.config import Settings
 from utils.password_utils import get_password_hash
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
+from sqlalchemy import select
+from models.user import User
+from fastapi.encoders import jsonable_encoder
+from fastapi_cache import FastAPICache
+
+from models.user_backend_payload import UserBackendPayload
+from models.user_frontend_payload import UserFrontendPayload
+from schemas.user import UserUuid
+from sqlalchemy import update
 
 
 class UserRepository:
-    async def find_user_by_email(cls, email: EmailStr) -> dict | None:
-        """Find user by email."""
-        async with async_session_maker() as session:
-            query = text(f"""
-                SELECT id, email, name 
-                FROM {Settings.DB_SCHEMA}.user 
-                WHERE email = :email
-            """)
-            result = await session.execute(query.params(email=email))
-            row = result.fetchone()
-            print(row)
-            return {"user_id": row[0], "email": row[1], "name": row[2]} if row else None
-        
+    def __init__(self, db: AsyncSession):
+        self.db = db
 
-    async def find_user_by_login(cls, name: str) -> dict | None:
-        """Find user by email."""
-        async with async_session_maker() as session:
-            query = text(f"""
-                SELECT id, email, name 
-                FROM {Settings.DB_SCHEMA}.user 
-                WHERE name = :name
-            """)
-            result = await session.execute(query.params(name=name))
-            row = result.fetchone()
-            return {"user_id": row[0], "email": row[1], "name": row[2]} if row else None
+    async def get_user_uuid_by_email_or_none(self, email: EmailStr) -> UserUuid | None:
+        async with self.db() as session:
+            print("validate user by email")
+            query_result = await session.execute(
+                select(User.user_uuid).where(User.email == email)
+            )
+            result = query_result.scalar_one_or_none()
+            return result
 
+    async def get_user_uuid_by_login_or_none(self, login: str) -> UserUuid | None:
+        async with self.db() as session:
+            print("validate user by login")
+            query_result = await session.execute(
+                select(User.user_uuid).where(User.login == login)
+            )
+            result = query_result.scalar_one_or_none()
+            return result
 
-    async def find_password_by_email(cls, email: EmailStr) -> str | None:
-        """Get password hash by email."""
-        async with async_session_maker() as session:
-            query = text(f"""
-                SELECT "hashedPassword" 
-                FROM {Settings.DB_SCHEMA}.user 
-                WHERE email = :email
-            """)
-            result = await session.execute(query.params(email=email))
-            row = result.fetchone()
-            return row[0] if row else None
-        
+    async def get_password_by_uuid(self, user_uuid: str) -> str:
+        async with self.db() as session:
+            query_result = await session.execute(
+                select(User.password).where(User.user_uuid == user_uuid)
+            )
+            result = (
+                query_result.scalar_one()
+            )  
+            return result
 
-    async def find_password_by_login(cls, name: str) -> str | None:
-        """Get password hash by email."""
-        async with async_session_maker() as session:
-            query = text(f"""
-                SELECT "hashedPassword" 
-                FROM {Settings.DB_SCHEMA}.user 
-                WHERE name = :name
-            """)
-            result = await session.execute(query.params(name=name))
-            row = result.fetchone()
-            return row[0] if row else None
-        
-    
-    async def find_email_by_login(cls, name: str) -> str | None:
-        """Get password hash by email."""
-        async with async_session_maker() as session:
-            query = text(f"""
-                SELECT email 
-                FROM {Settings.DB_SCHEMA}.user 
-                WHERE name = :name
-            """)
-            result = await session.execute(query.params(name=name))
-            row = result.fetchone()
-            return row[0] if row else None
+    async def get_email_by_user_uuid(self, user_uuid: str) -> EmailStr:
+        async with self.db() as session:
+            query_result = await session.execute(
+                select(User.email).where(User.user_uuid == user_uuid)
+            )
+            result = query_result.scalar_one_or_none()
+            print(result)
+            return result
 
+    async def create_user(
+        self,
+        login,
+        email,
+        password,
+        first_name,
+        middle_name,
+        last_name,
+        district_group,
+        roles,
+        groups,
+    ) -> None:
+        async with self.db() as session:
+            await session.add(User)
 
-    async def does_user_exist(cls, email: EmailStr) -> bool:
-        """Check if a user exists by email."""
-        async with async_session_maker() as session:
-            query = text(f"SELECT 1 FROM {Settings.DB_SCHEMA}.user WHERE email = :email")
-            result = await session.execute(query.params(email=email))
-            return result.scalar() is not None
-        
-    
-    async def does_user_exist_login(cls, name: str) -> bool:
-        """Check if a user exists by email."""
-        async with async_session_maker() as session:
-            query = text(f"SELECT 1 FROM {Settings.DB_SCHEMA}.user WHERE name = :name")
-            result = await session.execute(query.params(name=name))
-            return result.scalar() is not None
+    async def create_candidate_user():
+        pass
 
+    async def update_password(self, user_uuid: UUID, hashed_password: str) -> None:
+        async with self.db() as session:
+            query_result = await session.execute(
+                update(User)
+                .where(User.user_uuid == user_uuid)
+                .values(password=hashed_password)
+                .returning(User.user_uuid)
+            )
+        result = query_result.scalar_one_or_none()
+        await session.commit()
+        return result
 
-    async def create_user(cls, email: EmailStr, name: str, password: str) -> None:
-        """Create a new user."""
-        async with async_session_maker() as session:
-            query = text(f"""
-                INSERT INTO {Settings.DB_SCHEMA}.user (email, name, hashedPassword) 
-                VALUES (:email, :name, :password)
-            """)
-            await session.execute(query.params(email=email, name=name, password=password))
-            await session.commit()
+    async def get_user_backend_payload(self, user_uuid):
+        async with self.db() as session:
+            query_result = await session.execute(
+                select(UserBackendPayload).where(user_uuid == user_uuid)
+            )
+            result = query_result.scalars().first()
+            print(result.as_dict())
+            return result
 
-    async def update_password(email: str, new_password: str) -> None:
-        """Update a user's password."""
-        async with async_session_maker() as session:
-            hashed_password = get_password_hash(new_password)
-            query = text(f"""
-                UPDATE {Settings.DB_SCHEMA}.user 
-                SET hashedPassword = :new_password 
-                WHERE email = :email
-            """)
-            await session.execute(query.params(email=email, new_password=hashed_password))
-            await session.commit()
-
-
-    async def find_user_data_for_jwt(cls, email: EmailStr) -> dict | None:
-        """Get user data needed for JWT payload."""
-        async with async_session_maker() as session:
-            query = text(f"""
-                SELECT id, name, email
-                FROM {Settings.DB_SCHEMA}.user
-                WHERE email = :email
-            """)
-            result = await session.execute(query.params(email=email))
-            row = result.fetchone()
-            return {
-                "user_id": row[0],
-                "name": row[1],
-                "email": row[2]
-            } if row else None
+    async def get_user_frontend_payload(self, user_uuid):
+        async with self.db() as session:
+            print(type(user_uuid))
+            query_result = await session.execute(
+                select(
+                    UserFrontendPayload.first_name,
+                    UserFrontendPayload.middle_name,
+                    UserFrontendPayload.last_name,
+                    UserFrontendPayload.positions_info,
+                    UserFrontendPayload.districts,
+                    UserFrontendPayload.roles,
+                    UserFrontendPayload.groups_info,
+                ).where(UserFrontendPayload.user_uuid == user_uuid)
+            )
+            result = [dict(row) for row in query_result.mappings().all()][0]
+            return result

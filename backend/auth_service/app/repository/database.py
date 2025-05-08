@@ -3,8 +3,9 @@ from sqlalchemy.orm import sessionmaker
 
 from core.config import Settings
 
-schema = Settings.DB_SCHEMA
+print(Settings.DATABASE_URL)
 
-engine = create_async_engine(Settings.DATABASE_URL)
+EGNINE = create_async_engine(Settings.DATABASE_URL)
 
-async_session_maker = sessionmaker(engine, class_=AsyncSession)
+auth_session = sessionmaker(EGNINE, class_=AsyncSession, expire_on_commit=False)
+

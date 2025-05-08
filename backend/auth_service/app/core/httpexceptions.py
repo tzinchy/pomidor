@@ -1,4 +1,4 @@
-# app/core/httpexceptions.py
+
 from fastapi import HTTPException
 
 class UserNotFoundException(HTTPException):
