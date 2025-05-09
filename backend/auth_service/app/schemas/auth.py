@@ -1,5 +1,5 @@
-from pydantic import BaseModel, field_validator, EmailStr, ValidationError
-from typing import Union
+from pydantic import BaseModel, field_validator, EmailStr
+
 
 class UserLogin(BaseModel):
     login_or_email: str
@@ -20,3 +20,6 @@ class UserLogin(BaseModel):
 class UserRegister(BaseModel):
     email: EmailStr  # This will auto-validate as email
     password: str
+
+class UserResetEmail(BaseModel):
+    email : EmailStr

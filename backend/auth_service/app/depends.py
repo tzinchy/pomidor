@@ -1,15 +1,15 @@
-from repository.user_repository import UserRepository
-from service.user_service import UserService
-from service.email_service import EmailService
+from repository.auth_repository import AuthRepository
+from service.auth_service import AuthService
+from service.auth_email_service import AuthEmailService
 from repository.database import auth_session
 
-email_service = EmailService() 
+auth_email_service = AuthEmailService() 
 
-user_repository = UserRepository(auth_session)
-user_service = UserService(user_repository, email_service=email_service)
+auth_repository = AuthRepository(auth_session)
+auth_service = AuthService(auth_repository, email_service=auth_email_service)
 
-
+#user_service = UserService(user_repository = user_repository,email_service = user_email_service) 
 
 if __name__ == '__main__':
     import asyncio
-    asyncio.run(user_service.reset_password('7ad56dd7-fba0-4298-9be8-9a52db9abb41'))
+    asyncio.run(auth_service.login_user('dreevxq@gmail.com', "6Nb-rp'R%m6r"))

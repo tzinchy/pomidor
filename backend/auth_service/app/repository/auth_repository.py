@@ -13,7 +13,7 @@ from schemas.user import UserUuid
 from sqlalchemy import update
 
 
-class UserRepository:
+class AuthRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
@@ -72,7 +72,7 @@ class UserRepository:
     async def create_candidate_user():
         pass
 
-    async def update_password(self, user_uuid: UUID, hashed_password: str) -> None:
+    async def update_password(self, user_uuid: str, hashed_password: str) -> str | None:
         async with self.db() as session:
             query_result = await session.execute(
                 update(User)
@@ -80,9 +80,9 @@ class UserRepository:
                 .values(password=hashed_password)
                 .returning(User.user_uuid)
             )
-        result = query_result.scalar_one_or_none()
-        await session.commit()
-        return result
+            result = query_result.scalar_one_or_none()
+            await session.commit()
+            return result
 
     async def get_user_backend_payload(self, user_uuid):
         async with self.db() as session:
@@ -90,8 +90,7 @@ class UserRepository:
                 select(UserBackendPayload).where(user_uuid == user_uuid)
             )
             result = query_result.scalars().first()
-            print(result.as_dict())
-            return result
+            return result.as_dict()
 
     async def get_user_frontend_payload(self, user_uuid):
         async with self.db() as session:
