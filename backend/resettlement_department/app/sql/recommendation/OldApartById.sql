@@ -73,6 +73,7 @@ SELECT
     old_apart.is_queue,
     old_apart.people_v_dele,
     old_apart.rank,
+    old_apart.floor,
     JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
         joined_aparts.new_apartments
