@@ -1,11 +1,10 @@
 from fastapi import FastAPI
-from api.v1.endpoints.auth_endpoints import router as auth_roter
-from api.v1.endpoints.user_endpoints import router as user_router
 from fastapi.middleware.cors import CORSMiddleware
-app = FastAPI(root_path='/auth')
+from api.v1.router import router as v1_router 
 
-app.include_router(auth_roter)
-app.include_router(user_router)
+app = FastAPI()
+
+app.include_router(v1_router)
 
 origins = [
     "http://localhost",  # React Dev Server
