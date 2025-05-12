@@ -1,11 +1,7 @@
 from pydantic import EmailStr
-from utils.password_utils import get_password_hash
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import UUID
 from sqlalchemy import select
 from models.user import User
-from fastapi.encoders import jsonable_encoder
-from fastapi_cache import FastAPICache
 
 from models.user_backend_payload import UserBackendPayload
 from models.user_frontend_payload import UserFrontendPayload

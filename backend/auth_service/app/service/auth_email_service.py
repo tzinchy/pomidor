@@ -2,7 +2,8 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List, Union
-from core.config import Settings
+
+from core.config import settings
 
 
 class AuthEmailService:
@@ -95,15 +96,15 @@ class AuthEmailService:
             recipients = [recipients]
 
         msg = MIMEMultipart()
-        msg['From'] = Settings.EMAIL_SENDER
+        msg['From'] =settings.email_settings.EMAIL_SENDER
         msg['To'] = ', '.join(recipients)
         msg['Subject'] = subject
         msg.attach(MIMEText(html_body, 'html'))
 
         try:
-            with smtplib.SMTP(Settings.EMAIL_SERVER, Settings.EMAIL_PORT) as server:
+            with smtplib.SMTP(settings.email_settings.EMAIL_SERVER, settings.email_settings.EMAIL_PORT) as server:
                 server.starttls()
-                server.login(Settings.EMAIL_LOGIN, Settings.EMAIL_PASSWORD)
+                server.login(settings.email_settings.EMAIL_LOGIN, settings.email_settings.EMAIL_PASSWORD)
                 server.send_message(msg)
             return True
         except Exception as e:
@@ -115,9 +116,9 @@ class AuthEmailService:
         html = self.create_password_reset_email(new_password)
         return self.send_email(email, "Ваш новый пароль", html)
 
-    def send_login_notification(self, email: str, first_name: str, last_name: str) -> bool:
+    def send_login_notification(self, email: str, first_name: str, middle_name: str) -> bool:
         """Отправка уведомления о входе в аккаунт"""
-        html = self.create_login_notification_email(first_name, last_name)
+        html = self.create_login_notification_email(first_name, middle_name)
         return self.send_email(email, "Успешный вход в аккаунт", html)
 
     def send_password_update_notification(self, email: str, first_name: str) -> bool:

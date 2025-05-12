@@ -1,14 +1,17 @@
 # app/services/user_service.py
-from core.httpexceptions import UserNotFoundException, InvalidPasswordException
-
-from fastapi import HTTPException
-from fastapi import Response
-from utils.password_utils import validate_password, generate_new_password, get_password_hash
-from repository.auth_repository import AuthRepository
-from service.auth_email_service import AuthEmailService
-from schemas.user import UserUuid
-from service.jwt_service import create_jwt_token
+from core.httpexceptions import InvalidPasswordException, UserNotFoundException
+from fastapi import HTTPException, Response
 from pydantic import EmailStr
+from repository.auth_repository import AuthRepository
+from schemas.user import UserUuid
+from service.auth_email_service import AuthEmailService
+from service.jwt_service import create_jwt_token
+from utils.password_utils import (
+    generate_new_password,
+    get_password_hash,
+    validate_password,
+)
+
 
 class AuthService:
     def __init__(self, auth_repository : AuthRepository, email_service : AuthEmailService):

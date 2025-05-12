@@ -4,7 +4,9 @@ from typing import Type, Optional, List
 import jwt
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, Request, status
-from pydantic import BaseModel
+from pydantic import BaseModel 
+
+from schemas.user_token_data import UserTokenData
 
 load_dotenv()
 
@@ -13,16 +15,6 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY must be set in environment variables")
 
-class UserTokenData(BaseModel):
-    user_uuid: str
-    roles_ids: List[int] = []
-    district_group_id: Optional[int] = None
-    groups_ids: List[int] = []
-    positions_ids: List[int] = []
-    telegram_token: Optional[str] = None
-    telegram_chat_id: Optional[int] = None
-    districts_ids: List[int] = []
-    exp: int
 
 def create_jwt_token(payload: dict) -> str:
     """Создание JWT токена"""
@@ -102,6 +94,7 @@ class AuthChecker:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=str(e)
             )
+        
 async def get_user(token: str = Depends(get_token)) -> UserTokenData:
     """Базовая зависимость для получения данных пользователя без проверок прав"""
     try:
