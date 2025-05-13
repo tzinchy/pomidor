@@ -604,12 +604,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
             new_apart_df['manual_load_id'] = manual_load_id
             
             # Фильтрация и добавление колонок
-            new_apart_required = [
-                "district", "municipal_district", "house_address", "floor", "apart_number",
-                "full_living_area", "total_living_area", "living_area", "room_count",
-                "type_of_settlement", "for_special_needs_marker", "cad_num", "new_apart_id", 
-                "manual_load_id"
-            ]
+            new_apart_required = ["new_apart_id", "manual_load_id"]
             new_apart_df['district'] = new_apart_df['district'].map(district_mapping).fillna(new_apart_df['district'])
             for col in new_apart_required:
                 if col not in new_apart_df.columns:
