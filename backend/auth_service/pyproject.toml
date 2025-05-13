@@ -21,6 +21,8 @@ dependencies = [
     "h11==0.14.0",
     "idna==3.10",
     "jwt-tapo44ek==1.0.6",
+    "openpyxl>=3.1.5",
+    "pandas>=2.2.3",
     "psycopg2-binary==2.9.10",
     "pydantic==2.10.6",
     "pydantic-core==2.27.2",

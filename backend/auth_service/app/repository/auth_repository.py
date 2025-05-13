@@ -50,20 +50,7 @@ class AuthRepository:
             print(result)
             return result
 
-    async def create_user(
-        self,
-        login,
-        email,
-        password,
-        first_name,
-        middle_name,
-        last_name,
-        district_group,
-        roles,
-        groups,
-    ) -> None:
-        async with self.db() as session:
-            await session.add(User)
+
 
     async def create_candidate_user():
         pass
