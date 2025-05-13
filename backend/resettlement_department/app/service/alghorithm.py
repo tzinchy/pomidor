@@ -873,9 +873,21 @@ def match_new_apart_to_family_batch(
                 print('offers_to_insert - ', len(offers_to_insert))
                 print('cannot offer to insert - ', len(cannot_offer_to_insert))
                 # --- Обновление базы данных ---
-                # Для каждой пары old_apart_id и new_apart_id
+                # Создаем словарь для сопоставления affair_id с rank
+                old_apart_ranks = df_old_apart.set_index("affair_id")["rank"].astype(str).to_dict()
+
+                # Список для массового обновления рангов в new_apart
+                new_apart_rank_update = []
+
                 for old_apart_id, new_apart_id in offers_to_insert:
-                    # Проверяем существование записи для данного old_apart_id
+                    # Получаем rank из словаря
+                    rank = old_apart_ranks.get(old_apart_id)
+                    
+                    # Добавляем данные для обновления new_apart
+                    if rank is not None:
+                        new_apart_rank_update.append((rank, new_apart_id))
+                    
+                    # Обновляем запись в offer (без добавления rank в JSON)
                     cursor.execute(
                         "SELECT new_aparts FROM public.offer WHERE affair_id = %s",
                         (old_apart_id,)
@@ -884,29 +896,33 @@ def match_new_apart_to_family_batch(
                     
                     current_new_aparts = {}
                     if result and result[0]:
-                        # Десериализуем существующий JSON
                         current_new_aparts = json.loads(result[0])
                     
-                    # Добавляем/обновляем запись с ключом new_apart_id
                     current_new_aparts[str(new_apart_id)] = {
-                        "status_id": 7  # Укажите нужный статус
+                        "status_id": 7  # Только статус, без ранга
                     }
                     
-                    # Сериализуем обратно в JSON
                     new_aparts_json = json.dumps(current_new_aparts, ensure_ascii=False)
                     
                     if result:
-                        # Обновляем существующую запись
                         cursor.execute(
                             "UPDATE public.offer SET new_aparts = %s WHERE affair_id = %s",
                             (new_aparts_json, old_apart_id)
                         )
                     else:
-                        # Вставляем новую запись
                         cursor.execute(
                             "INSERT INTO public.offer (affair_id, new_aparts, status_id) VALUES (%s, %s, 7)",
                             (old_apart_id, new_aparts_json)
                         )
+
+                # Массовое обновление рангов в new_apart
+                if new_apart_rank_update:
+                    cursor.executemany(
+                        """UPDATE public.new_apart
+                            SET rank = %s
+                            WHERE new_apart_id = %s""",
+                        new_apart_rank_update
+                    )
 
                 conn.commit()
                 res = {'cannot_offer': len(cannot_offer_to_insert), 'offer':  len(offers_to_insert)}

@@ -146,12 +146,12 @@ function LeftBar({
                     </button>
                   </div>
 
-                  <div className="h-full pr-2 bg-white">
+                  <div className="h-full pr-2 bg-white text-sm">
                     <ul>
                       {districts.map((district) => {
                         const isDistOpen = expandedNodes[district] ?? false;
                         return (
-                          <li key={district} className="mb-2">
+                          <li key={district} className="mb-2 ">
                             <a
                               href="#"
                               onClick={(e) => {
@@ -221,12 +221,12 @@ function LeftBar({
                                     <ul className={`ml-4 !visible ${isMunOpen ? "" : "hidden"}`}>
                                       {houseAddresses[municipal]?.map((address) => (
                                         <li key={address} className="px-2">
-                                          <label className="flex items-center px-2 cursor-pointer">
+                                          <label className="flex items-center px-2 cursor-pointer text-xs">
                                             <input
                                               type="checkbox"
                                               checked={selectedAddresses.includes(address)}
                                               onChange={() => handleAddressToggle(address, municipal)}
-                                              className="mr-2 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                                              className="mr-2 text-blue-600 rounded focus:ring-blue-500"
                                             />
                                             <span>{address}</span>
                                           </label>
