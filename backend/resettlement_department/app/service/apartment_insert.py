@@ -621,9 +621,9 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
                     cursor,
                     f"""INSERT INTO new_apart ({", ".join(new_apart_required)})
                         VALUES %s
-                        ON CONFLICT (up_id)
+                        ON CONFLICT (new_apart_id)
                         DO UPDATE SET 
-                            {", ".join([f"{col} = EXCLUDED.{col}" for col in new_apart_required if col != 'up_id'])},
+                            {", ".join([f"{col} = EXCLUDED.{col}" for col in new_apart_required if col != 'new_apart_id'])},
                             updated_at = NOW()""",
                     new_apart_values
                 )
