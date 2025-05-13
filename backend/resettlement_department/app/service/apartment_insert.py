@@ -595,7 +595,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
                 'Площадь общая': 'full_living_area',
                 'Площадь общая(б/л)': 'total_living_area', 
                 'Площадь жилая': 'living_area',
-                'Сл.инф_APART_ID': 'up_id',
+                'Сл.инф_APART_ID': 'new_apart_id',
                 'Кадастровый номер': 'cad_num',
                 'К_Инв/к': 'for_special_needs_marker'
             }
@@ -607,7 +607,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
             new_apart_required = [
                 "district", "municipal_district", "house_address", "floor", "apart_number",
                 "full_living_area", "total_living_area", "living_area", "room_count",
-                "type_of_settlement", "for_special_needs_marker", "cad_num", "up_id", 
+                "type_of_settlement", "for_special_needs_marker", "cad_num", "new_apart_id", 
                 "manual_load_id"
             ]
             new_apart_df['district'] = new_apart_df['district'].map(district_mapping).fillna(new_apart_df['district'])
