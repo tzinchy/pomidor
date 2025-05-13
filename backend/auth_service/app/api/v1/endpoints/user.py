@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from services.user_service import UserService
 import logging
 from JWTs import DecodeJWT
-from models.user import UserJWTData
+from app.models.action import UserJWTData
 
 # get_user = DecodeJWT(UserJWTData)
 

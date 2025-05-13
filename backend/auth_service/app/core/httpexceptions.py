@@ -1,4 +1,4 @@
-# app/core/httpexceptions.py
+
 from fastapi import HTTPException
 
 class UserNotFoundException(HTTPException):
@@ -7,8 +7,7 @@ class UserNotFoundException(HTTPException):
         super().__init__(status_code=404, detail=detail)
 
 class InvalidPasswordException(HTTPException):
-    def __init__(self, email: str, detail: str = "Invalid password provided"):
-        detail = f"{detail} for user: {email}"
+    def __init__(self, detail: str = "Invalid password provided"):
         super().__init__(status_code=401, detail=detail)
 
 class JWTException(HTTPException):
