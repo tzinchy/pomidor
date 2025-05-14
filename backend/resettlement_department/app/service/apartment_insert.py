@@ -623,7 +623,6 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
                         VALUES %s
                         ON CONFLICT (new_apart_id)
                         DO UPDATE SET 
-                            {", ".join([f"{col} = EXCLUDED.{col}" for col in new_apart_required if col != 'new_apart_id'])},
                             updated_at = NOW()""",
                     new_apart_values
                 )
@@ -683,7 +682,6 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
                     VALUES %s
                     ON CONFLICT (affair_id)
                     DO UPDATE SET 
-                        {", ".join([f"{col} = EXCLUDED.{col}" for col in old_apart_required if col != 'affair_id'])},
                         updated_at = NOW()""",
                 old_apart_values
             )
@@ -721,15 +719,6 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
                         %(phone_otvet)s, %(start_date)s, %(otdel)s, %(manual_load_id)s
                     )
                     ON CONFLICT (unom) DO UPDATE SET 
-                        old_address = EXCLUDED.old_address,
-                        cin_address = EXCLUDED.cin_address,
-                        cin_schedule = EXCLUDED.cin_schedule,
-                        dep_schedule = EXCLUDED.dep_schedule,
-                        phone_osmotr = EXCLUDED.phone_osmotr,
-                        phone_otvet = EXCLUDED.phone_otvet,
-                        start_date = EXCLUDED.start_date,
-                        otdel = EXCLUDED.otdel,
-                        manual_load_id = EXCLUDED.manual_load_id,
                         updated_at = NOW()""",
                     data
                 )

@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Response, Depends, Body
 from depends import auth_service
-from schemas.auth import UserLogin, UserResetEmail
-from service.jwt_service import UserTokenData, get_user
+from schemas.auth import UserLogin, UserResetEmail, CreateUser
+from service.jwt_service import UserTokenData, get_user, SAD_required
 from schemas.user import PasswordSwitch
+
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/login")
@@ -17,6 +18,12 @@ async def change_password(password_switch : PasswordSwitch, user : UserTokenData
     return result
 
 @router.post("/reset_password")
-async def reset_passwor(user_email: UserResetEmail):
+async def reset_password(user_email: UserResetEmail):
     result = await auth_service.reset_password(user_email.email)
     return result
+
+@router.post("/create_user")
+async def create_user(create_user : CreateUser, user : UserTokenData = Depends(SAD_required)):
+    result = await auth_service.create_user(create_user.first_name, create_user.middle_name, create_user.last_name, create_user.login, create_user.email, create_user.password, create_user.roles_ids, create_user.groups_ids, create_user.position_ids, create_user.district_group_id)
+    return result
+

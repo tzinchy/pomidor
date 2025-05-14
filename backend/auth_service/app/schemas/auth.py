@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator, EmailStr
-
+from typing import List, Optional
 
 class UserLogin(BaseModel):
     login_or_email: str
@@ -23,3 +23,15 @@ class UserRegister(BaseModel):
 
 class UserResetEmail(BaseModel):
     email : EmailStr
+
+class CreateUser(BaseModel):
+    first_name : str
+    middle_name : str  
+    last_name : str
+    login : str
+    email : str
+    password : str
+    district_group_id : Optional[int] = None 
+    roles_ids : List[int]
+    groups_ids : List[int] 
+    position_ids : List[int]
