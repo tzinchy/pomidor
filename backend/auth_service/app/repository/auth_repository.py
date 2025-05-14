@@ -1,12 +1,14 @@
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, text
 from models.user import User
 
 from models.user_backend_payload import UserBackendPayload
 from models.user_frontend_payload import UserFrontendPayload
 from schemas.user import UserUuid
 from sqlalchemy import update
+import json
+from typing import List, Optional
 
 
 class AuthRepository:
@@ -91,3 +93,39 @@ class AuthRepository:
             )
             result = [dict(row) for row in query_result.mappings().all()][0]
             return result
+        
+    async def create_user(
+        self,
+        first_name: str,
+        middle_name: str,
+        last_name: str,
+        login: str,
+        email: str,
+        password: str,
+        roles_ids: List[int],
+        groups_ids: List[int],
+        position_ids: List[int],
+        district_group_id: Optional[int] = None,
+    ):
+        async with self.db() as session:
+            query = text("""
+                INSERT INTO auth.user 
+                (first_name, middle_name, last_name, login, email, password, 
+                roles_ids, groups_ids, positions_ids, district_group_id) 
+                VALUES (:first_name, :middle_name, :last_name, :login, :email, :password, 
+                        :roles_ids, :groups_ids, :positions_ids, :district_group_id)
+            """)
+            params = {
+                "first_name": first_name,
+                "middle_name": middle_name,
+                "last_name": last_name,
+                "login": login,
+                "email": email,
+                "password": password,
+                "roles_ids": roles_ids,  # Просто передаём список Python
+                "groups_ids": groups_ids,
+                "positions_ids": position_ids,
+                "district_group_id": district_group_id,
+            }
+            await session.execute(query, params)
+            await session.commit()

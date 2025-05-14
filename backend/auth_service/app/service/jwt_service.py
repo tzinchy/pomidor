@@ -128,7 +128,9 @@ class GetHrCandidate(AuthChecker):
     def __init__(self):
         super().__init__(required_roles=[4])  # Пример: роль 4 для кандидата
 
-# Пример использования
+def SAD_required():
+    return AuthChecker(required_groups=[5,6])
+    
 def admin_required():
     return AuthChecker(required_roles=[1], required_groups=[1])
 
