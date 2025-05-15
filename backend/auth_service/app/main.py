@@ -10,7 +10,8 @@ origins = [
     "http://localhost",  # React Dev Server
     "http://127.0.0.1",
     "http://10.9.96.160:3001",
-    "http://dsadgi.mlc.gov:3001"
+    "http://dsa.mlc.gov",
+    "http://auth.dsa.mlc.gov"
 ]
 
 app.add_middleware(
