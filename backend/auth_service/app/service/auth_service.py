@@ -52,27 +52,42 @@ class AuthService:
                     value=(create_jwt_token(districts)),
                     httponly=False,
                     max_age=60*60*24*90,
-                    samesite="Lax",
-                    secure=False,
-                    path='/'  
+                    samesite="None",
+                    secure=True,
+                    path='/',
+                    domain=".dsa.mlc.gov"  
                 )
             response.set_cookie(
                 key="AuthToken",
                 value=create_jwt_token(jwt_payload),
                 httponly=False,
                 max_age=60*60*24*90,
-                samesite="Lax",
-                secure=False,
-                path='/'
+                samesite="None",
+                secure=True,
+                path='/',
+                domain=".dsa.mlc.gov" 
             )
             response.set_cookie(
                 key='Frontend',
                 value=create_jwt_token(frontend_payload),
                 httponly=False,
                 max_age=60*60*24*90,
-                samesite="Lax",
-                secure=False,
-                path='/'  
+                samesite="None",
+                secure=True,
+                path='/',
+                domain=".dsa.mlc.gov"  
+            )
+
+            response.set_cookie(
+                key='uuid',
+                value=str(user_uuid),
+                httponly=False,
+                max_age=60*60*24*90,
+                samesite="None",
+                secure=True,
+                path='/',
+                domain=".dsa.mlc.gov" 
+
             )
             response.set_cookie(
                 key='uuid',
