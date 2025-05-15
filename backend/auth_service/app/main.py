@@ -1,17 +1,21 @@
 from fastapi import FastAPI
-from api.v1.endpoints.auth_endpoints import router as auth_roter
-from api.v1.endpoints.user_endpoints import router as user_router
 from fastapi.middleware.cors import CORSMiddleware
-app = FastAPI(root_path='/auth')
+from api.v1.router import router as v1_router 
 
-app.include_router(auth_roter)
-app.include_router(user_router)
+app = FastAPI()
+
 
 origins = [
     "http://localhost",  # React Dev Server
     "http://127.0.0.1",
     "http://10.9.96.160:3001",
-    "http://dsadgi.mlc.gov:3001"
+    "http://dsa.mlc.gov",
+    "http://auth.dsa.mlc.gov",
+    "http://doccontrol.dsa.mlc.gov",
+    "https://dsa.mlc.gov",
+    "https://auth.dsa.mlc.gov",
+    "https://doccontrol.dsa.mlc.gov"
+    "http://auth.dsa.mlc.gov"
 ]
 
 app.add_middleware(
@@ -21,3 +25,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(v1_router)
+

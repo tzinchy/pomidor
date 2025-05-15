@@ -1346,12 +1346,12 @@ if __name__ == "__main__":
     cursor = conn.cursor()
 
     test_data = {
-        'old_apartment_house_address_1': [{'address': 'Акулово пос., д.15'}],
+        'old_apartment_house_address_1': [{'address': 'Антонова-Овсеенко ул., д.2 стр. 1'}],
         'new_apartment_house_address_1': [{
             'address': 'Алтуфьевское шоссе, д. 53, корп. 1',
             'sections': []
         }],
-        'old_apartment_house_address_2': [{'address': 'Антонова-Овсеенко ул., д.2 стр. 1'}],
+        'old_apartment_house_address_2': [{'address': 'Болотниковская ул., д.54 кор.1'}],
         'new_apartment_house_address_2': [{
             'address': 'Алтуфьевское шоссе, д. 53, корп. 1',
             'sections': []
