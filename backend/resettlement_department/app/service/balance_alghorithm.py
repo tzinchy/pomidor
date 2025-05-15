@@ -138,7 +138,7 @@ def save_views_to_excel(
 
                                         # Новое условие объединения: Ресурс ИЛИ Баланс равны 0
                                         if (
-                                            (previous_row["Ресурс"] == 0 or previous_row["Баланс"] == 0)  # <-- ИЗМЕНЕНО ЗДЕСЬ
+                                            (previous_row["Ресурс"] == 0 or previous_row["Баланс"] == 0) 
                                             and current_rank != max_rank
                                             and previous_rank != max_rank
                                         ):
