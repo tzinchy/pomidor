@@ -37,7 +37,7 @@ class AuthService:
     def get_districts(self, frontend_payload):
         return {'districts' : frontend_payload['districts']}
     
-    async def login_user(self, login_or_email : str , password: str, response : Response) -> UserUuid | HTTPException:
+    async def login_user(self, login_or_email : str , password: str, response : Response, ) -> UserUuid | HTTPException:
         user_uuid = await self.user_exist(login_or_email=login_or_email)
         print('это uuid', type(user_uuid))
         user_password = await self.auth_repository.get_password_by_uuid(user_uuid=user_uuid)
@@ -52,30 +52,54 @@ class AuthService:
                     value=(create_jwt_token(districts)),
                     httponly=False,
                     max_age=60*60*24*90,
-                    samesite="Lax",
-                    secure=False,
-                    path='/'  
+                    samesite="None",
+                    secure=True,
+                    path='/',
+                    domain=".dsa.mlc.gov"  
                 )
             response.set_cookie(
                 key="AuthToken",
                 value=create_jwt_token(jwt_payload),
                 httponly=False,
                 max_age=60*60*24*90,
-                samesite="Lax",
-                secure=False,
-                path='/'
+                samesite="None",
+                secure=True,
+                path='/',
+                domain=".dsa.mlc.gov" 
             )
             response.set_cookie(
                 key='Frontend',
                 value=create_jwt_token(frontend_payload),
                 httponly=False,
                 max_age=60*60*24*90,
+                samesite="None",
+                secure=True,
+                path='/',
+                domain=".dsa.mlc.gov"  
+            )
+
+            response.set_cookie(
+                key='uuid',
+                value=str(user_uuid),
+                httponly=False,
+                max_age=60*60*24*90,
+                samesite="None",
+                secure=True,
+                path='/',
+                domain=".dsa.mlc.gov" 
+
+            )
+            response.set_cookie(
+                key='uuid',
+                value=user_uuid,
+                httponly=False,
+                max_age=60*60*24*90,
                 samesite="Lax",
                 secure=False,
                 path='/'  
+
             )
-            self.email_service.send_login_notification(email=user_email, first_name=frontend_payload['first_name'], middle_name=frontend_payload['middle_name'])
-            return frontend_payload
+            return frontend_payload, user_email
         else:
             raise InvalidPasswordException
             
@@ -94,14 +118,14 @@ class AuthService:
         print(hashed_password)
         result = await self.auth_repository.update_password(user_uuid=user_uuid, hashed_password=hashed_password)
         if result is not None:
-            self.email_service.send_password_reset(recipients=[email], new_password=new_password)
+            self.email_service.send_password_reset([email], new_password=new_password)
         else:
             raise HTTPException()
         
     async def change_password(self, user_uuid: UserUuid, old_password: str, new_password: str) -> dict:
         password_from_db = await self.auth_repository.get_password_by_uuid(user_uuid=user_uuid)
         if not validate_password(old_password, password_from_db):
-            raise HTTPException(status_code=409, detail='Новый и старый пароль не совпдаают!')
+            raise HTTPException(status_code=409, detail='Введен неправильный старый пароль!')
         if old_password == new_password: 
             raise HTTPException(status_code=409, detail='Новый и старый пароль совпадают!')
 
@@ -118,3 +142,6 @@ class AuthService:
         password =  get_password_hash(password)
         await self.auth_repository.create_user(first_name, middle_name, last_name, login, email, password, roles_ids, groups_ids, position_ids, district_group_id)
 
+
+    async def get_services(self): 
+        await self.auth_repository.get_services()

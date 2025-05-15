@@ -4,13 +4,18 @@ from api.v1.router import router as v1_router
 
 app = FastAPI()
 
-app.include_router(v1_router)
 
 origins = [
     "http://localhost",  # React Dev Server
     "http://127.0.0.1",
     "http://10.9.96.160:3001",
-    "http://dsadgi.mlc.gov:3001"
+    "http://dsa.mlc.gov",
+    "http://auth.dsa.mlc.gov",
+    "http://doccontrol.dsa.mlc.gov",
+    "https://dsa.mlc.gov",
+    "https://auth.dsa.mlc.gov",
+    "https://doccontrol.dsa.mlc.gov"
+    "http://auth.dsa.mlc.gov"
 ]
 
 app.add_middleware(
@@ -20,3 +25,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(v1_router)
+
