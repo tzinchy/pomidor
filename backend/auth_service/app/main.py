@@ -15,6 +15,7 @@ origins = [
     "https://dsa.mlc.gov",
     "https://auth.dsa.mlc.gov",
     "https://doccontrol.dsa.mlc.gov"
+    "http://auth.dsa.mlc.gov"
 ]
 
 app.add_middleware(
@@ -26,3 +27,4 @@ app.add_middleware(
 )
 
 app.include_router(v1_router)
+
