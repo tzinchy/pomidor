@@ -45,6 +45,7 @@ const SubmitButton = ({ onResponse, type }) => {
           }
         });
       }
+      console.log('selectedItems', selectedItems);
       
       const response = totalSelected ? (await fetch(`${HOSTLINK}/wave/process_waves`, {
         method: 'POST',
