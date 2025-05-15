@@ -13,6 +13,7 @@ import LoginPage from './Auth/LoginPage';
 import PrivateRoute from './Auth/PrivateRoute';
 import ParentChildTable from './Test';
 import { data } from './MessegeData';
+import ChessGrid from './ChessGrid';
 
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement); 
@@ -37,7 +38,7 @@ root.render(
       <Route path="/balance" element={<BalancePage />} />
       <Route path="/history" element={<HistoryPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/test" element={<ParentChildTable data={data}/>} />
+      <Route path="/test" element={<ChessGrid />} />
     </Routes>
   </BrowserRouter>
 );

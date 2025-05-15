@@ -781,21 +781,17 @@ def insert_data_to_old_apart(df: pd.DataFrame):
             "КПУ_снятие_сист_ дата": "removal_date",
             "КПУ_Др. напр. закр.": "rsm_another_closed"
         }
+        # Формируем список колонок для вставки в базу
         columns_db = list(columns_name.values())
         columns_db.append('is_queue')
         columns_db.append('was_queue')
         columns_db.append('is_hidden')
-        columns_db.append('status_id')
         df.rename(
             columns=columns_name,
             inplace=True,
         )
         # Удаляем строки с пустыми ID
         df = df.dropna(subset=["affair_id"])
-        special_needs_mapping = {"да": 1, "нет": 0}
-        df["is_special_needs_marker"] = (
-            df["is_special_needs_marker"].map(special_needs_mapping).fillna(0)
-        )
 
         df["affair_id"] = df["affair_id"].astype("Int64")
         df["people_in_family"] = df["people_in_family"].astype("Int64")
@@ -809,6 +805,11 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         df["full_living_area"] = df["full_living_area"].astype(float)
         df["removal_date"] = df["removal_date"].astype(str)
 
+        # Это поле в базе int
+        special_needs_mapping = {"да": 1, "нет": 0}
+        df["is_special_needs_marker"] = (
+            df["is_special_needs_marker"].map(special_needs_mapping).fillna(0)
+        )
         # Добавляем колонку is_queue на основе регулярного выражения
         df["is_queue"] = df["kpu_another"].apply(
               lambda x: 1 if re.search(r"-01-", str(x)) else 0
@@ -816,10 +817,12 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         df["was_queue"] = df["rsm_another_closed"].apply(
               lambda x: 1 if re.search(r"-01-", str(x)) else 0
         ).astype("Int64")
+        # На основе removal_reason скрываем некоторые записи
         removal_reason_is_hidden = ["техническое снятие в АСУ", "Ошибочно введенная КПУ"]
         df["is_hidden"] = df["removal_reason"].apply(
               lambda x: 1 if x in removal_reason_is_hidden else 0
         ).astype(bool)
+        # На основе removal_reason проставляем статус 14 - Подборов не будет
         removal_reason_14 = [
             "Переселение. Жилое помещение свободно",
             "п.2 смерть очередника",
@@ -833,8 +836,9 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         df["status_id"] = df["removal_reason"].apply(
               lambda x: 14 if x in removal_reason_14 else None
         ).astype("Int64")
-
+        # Сокращаем названия округов
         df['district'] = df['district'].map(district_mapping).fillna(df['district'])
+        # Удаляем записи на основании округа
         forbidden_districts = ["ДЖП и ЖФ (Газетный пер.,1/12)", "Перовский р-н"]
         df.drop(df[df["district"].isin(forbidden_districts)].index, inplace=True)
 
@@ -845,6 +849,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         df["people_v_dele"] = df["people_v_dele"].replace({None: 0})
         df["total_living_area"] = df["total_living_area"].replace({None: 0})
 
+        # Важно чтобы порядок колонок в df был такой же как в columns_db
         df = df[columns_db]
 
         args = df.itertuples(index=False, name=None)
@@ -878,10 +883,11 @@ def insert_data_to_old_apart(df: pd.DataFrame):
                 {args_str}
             ON CONFLICT (affair_id) 
             DO UPDATE SET 
-            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db if col != "status_id")},
+            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
             status_id = COALESCE(EXCLUDED.status_id, public.old_apart.status_id),
             updated_at = NOW()
         """
+        # Запрос для обновления справочной информации об успешной выгрузке
         set_env_true_sql = """
             UPDATE env.data_updates
             SET success = True,
@@ -900,6 +906,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         out = e
         print(e)
         print("DEBUG: Exception occurred")
+        # Корректно обновляем справочную информацию о неудачной выгрузке
         if not connection:
             print("DEBUG: Connection is None. Creating new one")
             connection = psycopg2.connect(
@@ -956,18 +963,19 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             columns=columns_name,
             inplace=True,
         )
+
+        # Возможность загружать выписки с этим полем и без этого поля
         has_order_id = False
         if "order_id" in new_apart_df.columns:
             has_order_id = True
         columns_db = list(columns_name.values())
         if not has_order_id:
             columns_db.remove("order_id")
+
         new_apart_df = new_apart_df[columns_db]
+
+        # Удаляем строки с пустым ID
         new_apart_df = new_apart_df.dropna(subset=["new_apart_id"])
-        special_needs_mapping = {"да": 1, "нет": 0}
-        new_apart_df["for_special_needs_marker"] = (
-            new_apart_df["for_special_needs_marker"].map(special_needs_mapping).fillna(0)
-        )
 
         int_columns = ["new_apart_id", "floor", "building_id", "apart_number", "un_kv", "room_count", "rsm_apart_id"]
         if has_order_id:
@@ -978,7 +986,13 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
         new_apart_df["full_living_area"] = new_apart_df["full_living_area"].astype(float)
         new_apart_df["living_area"] = new_apart_df["living_area"].astype(float)
 
+        # Сокращаем название округов
         new_apart_df['district'] = new_apart_df['district'].map(district_mapping).fillna(new_apart_df['district'])
+        # Это поле в базе int
+        special_needs_mapping = {"да": 1, "нет": 0}
+        new_apart_df["for_special_needs_marker"] = (
+            new_apart_df["for_special_needs_marker"].map(special_needs_mapping).fillna(0)
+        )
 
         new_apart_df = new_apart_df.replace({np.nan: None})
         new_apart_df["full_living_area"] = new_apart_df["full_living_area"].replace({None: 0})
@@ -1035,6 +1049,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             status_id = COALESCE(EXCLUDED.status_id, public.new_apart.status_id),
             updated_at = NOW()
         """
+        # Проставляем справочную информацию об успешной выгрузке
         set_env_true_sql = """
             UPDATE env.data_updates
             SET success = True,
@@ -1054,6 +1069,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
         out = e
         print(e)
         print("DEBUG: Exception occurred")
+        # Проставляем справочную информацию о неудачной выгрузке
         if not connection:
             print("DEBUG: Connection is None. Creating new one")
             connection = psycopg2.connect(

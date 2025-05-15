@@ -23,13 +23,30 @@ function LeftBar({
     setRowSelection
   }) {
 
-    const [selectedAddresses, setSelectedAddresses] = useState([]);
-    const [selectedMunicipals, setSelectedMunicipals] = useState([]);
-    const [currentMunicipal, setCurrentMunicipal] = useState(null);
+    // Состояния для хранения выбранных элементов для каждого типа
+    const [selections, setSelections] = useState({
+      OldApart: {
+        selectedAddresses: [],
+        selectedMunicipals: []
+      },
+      NewApartment: {
+        selectedAddresses: [],
+        selectedMunicipals: []
+      }
+    });
+
+    // Текущие выбранные элементы в зависимости от типа
+    const selectedAddresses = selections[apartType].selectedAddresses;
+    const selectedMunicipals = selections[apartType].selectedMunicipals;
 
     const handleResetFilters = () => {
-      setSelectedAddresses([]);
-      setSelectedMunicipals([]);
+      setSelections(prev => ({
+        ...prev,
+        [apartType]: {
+          selectedAddresses: [],
+          selectedMunicipals: []
+        }
+      }));
     }
 
     const toggleExpand = (key) => {
@@ -40,33 +57,49 @@ function LeftBar({
     };
 
     const handleMunicipalToggle = (municipal) => {
-      setSelectedMunicipals(prev => {
-        const newSelectedMunicipals = prev.includes(municipal)
-          ? prev.filter(m => m !== municipal)
-          : [...prev, municipal];
+      setSelections(prev => {
+        const currentType = apartType;
+        const currentSelections = prev[currentType];
+        
+        const newSelectedMunicipals = currentSelections.selectedMunicipals.includes(municipal)
+          ? currentSelections.selectedMunicipals.filter(m => m !== municipal)
+          : [...currentSelections.selectedMunicipals, municipal];
         
         // Если выбираем муниципалитет, загружаем его адреса
-        if (!prev.includes(municipal)) {
+        if (!currentSelections.selectedMunicipals.includes(municipal)) {
           fetchHouseAddresses(municipal);
         }
         
-        // Загружаем квартиры для выбранных муниципалитетов
-        
         setRowSelection({});
         
-        return newSelectedMunicipals;
+        return {
+          ...prev,
+          [currentType]: {
+            ...currentSelections,
+            selectedMunicipals: newSelectedMunicipals
+          }
+        };
       });
     };
 
     const handleAddressToggle = (address, municipal) => {
-      setSelectedAddresses(prev => {
-        const newSelectedAddresses = prev.includes(address)
-          ? prev.filter(addr => addr !== address)
-          : [...prev, address];
+      setSelections(prev => {
+        const currentType = apartType;
+        const currentSelections = prev[currentType];
+        
+        const newSelectedAddresses = currentSelections.selectedAddresses.includes(address)
+          ? currentSelections.selectedAddresses.filter(addr => addr !== address)
+          : [...currentSelections.selectedAddresses, address];
         
         setRowSelection({});
         
-        return newSelectedAddresses;
+        return {
+          ...prev,
+          [currentType]: {
+            ...currentSelections,
+            selectedAddresses: newSelectedAddresses
+          }
+        };
       });
     };
 
@@ -90,12 +123,15 @@ function LeftBar({
       setLoading(true); 
       setFilters({}); 
       setRowSelection({});
-      setSelectedAddresses([]);
-      setSelectedMunicipals([]);
+    };
+
+    const switchApartType = (type) => {
+      resetSelection();
+      setApartType(type);
     };
 
     return (
-      <div className="relative h-[100vh-1rem]s">
+      <div className="relative h-[100vh-1rem]s ">
         <div className={`fixed h-[calc(100vh-1rem)] transition-all duration-300 bg-white rounded-lg overflow-hidden z-[100] ${collapsed ? 'w-0' : ''}`}>
           <Sidebar collapsed={collapsed} className={`transition-all duration-300 h-[calc(100vh-1rem)] w-[270px]`}>
             <Menu>
@@ -103,19 +139,13 @@ function LeftBar({
                 <>
                   <div className="flex justify-around mb-4">
                     <button
-                      onClick={() => {
-                        resetSelection();
-                        setApartType("OldApart");
-                      }}
+                      onClick={() => switchApartType("OldApart")}
                       className={`p-8 py-4 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Семьи
                     </button>
                     <button
-                      onClick={() => {
-                        resetSelection();
-                        setApartType("NewApartment");
-                      }}
+                      onClick={() => switchApartType("NewApartment")}
                       className={`p-8 py-4 rounded-md ${apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
                     >
                       Ресурс
@@ -197,7 +227,6 @@ function LeftBar({
                                         onClick={(e) => {
                                           e.preventDefault();
                                           toggleExpand(municipal);
-                                          //handleMunicipalToggle(municipal)
                                         }}
                                       >
                                         <svg

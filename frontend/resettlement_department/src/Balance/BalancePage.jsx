@@ -92,7 +92,7 @@ export default function BalancePage() {
             ))}
 
             <div className="m-4 justify-items-center flex">
-              <TestBtn />
+              {/*<TestBtn />*/}
               <SubmitButton onResponse={handleResponse} type={''} />
               <SubmitButton onResponse={handleResponse} type={'last'} />
             </div>

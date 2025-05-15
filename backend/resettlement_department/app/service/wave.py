@@ -1153,6 +1153,9 @@ def waves(data, cursor, conn):
 
     print(f"\nTotal: {len(old_selected_addresses)} old and {len(new_selected_addresses)} new addresses")
 
+    if (old_selected_addresses == [] or new_selected_addresses == []):
+        return None
+
     df_old_apart, df_new_apart = df_for_aparts(cursor, old_selected_addresses=old_selected_addresses, new_selected_addresses=new_selected_addresses)
 
     # Создаем переменные для хранения ID квартир
@@ -1277,11 +1280,11 @@ def waves(data, cursor, conn):
         # Извлекаем номера из ключей и находим максимальный
         max_i = max(int(key.split('_')[-1]) for key in matching_keys)
 
-    folders = [Path("waves")]
+    folders = [Path("uploads")]
     for folder in folders:
         folder.mkdir(parents=True, exist_ok=True)
 
-    output_path = os.path.join(os.getcwd(), "././waves", "wave_result.xlsx")
+    output_path = os.path.join(os.getcwd(), "././uploads", f"matching_result_{last_history_id}.xlsx")
 
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
         new_addresses_all = [x['address'] for x in new_selected_addresses]
@@ -1343,15 +1346,15 @@ if __name__ == "__main__":
     cursor = conn.cursor()
 
     test_data = {
-        'old_apartment_house_address_1': [{'address': 'Инженерная ул., д.20 кор.2'}, {'address': 'Стандартная ул., д.15 кор.2'}],
+        'old_apartment_house_address_1': [{'address': 'Акулово пос., д.15'}],
         'new_apartment_house_address_1': [{
             'address': 'Алтуфьевское шоссе, д. 53, корп. 1',
-            'sections': [{'section': '2', 'range': {'from': 162, 'to': 256}}, {'section': '5', 'range': {'from': 446, 'to': 606}}]
+            'sections': []
         }],
-        'old_apartment_house_address_2': [{'address': 'Инженерная ул., д.30'}, {'address': 'Стандартная ул., д.19 кор.2'}],
+        'old_apartment_house_address_2': [{'address': 'Антонова-Овсеенко ул., д.2 стр. 1'}],
         'new_apartment_house_address_2': [{
             'address': 'Алтуфьевское шоссе, д. 53, корп. 1',
-            'sections': [{'section': '2', 'range': {'from': 162, 'to': 256}}, {'section': '5', 'range': {'from': 446, 'to': 606}}]
+            'sections': []
         }]
     }
     
