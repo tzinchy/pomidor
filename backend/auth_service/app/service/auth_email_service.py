@@ -103,9 +103,11 @@ class AuthEmailService:
 
         try:
             with smtplib.SMTP(settings.email_settings.EMAIL_SERVER, settings.email_settings.EMAIL_PORT) as server:
+                print('connection with smtp succes')
                 server.starttls()
                 server.login(settings.email_settings.EMAIL_LOGIN, settings.email_settings.EMAIL_PASSWORD)
                 server.send_message(msg)
+                print('message was send')
             return True
         except Exception as e:
             print(f"Email sending failed: {str(e)}")
@@ -118,7 +120,9 @@ class AuthEmailService:
 
     def send_login_notification(self, email: str, first_name: str, middle_name: str) -> bool:
         """Отправка уведомления о входе в аккаунт"""
+        print('send login notification')
         html = self.create_login_notification_email(first_name, middle_name)
+        print('html notification created')
         return self.send_email(email, "Успешный вход в аккаунт", html)
 
     def send_password_update_notification(self, email: str, first_name: str) -> bool:

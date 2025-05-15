@@ -52,8 +52,6 @@ class AuthRepository:
             print(result)
             return result
 
-
-
     async def create_candidate_user():
         pass
 
@@ -129,3 +127,8 @@ class AuthRepository:
             }
             await session.execute(query, params)
             await session.commit()
+    
+    async def get_services(self):
+        async with self.db() as session:
+            query_result = await session.execute(text('''select service_id, service from auth.service'''))
+            return [dict(row) for row in query_result.mappings().all()][0]
