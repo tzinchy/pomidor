@@ -274,6 +274,7 @@ def match_new_apart_to_family_batch(
                     # Присваиваем ранг 0, если площадь новой квартиры меньше минимальной площади старой квартиры с 1 рангом
                     if new_row["combined_area"] < min_area_1_rank:
                         df_new_apart.at[idx, "rank"] = 0
+                        print('-------------------------------------------------------------------------------------------------------\n', df_new_apart[df_new_apart['affair_id'] == idx])
                     else:
                         # Фильтруем старые квартиры, чтобы найти максимальную старую квартиру, которая покрывается новой
                         filtered_old = df_old_apart[
@@ -898,34 +899,6 @@ def match_new_apart_to_family_batch(
                         new_apart_rank_update
                     )
                 
-                # Обработка cannot_offer_to_insert и df_new_apart_second
-                if cannot_offer_to_insert and not df_new_apart_second.empty:
-                    # Извлекаем affair_id из кортежей (первый элемент каждого)
-                    cannot_offer_ids = [item[0] for item in cannot_offer_to_insert]
-                    
-                    # Фильтруем df_old_apart, оставляя только нужные affair_id, и берем rank, исключая nan
-                    ranks = df_old_apart[
-                        df_old_apart['affair_id'].isin(cannot_offer_ids)
-                    ]['rank'].dropna()
-                    
-                    if not ranks.empty:
-                        min_rank = str(ranks.min())
-                        
-                        # Получаем список new_apart_id из df_new_apart_second
-                        new_apart_ids = df_new_apart_second['new_apart_id'].tolist()
-                        
-                        # Создаем список кортежей для массового обновления
-                        update_data = [(min_rank, new_id) for new_id in new_apart_ids]
-                        print(ranks)
-                        
-                        # Массовое обновление рангов
-                        cursor.executemany(
-                            """UPDATE public.new_apart
-                                SET rank = %s
-                                WHERE new_apart_id = %s""",
-                            update_data
-                        )
-
 
                 conn.commit()
                 res = {'cannot_offer': len(cannot_offer_to_insert), 'offer':  len(offers_to_insert)}
