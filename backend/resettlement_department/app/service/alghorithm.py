@@ -962,7 +962,9 @@ def match_new_apart_to_family_batch(
                         
                         # Получаем минимальный ранг для данной комнатности
                         min_rank = min_rank_by_room.get(room_count)
-                        print('min_rank -------------- ', min_rank-1)
+                        if not min_rank:
+                            continue
+                        print('min_rank -------------- ', min_rank)
                         update_data.append((min_rank-1, new_id))
 
                     # Выполняем массовое обновление
