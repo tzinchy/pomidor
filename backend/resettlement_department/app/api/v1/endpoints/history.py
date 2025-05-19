@@ -28,9 +28,11 @@ async def balance(requirements: BalanceSchema = Body(...)):
         for folder in folders:
             folder.mkdir(parents=True, exist_ok=True)
 
-        uploads_folder = os.path.join(os.getcwd(), "././uploads")
+        uploads_folder = os.path.join(os.getcwd(), "././uploads/")
         file_name = f"matching_result_{requirements.history_id}.xlsx"
         output_path = os.path.join(uploads_folder, file_name)
+        print(output_path)
+        print(os.listdir(uploads_folder))
         if file_name not in os.listdir(uploads_folder):
             print("ТО ЧТО ВЫШЕ ЭТО ПАРАМЕТР")
             save_views_to_excel(
