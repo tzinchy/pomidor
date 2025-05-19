@@ -578,9 +578,8 @@ def match_new_apart_to_family_batch(
 
                         for _, old_apart in df_old_apart_reversed[df_old_apart_reversed["room_count"] == i].iterrows():
                             old_apart_id = int(old_apart["affair_id"])
-                            if old_apart_id not in old_apart_list:
-                                print('ASDFGSADKLNGKJQSDFBNGIJHGQBEWRUIJFBIJSDBNFOIKSANDKJFVBJAISDBGOIASEBDGFIOUJBAQSEEDUIOGFOIASDHGIOASDGVOJNAEERDIKJGVHAOIJEDFEGVNOIJUADSNHGIOJUASNDBVLKJABDSNJUIGVNAJSIKDVKJILASDNDKJVNADFOJVNOJAKDNFVOIKASDOIVKNADOIFKVNUIOJADFNJV',old_apart_id)
-                                continue
+                            #if old_apart_id not in old_apart_list:
+                            #    continue
                             # Определяем условие по этажу
                             floor_condition = (
                                 ((df_new_apart_second["floor"]>= (old_apart["min_floor"] - 2))&
