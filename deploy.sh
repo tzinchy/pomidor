@@ -10,5 +10,7 @@ cd "$SCRIPT_DIR"
 git pull upstream dev
 sudo systemctl restart resettlement_backend
 cp -r backend/auth_service/app /opt/auth/
+sudo chown -R dsa-dgi:dsa-dgi /opt/auth
+sudo chmod -R 777 /opt/auth
 sudo systemctl restart auth
 #sudo systemctl restart resettlement_frontend
