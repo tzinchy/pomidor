@@ -15,10 +15,10 @@ const LoginForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      const formData = new URLSearchParams();
-      
-      formData.append("login_or_email", data.login_or_email);
-      formData.append("password", data.password);
+      // const formData = new URLSearchParams();
+      data.login_or_email = data.login_or_email.toLowerCase()
+      // formData.append("login_or_email", data.login_or_email.toLowerCase());
+      // formData.append("password", data.password);
 
       const response = await axios.post(`${backendUrl}/v1/auth/login`, data, {
         headers: { "Content-Type": "application/json" }, withCredentials:  "include",
@@ -33,7 +33,7 @@ const LoginForm = () => {
     //   });
       setMessage("Успешный вход!");
       // navigate("/home");  // Перенаправляем на домашнюю страницу
-      window.location.href = "https://doccontrol.dsa.mlc.gov/doccontrol/GabitovDS"
+      window.location.href = "https://doccontrol.dsa.mlc.gov/"
       // alert("Успех, проверяй куки")
 
     } catch (error) {
@@ -51,7 +51,7 @@ const LoginForm = () => {
           {message && <p className="mt-3 text-center text-red font-semibold">{message}</p>}
           <div>
           
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-left m-6">Логин или EMAIL</label>
+            <label className="text-sm font-medium  leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-left m-6">Логин или EMAIL</label>
             <input 
               {...register("login_or_email", { required: "❌ Адрес электронной почты обязателен",
                 // pattern: {
@@ -60,7 +60,8 @@ const LoginForm = () => {
                 // }
                })} 
               type="text" 
-              className="border-input bg-transparent ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70" id="login_or_email" name="login_or_email" aria-describedby=":r1:-form-item-description" aria-invalid="false"
+              
+              className="border-input text-transform: lowercase; bg-transparent ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70" id="login_or_email" name="login_or_email" aria-describedby=":r1:-form-item-description" aria-invalid="false"
             //   placeholder="Введите логин"
             />
             
