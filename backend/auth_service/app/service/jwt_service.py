@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, Request, status
 from pydantic import BaseModel 
 
-from schemas.user_token_data import UserTokenData
+from schemas.user_token_data import UserTokenData, UserFrontedPayload, Districts
 
 load_dotenv()
 
@@ -37,6 +37,34 @@ def get_token(request: Request) -> str:
             detail="Authentication token missing"
         )
     return token
+
+def get_fronted_token(request : Request) -> str: 
+    token = request.cookies.get('Frontend')
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication token missing"
+        )
+    return token
+
+def get_uuid_token(request : Request) -> str: 
+    token = request.cookies.get('uuid')
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication token missing"
+        )
+    return token
+
+def get_districts_token(request : Request) -> str:
+    token = request.cookies.get('Districts')   
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication token missing"
+        )
+    return token
+
 
 class AuthChecker:
     def __init__(
@@ -100,6 +128,39 @@ async def get_user(token: str = Depends(get_token)) -> UserTokenData:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return UserTokenData(**payload)
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired"
+        )
+    except jwt.InvalidTokenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token: {str(e)}"
+        )
+    
+async def get_fronted_payload(token: str = Depends(get_fronted_token)) -> UserTokenData:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return UserFrontedPayload(**payload)
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired"
+        )
+    except jwt.InvalidTokenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token: {str(e)}"
+        )
+    
+async def get_user_uuid(user_uuid : str = Depends(get_uuid_token)): 
+    return user_uuid
+
+async def get_district_payload(token : str = Depends(get_districts_token)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return Districts(**payload)
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

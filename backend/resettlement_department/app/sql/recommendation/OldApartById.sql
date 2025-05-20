@@ -2,7 +2,7 @@ WITH unnested_offer AS (
     SELECT 
         offer_id,
         affair_id,
-        (key)::integer AS new_apart_id,
+        (key)::bigint AS new_apart_id,
         (value->'status_id')::integer AS status_id,
         sentence_date, 
         answer_date, 

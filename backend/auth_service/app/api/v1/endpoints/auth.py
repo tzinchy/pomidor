@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Response, Depends, Body, BackgroundTasks
-from depends import auth_service, auth_email_service
+from fastapi import APIRouter, Response, Depends, BackgroundTasks
+from depends import auth_service
 from schemas.auth import UserLogin, UserResetEmail, CreateUser
-from service.jwt_service import UserTokenData, get_user, SAD_required
+from service.jwt_service import get_user, SAD_required, get_fronted_payload, get_user_uuid, get_district_payload
+from schemas.user_token_data import UserFrontedPayload, UserTokenData
 from schemas.user import PasswordSwitch
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -32,4 +33,14 @@ async def create_user(create_user : CreateUser, user : UserTokenData = Depends(S
 async def get_backend_payload(user : UserTokenData = Depends(get_user)):
     return user
 
+@router.get('/get_frontend_payload')
+async def get_frontend_payload(user : UserFrontedPayload = Depends(get_fronted_payload)):
+    return user
 
+@router.get('/get_uuid')
+async def get_uuid(user_uuid = Depends(get_user_uuid)):
+    return user_uuid
+
+@router.get('/get_districts')
+async def get_districts_payload(districts = Depends(get_district_payload)):
+    return districts
