@@ -1,6 +1,6 @@
 WITH offered_aparts AS (
     SELECT 
-        (KEY)::int AS new_apart_id
+        (KEY)::bigint AS new_apart_id
     FROM 
         offer, 
         jsonb_each(new_aparts)

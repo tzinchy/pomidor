@@ -2,7 +2,7 @@ WITH clr_dt AS (
     SELECT 
         offer_id,
         affair_id, 
-        (KEY)::int AS new_apart_id, 
+        (KEY)::bigint AS new_apart_id, 
         sentence_date, 
         answer_date, 
 		created_at,
