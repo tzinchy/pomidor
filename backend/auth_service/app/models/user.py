@@ -23,3 +23,16 @@ class User(Base):
     district_group_id = Column(Integer, ForeignKey('auth.district_group.district_group_id'))
     groups = Column(ARRAY(Integer))
     positions = Column(ARRAY(Integer))
+    fio = Column(String)
+
+    def as_dict(self):
+        """Convert model instance to dictionary with serializable types"""
+        result = {}
+        for c in self.__table__.columns:
+            value = getattr(self, c.name)
+            # Convert UUID to string
+            if isinstance(value, uuid.UUID):
+                result[c.name] = str(value)
+            else:
+                result[c.name] = value
+        return result

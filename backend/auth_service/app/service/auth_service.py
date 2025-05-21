@@ -145,3 +145,9 @@ class AuthService:
 
     async def get_services(self): 
         await self.auth_repository.get_services()
+
+    async def get_users_fio_list_with_uuid(self):
+        return await self.auth_repository.get_users_fio_list_with_uuid()
+        
+    async def get_user_info_by_uuid(self, user_uuid):
+        return await self.auth_repository.get_user_info_by_uuid(user_uuid=user_uuid)
