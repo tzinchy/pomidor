@@ -26,7 +26,7 @@ def match_new_apart_to_family_batch(
     date=False,
     ochered=False,
 ):
-    if (new_selected_addresses is None or old_selected_addresses is None):
+    if (new_selected_addresses is None or old_selected_addresses is None) and not date:
         print('POPALSA SUKA')
         return None
     try:
@@ -916,16 +916,7 @@ def match_new_apart_to_family_batch(
                     if rank is not None:
                         new_apart_rank_update.append((rank, new_apart_id))
                     
-                    # Обновляем запись в offer (без добавления rank в JSON)
-                    cursor.execute(
-                        "SELECT new_aparts FROM public.offer WHERE affair_id = %s",
-                        (old_apart_id,)
-                    )
-                    result = cursor.fetchone()
-                    
                     current_new_aparts = {}
-                    if result and result[0]:
-                        current_new_aparts = json.loads(result[0])
                     
                     current_new_aparts[str(new_apart_id)] = {
                         "status_id": 7  # Только статус, без ранга
@@ -933,48 +924,10 @@ def match_new_apart_to_family_batch(
                     
                     new_aparts_json = json.dumps(current_new_aparts, ensure_ascii=False)
                     
-                    if result:
-                        cursor.execute(
-                            "UPDATE public.offer SET new_aparts = %s WHERE affair_id = %s",
-                            (new_aparts_json, old_apart_id)
-                        )
-                    else:
-                        cursor.execute(
-                            "INSERT INTO public.offer (affair_id, new_aparts, status_id) VALUES (%s, %s, 7)",
-                            (old_apart_id, new_aparts_json)
-                        )
-
-                # Массовое обновление рангов в new_apart
-                if new_apart_rank_update:
-                    cursor.executemany(
-                        """UPDATE public.new_apart
-                            SET rank = %s
-                            WHERE new_apart_id = %s""",
-                        new_apart_rank_update
+                    cursor.execute(
+                        "INSERT INTO public.offer (affair_id, new_aparts, status_id) VALUES (%s, %s, 7)",
+                        (old_apart_id, new_aparts_json)
                     )
-                
-                if cannot_offer_to_insert and not df_new_apart_second.empty:                    
-                    # Подготавливаем данные для обновления
-                    update_data = []
-                    for _, row in df_new_apart_second.iterrows():
-                        room_count = row['room_count']
-                        new_id = row['new_apart_id']
-                        
-                        # Получаем минимальный ранг для данной комнатности
-                        min_rank = min_rank_by_room.get(room_count)
-                        if not min_rank:
-                            continue
-                        print('min_rank -------------- ', min_rank)
-                        update_data.append((min_rank-1, new_id))
-
-                    # Выполняем массовое обновление
-                    if update_data:
-                        cursor.executemany(
-                            """UPDATE public.new_apart
-                                SET rank = %s
-                                WHERE new_apart_id = %s""",
-                            update_data
-                        )
 
                 conn.commit()
                 res = {'cannot_offer': len(cannot_offer_to_insert), 'offer':  len(offers_to_insert)}

@@ -873,7 +873,6 @@ def insert_data_to_old_apart(df: pd.DataFrame):
             ON CONFLICT (affair_id) 
             DO UPDATE SET 
             {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
-            status_id = COALESCE(EXCLUDED.status_id, public.old_apart.status_id),
             updated_at = NOW()
         """
         # Запрос для обновления справочной информации об успешной выгрузке
