@@ -63,8 +63,8 @@ def save_views_to_excel(
                             print('new_query', query_old_ranked)
                             # Добавляем фильтрацию по дате, если указана
                             if date:
-                                query_old_ranked += " AND old_apart.created_at = (SELECT MAX(created_at) FROM old_apart)"
-                                query_new_ranked += " AND new_apart.created_at = (SELECT MAX(created_at) FROM new_apart)"
+                                query_old_ranked += " AND old_apart.created_at = (SELECT MAX(updated_at) FROM old_apart)"
+                                query_new_ranked += " AND new_apart.created_at = (SELECT MAX(updated_at) FROM new_apart)"
 
 
                             df_old_ranked = pd.read_sql(query_old_ranked, conn)

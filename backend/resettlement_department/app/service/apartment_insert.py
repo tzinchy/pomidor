@@ -682,6 +682,7 @@ def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
                     VALUES %s
                     ON CONFLICT (affair_id)
                     DO UPDATE SET 
+                        is_special_needs_marker = EXCLUDED.is_special_needs_marker,
                         updated_at = NOW()""",
                 old_apart_values
             )
