@@ -86,6 +86,6 @@ tables = {
     
     # Other tables
     "renovation.objects": ["id", "code", "objectnotes", "municipaldistrict", "district", "address2", "apartmentnumber", "quantityroom", "sectionhouse", "floor", "area", "allarea", "livingspace", "cadastrnumber", "categoryroom", "owner", "control", "series", "information", "arealtype", "resource", "state", "givesubject", "areaadmin", "purpose"],
-    "renovation.selection_apartments": ["id", "sentencedate", "givedate", "registry", "answerdate", "sentencenumber", "selectionaction", "conditions", "notes", "claim", "ordinal", "subjectid", "objectid", "result", "archives", "subjectarea", "objectsallarea", "decreenumber", "decreedate", "agrementdate"],
     "renovation.subjects": ["id", "unom", "kpu_number", "lastname", "firstname", "patronymic", "viewsubject", "address2", "apartmentnumber", "roomnumber", "apartmenttype", "quantityroom", "allarea", "livingspace", "category", "quantitypeople", "quantityowner", "registrationpeople", "floor", "sectionhouse", "subject", "subjectstatus", "sectionposition", "notes", "area", "dateprg", "legalbasis", "pacttype", "informing"],
+    "renovation.selection_apartments": ["id", "sentencedate", "givedate", "registry", "answerdate", "sentencenumber", "selectionaction", "conditions", "notes", "claim", "ordinal", "subjectid", "objectid", "result", "archives", "subjectarea", "objectsallarea", "decreenumber", "decreedate", "agrementdate"]
 }

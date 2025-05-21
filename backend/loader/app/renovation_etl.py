@@ -1,123 +1,85 @@
 import time
 import json
+from decimal import Decimal
+from datetime import date, datetime
 from tqdm import tqdm
+from psycopg2 import extras
 from psycopg2.extras import Json
-from repository.database import get_connection, get_source_connection
 from core.config import tables
+from repository.database import get_connection, get_source_connection
 
-def executor(table: str, table_params: str):
-    try:
-        start_time = time.time()
-        schema, table_name = table.split('.')
-        
-        # 1. Получаем данные из источника с информацией о типах столбцов
-        with get_source_connection() as source_connection:
-            source_connection.autocommit = False
-            
-            with source_connection.cursor() as regular_cursor:
-                # Get column metadata
-                regular_cursor.execute(f"""
-                    SELECT column_name, data_type 
-                    FROM information_schema.columns 
-                    WHERE table_name = '{table_name}' 
-                    AND table_schema = '{schema}'
-                """)
-                column_types = {row[0]: row[1] for row in regular_cursor.fetchall()}
-                
-                # Identify JSON columns
-                json_columns = [col for col, dtype in column_types.items() 
-                               if dtype in ('json', 'jsonb')]
-                
-                # Get total rows count
-                regular_cursor.execute(f"SELECT COUNT(*) FROM {table}")
-                total_rows = regular_cursor.fetchone()[0]
-                
-                if total_rows == 0:
-                    print(f"\n{table}: Нет данных для переноса")
-                    return
-                
-                print(f"\n{table}: Начинаем перенос {total_rows:,} строк")
-            
-            source_connection.commit()
-            
-            with source_connection.cursor(name='server_side_cursor') as cursor:
-                cursor.itersize = 10000
-                cursor.execute(f'SELECT {table_params} FROM {table}')
-                
-                # 2. Вставляем данные в целевую БД
-                with get_connection() as target_connection:
-                    target_connection.autocommit = False
-                    
-                    with target_connection.cursor() as target_cursor:
-                        # Подготовка запроса
-                        columns = table_params.split(', ')
-                        placeholders = ', '.join(['%s'] * len(columns))
-                        updates = ', '.join([f"{col} = EXCLUDED.{col}" for col in columns if col != 'id'])
-                        
-                        insert_query = f"""
-                            INSERT INTO {table} ({table_params}) 
-                            VALUES ({placeholders})
-                            ON CONFLICT (id) DO UPDATE SET {updates}
-                        """
-                        
-                        # Временное отключение индексов для больших таблиц
-                        if total_rows > 100000:
-                            target_cursor.execute(f"ALTER TABLE {table} DISABLE TRIGGER ALL;")
-                        
-                        # Чтение и вставка с прогресс-баром
-                        inserted = 0
-                        with tqdm(total=total_rows, desc="Перенос") as pbar:
-                            while True:
-                                batch = cursor.fetchmany(5000)
-                                if not batch:
-                                    break
-                                
-                                # Обработка JSON данных для всего пакета
-                                processed_batch = []
-                                for row in batch:
-                                    processed_row = list(row)  # Преобразуем в список для изменения
-                                    for i, col_name in enumerate(columns):
-                                        if col_name in json_columns and processed_row[i] is not None:
-                                            processed_row[i] = Json(processed_row[i])
-                                    processed_batch.append(tuple(processed_row))
-                                
-                                target_cursor.executemany(insert_query, processed_batch)
-                                inserted += len(processed_batch)
-                                pbar.update(len(processed_batch))
-                                
-                                # Периодический коммит
-                                if inserted % 50000 == 0:
-                                    target_connection.commit()
-                        
-                        # Восстановление индексов
-                        if total_rows > 100000:
-                            target_cursor.execute(f"ALTER TABLE {table} ENABLE TRIGGER ALL;")
-                            target_cursor.execute(f"REINDEX TABLE {table};")
-                        
-                        target_connection.commit()
-                        
-                        elapsed = time.time() - start_time
-                        print(f"Успешно: {inserted:,} строк | Скорость: {inserted/elapsed:.1f} строк/сек")
-            
-            source_connection.commit()
-                        
-    except Exception as e:
-        print(f"\n[ОШИБКА] {table}: {str(e)}")
-        if 'target_connection' in locals():
-            target_connection.rollback()
-        if 'source_connection' in locals():
-            source_connection.rollback()
-        raise
 
-# Основной цикл обработки таблиц
+def clean_value(value):
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, str):
+        return value.replace('\t', ' ').replace('\n', ' ').strip()
+    return value
+
+
+def executor(table: str, columns: list):
+    start_time = time.time()
+    print(f"{table}: Начинаем загрузку")
+
+    with get_source_connection() as source_conn, get_connection() as target_conn:
+        with source_conn.cursor() as source_cur, target_conn.cursor() as target_cur:
+            # Определим индексы json/jsonb полей
+            schema, table_name = table.split(".")
+            source_cur.execute("""
+                SELECT column_name, data_type
+                FROM information_schema.columns
+                WHERE table_schema = %s AND table_name = %s
+            """, (schema, table_name))
+            col_type_map = {row[0]: row[1] for row in source_cur.fetchall()}
+            json_indexes = [
+                idx for idx, col in enumerate(columns)
+                if col_type_map.get(col) in ("json", "jsonb")
+            ]
+
+            # Забираем данные
+            source_cur.execute(f"SELECT {', '.join(columns)} FROM {table}")
+            rows = source_cur.fetchall()
+
+            if not rows:
+                print(f"{table}: Нет данных для вставки")
+                return
+
+            # Чистим и оборачиваем JSON
+            cleaned_rows = []
+            for row in rows:
+                cleaned_row = []
+                for i, value in enumerate(row):
+                    cleaned = clean_value(value)
+                    if i in json_indexes and cleaned is not None:
+                        try:
+                            if isinstance(cleaned, str):
+                                cleaned = json.loads(cleaned)
+                            cleaned = Json(cleaned)
+                        except Exception:
+                            cleaned = Json({})
+                    cleaned_row.append(cleaned)
+                cleaned_rows.append(tuple(cleaned_row))
+
+            # Запрос INSERT
+            insert_query = f"""
+                INSERT INTO {table} ({', '.join(columns)})
+                VALUES %s
+                ON CONFLICT (id) DO UPDATE SET
+                {', '.join(f"{col} = EXCLUDED.{col}" for col in columns if col != 'id')}
+            """
+
+            extras.execute_values(target_cur, insert_query, cleaned_rows)
+            target_conn.commit()
+
+            elapsed = time.time() - start_time
+            print(f"✅ {table}: {len(rows):,} строк вставлено | {elapsed:.2f} сек | Скорость: {len(rows)/elapsed:.1f} строк/сек")
+
+
 if __name__ == "__main__":
-    total_tables = len(tables)
-    print(f"Начинаем миграцию {total_tables} таблиц...")
-    
-    
-    # Обработка таблиц с прогресс-баром
-    for i, (table, params) in enumerate(tqdm(tables.items()), 1):
-        print(f"\n[{i}/{total_tables}] Обработка таблицы: {table}")
-        executor(table, ', '.join(params))
-    
-    print("\nМиграция завершена!")
+    print("📤 SELECT и вставка из source (dashboard) в point (project)...")
+    for table, columns in tqdm(tables.items(), desc="PostgreSQL перенос"):
+        executor(table, columns)
+
+    print("\n✅ Перенос завершён")
