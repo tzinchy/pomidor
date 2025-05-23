@@ -41,16 +41,19 @@ def from_rsm_get_old_apart() -> None:
 
 
 @router.patch("/get_new_apart", description='Для обновления ресурса с РСМ')
-def from_rsm_get_new_apart() -> dict:
-    layout_id = 21744
-    df = get_resurs_xlsx_df(layout_id)
-    if df.empty:
-        return {"status": "error", "message": "Нет данных для вставки"}
-    
-    output = BytesIO()
-    output.seek(0)
-    result = insert_data_to_new_apart(df)
-    return {"status": "success", "inserted": result}
+def from_rsm_get_new_apart():
+    try:
+        layout_id = 21744
+        df = get_resurs_xlsx_df(layout_id)
+        if df.empty:
+            return {"status": "error", "message": "Нет данных для вставки"}
+        
+        output = BytesIO()
+        output.seek(0)
+        result = insert_data_to_new_apart(df)
+        return {"status": "success", "inserted": result}
+    except Exception as e: 
+        return e
 
 @router.post("/upload-file/", deprecated=True)
 async def upload_file2(file: UploadFile = File(...)):

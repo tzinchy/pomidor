@@ -94,7 +94,10 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
             "Дата создания проекта выписки": "order_draft_date",
             "Выписка_Статья учета": "accounting_article",
             "Выписка_причина предоставления": "legal_reason",
-            "Выписка_Серия": "collateral_type"
+            "Выписка_Серия": "collateral_type",
+            "Адрес_UNOM": "unom",  
+            "Адрес_UNKV": "un_kv",
+            'КН предоставленной квартиры' : 'cad_num'
         }
         order_df.rename(columns=columns_name, inplace=True)
 

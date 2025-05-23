@@ -927,7 +927,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
         global district_mapping
         connection = None
         columns_name = {
-            "Сл.инф_APART_ID":	"rsm_apart_id",
+            "Сл.инф_APART_ID":	"new_apart_id",
             "Адрес_Округ": "district",
             "Адрес_Мун.округ": "municipal_district",
             "Адрес_Короткий": "house_address",
@@ -937,38 +937,30 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             "Площадь общая": "full_living_area",
             "Площадь общая(б/л)": "total_living_area",
             "Площадь жилая": "living_area",
-            "Сл.инф_UNOM": "building_id",  
+            "Сл.инф_UNOM": "unom",  
             "Сл.инф_UNKV": "un_kv",
             "К_Тип.пл": "apart_type",
             "Распорядитель_Название": "owner",
             "РСМ_Кад номер, квартира": "apart_kad_number",
-            "РСМ, Кад номер, комната": "room_kad_number",
+            "РСМ, Кад номер, комната": "room_kad_number",\
             "К_Инв/к": "for_special_needs_marker",
             "К_№ подъезда": "entrance_number",
-            "Идентификатор площади": "new_apart_id",
-            "Идентификатор выписки": "order_id",
+            "Идентификатор площади": "rsm_apart_id",
         }
         new_apart_df.rename(
             columns=columns_name,
             inplace=True,
         )
 
-        # Возможность загружать выписки с этим полем и без этого поля
-        has_order_id = False
-        if "order_id" in new_apart_df.columns:
-            has_order_id = True
         columns_db = list(columns_name.values())
-        if not has_order_id:
-            columns_db.remove("order_id")
+
 
         new_apart_df = new_apart_df[columns_db]
 
         # Удаляем строки с пустым ID
         new_apart_df = new_apart_df.dropna(subset=["new_apart_id"])
 
-        int_columns = ["new_apart_id", "floor", "building_id", "apart_number", "un_kv", "room_count", "rsm_apart_id"]
-        if has_order_id:
-            new_apart_df["order_id"] = new_apart_df["order_id"].astype("Int64")
+        int_columns = ["new_apart_id", "floor", "unom", "apart_number", "un_kv", "room_count", "rsm_apart_id"]
         for col in int_columns:
             new_apart_df[col] = new_apart_df[col].astype("Int64")
         new_apart_df["total_living_area"] = new_apart_df["total_living_area"].astype(float)
