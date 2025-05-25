@@ -70,7 +70,7 @@ class AuthRepository:
     async def get_user_backend_payload(self, user_uuid):
         async with self.db() as session:
             query_result = await session.execute(
-                select(UserBackendPayload).where(user_uuid == user_uuid)
+                select(UserBackendPayload).where(UserBackendPayload.user_uuid == user_uuid)
             )
             result = query_result.scalars().first()
             return result.as_dict()
