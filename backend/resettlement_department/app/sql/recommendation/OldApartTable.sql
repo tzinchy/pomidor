@@ -22,8 +22,8 @@ WITH ranked_apartments AS (
         COUNT(o.affair_id) OVER (PARTITION BY oa.affair_id) AS selection_count,
         oa.people_v_dele,
         oa.rank,
-		apartments_old_temp.stages_dates, 
-		apartments_old_temp.classificator
+		apartments_old_temp.classificator,
+        apartments_old_temp.dates
     FROM
         old_apart oa
     LEFT JOIN
