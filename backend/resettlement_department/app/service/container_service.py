@@ -75,7 +75,7 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
 		with unnst AS (
 			SELECT 
 			affair_id, 
-			(KEY)::int as new_apart_id
+			(KEY)::bigint as new_apart_id
 			FROM offer,
 			jsonb_each(new_aparts)
 		)
@@ -87,7 +87,7 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
         JOIN old_apart oa USING (affair_id)
         JOIN new_apart na USING (new_apart_id) 
         JOIN cin ON cin.old_address = oa.house_address
-        WHERE oa.is_queue <> 1
+        WHERE oa.is_queue <> 1 
     """
     params = []
 
@@ -98,6 +98,10 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
     if new_selected_addresses:
         query += " AND na.house_address IN %s"
         params.append(tuple(new_selected_addresses))
+        
+    if history_id:
+        query += " AND na.history_id = %s AND oa.history_id = %s"
+        params.extend([history_id, history_id])  # Исправлено здесь
 
     # Выполняем запрос
     cursor.execute(query, params)
@@ -109,6 +113,8 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
         'new_address', 'new_number', 'full_living_area', 'total_living_area', 'room_count', 
         'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'unom', 'start_date', 'otdel'
     ])
+
+    print(df)
 
     # Создаем новую книгу Excel и выбираем активный лист
     wb = openpyxl.Workbook()
