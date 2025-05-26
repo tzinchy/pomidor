@@ -18,6 +18,8 @@ import NotesCell from './Cells/Notes';
 import ApartDetails from './ApartDetails';
 import { HOSTLINK } from '..';
 import AllFilters from './Filters/AllFilters';
+import ProgressStatusBar from './Try';
+import StageCell from './Cells/StageCell';
 
 // Добавьте SVG для иконки меню
 const MenuIcon = () => (
@@ -37,7 +39,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [filteredApartments, setFilteredApartments] = useState(data);
   const [matchCount, setMatchCount] = useState([]);
   const [selectedRowId, setSelectedRowId] = useState();
-
   const [rooms, setRooms] = useState([]);
   const [filtersResetFlag, setFiltersResetFlag] = useState(false);
   const [isQueueChecked, setIsQueueChecked] = useState(false);
@@ -58,8 +59,9 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [minPeople, setMinPeople] = useState([]);
   const [maxPeople, setMaxPeople] = useState([]);
   const [filterStatuses, setFilterStatuses] = useState([]);
+  const [allStatuses, setAllStatuses] = useState(null)
 
-  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)"] : ["Резерв", "Блок", "Свободная"];
+  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)", "Подборов не будет"] : ["Резерв", "Блок", "Свободная", "Передано во вне"];
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -140,10 +142,21 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     return result;
   };
 
+  const countStatuses = (data) => {
+    return data.reduce((acc, item) => {
+      const status = item.status;
+      if (status) {
+        acc[status] = (acc[status] || 0) + 1;
+      }
+      return acc;
+    }, {});
+  };
+
   // 2. Добавляем эффект для синхронизации с исходными данными
   useEffect(() => {
     setFilteredApartments(data);
     setFilterData(getFilteData(data));
+    setAllStatuses(countStatuses(data))
     console.log(data);
   }, [data]);
   
@@ -443,6 +456,12 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         cell: ({ row }) => <StatusCell props={row.original} />,
         size: 120,
       },
+      ...(apartType === 'OldApart' ? [{
+        header: 'Этап работы',
+        accessorKey: 'classificator.stageName',
+        cell: ({ row }) => <StageCell props={row.original} />,
+        size: 140,
+      }] : []),
       {
         header: "Примечания",
         accessorKey: "notes",
@@ -453,7 +472,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             onSave={(rowData, newNotes) => handleNotesSave(rowData, newNotes)}
           />
         ),
-        size: 250,
+        size: 230,
       },
     ],
     [apartType]
@@ -538,6 +557,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   return (
     <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
       <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
+      <div className='flex w-[30%] items-center justify-between'>
       <button
           onClick={() => setIsOpen(!isOpen)}
           className=""
@@ -575,48 +595,56 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           </div>
         </button>
 
-        <AllFilters 
-          handleFilterChange={handleFilterChange} 
-          rooms={rooms} 
-          matchCount={matchCount} 
-          apartType={apartType} 
-          filtersResetFlag={filtersResetFlag} 
-          handleResetFilters={handleResetFilters}
-          isQueueChecked={isQueueChecked}
-          setIsQueueChecked={setIsQueueChecked}
-          filters={filters}
-          filterData={filterData}
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
-          setFirstMinArea={setFirstMinArea}
-          setFirstMaxArea={setFirstMaxArea}
-          firstMinArea={firstMinArea}
-          firstMaxArea={firstMaxArea}
-          setSecondMinArea={setSecondMinArea}
-          setSecondMaxArea={setSecondMaxArea}
-          secondMinArea={secondMinArea}
-          secondMaxArea={secondMaxArea}
-          setThirdMinArea={setThirdMinArea}
-          setThirdMaxArea={setThirdMaxArea}
-          thirdMinArea={thirdMinArea}
-          thirdMaxArea={thirdMaxArea}
-          setMinFloor={setMinFloor}
-          setMaxFloor={setMaxFloor}
-          minFloor={minFloor}
-          maxFloor={maxFloor}
-          setSearchApartQuery={setSearchApartQuery}
-          searchApartQuery={searchApartQuery}
-          setSearchFioQuery={setSearchFioQuery}
-          searchFioQuery={searchFioQuery}
-          setSearchNotesQuery={setSearchNotesQuery}
-          searchNotesQuery={searchNotesQuery}
-          typeOfSettlement={typeOfSettlement}
-          minPeople={minPeople}
-          setMinPeople={setMinPeople}
-          maxPeople={maxPeople} 
-          setMaxPeople={setMaxPeople}
-          filterStatuses={filterStatuses}
-        />
+        
+          <AllFilters 
+            handleFilterChange={handleFilterChange} 
+            rooms={rooms} 
+            matchCount={matchCount} 
+            apartType={apartType} 
+            filtersResetFlag={filtersResetFlag} 
+            handleResetFilters={handleResetFilters}
+            isQueueChecked={isQueueChecked}
+            setIsQueueChecked={setIsQueueChecked}
+            filters={filters}
+            filterData={filterData}
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            setFirstMinArea={setFirstMinArea}
+            setFirstMaxArea={setFirstMaxArea}
+            firstMinArea={firstMinArea}
+            firstMaxArea={firstMaxArea}
+            setSecondMinArea={setSecondMinArea}
+            setSecondMaxArea={setSecondMaxArea}
+            secondMinArea={secondMinArea}
+            secondMaxArea={secondMaxArea}
+            setThirdMinArea={setThirdMinArea}
+            setThirdMaxArea={setThirdMaxArea}
+            thirdMinArea={thirdMinArea}
+            thirdMaxArea={thirdMaxArea}
+            setMinFloor={setMinFloor}
+            setMaxFloor={setMaxFloor}
+            minFloor={minFloor}
+            maxFloor={maxFloor}
+            setSearchApartQuery={setSearchApartQuery}
+            searchApartQuery={searchApartQuery}
+            setSearchFioQuery={setSearchFioQuery}
+            searchFioQuery={searchFioQuery}
+            setSearchNotesQuery={setSearchNotesQuery}
+            searchNotesQuery={searchNotesQuery}
+            typeOfSettlement={typeOfSettlement}
+            minPeople={minPeople}
+            setMinPeople={setMinPeople}
+            maxPeople={maxPeople} 
+            setMaxPeople={setMaxPeople}
+            filterStatuses={filterStatuses}
+          />
+
+          {allStatuses ? (
+            <ProgressStatusBar data={allStatuses} />
+          ) : (
+            <div>Загрузка данных...</div>
+          )}
+        </div>
         
         <div className='flex items-center'>
 
@@ -811,7 +839,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             <div className="flex flex-1 overflow-hidden">
             {/* Таблица */}
             <div
-              className={` rounded-md h-[calc(100vh-3.8rem)] transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
+              className={` rounded-md h-[calc(100vh-4.7rem)] transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
             >
               <div
                 ref={tableContainerRef}
@@ -953,14 +981,14 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               >
                 <div className="fixed inset-0 bg-opacity-50 lg:bg-transparent lg:relative">
                   <div
-                    className={`fixed min-w-[40.5vw] max-w-[40.5vw] h-[calc(100vh-1rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+                    className={`fixed min-w-[40.5vw] max-w-[40.5vw] h-[calc(100vh-4.7rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
                       isDetailsVisible ? 'translate-x-0' : 'translate-x-full'
                     }`}
                     style={{
                       WebkitOverflowScrolling: 'touch', // Поддержка мобильных устройств
                     }}
                   >
-                    <div className="h-[calc(100vh-3.85rem)] flex flex-col">
+                    <div className="h-[calc(100vh-4.7rem)] flex flex-col">
                       <ApartDetails
                         apartmentDetails={apartmentDetails}
                         setIsDetailsVisible={setIsDetailsVisible}

@@ -83,6 +83,7 @@ function DopRow({ indexkey, details, houseDetailsHandler }) {
 
 
   function RenderRowDetails({ details }) {
+    console.log('details', details);
     const progressColors = {
       mfr: "#a78bfa",
       done: "#10b981",
