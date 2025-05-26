@@ -58,7 +58,7 @@ export default function ActionsCell( {props, setData}) {
   const upload_container = async (history_id) => {
     try {
       const response = await axios.patch(
-        `${HOSTLINK}/approve/${history_id}`,
+        `${HOSTLINK}/push_container/${history_id}`,
         {
           params: { history_id: history_id },
           paramsSerializer,
@@ -209,7 +209,7 @@ export default function ActionsCell( {props, setData}) {
             value.is_downloaded ? (
               <Button name="Контейнер загружен" isDisabled={true} />
             ) : (
-              <Button name="Загрузить контейнер" />
+              <Button name="Загрузить контейнер" func={() => upload_container(value.history_id)}/>
             )
           ) : (
             <Button name="Отменить" func={() => delete_history(value.history_id) }/>
