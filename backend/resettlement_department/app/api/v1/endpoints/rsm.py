@@ -98,12 +98,12 @@ async def from_rsm_get_orders():
     layout_id = 22262
     start_date = datetime(2017, 1, 1, 0, 0, 0)
     end_date = datetime.combine(datetime.now().date(), time(23, 59, 59))
-    order_decisions = await run_in_threadpool(
-        get_orders_xlsx_df, start_date, end_date, layout_id
-        )
+    # order_decisions = await run_in_threadpool(
+    #     get_orders_xlsx_df, start_date, end_date, layout_id
+    #     )
     #order_decisions.to_excel('order_data.xlsx')
 
-    #order_decisions = pd.read_excel('/Users/macbook/work/backend/resettlement_department/app/orderdta.xlsx')
+    order_decisions = pd.read_excel('/Users/macbook/work/backend/resettlement_department/app/order_data.xlsx')
     #order_decisions.to_excel('orderdta.xlsx')
     if order_decisions.empty:
         return {"status": "error", "message": "Нет данных для вставки"}

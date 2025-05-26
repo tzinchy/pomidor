@@ -6,7 +6,7 @@ from typing import List
 from service.balance_alghorithm import save_views_to_excel
 from schema.apartment import MatchingSchema, BalanceSchema
 import os
-from service.container_service import generate_excel_from_two_dataframes
+from service.container_service import generate_excel_from_two_dataframes, upload_container
 from pathlib import Path
 
 router = APIRouter(tags=["History"])
@@ -70,6 +70,17 @@ def container(history_id: int):
         )
     except Exception as e:
         return {"error": str(e)}
+    
+@router.post("/push_container/{history_id}")
+def push_container(history_id: int):
+    try:
+        # Генерация файла
+        generate_excel_from_two_dataframes(history_id)
+
+        file_path = f"./uploads/container_{history_id}.xlsx"
+        upload_container(history_id=history_id, file_path=file_path)
+    except Exception as e:
+        return HTTPException(detail=str(e))
     
 @router.patch("/approve/{history_id}")
 async def approve_history(history_id: int):
