@@ -45,15 +45,16 @@ const ProgressStatusBar = ({ data={} }) => {
     }
 
     const total = Object.values(data).reduce((sum, val) => sum + val, 0);
+    
     const segments = statusOrder
       .map(key => ({
         key,
         value: data[key] || 0,
-        percentage: total > 5 ? ((data[key] || 0) / total * 100) : 0,
+        percentage: total > 0 ? ((data[key] || 0) / total * 100) : 0,
         color: progressColors[key],
       }))
       .filter(segment => segment.value > 0);
-
+      
     return (
       <div className="ml-4 relative w-full flex items-center">
         <div 
@@ -68,6 +69,7 @@ const ProgressStatusBar = ({ data={} }) => {
               style={{
                 width: `${percentage}%`,
                 backgroundColor: color,
+                minWidth: percentage > 0 ? '2px' : '0',
               }}
             >
               {percentage >= 10 && (
