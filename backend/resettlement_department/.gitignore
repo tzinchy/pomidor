@@ -20,3 +20,7 @@ app/logs/app.log
 app/waves
 app/order_data.xlsx
 app/order_data.xlsx
+processed_offers.xlsx
+multi_subject_affairs.xlsx
+subject_counts.xlsx
+app/order_data.xlsx

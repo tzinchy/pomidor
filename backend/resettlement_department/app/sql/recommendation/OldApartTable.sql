@@ -13,7 +13,7 @@ WITH ranked_apartments AS (
         oa.living_area,
         oa.room_count,
         oa.type_of_settlement,
-        status.status,
+        status.status as status,
         CASE WHEN oa.notes IS NULL THEN oa.rsm_notes ELSE oa.rsm_notes || ';' || oa.notes END AS notes,
         oa.affair_id,
         oa.is_queue,

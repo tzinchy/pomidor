@@ -177,8 +177,9 @@ class OldApartRepository:
             data = result.fetchall()
             if not data:
                 raise ValueError(f"Apartment with ID {apart_id} not found")
-
-            return [row._mapping for row in data][0]
+            result = [row._mapping for row in data]
+            print(result)
+            return result
 
     async def get_house_address_with_room_count(self):
         query = await async_read_sql_query(
