@@ -111,7 +111,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
 
         # Удаляем записи с пустым ID
         order_df = order_df.dropna(subset=["order_id"])
-
+        
         # Агрегируем по ID. Формируем словарь area_id
         order_df = order_df.groupby("order_id").agg(concat_area_id_agg).reset_index()
         # После агрегации порядок колонок изменился и надо вернуть порядок
@@ -122,8 +122,8 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         order_df["order_id"] = order_df["order_id"].astype("Int64")
         order_df["is_cancelled"] = order_df["is_cancelled"].astype(bool)
         order_df = order_df.replace({np.nan: None})
-        
-        # Форматирование дат
+        order_df = order_df.sort_values(['affair_id', 'order_id'], ascending=False)
+
         date_columns = ["decision_date", "order_date", "cancel_date", 
                        "legal_cancel_date", "order_draft_date"]
         order_df = df_date_to_string(order_df, date_columns)
