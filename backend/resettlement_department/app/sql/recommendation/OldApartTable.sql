@@ -23,7 +23,8 @@ WITH ranked_apartments AS (
         oa.people_v_dele,
         oa.rank,
 		apartments_old_temp.classificator,
-        apartments_old_temp.dates
+        apartments_old_temp.dates,
+        was_queue
     FROM
         old_apart oa
     LEFT JOIN
