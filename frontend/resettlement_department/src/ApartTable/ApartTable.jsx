@@ -647,22 +647,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         </div>
         
         <div className='flex items-center'>
-
-          {/*<div className="flex justify-around">
-            <button
-              onClick={() => changeApartType('OldApart')}
-              className={`px-4 py-2 mr-2 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
-            >
-              Семьи
-            </button>
-            <button
-              onClick={() => changeApartType('NewApartment')}
-              className={`px-4 py-2 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
-            >
-              Ресурс
-            </button>
-          </div>*/}
-
             <Menu as="div" className="relative inline-block text-left z-[102]">
             <div>
               <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
@@ -729,6 +713,18 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
                       >
                         Снять инвалидность
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={(e) => {console.log('rowSelection', Object.keys(rowSelection).map(id => parseInt(id, 10)))}}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Console
                       </button>
                     )}
                   </Menu.Item>
