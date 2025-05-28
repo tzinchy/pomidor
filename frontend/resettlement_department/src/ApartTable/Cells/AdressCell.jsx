@@ -21,6 +21,11 @@ export default function AdressCell( props ){
               Инвалид
             </div>
           ) : ''}
+          {(value.was_queue || value.was_queue) ? (
+            <div className="inline-flex items-center rounded-full border py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground ml-1 h-4 px-1 text-xs bg-yellow-100 border-gray-200">
+              Быв. очередник
+            </div>
+          ) : ''}
         </div>
       </div>
     </div>
