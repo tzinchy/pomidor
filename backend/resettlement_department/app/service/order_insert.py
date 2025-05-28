@@ -100,7 +100,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
             'КН предоставленной квартиры' : 'cad_num'
         }
         order_df.rename(columns=columns_name, inplace=True)
-
+        order_df = order_df.sort_values(['affair_id', 'order_id'])
         # Добавляем колонку с извлеченным кодом статьи
         order_df['article_code'] = order_df['accounting_article'].apply(
             lambda x: str(x).split()[0] if pd.notna(x) and len(str(x).split()) > 0 else None

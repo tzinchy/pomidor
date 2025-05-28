@@ -941,8 +941,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             "Сл.инф_UNKV": "un_kv",
             "К_Тип.пл": "apart_type",
             "Распорядитель_Название": "owner",
-            "РСМ_Кад номер, квартира": "apart_kad_number",
-            "РСМ, Кад номер, комната": "room_kad_number",\
+            "РСМ_Кад номер, квартира": "cad_num",
             "К_Инв/к": "for_special_needs_marker",
             "К_№ подъезда": "entrance_number",
             "Идентификатор площади": "rsm_apart_id",
