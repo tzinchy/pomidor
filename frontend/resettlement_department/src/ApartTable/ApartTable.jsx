@@ -61,7 +61,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [filterStatuses, setFilterStatuses] = useState([]);
   const [allStatuses, setAllStatuses] = useState(null)
 
-  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)", "Подборов не будет"] : ["Резерв", "Блок", "Свободная", "Передано во вне"];
+  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ждёт одобрения",  "Подготовить смотровой", "Ожидание", "МФР (вне района)", "МФР Компенсация (вне района)", "Подборов не будет"] : ["Резерв", "Блок", "Свободная", "Передано во вне"];
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -451,6 +451,16 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         size: 120,
       },
       {
+        header: 'Ранг',
+        accessorKey: 'rank',
+        enableSorting: true,
+        cell: ({ row }) => 
+          <div className="text-xs">
+            {row.original['rank'] ? row.original['rank'] : '-'}
+          </div>,
+        size: 60,
+      },
+      {
         header: 'Статус',
         accessorKey: 'status',
         cell: ({ row }) => <StatusCell props={row.original} />,
@@ -498,7 +508,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   const rowVirtualizer = useVirtualizer({
     count: table.getRowModel().rows.length,
-    estimateSize: () => 65,
+    estimateSize: () => 75,
     getScrollElement: () => tableContainerRef.current,
     overscan: 10,
   });
@@ -540,19 +550,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     setMinPeople("");
     setMaxPeople("");
   };
-
-  const changeApartType= (apType) => {
-    if (apType !== apartType){
-      setIsDetailsVisible(false); 
-      setSelectedRow(false); 
-      setApartType(apType); 
-      setLoading(true); 
-      setFilters({}); 
-      setRowSelection({}); 
-      setFiltersResetFlag(prev => !prev);
-    }
-  }
-  
 
   return (
     <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
@@ -647,22 +644,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         </div>
         
         <div className='flex items-center'>
-
-          {/*<div className="flex justify-around">
-            <button
-              onClick={() => changeApartType('OldApart')}
-              className={`px-4 py-2 mr-2 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
-            >
-              Семьи
-            </button>
-            <button
-              onClick={() => changeApartType('NewApartment')}
-              className={`px-4 py-2 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
-            >
-              Ресурс
-            </button>
-          </div>*/}
-
             <Menu as="div" className="relative inline-block text-left z-[102]">
             <div>
               <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
@@ -729,6 +710,30 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
                       >
                         Снять инвалидность
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={(e) => {console.log('rowSelection', Object.keys(rowSelection).map(id => parseInt(id, 10)))}}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Переподобранные квартиры
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={(e) => {console.log('rowSelection', Object.keys(rowSelection).map(id => parseInt(id, 10)))}}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Console
                       </button>
                     )}
                   </Menu.Item>
@@ -839,7 +844,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             <div className="flex flex-1 overflow-hidden">
             {/* Таблица */}
             <div
-              className={` rounded-md h-[calc(100vh-4.7rem)] transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
+              className={` rounded-md h-[calc(100vh-3.67rem)] transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
             >
               <div
                 ref={tableContainerRef}
@@ -981,14 +986,14 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               >
                 <div className="fixed inset-0 bg-opacity-50 lg:bg-transparent lg:relative">
                   <div
-                    className={`fixed min-w-[40.5vw] max-w-[40.5vw] h-[calc(100vh-4.7rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+                    className={`fixed min-w-[40.5vw] max-w-[40.5vw] h-[calc(100vh-3.67rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
                       isDetailsVisible ? 'translate-x-0' : 'translate-x-full'
                     }`}
                     style={{
                       WebkitOverflowScrolling: 'touch', // Поддержка мобильных устройств
                     }}
                   >
-                    <div className="h-[calc(100vh-4.7rem)] flex flex-col">
+                    <div className="h-[calc(100vh-3.67rem)] flex flex-col">
                       <ApartDetails
                         apartmentDetails={apartmentDetails}
                         setIsDetailsVisible={setIsDetailsVisible}

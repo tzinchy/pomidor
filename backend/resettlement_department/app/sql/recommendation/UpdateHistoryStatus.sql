@@ -9,12 +9,12 @@ updt_history AS (
 updt_offer AS (
     UPDATE offer
     SET
-        status_id = 6,
+        status_id = 16,
         new_aparts = (
             SELECT COALESCE(
                 jsonb_object_agg(
                     key,
-                    jsonb_set(value, '{status_id}', '6'::jsonb)
+                    jsonb_set(value, '{status_id}', '16'::jsonb)
                 ),
                 '{}'::jsonb
             )

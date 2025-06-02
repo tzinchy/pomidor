@@ -28,6 +28,7 @@ export default function DetailsStatusCell({
 
   const colors = {
     "Ждёт одобрения": "bg-blue-100 text-blue-500",
+    "Подготовить смотровой": "bg-orange-100 text-orange-500",
     'Ожидание': "bg-yellow-100 text-amber-600",
     'Согласие': "bg-green-100 text-emerald-600",
     'Отказ': "bg-red-100  text-red-700 ",

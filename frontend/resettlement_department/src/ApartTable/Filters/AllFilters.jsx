@@ -53,6 +53,11 @@ export default function AllFilters({
         setIsQueueChecked(isChecked);
         handleFilterChange('is_queue', isChecked ? [1] : [0, 1]);
     };
+    const handleExQueueChange = (e) => {
+        const isChecked = e.target.checked;
+        setIsQueueChecked(isChecked);
+        handleFilterChange('was_queue', isChecked ? [1] : [0, 1]);
+    };
 
     if (!isOpen) return null;
 
@@ -189,6 +194,39 @@ export default function AllFilters({
                                     <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path>
                                 </svg>
                                 Очередники
+                            </label>
+                        </div>
+                    )}
+                    {/* Чекбокс Очередники (только для OldApart) */}
+                    {apartType === 'OldApart' && (
+                        <div className="flex-shrink-0">
+                            <label className="font-medium flex items-center bg-white border border-dashed border-input hover:bg-gray-100 rounded-md px-3 h-8 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={isQueueChecked}
+                                    onChange={handleExQueueChange}
+                                    className="mr-2"
+                                />
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="lucide lucide-list-ordered mr-2 h-4 w-4"
+                                >
+                                    <line x1="10" y1="6" x2="21" y2="6"></line>
+                                    <line x1="10" y1="12" x2="21" y2="12"></line>
+                                    <line x1="10" y1="18" x2="21" y2="18"></line>
+                                    <path d="M4 6h1v4"></path>
+                                    <path d="M4 10h2"></path>
+                                    <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path>
+                                </svg>
+                                Быв. очередники
                             </label>
                         </div>
                     )}

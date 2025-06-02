@@ -46,15 +46,14 @@ def upload_container(history_id, file_path):
         print(f"Произошла ошибка: {e}")
         return 500
 
-def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_selected_addresses=None, old_selected_addresses=None,
-                                       new_selected_districts=None, old_selected_districts=None,
-                                       new_selected_areas=None, old_selected_areas=None, date=False):
+def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", affair_ids=None):
     """
     Генерирует Excel-файл и загружает его на сервер.
     :param history_id: ID истории для формирования имени файла.
     :param output_dir: Директория для сохранения файла.
     :param new_selected_addresses: Список новых адресов.
     :param old_selected_addresses: Список старых адресов.
+    :param affair_ids: Список affair_id квартир для генерации контейнера.
     :param date: Флаг для включения даты.
     :return: Код статуса HTTP-ответа от сервера.
     """
@@ -72,15 +71,15 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
 
     # Основной запрос
     query = """
-		with unnst AS (
-			SELECT 
-			affair_id, 
-			(KEY)::bigint as new_apart_id
-			FROM offer,
-			jsonb_each(new_aparts)
-		)
-		
-		SELECT oa.house_address, oa.apart_number, oa.type_of_settlement, oa.kpu_number, o.new_apart_id, 
+        with unnst AS (
+            SELECT 
+            affair_id, 
+            (KEY)::bigint as new_apart_id
+            FROM offer,
+            jsonb_each(new_aparts)
+        )
+        
+        SELECT oa.house_address, oa.apart_number, oa.type_of_settlement, oa.kpu_number, o.new_apart_id, 
                na.house_address, na.apart_number, na.full_living_area, na.total_living_area, na.room_count, 
                na.living_area, na.floor, cin_address, cin_schedule, dep_schedule, phone_osmotr, phone_otvet, oa.unom, start_date, cin.otdel
         FROM unnst o
@@ -90,18 +89,15 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
         WHERE oa.is_queue <> 1 
     """
     params = []
-
-    # Добавляем условия в зависимости от входных параметров
-    if old_selected_addresses:
-        query += " AND oa.house_address IN %s"
-        params.append(tuple(old_selected_addresses))
-    if new_selected_addresses:
-        query += " AND na.house_address IN %s"
-        params.append(tuple(new_selected_addresses))
         
     if history_id:
         query += " AND na.history_id = %s AND oa.history_id = %s"
-        params.extend([history_id, history_id])  # Исправлено здесь
+        params.extend([history_id, history_id])
+
+    # Добавляем условие по affair_ids, если они переданы
+    if affair_ids:
+        query += " AND oa.affair_id IN %s"
+        params.append(tuple(affair_ids))
 
     # Выполняем запрос
     cursor.execute(query, params)
@@ -114,6 +110,7 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
         'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'unom', 'start_date', 'otdel'
     ])
 
+    print(df['full_living_area'], df['total_living_area'], df['living_area'])
     print(df)
 
     # Создаем новую книгу Excel и выбираем активный лист
@@ -198,7 +195,3 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
     wb.save(output_path)
     print(f"Excel файл '{output_path}' создан.")
     connection.close()
-
-    # Загружаем файл на сервер
-    #return upload_container(history_id, output_path)
-
