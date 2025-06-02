@@ -57,15 +57,13 @@ export default function ActionsCell( {props, setData}) {
 
   const upload_container = async (history_id) => {
     try {
-      const response = await axios.patch(
+      const response = await axios.post(
         `${HOSTLINK}/push_container/${history_id}`,
         {
           params: { history_id: history_id },
           paramsSerializer,
         }
       );
-  
-      // Если запрос прошел успешно, обновляем данные
       if (response.status === 200) {
         // Обновляем локальные данные, изменяя status_id для выбранного history_id
         setData(prevData => 

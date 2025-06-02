@@ -110,6 +110,7 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", affai
         'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'unom', 'start_date', 'otdel'
     ])
 
+    print(df['full_living_area'], df['total_living_area'], df['living_area'])
     print(df)
 
     # Создаем новую книгу Excel и выбираем активный лист

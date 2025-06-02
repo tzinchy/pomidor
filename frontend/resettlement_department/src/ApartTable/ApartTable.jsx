@@ -61,7 +61,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [filterStatuses, setFilterStatuses] = useState([]);
   const [allStatuses, setAllStatuses] = useState(null)
 
-  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)", "Подборов не будет"] : ["Резерв", "Блок", "Свободная", "Передано во вне"];
+  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ждёт одобрения",  "Подготовить смотровой", "Ожидание", "МФР (вне района)", "МФР Компенсация (вне района)", "Подборов не будет"] : ["Резерв", "Блок", "Свободная", "Передано во вне"];
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -713,6 +713,18 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
                       >
                         Снять инвалидность
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={(e) => {console.log('rowSelection', Object.keys(rowSelection).map(id => parseInt(id, 10)))}}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Переподобранные квартиры
                       </button>
                     )}
                   </Menu.Item>
