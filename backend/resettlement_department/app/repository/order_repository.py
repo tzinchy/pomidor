@@ -10,7 +10,8 @@ class OrderRepository:
         self.db = session_maker
 
     async def get_excel_order(self):
-        query = text("SELECT * FROM public.order_decisions")
+        query = text("""select *, new_apart.house_address, new_apart.apart_number from order_decisions
+            left join new_apart using (cad_num)""")
         results_list = []
         column_names = []
 
@@ -19,7 +20,7 @@ class OrderRepository:
             column_names = list(result_proxy.keys())
             results_list = result_proxy.all()
         return results_list, column_names
-    
+
     async def get_stat(self):
         query = text(
             """

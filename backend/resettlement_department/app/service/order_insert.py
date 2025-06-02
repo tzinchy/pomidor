@@ -101,7 +101,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         }
         order_df.rename(columns=columns_name, inplace=True)
         print('alg done ')
-        order_df = order_df[order_df['is_cancelled'] == False]
+        order_df
         order_df = order_df.sort_values(['affair_id', 'order_id'])
 
         print('alg done')

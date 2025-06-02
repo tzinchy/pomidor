@@ -26,8 +26,7 @@ ranked_apartments AS (
         na.notes, 
         na.new_apart_id,
         na.history_id,
-        ai.room_count AS required_room_count,   -- 💡 и тут!
-        ai.is_queue
+        ai.room_count AS required_room_count
     FROM new_apart na
     CROSS JOIN apart_info ai
     WHERE na.status_id = 11
@@ -47,8 +46,7 @@ SELECT
     notes, 
     new_apart_id,
     history_id,
-    required_room_count,
-    is_queue
+    required_room_count
 FROM ranked_apartments
 WHERE 
     CASE 
