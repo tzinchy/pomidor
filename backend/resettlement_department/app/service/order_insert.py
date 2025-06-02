@@ -100,12 +100,16 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
             'КН предоставленной квартиры' : 'cad_num'
         }
         order_df.rename(columns=columns_name, inplace=True)
+        print('alg done ')
+        order_df = order_df[order_df['is_cancelled'] == False]
         order_df = order_df.sort_values(['affair_id', 'order_id'])
+
+        print('alg done')
         # Добавляем колонку с извлеченным кодом статьи
         order_df['article_code'] = order_df['accounting_article'].apply(
             lambda x: str(x).split()[0] if pd.notna(x) and len(str(x).split()) > 0 else None
         )
-        
+
         # Формируем колонки для вставки
         columns_db = list(columns_name.values()) + ['article_code']
 
@@ -122,7 +126,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         order_df["order_id"] = order_df["order_id"].astype("Int64")
         order_df["is_cancelled"] = order_df["is_cancelled"].astype(bool)
         order_df = order_df.replace({np.nan: None})
-        order_df = order_df.sort_values(['affair_id', 'order_id'], ascending=False)
+
 
         date_columns = ["decision_date", "order_date", "cancel_date", 
                        "legal_cancel_date", "order_draft_date"]

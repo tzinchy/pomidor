@@ -24,3 +24,7 @@ processed_offers.xlsx
 multi_subject_affairs.xlsx
 subject_counts.xlsx
 app/order_data.xlsx
+multi_subject_affairs
+processed_offers
+app/order_sorted.xlsx
+temp_offer_insert.py
