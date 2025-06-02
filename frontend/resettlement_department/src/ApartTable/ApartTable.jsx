@@ -451,6 +451,16 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         size: 120,
       },
       {
+        header: 'Ранг',
+        accessorKey: 'rank',
+        enableSorting: true,
+        cell: ({ row }) => 
+          <div className="text-xs">
+            {row.original['rank'] ? row.original['rank'] : '-'}
+          </div>,
+        size: 60,
+      },
+      {
         header: 'Статус',
         accessorKey: 'status',
         cell: ({ row }) => <StatusCell props={row.original} />,
@@ -498,7 +508,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   const rowVirtualizer = useVirtualizer({
     count: table.getRowModel().rows.length,
-    estimateSize: () => 65,
+    estimateSize: () => 75,
     getScrollElement: () => tableContainerRef.current,
     overscan: 10,
   });
@@ -540,19 +550,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     setMinPeople("");
     setMaxPeople("");
   };
-
-  const changeApartType= (apType) => {
-    if (apType !== apartType){
-      setIsDetailsVisible(false); 
-      setSelectedRow(false); 
-      setApartType(apType); 
-      setLoading(true); 
-      setFilters({}); 
-      setRowSelection({}); 
-      setFiltersResetFlag(prev => !prev);
-    }
-  }
-  
 
   return (
     <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
@@ -847,7 +844,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             <div className="flex flex-1 overflow-hidden">
             {/* Таблица */}
             <div
-              className={` rounded-md h-[calc(100vh-4.7rem)] transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
+              className={` rounded-md h-[calc(100vh-3.67rem)] transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
             >
               <div
                 ref={tableContainerRef}
@@ -989,14 +986,14 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               >
                 <div className="fixed inset-0 bg-opacity-50 lg:bg-transparent lg:relative">
                   <div
-                    className={`fixed min-w-[40.5vw] max-w-[40.5vw] h-[calc(100vh-4.7rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+                    className={`fixed min-w-[40.5vw] max-w-[40.5vw] h-[calc(100vh-3.67rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
                       isDetailsVisible ? 'translate-x-0' : 'translate-x-full'
                     }`}
                     style={{
                       WebkitOverflowScrolling: 'touch', // Поддержка мобильных устройств
                     }}
                   >
-                    <div className="h-[calc(100vh-4.7rem)] flex flex-col">
+                    <div className="h-[calc(100vh-3.67rem)] flex flex-col">
                       <ApartDetails
                         apartmentDetails={apartmentDetails}
                         setIsDetailsVisible={setIsDetailsVisible}
