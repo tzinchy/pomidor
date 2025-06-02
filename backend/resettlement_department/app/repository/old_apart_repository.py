@@ -240,7 +240,7 @@ class OldApartRepository:
                             SELECT key, value 
                             FROM offer, jsonb_each(new_aparts)
                             WHERE affair_id = :apart_id
-                            AND (value->>'status_id')::int = 1
+                            AND (value->>'status_id')::int = 1 and offer_id = (select max(offer_id) from offer where affair_id = :apart_id)
                         ) approved_aparts;
                     """)
 

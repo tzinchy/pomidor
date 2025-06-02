@@ -100,8 +100,8 @@ async def from_rsm_get_orders():
     end_date = datetime.combine(datetime.now().date(), time(23, 59, 59))
     order_decisions = await run_in_threadpool(
         get_orders_xlsx_df, start_date, end_date, layout_id
-         )
-    #order_decisions.to_excel('order_data.xlsx')
+        )
+    order_decisions.to_excel('order_data.xlsx')
 
     #order_decisions = pd.read_excel('/Users/macbook/work/backend/resettlement_department/app/order_data.xlsx')
     #order_decisions.to_excel('orderdta.xls

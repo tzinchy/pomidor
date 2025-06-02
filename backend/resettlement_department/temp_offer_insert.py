@@ -84,3 +84,4 @@ def process_offers_data(input_file):
 if __name__ == "__main__":
     input_file = 'processed_offers.xlsx'
     process_offers_data(input_file)
+
