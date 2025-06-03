@@ -81,7 +81,6 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
     out = None  # Будет хранить результат (0 в случае успеха, ошибку в случае исключения)
 
     try:
-        raise ValueError("Тестовая ошибка для проверки try-except")  # ← Исключение времени выполнения
         columns_name = {
             "КПУ_Дело_Идентификатор": "affair_id",
             "Идентификатор выписки": "order_id",
