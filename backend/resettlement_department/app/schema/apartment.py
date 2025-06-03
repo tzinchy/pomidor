@@ -45,7 +45,7 @@ class SetPrivateStatusSchema(BaseModel):
 
 class SetStatusForNewAparts(BaseModel):
     apart_ids : List[int]
-    status : Status
+    status : str
 
 class SetSpecialNeedsSchema(BaseModel):
     apart_ids : List[int]
