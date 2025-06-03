@@ -77,12 +77,15 @@ def concat_area_id_agg(series: pd.Series):
         return {str(area_id): {} for area_id in unique_ids}
 
 def insert_data_to_order_decisions(order_df: pd.DataFrame):
+    connection = None
+    out = None  # Будет хранить результат (0 в случае успеха, ошибку в случае исключения)
+
     try:
-        connection = None
+        raise ValueError("Тестовая ошибка для проверки try-except")  # ← Исключение времени выполнения
         columns_name = {
             "КПУ_Дело_Идентификатор": "affair_id",
             "Идентификатор выписки": "order_id",
-            "Выписка_Решение_Д": "decision_date",
+            "Выписка_Решение_Д": "deciшsion_date",
             "Выписка_Решение №": "decision_number",
             "Выписка_Д": "order_date",
             "Выписка_Аннулирована": "is_cancelled",
@@ -100,11 +103,8 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
             'КН предоставленной квартиры' : 'cad_num'
         }
         order_df.rename(columns=columns_name, inplace=True)
-        print('alg done ')
-        order_df
         order_df = order_df.sort_values(['affair_id', 'order_id'])
 
-        print('alg done')
         # Добавляем колонку с извлеченным кодом статьи
         order_df['article_code'] = order_df['accounting_article'].apply(
             lambda x: str(x).split()[0] if pd.notna(x) and len(str(x).split()) > 0 else None
@@ -118,7 +118,6 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         
         # Агрегируем по ID. Формируем словарь area_id
         order_df = order_df.groupby("order_id").agg(concat_area_id_agg).reset_index()
-        # После агрегации порядок колонок изменился и надо вернуть порядок
         order_df = order_df[columns_db]
         
         # Преобразование типов
@@ -126,7 +125,6 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         order_df["order_id"] = order_df["order_id"].astype("Int64")
         order_df["is_cancelled"] = order_df["is_cancelled"].astype(bool)
         order_df = order_df.replace({np.nan: None})
-
 
         date_columns = ["decision_date", "order_date", "cancel_date", 
                        "legal_cancel_date", "order_draft_date"]
@@ -157,9 +155,9 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         merged_df = order_df_subset.merge(
             existed_df_subset,
             on=key_col,
-            how='outer', # outer чтобы найти и новые, и удаленные (если нужно)
+            how='outer',
             suffixes=('_new', '_old'),
-            indicator=True # Добавляет '_merge'
+            indicator=True
         )
         new_rows_idx = merged_df[merged_df['_merge'] == 'left_only'].index
         new_order_ids = merged_df.loc[new_rows_idx, key_col].tolist()
@@ -168,16 +166,13 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         rows_to_check = merged_df.loc[both_rows_idx].copy()
         print(f"Найдено строк для проверки на изменения: {len(rows_to_check)}")
         diff_mask_combined = pd.Series(False, index=rows_to_check.index)
-        for col in comparison_cols: # Используем исходные имена колонок
+        for col in comparison_cols:
             col_new = f'{col}_new'
             col_old = f'{col}_old'
 
             if col_new in rows_to_check and col_old in rows_to_check:
-                # Сравнение с корректной обработкой NA/None
-                # (A == B) or (A is NA and B is NA)
                 are_equal = rows_to_check[col_new].eq(rows_to_check[col_old]) | \
                             (rows_to_check[col_new].isna() & rows_to_check[col_old].isna())
-                # Инвертируем маску, чтобы True означало "есть различие"
                 has_diff = ~are_equal
                 diff_mask_combined = diff_mask_combined | has_diff
             else:
@@ -203,7 +198,6 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
             i += 1
             with connection:
                 with connection.cursor() as cursor:
-                    # Подготовка значений для вставки
                     values = []
                     for col in columns_db:
                         val = row[col]
@@ -217,7 +211,6 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
                         else:
                             values.append(str(val))
                     
-                    # SQL для вставки/обновления
                     insert_sql = f"""
                         INSERT INTO public.order_decisions (
                             {", ".join(columns_db)}
@@ -229,14 +222,47 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
                             {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
                             updated_at = NOW()
                     """
-                    
                     cursor.execute(insert_sql)
                     print(f"DEBUG: Inserted/updated order_id {row['article_code']} {row['order_id']}")
-        return 0
+
+        # Если дошли сюда без ошибок — обновляем статус успешной загрузки
+        with connection:
+            with connection.cursor() as cursor:
+                set_env_true_sql = """
+                    UPDATE env.data_updates
+                    SET success = True,
+                    updated_at = NOW()
+                    WHERE name = 'order_decisions'
+                """
+                cursor.execute(set_env_true_sql)
+                print("DEBUG: Env is set to true")
+        out = 0  # Успешное завершение
 
     except Exception as e:
-        print(f"Error: {e}")
-        raise e
+        out = e
+        print(f"ERROR: {e}")
+        # 5. Обработка ошибки
+        try:
+            if not connection:
+                connection = psycopg2.connect(
+                    host=settings.project_management_setting.DB_HOST,
+                    user=settings.project_management_setting.DB_USER,
+                    password=settings.project_management_setting.DB_PASSWORD,
+                    port=settings.project_management_setting.DB_PORT,
+                    database=settings.project_management_setting.DB_NAME
+                )
+            with connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        UPDATE env.data_updates
+                        SET success = False, updated_at = NOW()
+                        WHERE name = 'order_decisions'
+                    """)
+                    print('status должен был обновиться')
+        except Exception as db_error:
+            print(f"Ошибка при обновлении статуса: {db_error}")
+
     finally:
         if connection:
             connection.close()
+        return out
