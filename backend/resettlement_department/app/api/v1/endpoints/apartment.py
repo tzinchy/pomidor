@@ -129,9 +129,9 @@ async def set_consent(
     apart_ids_and_status : SetStatusForNewAparts,
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
 ):
-    print(apart_ids_and_status.apart_ids, apart_ids_and_status.status.value)
+    print(apart_ids_and_status.apart_ids, apart_ids_and_status.status)
     return await apartment_service.set_status_for_many(
-        apart_ids_and_status.apart_ids, apart_ids_and_status.status.value, apart_type
+        apart_ids_and_status.apart_ids, apart_ids_and_status.status, apart_type
     )
 
 @router.patch("/set_special_needs_for_many")
