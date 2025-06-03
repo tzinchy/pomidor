@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 
 router = APIRouter(prefix='/wave', tags=['wave'])
 
-@router.post("/process_waves/")
+@router.post("/process_waves")
 async def process_waves(data: Dict[str, Any]):
     if not data:
         raise HTTPException(
