@@ -14,8 +14,8 @@ origins = [
     "http://doccontrol.dsa.mlc.gov",
     "https://dsa.mlc.gov",
     "https://auth.dsa.mlc.gov",
-    "https://doccontrol.dsa.mlc.gov"
-    "http://auth.dsa.mlc.gov"
+    "https://doccontrol.dsa.mlc.gov",
+    "https://auth.dsa.mlc.gov"
 ]
 
 app.add_middleware(
