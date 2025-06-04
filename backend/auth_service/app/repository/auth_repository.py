@@ -140,6 +140,6 @@ class AuthRepository:
         
     async def get_user_info_by_uuid(self, user_uuid):
         async with self.db() as session:
-            query_result = await session.execute(select(UserFrontendPayload).where(user_uuid==user_uuid))
+            query_result = await session.execute(select(UserFrontendPayload).where(UserFrontendPayload.user_uuid==user_uuid))
             result = query_result.scalars().first()
             return result.as_dict()
