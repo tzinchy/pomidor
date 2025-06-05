@@ -195,3 +195,10 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", affai
     wb.save(output_path)
     print(f"Excel файл '{output_path}' создан.")
     connection.close()
+
+def set_is_uploaded(history_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute('UPDATE public.history set is_downloaded = True where history_id = %s', (history_id, ))
+    print('DONE', history_id)
+    connection.close()
