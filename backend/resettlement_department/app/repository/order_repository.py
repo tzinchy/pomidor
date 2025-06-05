@@ -12,14 +12,21 @@ class OrderRepository:
     async def get_excel_order(self):
         query = text("""SELECT 
                         od.*,
-                        na.house_address,
-                        na.apart_number
+                        COALESCE(na_by_cad.house_address, na_by_unom.house_address) AS house_address,
+                        COALESCE(na_by_cad.apart_number, na_by_unom.apart_number) AS apart_number,
+                        COALESCE(na_by_cad.new_apart_id, na_by_unom.new_apart_id) AS new_apart_id
                     FROM 
                         order_decisions od
                     LEFT JOIN (
-                        SELECT DISTINCT ON (cad_num) cad_num, house_address, apart_number
+                        SELECT DISTINCT ON (cad_num) cad_num, house_address, apart_number, new_apart_id
                         FROM new_apart
-                        ORDER BY cad_num) na ON od.cad_num = na.cad_num;""")
+                        ORDER BY cad_num
+                    ) na_by_cad ON od.cad_num = na_by_cad.cad_num
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (unom, un_kv) unom, un_kv, house_address, apart_number, new_apart_id
+                        FROM new_apart
+                        ORDER BY unom, un_kv
+                    ) na_by_unom ON od.unom = na_by_unom.unom AND od.un_kv = na_by_unom.un_kv;""")
         results_list = []
         column_names = []
 
