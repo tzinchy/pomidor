@@ -10,8 +10,16 @@ class OrderRepository:
         self.db = session_maker
 
     async def get_excel_order(self):
-        query = text("""select *, new_apart.house_address, new_apart.apart_number from order_decisions
-            left join new_apart using (cad_num)""")
+        query = text("""SELECT 
+                        od.*,
+                        na.house_address,
+                        na.apart_number
+                    FROM 
+                        order_decisions od
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (cad_num) cad_num, house_address, apart_number
+                        FROM new_apart
+                        ORDER BY cad_num) na ON od.cad_num = na.cad_num;""")
         results_list = []
         column_names = []
 
