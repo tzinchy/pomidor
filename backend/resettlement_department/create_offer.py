@@ -6,7 +6,7 @@ from app.core.config import settings
 # Определяем категории статусов
 STATUS_CATEGORIES = {
     "согласие": 1,
-    "подобрано": 6,
+    "подобрано": 7,
     "подобрано (ждет одобрения)": 6,
     "ожидание": 6,
     "отказ": 2,
@@ -27,7 +27,7 @@ STATUS_CATEGORIES = {
 def prepare_data(df: pd.DataFrame, new_apart_df: pd.DataFrame) -> pd.DataFrame:
     """Подготовка и очистка данных с заменой new_apart_id"""
     # Приводим статусы к строковому типу и нижнему регистру
-    df['Состояние'] = df['Состояние'].astype(str).str.strip().str.lower()
+    df['Результат предложения'] = df['Результат предложения'].astype(str).str.strip().str.lower()
     
     # Переименование колонок
     rename_map = {
@@ -95,11 +95,11 @@ def create_offer_structure(df: pd.DataFrame, conn) -> pd.DataFrame:
     result_records = []
     
     # Проверяем наличие необходимых колонок
-    if 'Состояние' not in df.columns:
-        raise ValueError("Отсутствует обязательная колонка 'Состояние'")
+    if 'Результат предложения' not in df.columns:
+        raise ValueError("Отсутствует обязательная колонка 'Результат предложения'")
     
     # Преобразуем статусы в строки
-    df['Состояние'] = df['Состояние'].astype(str).str.strip().str.lower()
+    df['Результат предложения'] = df['Результат предложения'].astype(str).str.strip().str.lower()
     
     # Сортируем данные по дате предложения
     if 'outcoming_date' in df.columns:
@@ -137,11 +137,11 @@ def create_offer_structure(df: pd.DataFrame, conn) -> pd.DataFrame:
             new_aparts = {}
             for _, row in group.iterrows():
                 try:
-                    status_text = str(row['Состояние']).strip().lower()
-                    status_id = int(STATUS_CATEGORIES.get(status_text, 6))
+                    status_text = str(row['Результат предложения']).strip().lower()
+                    status_id = int(STATUS_CATEGORIES.get(status_text, 7))
                 except Exception as e:
-                    print(f"Ошибка обработки статуса: {e}, значение: {row['Состояние']}")
-                    status_id =int(6)  # Статус по умолчанию
+                    print(f"Ошибка обработки статуса: {e}, значение: {row['Результат предложения']}")
+                    status_id =int(7)  # Статус по умолчанию
                 
                 entry = {
                     'status_id': status_id,
@@ -179,10 +179,10 @@ def create_offer_structure(df: pd.DataFrame, conn) -> pd.DataFrame:
         affair_df = df[df['affair_id'] == affair_id]
         for _, row in affair_df.iterrows():
             try:
-                status_text = str(row['Состояние']).strip().lower()
+                status_text = str(row['Результат предложения']).strip().lower()
                 status_id = STATUS_CATEGORIES.get(status_text, 6)
             except Exception as e:
-                print(f"Ошибка обработки статуса: {e}, значение: {row['Состояние']}")
+                print(f"Ошибка обработки статуса: {e}, значение: {row['Результат предложения']}")
                 status_id = 6  # Статус по умолчанию
             
             new_aparts = {
@@ -290,5 +290,5 @@ def process_offers_data(input_file):
         print("Обработка завершена. Результаты сохранены в processed_offers.xlsx")
 
 if __name__ == "__main__":
-    input_file = '2025.06.02 Подбор квартир (полный).xlsx'
+    input_file = '/Volumes/Управление ведения жилищного учета/01-Переселение УВЖУ/Отдел статистики и аналитики/Арсеньев В.Д/2025.06.02 Подбор квартир (полный).xlsx'
     process_offers_data(input_file)
