@@ -84,7 +84,7 @@ def insert_data_to_order_decisions(order_df: pd.DataFrame):
         columns_name = {
             "КПУ_Дело_Идентификатор": "affair_id",
             "Идентификатор выписки": "order_id",
-            "Выписка_Решение_Д": "deciшsion_date",
+            "Выписка_Решение_Д": "decision_date",
             "Выписка_Решение №": "decision_number",
             "Выписка_Д": "order_date",
             "Выписка_Аннулирована": "is_cancelled",
