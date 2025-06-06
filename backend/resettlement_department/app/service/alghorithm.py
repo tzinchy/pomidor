@@ -3,6 +3,7 @@ import pandas as pd
 from core.config import settings
 from datetime import datetime
 import json
+from service.balance_alghorithm import save_views_to_excel
 
 def get_db_connection():
     return psycopg2.connect(
@@ -928,7 +929,12 @@ def match_new_apart_to_family_batch(
                         "INSERT INTO public.offer (affair_id, new_aparts, status_id) VALUES (%s, %s, 7)",
                         (old_apart_id, new_aparts_json)
                     )
-
+                save_views_to_excel(history_id=last_history_id)
+                if date: 
+                    cursor.execute('DELETE FROM new_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM new_apart)')
+                    cursor.execute('DELETE FROM old_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM old_apart)')
+                    cursor.execute('DELETE FROM manual_load WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM manual_load)')
+                    print('Загруженное ручками удалено')
                 conn.commit()
                 res = {'cannot_offer': len(cannot_offer_to_insert), 'offer':  len(offers_to_insert)}
                 return res
