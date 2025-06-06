@@ -24,7 +24,8 @@ WITH ranked_apartments AS (
         oa.rank,
 		apartments_old_temp.classificator,
         apartments_old_temp.dates,
-        was_queue
+        was_queue,
+        rsm_apart_id
     FROM
         old_apart oa
     LEFT JOIN
