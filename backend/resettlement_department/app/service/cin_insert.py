@@ -34,7 +34,7 @@ def insert_cin(cin_df : pd.DataFrame) -> int:
                 ) VALUES (
                     %(unom)s, %(old_address)s, %(cin_address)s, 
                     %(cin_schedule)s, %(dep_schedule)s, %(phone_osmotr)s, 
-                    %(phone_otvet)s, %(start_date)s, %(otdel)s, %(manual_load_id)s
+                    %(phone_otvet)s, %(start_date)s, %(otdel)s
                 )
                 ON CONFLICT (unom) DO UPDATE SET 
                     updated_at = NOW()""",
