@@ -931,7 +931,7 @@ def match_new_apart_to_family_batch(
                         (old_apart_id, new_aparts_json)
                     )
                 uploads_folder = os.path.join(os.getcwd(), "././uploads/")
-                file_name = f"matching_result_{history_id}.xlsx"
+                file_name = f"matching_result_{last_history_id}.xlsx"
                 output_path = os.path.join(uploads_folder, file_name)
                 if date: 
                     save_views_to_excel(output_path=output_path, history_id=last_history_id)
