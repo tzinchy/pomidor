@@ -931,6 +931,7 @@ def match_new_apart_to_family_batch(
                     )
                 save_views_to_excel(history_id=last_history_id)
                 if date: 
+                    cursor.execute('DELETE FROM offer where affair_id in (select affair_id from old_apart where manual_load_id = (select max(manual_load_id) from offer))')
                     cursor.execute('DELETE FROM new_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM new_apart)')
                     cursor.execute('DELETE FROM old_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM old_apart)')
                     cursor.execute('DELETE FROM manual_load WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM manual_load)')
