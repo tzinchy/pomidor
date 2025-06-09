@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pandas as pd
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse
 from repository.order_repository import OrderRepository
 
 

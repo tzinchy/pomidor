@@ -24,7 +24,8 @@ WITH ranked_apartments AS (
         oa.rank,
 		apartments_old_temp.classificator,
         apartments_old_temp.dates,
-        was_queue
+        was_queue,
+        rsm_apart_id
     FROM
         old_apart oa
     LEFT JOIN
@@ -32,6 +33,7 @@ WITH ranked_apartments AS (
     LEFT JOIN
         status ON oa.status_id = status.status_id
 	LEFT JOIN renovation.apartments_old_temp using (affair_id)
+    WHERE is_hidden = False
 )
 SELECT *
 FROM ranked_apartments
