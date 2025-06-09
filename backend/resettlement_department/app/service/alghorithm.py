@@ -4,6 +4,7 @@ from core.config import settings
 from datetime import datetime
 import json
 from service.balance_alghorithm import save_views_to_excel
+import os 
 
 def get_db_connection():
     return psycopg2.connect(
@@ -929,8 +930,11 @@ def match_new_apart_to_family_batch(
                         "INSERT INTO public.offer (affair_id, new_aparts, status_id) VALUES (%s, %s, 7)",
                         (old_apart_id, new_aparts_json)
                     )
-                save_views_to_excel(history_id=last_history_id)
+                uploads_folder = os.path.join(os.getcwd(), "././uploads/")
+                file_name = f"matching_result_{history_id}.xlsx"
+                output_path = os.path.join(uploads_folder, file_name)
                 if date: 
+                    save_views_to_excel(output_path=output_path, history_id=last_history_id)
                     cursor.execute('DELETE FROM offer where affair_id in (select affair_id from old_apart where manual_load_id = (select max(manual_load_id) from offer))')
                     cursor.execute('DELETE FROM new_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM new_apart)')
                     cursor.execute('DELETE FROM old_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM old_apart)')
