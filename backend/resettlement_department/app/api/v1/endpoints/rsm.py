@@ -55,44 +55,6 @@ def from_rsm_get_new_apart():
     except Exception as e: 
         return e
 
-@router.post("/upload-file/", deprecated=True)
-async def upload_file2(file: UploadFile = File(...)):
-    """
-    Загружает файл в таблицу old_apart.
-
-    Эта функция не имеет практического применения
-    и может быть удалена.
-    """
-    try:
-        # Создаем папку если ее нет
-        folders = [Path("manual_download")]
-
-        for folder in folders:
-            folder.mkdir(parents=True, exist_ok=True)
-
-        content = await file.read()
-
-        # Сохраняем в manual_download
-        manual_path = Path("manual_download") / file.filename
-        with open(manual_path, "wb") as f:
-            f.write(content)
-
-        # Обработка данных
-        old_apart = pd.read_excel(BytesIO(content))
-
-        ds = insert_data_to_old_apart(old_apart)
-        if isinstance(ds, Exception):
-            raise ds
-        return {"message": "Файл успешно загружен и обработан"}
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Ошибка при обработке файла: {str(e)}"
-        )
-    finally:
-        await file.close()
-
-
 @router.patch("/get_orders")
 async def from_rsm_get_orders():
     layout_id = 22262
