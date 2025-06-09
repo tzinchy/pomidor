@@ -65,6 +65,7 @@ SELECT
     new_apart.type_of_settlement,
     new_apart.rank,
     new_apart.floor,
+    new_apart.rsm_apart_id, 
     JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
         joined_aparts.offers
@@ -85,4 +86,5 @@ GROUP BY
     new_apart.room_count,
     new_apart.type_of_settlement,
     new_apart.rank,
-    new_apart.floor;
+    new_apart.floor,
+    new_apart.rsm_apart_id;
