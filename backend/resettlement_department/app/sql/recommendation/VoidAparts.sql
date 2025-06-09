@@ -9,7 +9,7 @@ WITH offered_aparts AS (
 apart_info AS (
     SELECT affair_id, history_id, room_count, is_queue 
     FROM old_apart 
-    WHERE affair_id = :apart_id
+    WHERE affair_id = :apart_id 
 ),
 ranked_apartments AS (
     SELECT 
@@ -26,7 +26,8 @@ ranked_apartments AS (
         na.notes, 
         na.new_apart_id,
         na.history_id,
-        ai.room_count AS required_room_count
+        ai.room_count AS required_room_count,
+		ai.is_queue
     FROM new_apart na
     CROSS JOIN apart_info ai
     WHERE na.status_id = 11
