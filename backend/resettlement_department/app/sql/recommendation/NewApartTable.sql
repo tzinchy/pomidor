@@ -37,7 +37,8 @@ ranked_apartments AS (
             ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC
         ) AS rn,
         COUNT(o.affair_id) OVER (PARTITION BY na.new_apart_id) AS selection_count, 
-        rank
+        rank,
+        rsm_apart_id
     FROM 
         new_apart na
     LEFT JOIN 
