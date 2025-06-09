@@ -10,6 +10,7 @@ from RSM.RSM import get_kpu_xlsx_df, get_orders_xlsx_df, get_resurs_xlsx_df
 from schema.history import EnvStatResponse
 from service.apartment_insert import insert_data_to_new_apart, insert_data_to_old_apart
 from service.order_insert import insert_data_to_order_decisions
+from service.cin_insert import insert_cin
 from datetime import timedelta
 
 router = APIRouter(prefix="/rsm", tags=["RSM"])
@@ -74,3 +75,37 @@ async def from_rsm_get_orders():
     
     return {"status": "success", "exit_code": result}
 
+
+@router.post("/upload_cin_file/")
+async def upload_file2(file: UploadFile = File(...)):
+    """
+    Загружает файл в таблицу cin.
+    """
+    try:
+        # Создаем папку если ее нет
+        folders = [Path("cin")]
+
+        for folder in folders:
+            folder.mkdir(parents=True, exist_ok=True)
+
+        content = await file.read()
+
+        # Сохраняем в manual_download
+        manual_path = Path("manual_download") / file.filename
+        with open(manual_path, "wb") as f:
+            f.write(content)
+
+        # Обработка данных
+        cin_df = pd.read_excel(BytesIO(content))
+
+        ds = insert_cin(cin_df)
+        if isinstance(ds, Exception):
+            raise ds
+        return {"message": "Файл успешно загружен и обработан"}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Ошибка при обработке файла: {str(e)}"
+        )
+    finally:
+        await file.close()

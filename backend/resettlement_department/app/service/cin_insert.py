@@ -4,7 +4,7 @@ from repository.database import get_db_connection
 def insert_cin(cin_df : pd.DataFrame) -> int:
     connection = get_db_connection() 
     cursor = connection.cursor()
-    
+
     # 4. Обработка CIN
     if not cin_df.empty:
         # Подготовка данных
@@ -42,3 +42,4 @@ def insert_cin(cin_df : pd.DataFrame) -> int:
             )
 
     connection.commit()
+    return 200
