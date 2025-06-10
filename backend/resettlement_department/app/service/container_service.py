@@ -4,7 +4,8 @@ import openpyxl
 import pandas as pd
 from repository.database import get_db_connection
 from datetime import datetime
-
+from core.config import RECOMMENDATION_FILE_PATH
+from utils.sql_reader import read_sql_query
 
 def upload_container(history_id, file_path):
     """
@@ -203,3 +204,32 @@ def set_is_uploaded(history_id):
     connection.commit()
     print('DONE', history_id)
     connection.close()
+
+def update_apart_status_by_history_id(history_id: int) -> str:
+    if not isinstance(history_id, int) or history_id <= 0:
+        raise ValueError("history_id должен быть положительным целым числом")
+    connection = None  # Инициализируем переменную заранее
+    sql_file_path = os.path.join(RECOMMENDATION_FILE_PATH, 'UpdateOfferStatusByHistoryId.sql')
+    
+    try:
+        with get_db_connection() as connection:
+            with connection.cursor() as cursor:
+                # Читаем SQL из файла
+                with open(sql_file_path, 'r', encoding='utf-8') as f:
+                    sql_query = f.read()
+                
+                # Выполняем запрос в транзакции
+                cursor.execute(sql_query, (history_id,))
+                connection.commit()
+
+                updated_rows = cursor.fetchone()[0]
+                
+                return f"Successfully updated. Affected rows: {updated_rows}"
+                
+    except FileNotFoundError:
+        raise Exception(f"SQL файл не найден: {sql_file_path}")
+    except Exception as e:
+        print(e)
+        if connection is not None:
+            connection.rollback()
+        raise Exception(f"Database error occurred: {str(e)}")

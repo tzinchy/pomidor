@@ -931,11 +931,18 @@ def match_new_apart_to_family_batch(
                         (old_apart_id, new_aparts_json)
                     )
                 uploads_folder = os.path.join(os.getcwd(), "././uploads/")
-                file_name = f"matching_result_{history_id}.xlsx"
+                file_name = f"matching_result_{last_history_id}.xlsx"
                 output_path = os.path.join(uploads_folder, file_name)
                 if date: 
                     save_views_to_excel(output_path=output_path, history_id=last_history_id)
-                    cursor.execute('DELETE FROM offer where affair_id in (select affair_id from old_apart where manual_load_id = (select max(manual_load_id) from offer))')
+                    cursor.execute('''
+                        DELETE FROM offer 
+                        WHERE affair_id IN (
+                            SELECT affair_id 
+                            FROM old_apart 
+                            WHERE manual_load_id = (SELECT manual_load_id FROM offer ORDER BY manual_load_id DESC LIMIT 1)
+                        )
+                    ''')
                     cursor.execute('DELETE FROM new_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM new_apart)')
                     cursor.execute('DELETE FROM old_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM old_apart)')
                     cursor.execute('DELETE FROM manual_load WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM manual_load)')
