@@ -34,6 +34,7 @@ joined_aparts AS (
                 'answer_date', o.answer_date::DATE,
                 'decline_reason_id', o.decline_reason_id,
                 'created_at', o.created_at::DATE,
+                'floor', na.floor,
                 'decline_reason', JSONB_BUILD_OBJECT(
                     'min_floor', dr.min_floor, 
                     'max_floor', dr.max_floor, 

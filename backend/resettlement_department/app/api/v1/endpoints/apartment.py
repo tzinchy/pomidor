@@ -12,6 +12,8 @@ from schema.apartment import (
 from schema.status import Status, StatusUpdate
 from service.rematch_service import rematch
 from service.container_service import generate_excel_from_two_dataframes
+from service.container_service import update_apart_status
+
 router = APIRouter(prefix="/tables/apartment", tags=["Apartment Action"])
 
 
@@ -161,5 +163,6 @@ async def set_notes_for_many(
 
 @router.patch("/push_container_for_aparts")
 def push_container_for_aparts(apart_ids : RematchSchema):
+    print(apart_ids.apartment_ids)
     generate_excel_from_two_dataframes(affair_ids=apart_ids.apartment_ids)
-    
+    update_apart_status(apart_ids=apart_ids.apartment_ids)
