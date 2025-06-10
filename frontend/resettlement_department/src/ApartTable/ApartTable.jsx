@@ -382,6 +382,24 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     }
   };
 
+  const setContaionerForMany = async () => {
+    const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+    console.log('setContaionerForMany', apartmentIds, apartType)
+    
+    try {
+      await axios.patch(
+        `${HOSTLINK}/tables/apartment/push_container_for_aparts`,
+        { 
+          apart_ids: apartmentIds,
+        }
+      );
+      
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+    } catch (error) {
+      console.error("Error setting status:", error.response?.data);
+    }
+  };
+
   const handleNotesSave = async (rowData, newNotes) => {
     try {
       await axios.patch(
@@ -710,6 +728,18 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
                       >
                         Снять инвалидность
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={setContaionerForMany}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                      >
+                        Отправить контейнер
                       </button>
                     )}
                   </Menu.Item>
