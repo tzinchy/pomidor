@@ -321,7 +321,8 @@ class NewApartRepository:
                 await session.commit()
 
     async def get_excel_new_apart(self):
-        query = text("SELECT * FROM public.new_apart")
+        query = text("""SELECT * FROM public.new_apart
+                        join status using (status_id)""")
         results_list = []
         column_names = []
 

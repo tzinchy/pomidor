@@ -1,6 +1,3 @@
-import json
-
-import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 
