@@ -12,7 +12,7 @@ class OfferRepository:
                 from offer,
                 jsonb_each (new_aparts)
             )
-            select offer_id, outcoming_date, old_apart.affair_id, old_apart.house_address as old_house_address, old_apart.apart_number as new_house_address, old_apart.fio as fio, 
+            select offer_id, outcoming_date, old_apart.affair_id, old_apart.house_address as old_house_address, old_apart.apart_number as old_apart_number, old_apart.fio as fio, 
             new_apart.new_apart_id, new_apart.house_address as new_apart_house_address, new_apart.apart_number, status
             from offer_unnst
             left join old_apart on old_apart.affair_id = offer_unnst.affair_id 
