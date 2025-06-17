@@ -488,7 +488,7 @@ class OldApartRepository:
                 await session.rollback()
                 raise error
 
-    async def set_status_for_many(self, old_apart_ids: List[int], status: str):
+    async def set_status_for_many_old_apart(self, old_apart_ids: List[int], status: str):
         async with self.db() as session:
             try:
                 affair_ids = ", ".join(map(str, old_apart_ids))
@@ -496,38 +496,70 @@ class OldApartRepository:
                     text(f"""
                         WITH get_status_id AS (
                             SELECT status_id FROM status WHERE status = :status
-                        )
-                        UPDATE offer
-                        SET
-                            status_id = (select status_id FROM get_status_id),
-                            new_aparts = (
-                                SELECT
-                                    COALESCE(
-                                        jsonb_object_agg(
-                                            key, 
-                                            jsonb_set(
-                                                value, 
-                                                '{{status_id}}', 
-                                                to_jsonb((select status_id FROM get_status_id))
-                                            )
-                                        ), 
-                                        '{{}}'::jsonb
-                                    )
-                                FROM
-                                    jsonb_each(COALESCE(offer.new_aparts, '{{}}'::jsonb))
-                            ),
-                            updated_at = NOW()
-                        WHERE
-                            offer_id IN (
-                                SELECT
-                                    MAX(offer_id)
-                                FROM
-                                    offer
-                                WHERE
-                                    affair_id IN ({affair_ids})
-                                GROUP BY
-                                    affair_id
+                        ),
+                        all_affairs AS (
+                            SELECT unnest(ARRAY[{affair_ids}])::int AS affair_id
+                        ),
+                        with_offers AS (
+                            SELECT DISTINCT o.affair_id
+                            FROM offer o
+                            WHERE o.affair_id IN (SELECT affair_id FROM all_affairs)
+                        ),
+                        without_offers AS (
+                            SELECT a.affair_id
+                            FROM all_affairs a
+                            WHERE NOT EXISTS (
+                                SELECT 1 FROM offer o 
+                                WHERE o.affair_id = a.affair_id
                             )
+                            AND EXISTS (
+                                SELECT 1 FROM old_apart oa 
+                                WHERE oa.affair_id = a.affair_id
+                            )
+                        ),
+                        latest_offers AS (
+                            SELECT MAX(offer_id) as offer_id, affair_id
+                            FROM offer
+                            WHERE affair_id IN (SELECT affair_id FROM with_offers)
+                            GROUP BY affair_id
+                        ),
+                        update_offers AS (
+                            UPDATE offer
+                            SET
+                                status_id = (SELECT status_id FROM get_status_id),
+                                new_aparts = CASE 
+                                    WHEN new_aparts IS NOT NULL AND new_aparts != '{{}}'::jsonb THEN (
+                                        SELECT COALESCE(
+                                            jsonb_object_agg(
+                                                key, 
+                                                jsonb_set(
+                                                    value, 
+                                                    '{{status_id}}', 
+                                                    to_jsonb((SELECT status_id FROM get_status_id))
+                                                )
+                                            ), 
+                                            '{{}}'::jsonb
+                                        )
+                                        FROM jsonb_each(COALESCE(new_aparts, '{{}}'::jsonb))
+                                    )
+                                    ELSE new_aparts
+                                END,
+                                updated_at = NOW()
+                            FROM latest_offers
+                            WHERE offer.offer_id = latest_offers.offer_id
+                            RETURNING 1
+                        ),
+                        update_old_aparts AS (
+                            UPDATE old_apart 
+                            SET 
+                                status_id = (SELECT status_id FROM get_status_id),
+                                updated_at = NOW()
+                            WHERE affair_id IN (SELECT affair_id FROM without_offers)
+                            RETURNING 1
+                        )
+                        SELECT 
+                            (SELECT count(*) FROM update_offers) AS offers_updated,
+                            (SELECT count(*) FROM update_old_aparts) AS old_aparts_updated;
                     """),
                     {"status": status},
                 )

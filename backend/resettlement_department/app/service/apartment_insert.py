@@ -776,6 +776,8 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         columns_db.append('is_queue')
         columns_db.append('was_queue')
         columns_db.append('is_hidden')
+        columns_db_for_do_update = columns_db.copy()
+        columns_db.remove('is_special_needs_marker')
         df.rename(
             columns=columns_name,
             inplace=True,
@@ -841,7 +843,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
 
         # Важно чтобы порядок колонок в df был такой же как в columns_db
         df = df[columns_db]
-
+        
         args = df.itertuples(index=False, name=None)
         # Prepare the arguments string for the SQL query
         args_str = ",".join(
@@ -857,7 +859,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
             )
             for arg in args
         )
-
+        
         connection = psycopg2.connect(
             host=settings.project_management_setting.DB_HOST,
             user=settings.project_management_setting.DB_USER,
@@ -873,7 +875,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
                 {args_str}
             ON CONFLICT (affair_id) 
             DO UPDATE SET 
-            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
+            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db_for_do_update)},
             updated_at = NOW()
         """
         # Запрос для обновления справочной информации об успешной выгрузке
