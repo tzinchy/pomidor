@@ -53,6 +53,7 @@ async def rematch(apart_ids):
             apart_info_result = await session.execute(apart_query, {"apart_id": apart_id})
             apart_info = dict(apart_info_result.fetchone()._mapping) if apart_info_result.rowcount > 0 else None
             if not apart_info:
+                print('NO APART INFO')
                 continue
 
             # Check approved apartments
@@ -67,11 +68,8 @@ async def rematch(apart_ids):
             """)
             approved_result = await session.execute(check_approved_query, {"apart_id": apart_id})
             approved_aparts = approved_result.scalar() or {}
-            print(apart_info)
-            approved_aparts_start = len(approved_aparts.keys())
             if (apart_info.get('is_special_needs_marker') == 1) and (apart_info.get('is_queue') == 1): 
                 apart_info['is_special_needs_marker'] = 0 
-            print(apart_info)
             
             # Check declined apartments
             check_declined_query = text("""
@@ -175,7 +173,6 @@ async def rematch(apart_ids):
                     res = res.fetchone()  
                     if res is None: 
                         print('NO NEW APARTS')
-                    print(res)
                 # Если нашли квартиру, добавляем в approved_aparts
                 if res is not None:
                     new_apart_id = res[0]
@@ -194,9 +191,11 @@ async def rematch(apart_ids):
                 )
                 await session.commit()
                 # Сохраняем информацию о найденных квартирах
+                print('YES apart_id', apart_id)
+
                 matched_aparts[apart_id] = new_aparts_count
-                print(approved_aparts)
             else:
+                print('NO apart_id', apart_id)
                 reason = 'Не нашлось подходящих квартир'
                 cant_offer_aparts_raise_ids[apart_id] = reason
                 unmatched_aparts[apart_id] = reason
@@ -205,6 +204,7 @@ async def rematch(apart_ids):
         print(f"\n=== ИТОГИ ПОДБОРА КВАРТИР ===")
         print(f"Найдено квартир для {len(matched_aparts)} заявок: всего {total_matched} квартир")
         print(f"Не найдено квартир для {len(unmatched_aparts)} заявок")
+    print('-----------sdfsdfsdfsf-----------------', matched_aparts, unmatched_aparts)
     data = [len(matched_aparts), len(unmatched_aparts)]
 
     return data
