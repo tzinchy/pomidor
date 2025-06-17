@@ -560,7 +560,8 @@ class OldApartRepository:
                 raise e
     
     async def get_excel_old_apart(self):
-        query = text("SELECT * FROM public.old_apart")
+        query = text("""SELECT * FROM public.old_apart
+                     JOIN status USING (status_id)""")
         results_list = []
         column_names = []
 
