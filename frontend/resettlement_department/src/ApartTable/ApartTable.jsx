@@ -994,7 +994,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         lastSelectedMunicipal={lastSelectedMunicipal}
                         fetchApartmentDetails={fetchApartmentDetails}
                         getFilteData={getFilteData}
-                        className="flex-1" // Оставляем для гибкости внутри компонента
+                        className="flex-1"
                       />
                     </div>
                   </div>

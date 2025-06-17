@@ -109,7 +109,7 @@ export default function ApartDetails({
         )}
         {apartType !== 'OldApart' && (
           <div className="flex items-center">
-            <a className="mr-6" target="_blank" rel="noreferrer" href={`http://webrsm.mlc.gov:5222/ObjectCard?ObjId=${apartmentDetails.rsm_apart_ids}&RegisterViewId=CityObjectPremiseFromLivingSpace&isVertical=true&useMasterPage=true`}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-file-text"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg></a>
+            <a className="mr-6" target="_blank" rel="noreferrer" href={`http://webrsm.mlc.gov:5222/ObjectCard?ObjId=${apartmentDetails.rsm_apart_id}&RegisterViewId=CityObjectPremiseFromLivingSpace&isVertical=true&useMasterPage=true`}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-file-text"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg></a>
             <button
               className="h-10 w-10 p-0 border border-gray-300 rounded-full flex items-center justify-center"
               onClick={handleClose}
