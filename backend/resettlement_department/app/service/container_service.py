@@ -63,7 +63,10 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
         os.makedirs(output_dir)
 
     # Формируем полный путь к файлу
-    file_name = f"container_{history_id}.xlsx"
+    if history_id:
+        file_name = f"container_{history_id}.xlsx"
+    else:
+        file_name = f"container_0.xlsx"
     output_path = os.path.join(output_dir, file_name)
 
     # Создаем соединение с базой данных
