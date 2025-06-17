@@ -2,9 +2,12 @@ from repository.database import project_managment_session
 from sqlalchemy import text
 import json 
 
-
 async def rematch(apart_ids):
     cant_offer_aparts_raise_ids = {}
+    # Инициализируем переменные для хранения результатов
+    matched_aparts = {}  # affair_id: количество добавленных квартир
+    unmatched_aparts = {}  # affair_id: причина
+
     print(apart_ids)
     async with project_managment_session() as session:
         for apart_id in apart_ids:
@@ -69,6 +72,7 @@ async def rematch(apart_ids):
             if (apart_info.get('is_special_needs_marker') == 1) and (apart_info.get('is_queue') == 1): 
                 apart_info['is_special_needs_marker'] = 0 
             print(apart_info)
+            
             # Check declined apartments
             check_declined_query = text("""
                 WITH declined_aparts AS (
@@ -97,6 +101,8 @@ async def rematch(apart_ids):
                 if room_count in max_ranks:
                     declined['decline_info']['max_rank'] = max_ranks[room_count]
             
+            # Счетчик новых квартир для текущего apart_id
+            new_aparts_count = 0
             for declined in declined_aparts:
                 house_address_list = ", ".join(f"'{addr}'" for addr in apart_info["new_house_addresses"])
                 house_address_condition = f"AND house_address IN ({house_address_list})" if house_address_list else ""
@@ -167,10 +173,17 @@ async def rematch(apart_ids):
                             LIMIT 1'''
                     res = await session.execute(text(new_apart_query), decline_reason)
                     res = res.fetchone()  
+                    if res is None: 
+                        print('NO NEW APARTS')
                     print(res)
-                approved_aparts[res[0]] = {'status_id' : 7}
+                # Если нашли квартиру, добавляем в approved_aparts
+                if res is not None:
+                    new_apart_id = res[0]
+                    # Увеличиваем счетчик новых квартир
+                    new_aparts_count += 1
+                    approved_aparts[str(new_apart_id)] = {'status_id': 7}
 
-            if approved_aparts_start<len(approved_aparts.keys()):
+            if new_aparts_count > 0:
                 aparts_json = json.dumps(approved_aparts)
                 await session.execute(
                     text("""
@@ -180,10 +193,18 @@ async def rematch(apart_ids):
                     {"apart_id": apart_info.get('affair_id'), "aparts": aparts_json},
                 )
                 await session.commit()
+                # Сохраняем информацию о найденных квартирах
+                matched_aparts[apart_id] = new_aparts_count
                 print(approved_aparts)
             else:
-                cant_offer_aparts_raise_ids[apart_info.get('affair_id')] = 'Не нашлось подходящих квартир'
-    print(cant_offer_aparts_raise_ids)
-    return cant_offer_aparts_raise_ids
+                reason = 'Не нашлось подходящих квартир'
+                cant_offer_aparts_raise_ids[apart_id] = reason
+                unmatched_aparts[apart_id] = reason
+        # Выводим итоговую статистику
+        total_matched = sum(matched_aparts.values())
+        print(f"\n=== ИТОГИ ПОДБОРА КВАРТИР ===")
+        print(f"Найдено квартир для {len(matched_aparts)} заявок: всего {total_matched} квартир")
+        print(f"Не найдено квартир для {len(unmatched_aparts)} заявок")
+    data = [len(matched_aparts), len(unmatched_aparts)]
 
-
+    return data

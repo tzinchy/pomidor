@@ -10,6 +10,8 @@ import {
 } from '@tanstack/react-table';
 import axios from "axios";
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { ToastContainer, toast } from 'react-toastify';
+
 import AdressCell from './Cells/AdressCell';
 import FamilyCell from './Cells/Fio';
 import PloshCell from './Cells/PloshCell';
@@ -310,21 +312,108 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor, minPeople, maxPeople, searchApartQuery, searchFioQuery, searchNotesQuery]);
 
   const rematch = async () => {
-    const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
-    try {
-      await axios.post(
-        `${HOSTLINK}/tables/apartment/rematch`,
-        JSON.stringify({ apartment_ids: apartmentIds }),
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
-    } catch (error) {
-      console.error("Error rematch:", error.response?.data);
+  const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+  
+  return axios.post(
+    `${HOSTLINK}/tables/apartment/rematch`,
+    JSON.stringify({ apartment_ids: apartmentIds }),
+    { headers: { 'Content-Type': 'application/json' } }
+  )
+  .then(async response => {
+    console.log('REMACH RETURN - ', response.data['res']);
+    
+    // Вызываем обновление квартир
+    await fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+    
+    // Возвращаем данные для обработки в toast
+    const failedCount = Object.keys(response.data || {}).length;
+    const successCount = apartmentIds.length - failedCount;
+    
+    return {
+      successCount,
+      failedCount,
+      details: response.data
+    };
+  })
+  .catch(error => {
+    console.error("Error rematch:", error.response?.data);
+    throw new Error(error.response?.data?.detail || "Неизвестная ошибка при переподборе");
+  });
+};
+
+// Функция для запуска переподбора с уведомлениями
+const startRematchWithNotifications = () => {
+  toast.promise(
+    rematch(),
+    {
+      pending: {
+        render: () => {return (
+          <div className="flex items-center">
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Идет переподбор квартир...</span>
+          </div>
+        )},
+        icon: false,
+      },
+      success: {
+        render: ({data}) => {return (
+          <div>
+            {console.log('-------DATA--------',data)}
+            <b>Переподбор завершен!</b>
+            <p>Переподобрано: {data.successCount} кв.</p>
+            {data.failedCount > 0 && (
+              <p className="text-yellow-600">Не переподобрано: {data.failedCount} кв.</p>
+            )}
+          </div>
+        )},
+        icon: "✅",
+        autoClose: 5000,
+      },
+      error: {
+        render: ({err}) => {return (
+          <div>
+            <b>Ошибка при переподборе!</b>
+            <p>{err}</p>
+          </div>
+        )},
+        icon: "❌",
+        autoClose: 5000,
+      },
+    },
+    {
+      position: "bottom-right",
+      closeButton: true,
+      draggable: true,
+      style: {
+        zIndex: 9999, // Высокий z-index
+        position: 'relative',
+      },
+      progressStyle: {
+        background: "linear-gradient(to right, #4f46e5, #ec4899)",
+      },
+      className: "bg-white text-gray-800 shadow-lg rounded-xl border border-gray-200",
+      toastClassName: "!z-[9999]", // Дополнительное повышение z-index
     }
-  };
+  );
+};
 
   const switchAparts = async () => {
-    if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment')) return;
+    if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment')) {
+      toast.warn('Нужно выбрать 2 квартиры', {
+        position: "bottom-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        });
+      return;
+    }
     try {
       await axios.post(
         `${HOSTLINK}/tables/switch_aparts`,
@@ -333,6 +422,16 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           second_apart_id: parseInt(Object.keys(rowSelection)[1])
         }
       );
+      toast.success('Квартиры успешно поменялись', {
+        position: "bottom-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
     } catch (error) {
       console.error("Error ", error.response?.data);
     }
@@ -571,6 +670,19 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   return (
     <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
+            <ToastContainer
+              position="bottom-right"
+              autoClose={5000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick={false}
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              style={{ zIndex: 9999 }} // Глобальный высокий z-index
+              toastStyle={{ position: 'relative' }}
+            />
       <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
       <div className='flex w-[30%] items-center justify-between'>
       <button
@@ -609,8 +721,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             </svg>
           </div>
         </button>
-
-        
           <AllFilters 
             handleFilterChange={handleFilterChange} 
             rooms={rooms} 
@@ -686,7 +796,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                   <Menu.Item>
                     {({ active }) => (
                       <button
-                        onClick={rematch}
+                        onClick={startRematchWithNotifications}
                         className={`${
                           active ? 'bg-gray-100' : ''
                         } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
