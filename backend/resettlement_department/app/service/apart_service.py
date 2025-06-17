@@ -300,7 +300,7 @@ class ApartService:
         )
         return {"affected_rows": affected_rows, "status": "done"}
 
-    async def set_status_for_many(self, apart_ids, status, apart_type):
+    async def set_status_for_many_old_apart(self, apart_ids, status, apart_type):
         """
         Конкретно данный сервис проставляет статус в offer(в jsonb тоже)
         Либо резервирует новые квартиры
@@ -311,7 +311,7 @@ class ApartService:
                     apart_ids, status=status
                 )
             elif apart_type == ApartTypeSchema.NEW:
-                    affected_rows = await self.new_apart_repository.set_private_or_reserve_status_for_new_aparts(
+                    affected_rows = await self.new_apart_repository.set_status_for_many_new_apart(
                         apart_ids, status=status
                     )
 

@@ -207,28 +207,6 @@ class NewApartRepository:
         async with self.db() as session:
             result = await session.execute(text(query))
             return result.fetchall()
-
-    async def set_private_for_new_aparts(self, new_apart_ids, status: bool = True):
-        async with self.db() as session:
-            try:
-
-                placeholders = ", ".join(
-                    [":id_" + str(i) for i in range(len(new_apart_ids))]
-                )
-
-                params = {"status": status}
-                params.update({f"id_{i}": id for i, id in enumerate(new_apart_ids)})
-
-                query = text(
-                    f"UPDATE new_apart SET is_private = :status WHERE new_apart_id IN ({placeholders})"
-                )
-
-                # Передаем параметры в правильном формате
-                await session.execute(query, params)
-                await session.commit()
-            except Exception as error:
-                session.rollback()
-                raise error
             
     async def cancell_matching_apart(self, apart_id):
         async with self.db() as session:
@@ -300,7 +278,7 @@ class NewApartRepository:
                 await session.commit()
                 return result.rowcount
     
-    async def set_private_or_reserve_status_for_new_aparts(self, new_apart_ids: list[int], status):
+    async def set_status_for_many_new_apart(self, new_apart_ids: list[int], status):
         async with self.db() as session:
             try:
                 id_placeholder = ', '.join(map(str, new_apart_ids))
