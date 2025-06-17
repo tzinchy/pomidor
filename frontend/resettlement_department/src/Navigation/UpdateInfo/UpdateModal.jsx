@@ -93,6 +93,7 @@ export default function UpdateDataButton() {
             if (!response.ok) throw new Error('Ошибка загрузки адресов');
             const data = await response.json();
             setUpdateHistory(data);
+            console.log('RSM data',data);
         } catch (err) {
             console.log(err.message);
         }
@@ -297,7 +298,7 @@ export default function UpdateDataButton() {
                                     {updateHistory.length > 0 ? (
                                         updateHistory.map((entry, index) => (
                                             <tr key={index} className="">
-                                                <td className="p-1">{entry.name === 'new_aparts_resource' ? 'Ресурс' : 'Потребность'}</td>
+                                                <td className="p-1">{entry.name === 'new_aparts_resource' ? 'Ресурс' : entry.name === 'old_aparts_kpu' ? 'Потребность' : 'Выписки'}</td>
                                                 <td className="p-1 text-gray-500">{entry.timestamp.slice(8, 10)}.{entry.timestamp.slice(5, 7)}.{entry.timestamp.slice(0, 4)} | {entry.timestamp.slice(11, 16)}</td>
                                                 <td className="p-1 flex text-gray-500 justify-center">{entry.is_active ? <RiskIcon risk='Работа завершена' /> : <RiskIcon risk='Наступили риски' /> }</td>
                                             </tr>
