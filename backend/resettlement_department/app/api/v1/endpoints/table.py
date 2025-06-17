@@ -2,7 +2,7 @@ from typing import List, Literal, Optional
 
 from fastapi.responses import FileResponse
 
-from depends import apartment_service, order_service
+from depends import apartment_service, order_service, offer_service
 from fastapi import APIRouter, Body, HTTPException, Query
 from schema.apartment import ApartTypeSchema
 
@@ -188,6 +188,19 @@ async def order_decisions():
     else:
         return result
 
+@router.get("/offer_result")
+async def offer():
+    "Выгрузка таблицы offer в Excel файл"
+    result = await offer_service.get_excel_offer()
+    if filepath := result.get("filepath"):
+        return FileResponse(
+            path=filepath,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            filename="offer.xlsx",
+        )
+    else:
+        return result
+    
 @router.get("/get_stat")
 async def get_stat():
     return await order_service.get_stat()

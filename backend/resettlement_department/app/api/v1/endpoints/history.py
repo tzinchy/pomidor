@@ -8,6 +8,7 @@ from schema.apartment import MatchingSchema, BalanceSchema
 import os
 from service.container_service import generate_excel_from_two_dataframes, upload_container, set_is_uploaded
 from pathlib import Path
+from service.container_service import update_apart_status_by_history_id
 
 router = APIRouter(tags=["History"])
 
@@ -79,7 +80,8 @@ def push_container(history_id: int):
         set_is_uploaded(history_id)
 
         file_path = f"./uploads/container_{history_id}.xlsx"
-        #upload_container(history_id=history_id, file_path=file_path)
+        upload_container(history_id=history_id, file_path=file_path)
+        update_apart_status_by_history_id(history_id=history_id)
     except Exception as e:
         return HTTPException(detail=str(e))
     
