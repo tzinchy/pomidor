@@ -33,3 +33,4 @@ order_service = OrderService(order_repository)
 
 offer_repository = OfferRepository(project_managment_session)
 offer_service = OfferService(offer_repository)
+

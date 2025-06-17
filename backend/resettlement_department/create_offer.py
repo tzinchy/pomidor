@@ -101,12 +101,6 @@ def create_offer_structure(df: pd.DataFrame, conn) -> pd.DataFrame:
     # Преобразуем статусы в строки
     df['Результат предложения'] = df['Результат предложения'].astype(str).str.strip().str.lower()
     
-    # Сортируем данные по дате предложения
-    if 'outcoming_date' in df.columns:
-        df = df.sort_values(['affair_id', 'outcoming_date'])
-    else:
-        df = df.sort_values(['affair_id'])
-    
     # Определяем многоподписные дела
     subject_counts = df.groupby('affair_id')['subject_id'].nunique()
     multi_subject_affairs = set(subject_counts[subject_counts > 1].index)
@@ -251,8 +245,7 @@ def process_offers_data(input_file):
             sort_cols = ['affair_type', 'affair_id']
             if 'outcoming_date' in offers_df.columns:
                 sort_cols.append('outcoming_date')
-            
-            offers_df = offers_df.sort_values(sort_cols, ascending=[False, True, True])
+
             
             # Преобразуем даты в строки только для вывода в Excel
             excel_df = offers_df.copy()
@@ -290,5 +283,5 @@ def process_offers_data(input_file):
         print("Обработка завершена. Результаты сохранены в processed_offers.xlsx")
 
 if __name__ == "__main__":
-    input_file = '/Volumes/Управление ведения жилищного учета/01-Переселение УВЖУ/Отдел статистики и аналитики/Арсеньев В.Д/2025.06.02 Подбор квартир (полный).xlsx'
+    input_file = '2025.06.02 Подбор квартир (полный).xlsx'
     process_offers_data(input_file)
