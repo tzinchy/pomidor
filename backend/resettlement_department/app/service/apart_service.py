@@ -300,7 +300,7 @@ class ApartService:
         )
         return {"affected_rows": affected_rows, "status": "done"}
 
-    async def set_status_for_many_old_apart(self, apart_ids, status, apart_type):
+    async def set_status_for_many(self, apart_ids, status, apart_type):
         """
         Конкретно данный сервис проставляет статус в offer(в jsonb тоже)
         Либо резервирует новые квартиры
