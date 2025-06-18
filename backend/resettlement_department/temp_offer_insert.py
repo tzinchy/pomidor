@@ -13,22 +13,6 @@ def get_db_connection():
         database=settings.project_management_setting.DB_NAME,
     )
 
-def insert_single_offer(cursor, row):
-    """Вставляет одну строку данных"""
-    try:
-        cursor.execute(
-            """
-            INSERT INTO offer (affair_id, new_aparts, outcoming_date, outgoing_offer_number)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT DO NOTHING
-            """,
-            (row['affair_id'], row['new_aparts'], row['outcoming_date'], row['outgoing_offer_number'])
-        )
-        return 1
-    except Exception as e:
-        print(f"Ошибка при вставке строки: {str(e)}")
-        return 0
-
 def process_offers_data(input_file):
     """Основной процесс обработки данных (построчная вставка)"""
     conn = None
@@ -55,9 +39,16 @@ def process_offers_data(input_file):
         total_inserted = 0
         with tqdm(total=len(records), desc="Вставка данных") as pbar:
             for row in records:
-                inserted = insert_single_offer(cursor, row)
+                cursor.execute(
+                    """
+                    INSERT INTO offer (affair_id, new_aparts, outcoming_date, outgoing_offer_number)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT DO NOTHING
+                    """,
+                    (row['affair_id'], row['new_aparts'], row['outcoming_date'], row['outgoing_offer_number'])
+                )
                 conn.commit()  # Коммитим после каждой строки
-                total_inserted += inserted
+                total_inserted += 1
                 pbar.update(1)
         
         print(f"\nУспешно вставлено {total_inserted} записей из {len(records)}")
