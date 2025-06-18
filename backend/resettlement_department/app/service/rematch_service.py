@@ -1,6 +1,7 @@
 from repository.database import project_managment_session
 from sqlalchemy import text
 import json 
+from fastapi import HTTPException  # Импортируем HTTPException для возврата ошибок
 
 async def rematch(apart_ids):
     cant_offer_aparts_raise_ids = {}
@@ -207,4 +208,7 @@ async def rematch(apart_ids):
     print('-----------sdfsdfsdfsf-----------------', matched_aparts, unmatched_aparts)
     data = [len(matched_aparts), len(unmatched_aparts)]
 
+    if not matched_aparts and not unmatched_aparts:
+        raise HTTPException(status_code=500, detail="Не удалось обработать ни одну заявку")
+    
     return data
