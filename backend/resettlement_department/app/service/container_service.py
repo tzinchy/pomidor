@@ -199,6 +199,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
     wb.save(output_path)
     print(f"Excel файл '{output_path}' создан.")
     connection.close()
+    print('-------------------------------------------------------------\nDONE\n---------------------------------------------------------------------')
 
 def set_is_uploaded(history_id):
     connection = get_db_connection()

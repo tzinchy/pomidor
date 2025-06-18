@@ -863,7 +863,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                       </button>
                     )}
                   </Menu.Item>
-                  
                   </div>
                 )}
                 <div className="px-1 py-1">
