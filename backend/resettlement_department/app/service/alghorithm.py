@@ -61,7 +61,7 @@ def match_new_apart_to_family_batch(
                         o.affair_id NOT IN (
                             SELECT affair_id
                             FROM  offer
-                            where status_id <> 2
+                            where status_id not in (2, 14)
                         ) 
                 """
                 
@@ -930,6 +930,7 @@ def match_new_apart_to_family_batch(
                         "INSERT INTO public.offer (affair_id, new_aparts, status_id) VALUES (%s, %s, 7)",
                         (old_apart_id, new_aparts_json)
                     )
+                    conn.commit()
                 uploads_folder = os.path.join(os.getcwd(), "././uploads/")
                 file_name = f"matching_result_{last_history_id}.xlsx"
                 output_path = os.path.join(uploads_folder, file_name)

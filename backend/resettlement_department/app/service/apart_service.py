@@ -307,11 +307,11 @@ class ApartService:
         """
         try:
             if apart_type == ApartTypeSchema.OLD:
-                affected_rows = await self.old_apart_repository.set_status_for_many(
+                affected_rows = await self.old_apart_repository.set_status_for_many_old_apart(
                     apart_ids, status=status
                 )
             elif apart_type == ApartTypeSchema.NEW:
-                    affected_rows = await self.new_apart_repository.set_private_or_reserve_status_for_new_aparts(
+                    affected_rows = await self.new_apart_repository.set_status_for_many_new_apart(
                         apart_ids, status=status
                     )
 

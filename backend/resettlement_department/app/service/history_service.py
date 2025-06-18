@@ -1,4 +1,6 @@
 from repository.history_repository import HistoryRepository
+import os
+import glob
 
 
 class HistoryService:
@@ -24,3 +26,9 @@ class HistoryService:
     async def get_manual_load_history(self):
         res = await self.repository.get_manual_load_history()
         return res
+    
+    def clear_matching_files(self):
+        files = glob.glob('programs/pomidor/backend/resettlement_department/app/uploads/.xlsx')
+        for f in files:
+            os.remove(f)
+

@@ -7,7 +7,7 @@ from models.user_backend_payload import UserBackendPayload
 from models.user_frontend_payload import UserFrontendPayload
 from schemas.user import UserUuid
 from sqlalchemy import update
-import json
+from models.subordinates_by_uuid import SubordinatesByUuid
 from typing import List, Optional
 
 
@@ -142,4 +142,13 @@ class AuthRepository:
         async with self.db() as session:
             query_result = await session.execute(select(UserFrontendPayload).where(UserFrontendPayload.user_uuid==user_uuid))
             result = query_result.scalars().first()
-            return result.as_dict()
+            return result.as_dict() if result else None
+
+    async def get_subordinates_by_uuid(self, user_uuid) -> dict: 
+        async with self.db() as session: 
+            query_result = await session.execute(select(SubordinatesByUuid.subordinates).where(SubordinatesByUuid.user_uuid==user_uuid))
+            result = query_result.scalars().first()
+            print(result)
+            return {'subordinates' : result} if result else None
+            
+        

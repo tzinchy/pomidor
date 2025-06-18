@@ -57,6 +57,15 @@ class AuthService:
                     path='/',
                     domain=".dsa.mlc.gov"  
                 )
+                response.set_cookie(
+                    key="Districts",
+                    value=(create_jwt_token(districts)),
+                    httponly=False,
+                    max_age=60*60*24*90,
+                    samesite="None",
+                    secure=True,
+                    path='/'
+                )
             response.set_cookie(
                 key="AuthToken",
                 value=create_jwt_token(jwt_payload),
@@ -68,6 +77,15 @@ class AuthService:
                 domain=".dsa.mlc.gov" 
             )
             response.set_cookie(
+                key="AuthToken",
+                value=create_jwt_token(jwt_payload),
+                httponly=False,
+                max_age=60*60*24*90,
+                samesite="None",
+                secure=True,
+                path='/'
+            )
+            response.set_cookie(
                 key='Frontend',
                 value=create_jwt_token(frontend_payload),
                 httponly=False,
@@ -77,7 +95,15 @@ class AuthService:
                 path='/',
                 domain=".dsa.mlc.gov"  
             )
-
+            response.set_cookie(
+                key='Frontend',
+                value=create_jwt_token(frontend_payload),
+                httponly=False,
+                max_age=60*60*24*90,
+                samesite="None",
+                secure=True,
+                path='/'
+            )
             response.set_cookie(
                 key='uuid',
                 value=str(user_uuid),
@@ -151,3 +177,6 @@ class AuthService:
         
     async def get_user_info_by_uuid(self, user_uuid):
         return await self.auth_repository.get_user_info_by_uuid(user_uuid=user_uuid)
+    
+    async def get_subordinates_by_uuid(self, user_uuid) -> dict: 
+        return await self.auth_repository.get_subordinates_by_uuid(user_uuid=user_uuid)

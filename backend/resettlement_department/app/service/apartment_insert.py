@@ -425,127 +425,6 @@ def format_datetime_columns(df, columns):
         )
     return df
 
-'''
-# Функция для маппинга статуса в числовое поле status_id
-def map_status(df):
-    status_map = {
-        "согласие": 1,
-        "отказ": 2,
-        "суд": 3,
-        "фонд компенсация": 4,
-        "фонд докупка": 5,
-        "ожидание": 6,
-        "подобрано": 7,
-    }
-
-    # Проверка значений перед маппингом
-    unmapped_values = df.loc[~df["Result"].isin(status_map.keys()), "Result"].unique()
-    if unmapped_values.size > 0:
-        raise ValueError(f"Unmapped values in 'Result': {unmapped_values}")
-
-    # Маппинг значений
-    df["status_id"] = df["Result"].map(status_map)
-    return df
-'''
-'''
-def insert_offer(offer_df: pd.DataFrame):
-    # Удаляем дубликаты по полю 'ID'
-    offer_df = offer_df.drop_duplicates(subset=["ID"])
-
-    # Преобразование формата даты и времени
-    offer_df = format_datetime_columns(
-        offer_df, ["SentenceDate", "GiveDate", "AnswerDate"]
-    )
-
-    # Применяем маппинг статуса
-    offer_df = map_status(offer_df)
-
-    # Заменяем NaN значения на None для корректной вставки в базу данных
-    offer_df = offer_df.replace({np.nan: None})
-
-    # Подготовка кортежей для вставки в SQL
-    columns = [
-        "ID",
-        "SentenceDate",
-        "GiveDate",
-        "AnswerDate",
-        "SentenceNumber",
-        "SelectionAction",
-        "Conditions",
-        "Notes",
-        "Claim",
-        "SubjectID",
-        "ObjectID",
-        "status_id",
-    ]
-    args = list(offer_df[columns].itertuples(index=False, name=None))
-
-    # Подключение к базе данных PostgreSQL
-    connection  =  psycopg2.connect(
-            host=settings.project_management_setting.DB_HOST,
-            user=settings.project_management_setting.DB_USER,
-            password=settings.project_management_setting.DB_PASSWORD,
-            port=settings.project_management_setting.DB_PORT,
-            database=settings.project_management_setting.DB_NAME
-    )
-    cursor = connection.cursor()
-
-    try:
-        # Подготовка строки аргументов для SQL запроса
-        args_str = ",".join(
-            "({})".format(
-                ", ".join(
-                    "'{}'".format(x.replace("'", "''"))
-                    if isinstance(x, str)
-                    else "NULL"
-                    if x is None
-                    else str(x)
-                    for x in arg
-                )
-            )
-            for arg in args
-        )
-
-        # Выполнение SQL запроса для вставки данных
-        cursor.execute(f"""
-        INSERT INTO public.offer (
-            offer_id, sentence_date, give_date, answer_date, 
-            sentence_number, selection_action, conditions, rsm_notes, claim, 
-            subject_id, object_id, status_id
-        )
-        VALUES
-            {args_str}
-        ON CONFLICT (offer_id) 
-        DO UPDATE SET 
-            sentence_date = EXCLUDED.sentence_date,
-            give_date = EXCLUDED.give_date,
-            answer_date = EXCLUDED.answer_date,
-            sentence_number = EXCLUDED.sentence_number,
-            selection_action = EXCLUDED.selection_action,
-            conditions = EXCLUDED.conditions,
-            rsm_notes = EXCLUDED.rsm_notes,
-            claim = EXCLUDED.claim,
-            subject_id = EXCLUDED.subject_id,
-            object_id = EXCLUDED.object_id,
-            status_id = EXCLUDED.status_id,
-            updated_at = NOW()
-        """)
-
-        # Подтверждение изменений
-        connection.commit()
-        ds = 1
-
-    except Exception as e:
-        print("Error:", e)
-        ds = 0
-
-    # Закрытие курсора и соединения
-    cursor.close()
-    connection.close()
-
-    return ds
-'''
-
 
 def insert_to_db(new_apart_df, old_apart_df, cin_df, file_name, file_path):
     global district_mapping
@@ -776,6 +655,8 @@ def insert_data_to_old_apart(df: pd.DataFrame):
         columns_db.append('is_queue')
         columns_db.append('was_queue')
         columns_db.append('is_hidden')
+        columns_db_for_do_update = columns_db.copy()
+        columns_db.remove('is_special_needs_marker')
         df.rename(
             columns=columns_name,
             inplace=True,
@@ -808,21 +689,26 @@ def insert_data_to_old_apart(df: pd.DataFrame):
               lambda x: 1 if re.search(r"-01-", str(x)) else 0
         ).astype("Int64")
         # На основе removal_reason скрываем некоторые записи
-        removal_reason_is_hidden = ["техническое снятие в АСУ", "Ошибочно введенная КПУ"]
+        removal_reason_is_hidden = ["техническое снятие в АСУ", "Ошибочно введенная КПУ","Б/общежитие.Право собственности по суду"]
         df["is_hidden"] = df["removal_reason"].apply(
               lambda x: 1 if x in removal_reason_is_hidden else 0
         ).astype(bool)
         # На основе removal_reason проставляем статус 14 - Подборов не будет
         removal_reason_14 = [
-            "Переселение. Жилое помещение свободно",
-            "п.2 смерть очередника",
-            "п.4 получение субсидии на приобретение жилья",
-            "Переселение. Денежная компенсация",
-            "п.1 выезд на постоянное место жительства в другую местность",
             "п.2 признан ненуждающимся (без предоставления)",
-            "Реновация.Без предоставления",
+            "Переселение. Жилое помещение свободно",
+            "п.2 выкуп комнаты в квартире коммун. заселения",
+            "п.7 по личному заявлению очередника",
+            "Переселение. Денежная компенсация",
             "Реновация. Денежная компенсация",
+            "п.5 выявлены недостоверные документы",
+            "п.2 в связи с предоставл.жилья по другому месту постановки",
+            "п.2 смерть очередника",
+            "Техническое снятие (прошлые года)",
+            "Реновация.Без предоставления"
         ]
+
+        #"Б/общежитие.Право собственности по суду", "Ошибочно введенная КПУ", "техническое снятие в АСУ", - кпу не показывать 
         df["status_id"] = df["removal_reason"].apply(
               lambda x: 14 if x in removal_reason_14 else None
         ).astype("Int64")
@@ -841,7 +727,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
 
         # Важно чтобы порядок колонок в df был такой же как в columns_db
         df = df[columns_db]
-
+        
         args = df.itertuples(index=False, name=None)
         # Prepare the arguments string for the SQL query
         args_str = ",".join(
@@ -857,7 +743,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
             )
             for arg in args
         )
-
+        
         connection = psycopg2.connect(
             host=settings.project_management_setting.DB_HOST,
             user=settings.project_management_setting.DB_USER,
@@ -873,7 +759,7 @@ def insert_data_to_old_apart(df: pd.DataFrame):
                 {args_str}
             ON CONFLICT (affair_id) 
             DO UPDATE SET 
-            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db)},
+            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db_for_do_update)},
             updated_at = NOW()
         """
         # Запрос для обновления справочной информации об успешной выгрузке

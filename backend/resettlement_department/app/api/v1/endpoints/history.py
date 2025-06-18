@@ -96,3 +96,12 @@ async def cancell_history(history_id: int):
 @router.delete("/delete/manual_load/{manual_load_id}")
 async def cancell_history_manual_load(manual_load_id: int):
     return await history_service.cancell_manual_load(manual_load_id)
+
+@router.delete("/delete/clear_matching_files")
+def clear_matching_files():
+    try:
+        history_service.clear_matching_files()
+    except Exception as e:
+        HTTPException(status_code=400, detail=e) 
+        
+

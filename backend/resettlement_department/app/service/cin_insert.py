@@ -30,7 +30,7 @@ def insert_cin(cin_df : pd.DataFrame) -> int:
                 """INSERT INTO cin (
                     unom, old_address, cin_address, cin_schedule, 
                     dep_schedule, phone_osmotr, phone_otvet, 
-                    start_date, otdel, manual_load_id
+                    start_date, otdel
                 ) VALUES (
                     %(unom)s, %(old_address)s, %(cin_address)s, 
                     %(cin_schedule)s, %(dep_schedule)s, %(phone_osmotr)s, 

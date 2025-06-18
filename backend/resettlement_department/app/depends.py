@@ -5,12 +5,15 @@ from repository.database import project_managment_session
 from repository.history_repository import HistoryRepository
 from repository.env_repository import EnvRepository
 from repository.order_repository import OrderRepository
+from repository.offer_repository import OfferRepository
+
 
 from service.apart_service import ApartService
 from service.dashboard_service import DashboardService
 from service.history_service import HistoryService 
 from service.env_service import EnvService
 from service.order_service import OrderService
+from service.offer_service import OfferService
 
 old_apartment_repository = OldApartRepository(project_managment_session)
 new_apartment_repository = NewApartRepository(project_managment_session)
@@ -27,3 +30,7 @@ env_service = EnvService(env_repository)
 
 order_repository = OrderRepository(project_managment_session)
 order_service = OrderService(order_repository)
+
+offer_repository = OfferRepository(project_managment_session)
+offer_service = OfferService(offer_repository)
+
