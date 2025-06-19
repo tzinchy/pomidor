@@ -131,7 +131,7 @@ export default function DetailsStatusCell({
   }
 
   const handleStatusSelect = (status) => {
-    if (status === "Отказ") {
+    if ((status === "Отказ") || (status === "Суд")) {
       setSelectedStatus(status);
       setShowRejectModal(true);
     } else {
@@ -229,7 +229,7 @@ function Dropdown({ colors, position, onSelect, dropdownRef }) {
       {Object.keys(colors).map((key) => (
         <div
           key={key}
-          className={`px-2 py-2 hover:border hover:border-white cursor-pointer ${colors[key]}`}
+          className={`px-2 py-2 cursor-pointer ${colors[key]}`}
           onClick={() => onSelect(key)}
         >
           {key}

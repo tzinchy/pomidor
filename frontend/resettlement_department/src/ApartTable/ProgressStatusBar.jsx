@@ -1,18 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
-const ProgressStatusBar = ({ data={} }) => {
+const ProgressStatusBar = ({ data = {}, handleFilterChange }) => {
   const progressColors = {
     "Согласие": "#10b981",
     "Отказ": "#ef4444",
     "Суд": "#dc2626",
     "МФР Компенсация": "#a78bfa",
     "МФР Докупка": "#a78bfa",
+    "МФР (вне района)": "#a78bfa",
+    "МФР Компенсация (вне района)": "#a78bfa",
     "Ожидание": "#fbbf24",
     "Ждёт одобрения": "#3b82f6",
     "Подготовить смотровой": "#f76d0a",
     "Не подобрано": "#94a3b8",
-    "МФР (вне района)": "#a78bfa",
-    "МФР Компенсация (вне района)": "#a78bfa",
     "Свободная": "#94a3b8",
     "Резерв": "#94a3b8",
     "Блок": "#94a3b8",
@@ -21,29 +21,62 @@ const ProgressStatusBar = ({ data={} }) => {
   };
 
   const statusOrder = [
-    "Согласие",
     "Отказ",
     "Суд",
     "МФР Компенсация",
     "МФР Докупка",
-    "Ожидание",
-    "Ждёт одобрения",
-    "Подготовить смотровой",
-    "Не подобрано",
     "МФР (вне района)",
     "МФР Компенсация (вне района)",
+    "Ждёт одобрения",
+    "Ожидание",
+    "Подготовить смотровой",
+    "Не подобрано",
     "Свободная",
     "Резерв",
     "Блок",
     "Подборов не будет",
-    "Передано во вне"
+    "Передано во вне",
+    "Согласие",
   ];
 
   const [isHovered, setIsHovered] = useState(false);
+  const popupRef = useRef(null);
+  const barRef = useRef(null);
+
+  useEffect(() => {
+    const handleMouseLeave = (e) => {
+      // Проверяем, находится ли курсор за пределами и прогресс-бара, и всплывающего окна
+      if (
+        barRef.current &&
+        popupRef.current &&
+        !barRef.current.contains(e.relatedTarget) &&
+        !popupRef.current.contains(e.relatedTarget)
+      ) {
+        setIsHovered(false);
+      }
+    };
+
+    if (barRef.current) {
+      barRef.current.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (barRef.current) {
+        barRef.current.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+  }, []);
+
+  const handleStatusClick = (status) => {
+    if (handleFilterChange) {
+      handleFilterChange('status', [status]);
+      setIsHovered(false); // Закрываем окно после выбора
+    }
+  };
 
   const renderProgress = () => {
     if (!data || typeof data !== 'object' || Object.keys(data).length === 0) {
-        return <div className="text-slate-500">-_-</div>;
+      return <div className="text-slate-500">-_-</div>;
     }
 
     const total = Object.values(data).reduce((sum, val) => sum + val, 0);
@@ -60,9 +93,9 @@ const ProgressStatusBar = ({ data={} }) => {
     return (
       <div className="ml-4 relative w-full flex items-center">
         <div 
+          ref={barRef}
           className="relative h-6 w-full bg-slate-200 rounded-md overflow-hidden flex"
           onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
           {segments.map(({ key, percentage, color, value }) => (
             <div
@@ -83,15 +116,21 @@ const ProgressStatusBar = ({ data={} }) => {
           ))}
         </div>
 
-        <div className={`absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[200px] z-[10000] bg-white border border-slate-200 rounded-lg shadow-lg transition-all duration-200 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-        }`}>
+        <div 
+          ref={popupRef}
+          className={`absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[200px] z-[10000] bg-white border border-slate-200 rounded-lg shadow-lg transition-all duration-200 ${
+            isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           <table className="caption-bottom w-full text-sm">
             <tbody className="[&_tr:last-child]:border-0">
               {segments.map(({ key, value, color }) => (
                 <tr
                   key={key}
-                  className="hover:bg-muted/50 border-b transition-colors text-slate-500"
+                  className="hover:bg-muted/50 border-b transition-colors text-slate-500 cursor-pointer"
+                  onClick={() => handleStatusClick(key)}
                 >
                   <td className="align-middle [&:has([role=checkbox])]:pr-0 px-2 py-1 text-center text-xs">
                     <div
@@ -111,10 +150,10 @@ const ProgressStatusBar = ({ data={} }) => {
           </table>
 
           <span className="absolute -top-2 left-1/2 -translate-x-1/2">
-          <svg width="10" height="5" viewBox="0 0 30 10" preserveAspectRatio="none" className="block rotate-180">
-            <polygon points="0,0 30,0 15,10"></polygon>
-          </svg>
-        </span>
+            <svg width="10" height="5" viewBox="0 0 30 10" preserveAspectRatio="none" className="block rotate-180">
+              <polygon points="0,0 30,0 15,10"></polygon>
+            </svg>
+          </span>
         </div>
       </div>
     );

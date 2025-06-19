@@ -20,7 +20,7 @@ import NotesCell from './Cells/Notes';
 import ApartDetails from './ApartDetails';
 import { HOSTLINK } from '..';
 import AllFilters from './Filters/AllFilters';
-import ProgressStatusBar from './Try';
+import ProgressStatusBar from './ProgressStatusBar';
 import StageCell from './Cells/StageCell';
 
 // Добавьте SVG для иконки меню
@@ -61,9 +61,32 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [minPeople, setMinPeople] = useState([]);
   const [maxPeople, setMaxPeople] = useState([]);
   const [filterStatuses, setFilterStatuses] = useState([]);
-  const [allStatuses, setAllStatuses] = useState(null)
+  const [allStatuses, setAllStatuses] = useState(null);
+  const error_toast = () => {
+    return toast.error('Ошибка', {
+        position: "bottom-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });}
+  const success_toast = (text) => {
+    return toast.success(text, {
+        position: "bottom-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+  }
 
-  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ждёт одобрения",  "Подготовить смотровой", "Ожидание", "МФР (вне района)", "МФР Компенсация (вне района)", "Подборов не будет"] : ["Резерв", "Блок", "Свободная", "Передано во вне"];
+  const statuses = apartType === 'OldApart' ? ["Суд", "МФР Компенсация", "МФР Докупка", "МФР (вне района)", "МФР Компенсация (вне района)",  "Ждёт одобрения",  "Подготовить смотровой", "Ожидание", "Подборов не будет", "Согласие"] : ["Резерв", "Блок", "Свободная", "Передано во вне"];
   
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
@@ -411,7 +434,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   };
 
   const switchAparts = async () => {
-    if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment')) {
+    if ((Object.keys(rowSelection).length !== 2) || (apartType === 'NewApartment')) {
       toast.warn('Нужно выбрать 2 квартиры', {
         position: "bottom-right",
         autoClose: 3000,
@@ -432,18 +455,10 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           second_apart_id: parseInt(Object.keys(rowSelection)[1])
         }
       );
-      toast.success('Квартиры успешно поменялись', {
-        position: "bottom-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
+      success_toast('Квартиры успешно заменены');
     } catch (error) {
       console.error("Error ", error.response?.data);
+      error_toast();
     }
   };
 
@@ -465,10 +480,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           }
         }
       );
-      
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      success_toast('Статус успешно изменён');
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
+      error_toast();
     }
   };
 
@@ -484,10 +500,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           is_special_needs_marker: marker 
         }
       );
-      
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      success_toast('Инвалидность успешно проставлена');
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
+      error_toast();
     }
   };
 
@@ -502,10 +519,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           apartment_ids: apartmentIds
         }
       );
-      
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      success_toast('Контейнер успешно отправлен');
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
+      error_toast();
     }
   };
 
@@ -519,6 +537,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
     } catch (error) {
       console.error("Ошибка при сохранении:", error);
+      error_toast();
     }
   };
 
@@ -694,43 +713,43 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               toastStyle={{ position: 'relative' }}
             />
       <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
-      <div className='flex w-[30%] items-center justify-between'>
-      <button
-          onClick={() => setIsOpen(!isOpen)}
-          className=""
-        >
-          <div className="relative">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="filter-icon"
-            >
-              <path
-                d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z"
-                stroke="url(#filterGradient)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <defs>
-                <linearGradient
-                  id="filterGradient"
-                  x1="2"
-                  y1="3"
-                  x2="22"
-                  y2="3"
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop stopColor="#3B82F6" />
-                  <stop offset="1" stopColor="#8B5CF6" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-        </button>
+      <div className='flex w-[40%] items-center justify-between'>
+        <button
+            onClick={() => setIsOpen(!isOpen)}
+            className=""
+          >
+            <div className="relative">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="filter-icon"
+              >
+                <path
+                  d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z"
+                  stroke="url(#filterGradient)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <defs>
+                  <linearGradient
+                    id="filterGradient"
+                    x1="2"
+                    y1="3"
+                    x2="22"
+                    y2="3"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop stopColor="#3B82F6" />
+                    <stop offset="1" stopColor="#8B5CF6" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+          </button>
           <AllFilters 
             handleFilterChange={handleFilterChange} 
             rooms={rooms} 
@@ -775,10 +794,33 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           />
 
           {allStatuses ? (
-            <ProgressStatusBar data={allStatuses} />
+            <ProgressStatusBar data={allStatuses} handleFilterChange={handleFilterChange} />
           ) : (
             <div>Загрузка данных...</div>
           )}
+          <div className="flex-shrink-0 mt-2">
+            <button
+                onClick={handleResetFilters}
+                className="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap text-sm font-medium hover:bg-gray-100 rounded-md px-3 h-8 border-dashed"
+            >
+                Сброс
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-x ml-2 h-4 w-4"
+                >
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                </svg>
+            </button>
+          </div>
         </div>
         
         <div className='flex items-center'>
@@ -904,7 +946,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                                       }}
                                       className={`${
                                         active ? 'bg-gray-100' : ''
-                                      } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                                      } group flex w-full rounded-md px-2 py-2 text-xs text-gray-900`}
                                     >
                                       {status}
                                     </button>
