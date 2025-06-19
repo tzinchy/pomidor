@@ -89,6 +89,13 @@ def push_container(history_id: int):
 async def approve_history(history_id: int):
     return await history_service.approve_history(history_id)
 
+@router.post("/clear_matching_files")
+def clear_matching_files():
+    try:
+        history_service.clear_matching_files()
+    except Exception as e:
+        HTTPException(status_code=400, detail=e) 
+
 @router.delete("/delete/{history_id}")
 async def cancell_history(history_id: int):
     return await history_service.cancell_history(history_id)
@@ -97,11 +104,6 @@ async def cancell_history(history_id: int):
 async def cancell_history_manual_load(manual_load_id: int):
     return await history_service.cancell_manual_load(manual_load_id)
 
-@router.delete("/delete/clear_matching_files")
-def clear_matching_files():
-    try:
-        history_service.clear_matching_files()
-    except Exception as e:
-        HTTPException(status_code=400, detail=e) 
+
         
 

@@ -1,6 +1,8 @@
 import pandas as pd
 from tqdm import tqdm
 import psycopg2
+import json
+from datetime import datetime
 from app.core.config import settings
 
 def get_db_connection():
@@ -13,52 +15,76 @@ def get_db_connection():
         database=settings.project_management_setting.DB_NAME,
     )
 
+
 def process_offers_data(input_file):
-    """Основной процесс обработки данных (построчная вставка)"""
+    """Основной процесс обработки данных"""
     conn = None
     try:
         # 1. Загрузка данных
-        offers_df = pd.read_excel(
+        df = pd.read_excel(
             input_file,
-            usecols=['affair_id', 'new_aparts', 'outcoming_date', 'outgoing_offer_number'],
+            usecols=['offer_id', 'affair_id', 'new_aparts', 'outcoming_date', 'outgoing_offer_number'],
             dtype={
                 'affair_id': 'int32',
-                'new_aparts': 'str',
                 'outgoing_offer_number': 'str'
             }
         )
-        
+        df = df.sort_values('offer_id')
         # 2. Подготовка данных
-        offers_df = offers_df.where(pd.notnull(offers_df), None)
-        records = offers_df.to_dict('records')
+        df = df.where(pd.notnull(df), None)
         
-        # 3. Построчная обработка
+        # 3. Обработка данных
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        total_inserted = 0
-        with tqdm(total=len(records), desc="Вставка данных") as pbar:
-            for row in records:
-                cursor.execute(
-                    """
-                    INSERT INTO offer (affair_id, new_aparts, outcoming_date, outgoing_offer_number)
-                    VALUES (%s, %s, %s, %s)
+        total = 0
+        with tqdm(total=len(df), desc="Обработка офферов") as pbar:
+            for _, row in df.iterrows():
+                new_aparts = json.loads(row['new_aparts']) if isinstance(row['new_aparts'], str) else row['new_aparts']
+
+                # Вставляем запись
+                cursor.execute("""
+                    INSERT INTO offer (
+                        offer_id,affair_id, new_aparts, outcoming_date, outgoing_offer_number
+                    ) VALUES (%s, %s, %s, %s, %s)
                     ON CONFLICT DO NOTHING
-                    """,
-                    (row['affair_id'], row['new_aparts'], row['outcoming_date'], row['outgoing_offer_number'])
-                )
-                conn.commit()  # Коммитим после каждой строки
-                total_inserted += 1
+                    RETURNING offer_id
+                    """, (
+                        row['offer_id'],
+                        row['affair_id'],
+                        json.dumps(new_aparts),
+                        row['outcoming_date'],
+                        row['outgoing_offer_number']
+                    ))
+                
+                offer_row = cursor.fetchone()
+                if offer_row:
+                    offer_id = offer_row[0]
+                    cursor.execute('''SELECT key::bigint as new_apart_id, (value->'status_id')::integer as status_id FROM offer, jsonb_each(new_aparts) WHERE offer_id = %s''', (offer_id,))
+                    pairs = cursor.fetchall()
+                    for pair in pairs:
+                        cursor.execute('''
+                                        update new_apart 
+                                        SET status_id = (%s) 
+                                        WHERE new_apart_id = (%s)''', (pair[1],pair[0]))
+                    total += 1
+                else:
+                    print(f"No offer_id returned for affair_id {row['affair_id']}")
+                conn.commit() 
                 pbar.update(1)
         
-        print(f"\nУспешно вставлено {total_inserted} записей из {len(records)}")
+        print(f"\nУспешно обработано {total} из {len(df)} записей")
         
     except Exception as e:
         print(f"Критическая ошибка: {str(e)}")
+        if conn: conn.rollback()
     finally:
-        if conn:
-            conn.close()
+        if conn: conn.close()
+
 
 if __name__ == "__main__":
+    # Исправляем существующие данные
+    
+    # Обрабатываем новые данные
     input_file = 'processed_offers.xlsx'
     process_offers_data(input_file)

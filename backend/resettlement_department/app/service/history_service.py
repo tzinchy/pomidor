@@ -28,7 +28,7 @@ class HistoryService:
         return res
     
     def clear_matching_files(self):
-        files = glob.glob('programs/pomidor/backend/resettlement_department/app/uploads/.xlsx')
+        files = glob.glob('programs/pomidor/backend/resettlement_department/app/uploads/*.xlsx')
         for f in files:
             os.remove(f)
 
