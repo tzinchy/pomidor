@@ -29,7 +29,9 @@ class HistoryService:
     
     def clear_matching_files(self):
         try:
+            print('in func')
             files = glob.glob('programs/pomidor/backend/resettlement_department/app/uploads/*.xlsx')
+            print(files)
             for f in files:
                 try:
                     if os.path.isfile(f):
