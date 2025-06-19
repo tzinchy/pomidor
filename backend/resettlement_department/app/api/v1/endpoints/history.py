@@ -93,6 +93,7 @@ async def approve_history(history_id: int):
 def clear_matching_files():
     try:
         history_service.clear_matching_files()
+        return {'succes' : True}
     except Exception as e:
         HTTPException(status_code=400, detail=e) 
 
