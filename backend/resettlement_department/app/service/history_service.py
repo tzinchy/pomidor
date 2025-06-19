@@ -28,7 +28,17 @@ class HistoryService:
         return res
     
     def clear_matching_files(self):
-        files = glob.glob('programs/pomidor/backend/resettlement_department/app/uploads/*.xlsx')
-        for f in files:
-            os.remove(f)
+        try:
+            files = glob.glob('programs/pomidor/backend/resettlement_department/app/uploads/*.xlsx')
+            for f in files:
+                try:
+                    if os.path.isfile(f):
+                        os.remove(f)
+                        print(f"Удален файл: {f}")  
+                    else:
+                        print(f"Файл не найден: {f}")
+                except Exception as e:
+                    print(f"Ошибка при удалении файла {f}: {e}")
+        except Exception as e:
+            print(f"Ошибка при поиске файлов: {e}")
 
