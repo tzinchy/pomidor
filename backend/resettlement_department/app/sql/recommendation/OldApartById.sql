@@ -76,6 +76,7 @@ SELECT
     old_apart.rank,
     old_apart.floor,
 	affair_timeline.timeline_events,
+    old_apart.status_id,
     JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
         joined_aparts.new_apartments
@@ -102,4 +103,5 @@ GROUP BY
     old_apart.is_queue,
     old_apart.people_v_dele,
     old_apart.rank,
-	affair_timeline.timeline_events;
+	affair_timeline.timeline_events,
+    old_apart.status_id;
