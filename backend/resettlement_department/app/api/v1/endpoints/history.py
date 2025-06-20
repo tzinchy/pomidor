@@ -89,7 +89,7 @@ def push_container(history_id: int):
 async def approve_history(history_id: int):
     return await history_service.approve_history(history_id)
 
-@router.post("/clear_matching_files")
+@router.delete("/clear_matching_files")
 def clear_matching_files():
     try:
         history_service.clear_matching_files()
