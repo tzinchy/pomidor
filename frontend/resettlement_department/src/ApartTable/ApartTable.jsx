@@ -798,7 +798,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           ) : (
             <div>Загрузка данных...</div>
           )}
-          <div className="flex-shrink-0 mt-2">
+          <div className="flex-shrink-0 ml-2">
             <button
                 onClick={handleResetFilters}
                 className="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap text-sm font-medium hover:bg-gray-100 rounded-md px-3 h-8 border-dashed"
