@@ -1234,9 +1234,10 @@ def waves(data, cursor, conn):
         """
             INSERT INTO public.history(
                 old_house_addresses, 
-                new_house_addresses
+                new_house_addresses,
+                is_wave
             ) 
-            VALUES(%s, %s)
+            VALUES(%s, %s, true)
             RETURNING history_id
         """,
         (old_selected_addresses, new_selected_addresses_history),

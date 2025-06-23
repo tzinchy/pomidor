@@ -93,3 +93,4 @@ class SetNotesSchema(BaseModel):
 class BalanceSchema(BaseModel):
     history_id : int 
     is_date : bool = None
+    is_wave : Optional[bool] = None

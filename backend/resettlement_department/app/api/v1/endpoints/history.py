@@ -25,17 +25,20 @@ async def get_manual_history():
 async def balance(requirements: BalanceSchema = Body(...)):
     try:
         # Создаем папки если их нет
+        print('requirements', requirements)
         folders = [Path("uploads")]
         for folder in folders:
             folder.mkdir(parents=True, exist_ok=True)
-
         uploads_folder = os.path.join(os.getcwd(), "././uploads/")
-        file_name = f"matching_result_{requirements.history_id}.xlsx"
+        if requirements.is_wave:
+            file_name = f"matching_result_{requirements.history_id}.xlsx"
+        else:
+            file_name = f"matching_result.xlsx"
         output_path = os.path.join(uploads_folder, file_name)
         print(output_path)
         print(os.listdir(uploads_folder))
-        if file_name not in os.listdir(uploads_folder):
-            print("ТО ЧТО ВЫШЕ ЭТО ПАРАМЕТР")
+        print("ТО ЧТО ВЫШЕ ЭТО ПАРАМЕТР")
+        if not requirements.is_wave:
             save_views_to_excel(
                 output_path=output_path,
                 history_id=requirements.history_id,
