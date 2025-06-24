@@ -85,7 +85,8 @@ function TooltipDesc({ name }){
         'table_page': 'Площадки',
         'dashboard': 'Дашборд',
         'aparts': 'Ресурс / Отселяемые дома',
-        'balance': 'Баланс'
+        'balance': 'Баланс',
+        'cin': 'ЦИН'
     } 
 
     return descriptions[name]

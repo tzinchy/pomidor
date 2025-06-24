@@ -7,6 +7,7 @@ class HistoryResponse(BaseModel):
     new_house_addresses: Optional[List[str]]
     status_id: Optional[int]
     is_downloaded: Optional[bool]
+    is_wave: Optional[bool]
 
     class Config:
         from_attributes = True
