@@ -6,7 +6,7 @@ from repository.history_repository import HistoryRepository
 from repository.env_repository import EnvRepository
 from repository.order_repository import OrderRepository
 from repository.offer_repository import OfferRepository
-from repository.cin_repository import CinReposiory
+from repository.cin_repository import CinRepository
 
 from service.apart_service import ApartService
 from service.dashboard_service import DashboardService
@@ -35,5 +35,5 @@ order_service = OrderService(order_repository)
 offer_repository = OfferRepository(project_managment_session)
 offer_service = OfferService(offer_repository)
 
-cin_repository = CinReposiory(project_managment_session)
+cin_repository = CinRepository(project_managment_session)
 cin_service = CinService(cin_repository)
