@@ -20,15 +20,13 @@ def insert_test_data(connection):
             affair_id, kpu_number, fio, people_in_family, cad_num, 
             house_address, apart_number, room_count, floor, living_area, 
             people_v_dele, people_uchet, apart_type, municipal_district, 
-            is_special_needs_marker, is_queue, unom, total_living_area, full_living_area,
-            status_id, created_at, updated_at
+            is_special_needs_marker, is_queue, unom, total_living_area, full_living_area
         )
         VALUES (
             %(affair_id)s, %(kpu_number)s, %(fio)s, %(people_in_family)s, %(cad_num)s,
             %(house_address)s, %(apart_number)s, %(room_count)s, %(floor)s, %(living_area)s,
             %(people_v_dele)s, %(people_uchet)s, %(apart_type)s, %(municipal_district)s,
-            %(is_special_needs_marker)s, %(is_queue)s, %(unom)s, %(total_living_area)s, %(full_living_area)s,
-            8, NOW(), NOW()
+            %(is_special_needs_marker)s, %(is_queue)s, %(unom)s, %(total_living_area)s, %(full_living_area)s
         )
         """
 
@@ -39,12 +37,10 @@ def insert_test_data(connection):
             cursor.execute("""
                 INSERT INTO new_apart (
                     new_apart_id, rsm_apart_id, cad_num, unom, un_kv,
-                    house_address, apart_number, floor, room_count, living_area,
-                    status_id, manual_load_id, history_id, created_at, updated_at
+                    house_address, apart_number, floor, room_count, living_area
                 ) VALUES (
                     %(new_apart_id)s, %(rsm_apart_id)s, %(cad_num)s, %(unom)s, %(un_kv)s,
-                    %(house_address)s, %(apart_number)s, %(floor)s, %(room_count)s, %(living_area)s,
-                    %(status_id)s, %(manual_load_id)s, %(history_id)s, NOW(), NOW()
+                    %(house_address)s, %(apart_number)s, %(floor)s, %(room_count)s, %(living_area)s
                 )
             """, apart)
 
