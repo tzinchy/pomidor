@@ -941,7 +941,7 @@ def match_new_apart_to_family_batch(
                         WHERE affair_id IN (
                             SELECT affair_id 
                             FROM old_apart 
-                            WHERE manual_load_id = (SELECT manual_load_id FROM offer ORDER BY manual_load_id DESC LIMIT 1)
+                            WHERE manual_load_id = (SELECT manual_load_id FROM manual_load ORDER BY manual_load_id DESC LIMIT 1)
                         )
                     ''')
                     cursor.execute('DELETE FROM new_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM new_apart)')
