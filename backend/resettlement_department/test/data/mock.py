@@ -152,26 +152,55 @@ offer_test_data = [
     },
     {
         'offer_id': 2,
-        'affair_id': 1002,
+        'affair_id': 1001,
         'new_aparts': json.dumps({'2002': {'status_id': 2}})
     },
     {
         'offer_id': 3,
-        'affair_id': 1002,
+        'affair_id': 1001,
         'new_aparts': json.dumps({'2003': {'status_id': 2}})
 
     },
     {
         'offer_id': 4,
-        'affair_id': 1002,
+        'affair_id': 1001,
         'new_aparts': json.dumps({'2004': {'status_id': 2}, '2005': {'status_id': 2}})
     },
     {
         'offer_id': 5,
-        'affair_id': 1001,
-        'new_aparts': json.dumps({'2003': {'status_id': 2}})
+        'affair_id': 1002,
+        'new_aparts': json.dumps({'2002': {'status_id': 2}})
     },
     {
+        'offer_id': 6,
+        'affair_id': 1002,
+        'new_aparts': json.dumps({'2001': {'status_id': 2}})
+    },
+    {
+        'offer_id': 8,
+        'affair_id': 1003,
+        'new_aparts': json.dumps({'2002': {'status_id': 2}})
+    },
+    {
+        'offer_id': 9,
+        'affair_id': 1003,
+        'new_aparts': json.dumps({'2001': {'status_id': 2}})
+    },
+    {
+        'offer_id': 10,
+        'affair_id': 1003,
+        'new_aparts': json.dumps({'2003': {'status_id': 2}})
 
-    }
-]
+    },
+    {
+    'offer_id': 11,
+        'affair_id': 1003,
+        'new_aparts': json.dumps({'2004': {'status_id': 3}})
+
+    },
+    {
+    'offer_id': 12,
+        'affair_id': 1003,
+        'new_aparts': json.dumps({'2001': {'status_id': 3}})
+
+    }]

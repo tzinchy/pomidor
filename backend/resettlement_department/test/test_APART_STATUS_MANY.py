@@ -25,7 +25,7 @@ STATUS_NAME_TO_ID = {v: k for k, v in STATUS_MAPPING.items()}
 # Проверенные тестовые данные
 TEST_DATA = [
     {
-        'affair_id': 1002,
+        'affair_id': 1001,
         'offer_id': 4,
         'new_aparts':  [2004, 2005] 
     }
