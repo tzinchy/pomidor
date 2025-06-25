@@ -21,42 +21,55 @@ class OldApartRepository:
             result = await session.execute(text(query))
             return [row[0] for row in result if row[0] is not None]
 
-    async def get_municipal_district(self, districts: list[str]) -> list[str]:
+    async def get_municipal_district(self, districts: list[str] = None) -> list[str]:
         params = {}
         placeholders = []
-        for i, district in enumerate(districts):
-            key = f"district_{i}"
-            placeholders.append(f":{key}")
-            params[key] = district
-        placeholders_str = ", ".join(placeholders)
-        query = f"""
+        query = """
             SELECT DISTINCT municipal_district
             FROM old_apart
-            WHERE district IN ({placeholders_str})
-            ORDER BY municipal_district
         """
+        
+        if districts:  # Исправлено: districts вместо district
+            for i, district in enumerate(districts):
+                key = f"district_{i}"
+                placeholders.append(f":{key}")
+                params[key] = district
+            
+            placeholders_str = ", ".join(placeholders)
+            query += f"""
+                WHERE district IN ({placeholders_str})
+                ORDER BY municipal_district
+            """
+        
         async with self.db() as session:
             result = await session.execute(text(query), params)
-            return [row[0] for row in result if row[0] is not None]
+            return [row[0] for row in result if row[0] is not None] or []
 
-    async def get_house_addresses(self, municipal_districts: list[str]) -> list[str]:
+    async def get_house_addresses(self, municipal_districts: list[str] = None) -> list[str]:
         params = {}
-        placeholders = []
-        for i, municipal in enumerate(municipal_districts):
-            key = f"municipal_{i}"
-            placeholders.append(f":{key}")
-            params[key] = municipal
-        placeholders_str = ", ".join(placeholders)
-        query = f"""
-            SELECT DISTINCT house_address
-            FROM old_apart
-            WHERE municipal_district IN ({placeholders_str})
-            ORDER BY house_address
-        """
-        print(query, params)
+        query = "SELECT DISTINCT house_address FROM old_apart"
+        
+        if municipal_districts:
+            # Создаем список параметров для IN-условия
+            placeholders = [f":municipal_{i}" for i in range(len(municipal_districts))]
+            params = {f"municipal_{i}": dist for i, dist in enumerate(municipal_districts)}
+            
+            # Добавляем условие с пробелом перед WHERE
+            query += f" WHERE municipal_district IN ({', '.join(placeholders)})"
+        
+        # Всегда добавляем сортировку
+        query += " ORDER BY house_address"
+        
+        print("Final query:", query)
+        print("Params:", params)
+        
         async with self.db() as session:
-            result = await session.execute(text(query), params)
-            return [row[0] for row in result if row[0] is not None]
+            try:
+                result = await session.execute(text(query), params)
+                addresses = [row[0] for row in result if row[0] is not None]
+                return addresses if addresses else []
+            except Exception as e:
+                raise e
 
     async def get_district_chain(self):
         async with self.db() as session:
