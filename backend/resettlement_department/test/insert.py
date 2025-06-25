@@ -4,15 +4,8 @@ from config import get_connection
 import json
 from data.mock import old_apart_test_data, new_apart_test_data, offer_test_data
 
-def insert_test_data(connection):
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            TRUNCATE TABLE 
-                old_apart, new_apart, offer, order_decisions, 
-                history, manual_load 
-            RESTART IDENTITY CASCADE
-        """)
-        
+def insert_test_data():
+    connection = get_connection()        
     with connection.cursor() as cursor:
 
         insert_query = """
@@ -55,10 +48,15 @@ def insert_test_data(connection):
 
         connection.commit()
 
+def truncate():
+    connection = get_connection()   
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            TRUNCATE TABLE 
+                old_apart, new_apart, offer, order_decisions, 
+                history, manual_load 
+            RESTART IDENTITY CASCADE
+        """)
+
 if __name__ == '__main__':
-    conn = get_connection()
-    try:
-        insert_test_data(conn)
-        print("Test data inserted successfully")
-    finally:
-        conn.close()
+    insert_test_data()
