@@ -37,7 +37,7 @@ test_cases = [
     # Суд (3) order
     (order_decisions_test_data[3], 7, 7),   # суд -> ждёт одобрения = ждёт одобрения
     (order_decisions_test_data[3], 2, 3),   # суд -> отказ = суд
-    (order_decisions_test_data[3], 1, 1),   # суд -> согласие = суд
+    (order_decisions_test_data[3], 1, 1),   # суд -> согласие = согласие
     (order_decisions_test_data[3], 6, 6),   # суд -> ожидание = ожидание
     (order_decisions_test_data[3], 3, 3),   # суд -> суд = суд
     (order_decisions_test_data[3], 16, 16), # суд -> подготовить смотровой = подготовить смотровой

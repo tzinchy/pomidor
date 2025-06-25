@@ -32,4 +32,4 @@ class OfferService:
             return {"error": str(e)}
         
     async def use_strict_update_offer_status(self):
-        await self.repository.use_strict_update_offer_status()
+        return await self.repository.use_strict_update_offer_status()

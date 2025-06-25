@@ -1,7 +1,7 @@
 from typing import List, Literal, Optional
 
 from fastapi.responses import FileResponse
-
+from fastapi.concurrency import run_in_threadpool
 from depends import apartment_service, order_service, offer_service
 from fastapi import APIRouter, Body, HTTPException, Query
 from schema.apartment import ApartTypeSchema
@@ -148,7 +148,7 @@ async def old_apart():
     """
     Выгрузка таблицы old_apart в Excel файл
     """
-    result = await apartment_service.get_excel_old_apart()
+    result = await  run_in_threadpool(apartment_service.get_excel_old_apart)
     if filepath := result.get("filepath"):
         return FileResponse(
             path=filepath,
@@ -163,7 +163,7 @@ async def new_apart():
     """
     Выгрузка таблицы new_apart в Excel файл
     """
-    result = await apartment_service.get_excel_new_apart()
+    result = await run_in_threadpool(apartment_service.get_excel_new_apart)
     if filepath := result.get("filepath"):
         return FileResponse(
             path=filepath,
@@ -178,7 +178,7 @@ async def order_decisions():
     """
     Выгрузка таблицы order_decisions в Excel файл
     """
-    result = await order_service.get_excel_order()
+    result = await run_in_threadpool(order_service.get_excel_order)
     if filepath := result.get("filepath"):
         return FileResponse(
             path=filepath,
@@ -191,7 +191,7 @@ async def order_decisions():
 @router.get("/offer_result")
 async def offer():
     "Выгрузка таблицы offer в Excel файл"
-    result = await offer_service.get_excel_offer()
+    result = await run_in_threadpool(offer_service.get_excel_offer)
     if filepath := result.get("filepath"):
         return FileResponse(
             path=filepath,

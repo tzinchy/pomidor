@@ -103,5 +103,6 @@ GROUP BY
     old_apart.is_queue,
     old_apart.people_v_dele,
     old_apart.rank,
+    old_apart.floor,
 	affair_timeline.timeline_events,
     old_apart.status_id;
