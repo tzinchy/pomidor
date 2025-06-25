@@ -19,20 +19,21 @@ class NewApartRepository:
             return [row[0] for row in result if row[0] is not None]
 
 
-    async def get_municipal_district(self, districts: list[str]) -> list[str]:
+    async def get_municipal_district(self, districts: list[str] = None) -> list[str]:
         params = {}
         placeholders = []
-        for i, district in enumerate(districts):
-            key = f"district_{i}"
-            placeholders.append(f":{key}")
-            params[key] = district
-        placeholders_str = ", ".join(placeholders)
         query = f"""
             SELECT DISTINCT municipal_district
-            FROM new_apart
-            WHERE district IN ({placeholders_str})
-            ORDER BY municipal_district
-        """
+            FROM new_apart"""
+        if districts:
+            for i, district in enumerate(districts):
+                key = f"district_{i}"
+                placeholders.append(f":{key}")
+                params[key] = district
+            placeholders_str = ", ".join(placeholders)
+
+            query+=f"""WHERE district IN ({placeholders_str})
+            ORDER BY municipal_district"""
         async with self.db() as session:
             result = await session.execute(text(query), params)
             return [row[0] for row in result if row[0] is not None]
