@@ -42,61 +42,35 @@ const ProgressStatusBar = ({ data = {}, handleFilterChange }) => {
   const [isHovered, setIsHovered] = useState(false);
   const popupRef = useRef(null);
   const barRef = useRef(null);
-  const timeoutRef = useRef(null);
 
   useEffect(() => {
-    const handleMouseLeaveBar = (e) => {
-      // Если курсор перешел на всплывающее окно - не закрываем
-      if (e.relatedTarget && popupRef.current?.contains(e.relatedTarget)) {
-        return;
-      }
-      // Иначе закрываем с небольшой задержкой
-      timeoutRef.current = setTimeout(() => {
+    const handleMouseLeave = (e) => {
+      // Проверяем, находится ли курсор за пределами и прогресс-бара, и всплывающего окна
+      if (
+        barRef.current &&
+        popupRef.current &&
+        !barRef.current.contains(e.relatedTarget) &&
+        !popupRef.current.contains(e.relatedTarget)
+      ) {
         setIsHovered(false);
-      }, 100);
-    };
-
-    const handleMouseEnterPopup = () => {
-      clearTimeout(timeoutRef.current);
-    };
-
-    const handleMouseLeavePopup = (e) => {
-      // Если курсор перешел на прогресс-бар - не закрываем
-      if (e.relatedTarget && barRef.current?.contains(e.relatedTarget)) {
-        return;
       }
-      // Иначе закрываем
-      setIsHovered(false);
     };
 
-    const bar = barRef.current;
-    const popup = popupRef.current;
-
-    if (bar) {
-      bar.addEventListener('mouseleave', handleMouseLeaveBar);
-    }
-
-    if (popup) {
-      popup.addEventListener('mouseenter', handleMouseEnterPopup);
-      popup.addEventListener('mouseleave', handleMouseLeavePopup);
+    if (barRef.current) {
+      barRef.current.addEventListener('mouseleave', handleMouseLeave);
     }
 
     return () => {
-      if (bar) {
-        bar.removeEventListener('mouseleave', handleMouseLeaveBar);
+      if (barRef.current) {
+        barRef.current.removeEventListener('mouseleave', handleMouseLeave);
       }
-      if (popup) {
-        popup.removeEventListener('mouseenter', handleMouseEnterPopup);
-        popup.removeEventListener('mouseleave', handleMouseLeavePopup);
-      }
-      clearTimeout(timeoutRef.current);
     };
   }, []);
 
   const handleStatusClick = (status) => {
     if (handleFilterChange) {
       handleFilterChange('status', [status]);
-      setIsHovered(false);
+      setIsHovered(false); // Закрываем окно после выбора
     }
   };
 
@@ -121,10 +95,7 @@ const ProgressStatusBar = ({ data = {}, handleFilterChange }) => {
         <div 
           ref={barRef}
           className="relative h-6 w-full bg-slate-200 rounded-md overflow-hidden flex"
-          onMouseEnter={() => {
-            clearTimeout(timeoutRef.current);
-            setIsHovered(true);
-          }}
+          onMouseEnter={() => setIsHovered(true)}
         >
           {segments.map(({ key, percentage, color, value }) => (
             <div
@@ -150,6 +121,8 @@ const ProgressStatusBar = ({ data = {}, handleFilterChange }) => {
           className={`absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[200px] z-[10000] bg-white border border-slate-200 rounded-lg shadow-lg transition-all duration-200 ${
             isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           <table className="caption-bottom w-full text-sm">
             <tbody className="[&_tr:last-child]:border-0">
