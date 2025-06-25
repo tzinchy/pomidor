@@ -19,23 +19,32 @@ class NewApartRepository:
             return [row[0] for row in result if row[0] is not None]
 
 
-    async def get_municipal_district(self, districts: list[str]) -> list[str]:
+    async def get_municipal_district(self, districts: list[str] = None) -> list[str]:
         params = {}
         placeholders = []
-        for i, district in enumerate(districts):
-            key = f"district_{i}"
-            placeholders.append(f":{key}")
-            params[key] = district
-        placeholders_str = ", ".join(placeholders)
-        query = f"""
+        query = """
             SELECT DISTINCT municipal_district
-            FROM new_apart
-            WHERE district IN ({placeholders_str})
-            ORDER BY municipal_district
-        """
-        async with self.db() as session:
-            result = await session.execute(text(query), params)
-            return [row[0] for row in result if row[0] is not None]
+            FROM new_apart"""
+        
+        if districts:
+            for i, district in enumerate(districts):
+                key = f"district_{i}"
+                placeholders.append(f":{key}")
+                params[key] = district
+            placeholders_str = ", ".join(placeholders)
+            query += f" WHERE district IN ({placeholders_str})"
+        
+        query += " ORDER BY municipal_district"
+        
+        try:
+            async with self.db() as session:
+                result = await session.execute(text(query), params)
+                return [row[0] for row in result if row[0] is not None]
+        except Exception as e:
+            # Log the error for debugging
+            print(f"Database error: {str(e)}")
+            # Return an empty list or raise an HTTPException if you're using FastAPI
+            return []
 
 
     async def get_house_addresses(self, municipal_districts: list[str] | None = None) -> list[str]:
