@@ -309,3 +309,9 @@ class NewApartRepository:
             column_names = list(result_proxy.keys())
             results_list = result_proxy.all()
         return results_list, column_names
+
+    async def get_new_house_address(self):
+        async with self.db() as session: 
+            query = text('SELECT DISTINCT house_address FROM new_apart')
+            result = await session.execute(query)
+            return result.fetchall() or []
