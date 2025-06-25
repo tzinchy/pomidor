@@ -204,3 +204,91 @@ offer_test_data = [
         'new_aparts': json.dumps({'2001': {'status_id': 3}})
 
     }]
+
+order_decisions_test_data = {    
+    3 :
+    {
+        'affair_id': 1002,
+        'order_id': 5002,
+        'is_cancelled': False,
+        'article_code': '97/70',
+        'collateral_type': 'ППд',
+        'accounting_article': '70Переселение',
+        'cad_num': 'test_new2',
+        'unom': 2002,
+        'un_kv': 101,
+        'area_id': json.dumps({'2001' : {}}),
+        'status_id' : 3
+    },
+    
+    5 :
+    {
+        'affair_id': 1002,
+        'order_id': 5003,
+        'is_cancelled': False,
+        'article_code': '7002',
+        'collateral_type': 'ППд',
+        'accounting_article': '70',
+        'cad_num': 'test_new2',
+        'unom': 2002,
+        'un_kv': 101,
+        'area_id': json.dumps({'2001' : {}}),
+        'status_id' : 5
+    },
+    
+    4: 
+    {
+        'affair_id': 1002,
+        'order_id': 5004,
+        'is_cancelled': False,
+        'article_code': '7002',
+        'collateral_type': 'ППк789',
+        'accounting_article': '70Реновация',
+        'cad_num': 'test_new2',  # Проверка поиска по unom/un_kv
+        'unom': 2002,
+        'un_kv': 101,
+        'area_id': json.dumps(None),
+        'status_id' : 4
+    },
+    
+    1:
+    {
+        'affair_id': 1002,
+        'order_id': 5005,
+        'is_cancelled': False,
+        'article_code': '9715',
+        'collateral_type': 'ППв',
+        'accounting_article': '70',
+        'cad_num': 'test_new2',
+        'unom': None, 
+        'un_kv': None,
+        'area_id': json.dumps({'2001' : {}}),
+        'status_id' : 1
+    },
+    9 :  {
+        'affair_id': 1002,
+        'order_id': 5006,
+        'is_cancelled': False,
+        'article_code': '7002',
+        'collateral_type': 'ППв',
+        'accounting_article': '70',
+        'cad_num': 'test_new2',
+        'unom': None, 
+        'un_kv': None,
+        'area_id': json.dumps({'2001' : {}}),
+        'status_id' : 1
+    },
+    10 : {
+        'affair_id': 1002,
+        'order_id': 5006,
+        'is_cancelled': False,
+        'article_code': '7002',
+        'collateral_type': 'ППвк',
+        'accounting_article': '70',
+        'cad_num': 'test_new2',
+        'unom': None, 
+        'un_kv': None,
+        'area_id': json.dumps({'2001' : {}}),
+        'status_id' : 1
+    },
+}

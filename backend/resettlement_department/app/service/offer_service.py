@@ -31,5 +31,5 @@ class OfferService:
         except Exception as e:
             return {"error": str(e)}
         
-    async def get_stat(self):
-        return await self.repository.get_stat()
+    async def use_strict_update_offer_status(self):
+        await self.repository.use_strict_update_offer_status()

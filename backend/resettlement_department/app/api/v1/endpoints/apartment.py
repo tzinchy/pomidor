@@ -37,6 +37,9 @@ async def get_decline_reason(decline_reason_id: int):
 async def get_void_aparts_for_apartment(apart_id: int):
     return await apartment_service.get_void_aparts_for_apartment(apart_id)
 
+@router.get("/actions/get_house_address")
+async def get_house_address(apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов")):
+    return await apartment_service.get_house_address(apart_type=apart_type)
 
 @router.post("/{apart_id}/manual_matching")
 async def manual_matching(

@@ -368,3 +368,22 @@ class ApartService:
             return {"filepath": output_path}
         except Exception as e:
             return {"error": str(e)}
+
+# В сервисе
+    async def get_house_address(self, apart_type: ApartTypeSchema) :
+        try:
+            if apart_type == ApartTypeSchema.OLD:
+                result = await self.old_apart_repository.get_old_house_address()
+                print(result)
+            elif apart_type == ApartTypeSchema.NEW:
+                result = await self.new_apart_repository.get_new_house_address()
+                print(result)
+            else:
+                return []
+            
+            return [row[0] for row in result] if result else []
+        
+        except Exception as e:
+            print(f"Error getting house addresses: {str(e)}")
+            return []
+
