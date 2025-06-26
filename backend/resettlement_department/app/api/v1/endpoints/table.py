@@ -25,14 +25,14 @@ async def get_districts(
 @router.get("/municipal_district")
 async def get_areas(
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
-    district: List[str] = Query(None, description="Список районов"),
+    district: List[str] = Query(..., description="Список районов"),
 ):
     return await apartment_service.get_municipal_districts(apart_type, district)
 
 @router.get("/house_addresses")
 async def get_house_addresses(
     apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
-    municipal_districts: Optional[List[str]] = Query(None),
+    municipal_districts: Optional[List[str]] = Query(...),
 ):
     return await apartment_service.get_house_addresses(apart_type, municipal_districts)
 
