@@ -57,19 +57,6 @@ def process_offers_data(input_file):
                         row['outgoing_offer_number']
                     ))
                 
-                offer_row = cursor.fetchone()
-                if offer_row:
-                    offer_id = offer_row[0]
-                    cursor.execute('''SELECT key::bigint as new_apart_id, (value->'status_id')::integer as status_id FROM offer, jsonb_each(new_aparts) WHERE offer_id = %s''', (offer_id,))
-                    pairs = cursor.fetchall()
-                    for pair in pairs:
-                        cursor.execute('''
-                                        update new_apart 
-                                        SET status_id = (%s) 
-                                        WHERE new_apart_id = (%s)''', (pair[1],pair[0]))
-                    total += 1
-                else:
-                    print(f"No offer_id returned for affair_id {row['affair_id']}")
                 conn.commit() 
                 pbar.update(1)
         
