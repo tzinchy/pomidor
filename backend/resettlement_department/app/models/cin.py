@@ -2,9 +2,10 @@ from sqlalchemy import Column, Integer, String, Date, DateTime, SmallInteger
 from sqlalchemy.sql import func
 from models.base import Base
 
+
 class Cin(Base):
-    __tablename__ = 'cin'
-    
+    __tablename__ = "cin"
+
     cin_id = Column(Integer, primary_key=True, autoincrement=True)
     unom = Column(String, unique=True)
     old_address = Column(String)
@@ -18,6 +19,6 @@ class Cin(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True))
     manual_load_id = Column(SmallInteger)
-    
+
     def __repr__(self):
         return f"<Cin(unom='{self.unom}', cin_address='{self.cin_address}')>"

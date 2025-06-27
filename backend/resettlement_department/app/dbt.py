@@ -1,11 +1,13 @@
-import psycopg2
-from psycopg2.extras import execute_values, Json
-import multiprocessing
 import json
-from functools import partial
-from tqdm import tqdm
+import multiprocessing
 import time
+from functools import partial
+
+import psycopg2
+from psycopg2.extras import Json, execute_values
 from repository.database import get_db_connection as get_db_connection
+from tqdm import tqdm
+
 
 def get_total_count():
     """Получаем общее количество записей для прогресс-бара"""

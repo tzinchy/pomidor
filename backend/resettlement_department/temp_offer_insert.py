@@ -1,9 +1,11 @@
-import pandas as pd
-from tqdm import tqdm
-import psycopg2
 import json
-from datetime import datetime
+
+import pandas as pd
+import psycopg2
+from tqdm import tqdm
+
 from app.core.config import settings
+
 
 def get_db_connection():
     """Создает соединение с БД"""

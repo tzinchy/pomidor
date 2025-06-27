@@ -1,16 +1,15 @@
 import os
 from pathlib import Path
-import pandas as pd
 from typing import List, Optional
 
+import pandas as pd
 from fastapi import HTTPException
 from fastapi import status as http_status
 from fastapi.concurrency import run_in_threadpool
 from handlers.httpexceptions import NotFoundException
 from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
-from schema.apartment import ApartTypeSchema
-from schema.status import Status
+from schema.apartment import ApartType
 
 
 class ApartService:
@@ -24,9 +23,9 @@ class ApartService:
 
     async def get_district(self, apart_type: str):
         try:
-            if apart_type == ApartTypeSchema.OLD:
+            if apart_type == ApartType.OLD:
                 return await self.old_apart_repository.get_districts()
-            elif apart_type == ApartTypeSchema.NEW:
+            elif apart_type == ApartType.NEW:
                 return await self.new_apart_repository.get_districts()
             else:
                 raise NotFoundException
@@ -35,11 +34,11 @@ class ApartService:
 
     async def get_municipal_districts(self, apart_type: str, districts: List[str]):
         try:
-            if apart_type == ApartTypeSchema.OLD:
+            if apart_type == ApartType.OLD:
                 return await self.old_apart_repository.get_municipal_district(
                     districts=districts
                 )
-            elif apart_type == ApartTypeSchema.NEW:
+            elif apart_type == ApartType.NEW:
                 return await self.new_apart_repository.get_municipal_district(
                     districts=districts
                 )
@@ -51,11 +50,11 @@ class ApartService:
     async def get_house_addresses(
         self, apart_type: str, municipal_districts: List[str]
     ):
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             return await self.old_apart_repository.get_house_addresses(
                 municipal_districts
             )
-        elif apart_type == ApartTypeSchema.NEW:
+        elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.get_house_addresses(
                 municipal_districts
             )
@@ -77,7 +76,7 @@ class ApartService:
         is_private: bool = None,
         statuses : List[str] = None
     ):
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             return await self.old_apart_repository.get_apartments(
                 apart_type=apart_type,
                 house_addresses=house_addresses,
@@ -92,7 +91,7 @@ class ApartService:
                 is_private=is_private,
                 statuses=statuses
             )
-        elif apart_type == ApartTypeSchema.NEW:
+        elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.get_apartments(
                 apart_type=apart_type,
                 house_addresses=house_addresses,
@@ -111,19 +110,19 @@ class ApartService:
             raise NotFoundException
 
     async def get_apartment_by_id(self, apart_id: int, apart_type: str):
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             return await self.old_apart_repository.get_apartment_by_id(
                 apart_id=apart_id
             )
-        elif apart_type == ApartTypeSchema.NEW:
+        elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.get_apartment_by_id(
                 apart_id=apart_id
             )
 
     async def get_house_address_with_room_count(self, apart_type: str):
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             result = await self.old_apart_repository.get_house_address_with_room_count()
-        elif apart_type == ApartTypeSchema.NEW:
+        elif apart_type == ApartType.NEW:
             result = await self.new_apart_repository.get_house_address_with_room_count()
         formatted_result = []
         for address, room_counts in result:
@@ -149,11 +148,11 @@ class ApartService:
         )
 
     async def cancell_matching_for_apart(self, apart_id: int, apart_type: str):
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             return await self.old_apart_repository.cancell_matching_apart(
                 apart_id=apart_id
             )
-        elif apart_type == ApartTypeSchema.NEW:
+        elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.cancell_matching_apart(
                 apart_id=apart_id
             )
@@ -163,7 +162,7 @@ class ApartService:
     async def update_status_for_apart(
         self, apart_id: int, new_apart_id: int, status: str, apart_type: str
     ):
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             return await self.old_apart_repository.update_status_for_apart(
                 apart_id=apart_id, new_apart_id=new_apart_id, status=status
             )
@@ -210,9 +209,9 @@ class ApartService:
         notes_list = notes.split(";")
         rsm_note = notes_list.pop(0)
         notes = ";".join(notes_list)
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             return await self.old_apart_repository.set_notes(apart_ids, notes=notes, rsm_note=rsm_note)
-        elif apart_type == ApartTypeSchema.NEW:
+        elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.set_notes(
                 apart_ids=apart_ids, notes=notes, rsm_note=rsm_note
             )
@@ -260,11 +259,11 @@ class ApartService:
         Либо резервирует новые квартиры
         """
         try:
-            if apart_type == ApartTypeSchema.OLD:
+            if apart_type == ApartType.OLD:
                 affected_rows = await self.old_apart_repository.set_status_for_many_old_apart(
                     apart_ids, status=status
                 )
-            elif apart_type == ApartTypeSchema.NEW:
+            elif apart_type == ApartType.NEW:
                     affected_rows = await self.new_apart_repository.set_status_for_many_new_apart(
                         apart_ids, status=status
                     )

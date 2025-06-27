@@ -1,6 +1,7 @@
-from repository.history_repository import HistoryRepository
-import os
 import glob
+import os
+
+from repository.history_repository import HistoryRepository
 
 
 class HistoryService:

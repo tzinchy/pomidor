@@ -4,11 +4,12 @@ from schema.cin import Cin
 
 router = APIRouter(prefix="/cin", tags=["Cin"])
 
-@router.get('')
+
+@router.get("")
 async def get_cin():
     return await cin_service.get_cin()
 
 
-@router.patch('update_cin')
-async def udpate_cin(cin : Cin):
+@router.patch("update_cin")
+async def udpate_cin(cin: Cin):
     return await cin

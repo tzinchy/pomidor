@@ -1,5 +1,7 @@
-from repository.dashboard_repository import DashboardRepository
 from datetime import datetime
+
+from repository.dashboard_repository import DashboardRepository
+
 
 class DashboardService:
     def __init__(self, repository : DashboardRepository):
