@@ -124,6 +124,7 @@ class NewApartRepository:
         area_type: str = "full_living_area",
         is_queue: bool = None,
         is_private: bool = None,
+        statuses : list[str] = None,
     ) -> list[dict]:
         if area_type not in ["full_living_area", "total_living_area", "living_area"]:
             raise ValueError(f"Invalid area type: {area_type}")
@@ -184,6 +185,12 @@ class NewApartRepository:
             params["max_area"] = max_area
         if area_conditions:
             conditions.append(" AND ".join(area_conditions))
+
+        if statuses:
+            print(statuses)
+            statuses = [f"'{i}'" for i in statuses]  # Добавляем кавычки вокруг каждого значения
+            print(statuses)
+            conditions.append(f"status IN ({', '.join(statuses)})")
 
         where_clause = " AND ".join(conditions)
 

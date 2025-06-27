@@ -75,6 +75,7 @@ class ApartService:
         room_count: Optional[List[int]] = None,
         is_queue: bool = None,
         is_private: bool = None,
+        statuses : List[str] = None
     ):
         if apart_type == ApartTypeSchema.OLD:
             return await self.old_apart_repository.get_apartments(
@@ -89,6 +90,7 @@ class ApartService:
                 room_count=room_count,
                 is_queue=is_queue,
                 is_private=is_private,
+                statuses=statuses
             )
         elif apart_type == ApartTypeSchema.NEW:
             return await self.new_apart_repository.get_apartments(
@@ -103,6 +105,7 @@ class ApartService:
                 room_count=room_count,
                 is_queue=is_queue,
                 is_private=is_private,
+                statuses=statuses,
             )
         else:
             raise NotFoundException

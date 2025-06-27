@@ -58,7 +58,8 @@ async def get_apartments(
         example=[1, 2, 3],
     ),
     is_queue: bool = None,
-    is_private: bool = None
+    is_private: bool = None,
+    statuses: Optional[List[str]] = Query(None, example=['Свободная'])
 ):
     try:
         return await apartment_service.get_apartments(
@@ -73,6 +74,7 @@ async def get_apartments(
             room_count=room_count,
             is_queue=is_queue,
             is_private=is_private,
+            statuses=statuses
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -99,7 +101,7 @@ async def get_apartments_one_json(
         example=[1, 2, 3],
     ),
     is_queue: bool = None,
-    is_private: bool = None
+    is_private: bool = None,
 ):
     try:
         return await apartment_service.get_apartments_one_json(

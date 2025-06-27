@@ -105,6 +105,7 @@ class OldApartRepository:
         area_type: str = "full_living_area",
         is_queue: bool = None,
         is_private: bool = None,
+        statuses : List[str] = None
     ) -> list[dict]:
         if area_type not in ["full_living_area", "total_living_area", "living_area"]:
             raise ValueError(f"Invalid area type: {area_type}")
@@ -149,7 +150,7 @@ class OldApartRepository:
                 room_placeholders.append(f":{key}")
                 params[key] = room
             conditions.append(f"room_count IN ({', '.join(room_placeholders)})")
-
+            
         if is_queue is not None and apart_type == ApartTypeSchema.OLD:
             conditions.append("is_queue != 0")
 
@@ -165,6 +166,12 @@ class OldApartRepository:
             params["max_area"] = max_area
         if area_conditions:
             conditions.append(" AND ".join(area_conditions))
+        print(statuses)
+        if statuses:
+            print(statuses)
+            statuses = [f"'{i}'" for i in statuses]  # Добавляем кавычки вокруг каждого значения
+            print(statuses)
+            conditions.append(f"status IN ({', '.join(statuses)})")
 
         where_clause = " AND ".join(conditions)
 
@@ -173,10 +180,12 @@ class OldApartRepository:
         )
 
         query = f"{query} WHERE {where_clause}"
+        print(query)
         async with self.db() as session:
             result = await session.execute(text(query), params)
-
-            return [row._mapping for row in result]
+            clear_result = [row._mapping for row in result]
+            print(len(clear_result))
+            return clear_result
 
     async def get_apartment_by_id(self, apart_id: int) -> dict:
         params = {"apart_id": apart_id}
