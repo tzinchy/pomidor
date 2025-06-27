@@ -110,55 +110,6 @@ class ApartService:
         else:
             raise NotFoundException
 
-    async def get_apartments_one_json(
-        self,
-        apart_type: str,
-        house_addresses: Optional[List[str]] = None,
-        districts: Optional[List[str]] = None,
-        municipal_districts: Optional[List[str]] = None,
-        floor: Optional[int] = None,
-        min_area: Optional[float] = None,
-        max_area: Optional[float] = None,
-        area_type: str = "full_living_area",
-        room_count: Optional[List[int]] = None,
-        is_queue: bool = None,
-        is_private: bool = None,
-    ):
-        if apart_type == ApartTypeSchema.OLD:
-            apart_list = await self.old_apart_repository.get_apartments(
-                apart_type=apart_type,
-                house_addresses=house_addresses,
-                districts=districts,
-                municipal_districts=municipal_districts,
-                floor=floor,
-                min_area=min_area,
-                max_area=max_area,
-                area_type=area_type,
-                room_count=room_count,
-                is_queue=is_queue,
-                is_private=is_private,
-            )
-            apart_dict = {str(apart["affair_id"]): apart for apart in apart_list}
-            return apart_dict
-        elif apart_type == ApartTypeSchema.NEW:
-            apart_list = await self.new_apart_repository.get_apartments(
-                apart_type=apart_type,
-                house_addresses=house_addresses,
-                districts=districts,
-                municipal_districts=municipal_districts,
-                floor=floor,
-                min_area=min_area,
-                max_area=max_area,
-                area_type=area_type,
-                room_count=room_count,
-                is_queue=is_queue,
-                is_private=is_private,
-            )
-            apart_dict = {str(apart["new_apart_id"]): apart for apart in apart_list}
-            return apart_dict
-        else:
-            raise NotFoundException
-
     async def get_apartment_by_id(self, apart_id: int, apart_type: str):
         if apart_type == ApartTypeSchema.OLD:
             return await self.old_apart_repository.get_apartment_by_id(
@@ -371,22 +322,4 @@ class ApartService:
             return {"filepath": output_path}
         except Exception as e:
             return {"error": str(e)}
-
-# В сервисе
-    async def get_house_address(self, apart_type: ApartTypeSchema) :
-        try:
-            if apart_type == ApartTypeSchema.OLD:
-                result = await self.old_apart_repository.get_old_house_address()
-                print(result)
-            elif apart_type == ApartTypeSchema.NEW:
-                result = await self.new_apart_repository.get_new_house_address()
-                print(result)
-            else:
-                return []
-            
-            return [row[0] for row in result] if result else []
-        
-        except Exception as e:
-            print(f"Error getting house addresses: {str(e)}")
-            return []
 
