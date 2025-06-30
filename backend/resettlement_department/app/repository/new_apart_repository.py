@@ -1,10 +1,10 @@
-import pandas as pd
 from core.config import RECOMMENDATION_FILE_PATH
-from schema.apartment import ApartTypeSchema
+from schema.apartment import ApartType
 from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 from utils.sql_reader import async_read_sql_query
-import json
+
+
 
 class NewApartRepository:
     def __init__(self, session_maker: sessionmaker):
@@ -18,43 +18,49 @@ class NewApartRepository:
             result = await session.execute(text(query))
             return [row[0] for row in result if row[0] is not None]
 
-
     async def get_municipal_district(self, districts: list[str] = None) -> list[str]:
         params = {}
         placeholders = []
         query = """
             SELECT DISTINCT municipal_district
-            FROM new_apart"""
-        
-        if districts:
+            FROM new_apart
+        """
+
+        if districts:  # Исправлено: districts вместо district
             for i, district in enumerate(districts):
                 key = f"district_{i}"
                 placeholders.append(f":{key}")
                 params[key] = district
+
             placeholders_str = ", ".join(placeholders)
-            query += f" WHERE district IN ({placeholders_str})"
-        
-        query += " ORDER BY municipal_district"
-        
-        try:
-            async with self.db() as session:
-                result = await session.execute(text(query), params)
-                return [row[0] for row in result if row[0] is not None]
-        except Exception as e:
-            # Log the error for debugging
-            print(f"Database error: {str(e)}")
-            # Return an empty list or raise an HTTPException if you're using FastAPI
-            return []
+            query += f"""
+                WHERE district IN ({placeholders_str})
+                ORDER BY municipal_district
+            """
 
+        async with self.db() as session:
+            result = await session.execute(text(query), params)
+            return [row[0] for row in result if row[0] is not None] or []
 
-    async def get_house_addresses(self, municipal_districts: list[str] | None = None) -> list[str]:
+    async def get_house_addresses(
+        self, municipal_districts: list[str] | None = None, district: list[str] | None = None
+    ) -> list[str]:
         params = {}
         query = """
             SELECT DISTINCT house_address
             FROM new_apart
+            WHERE 1=1
         """
-        
-        # Если переданы муниципальные районы, добавляем условие WHERE
+
+        if district:
+            placeholders = []
+            for i, municipal in enumerate(district):
+                key = f"district_{i}"
+                placeholders.append(f":{key}")
+                params[key] = municipal
+            placeholders_str = ", ".join(placeholders)
+            query += f" AND district IN ({placeholders_str})"     
+            
         if municipal_districts:
             placeholders = []
             for i, municipal in enumerate(municipal_districts):
@@ -62,14 +68,13 @@ class NewApartRepository:
                 placeholders.append(f":{key}")
                 params[key] = municipal
             placeholders_str = ", ".join(placeholders)
-            query += f" WHERE municipal_district IN ({placeholders_str})"
-        
+            query += f" AND municipal_district IN ({placeholders_str})"
+
         query += " ORDER BY house_address"
-        
+
         async with self.db() as session:
             result = await session.execute(text(query), params)
             return [row[0] for row in result if row[0] is not None]
-
 
     async def get_district_chain(self):
         async with self.db() as session:
@@ -124,6 +129,7 @@ class NewApartRepository:
         area_type: str = "full_living_area",
         is_queue: bool = None,
         is_private: bool = None,
+        statuses: list[str] = None,
     ) -> list[dict]:
         if area_type not in ["full_living_area", "total_living_area", "living_area"]:
             raise ValueError(f"Invalid area type: {area_type}")
@@ -169,10 +175,10 @@ class NewApartRepository:
                 params[key] = room
             conditions.append(f"room_count IN ({', '.join(room_placeholders)})")
 
-        if is_queue is not None and apart_type == ApartTypeSchema.OLD:
+        if is_queue is not None and apart_type == ApartType.OLD:
             conditions.append("is_queue != 0")
 
-        if is_private is not None and apart_type == ApartTypeSchema.NEW:
+        if is_private is not None and apart_type == ApartType.NEW:
             conditions.append("is_private != 0")
 
         area_conditions = []
@@ -185,21 +191,31 @@ class NewApartRepository:
         if area_conditions:
             conditions.append(" AND ".join(area_conditions))
 
+        if statuses:
+            print(statuses)
+            statuses = [
+                f"'{i}'" for i in statuses
+            ]  # Добавляем кавычки вокруг каждого значения
+            print(statuses)
+            conditions.append(f"status IN ({', '.join(statuses)})")
+
         where_clause = " AND ".join(conditions)
 
-        query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartTable.sql")
+        query = await async_read_sql_query(
+            f"{RECOMMENDATION_FILE_PATH}/NewApartTable.sql"
+        )
 
         query = f"{query} WHERE {where_clause}"
         async with self.db() as session:
             result = await session.execute(text(query), params)
             return [row._mapping for row in result]
 
-
-            
     async def get_apartment_by_id(self, apart_id: int) -> dict:
         query_params = {"apart_id": apart_id}
 
-        query = await async_read_sql_query(f"{RECOMMENDATION_FILE_PATH}/NewApartById.sql")
+        query = await async_read_sql_query(
+            f"{RECOMMENDATION_FILE_PATH}/NewApartById.sql"
+        )
 
         async with self.db() as session:
             result = await session.execute(text(query), query_params)
@@ -216,7 +232,7 @@ class NewApartRepository:
         async with self.db() as session:
             result = await session.execute(text(query))
             return result.fetchall()
-            
+
     async def cancell_matching_apart(self, apart_id):
         async with self.db() as session:
             try:
@@ -236,7 +252,7 @@ class NewApartRepository:
             except Exception as error:
                 session.rollback()
                 raise error
-            
+
     async def get_entrance_ranges(self, address):
         async with self.db() as session:
             result = await session.execute(
@@ -264,11 +280,11 @@ class NewApartRepository:
                     WHERE
                         entrance_number IS NOT NULL
                 """),
-                {"address": address}
+                {"address": address},
             )
             row = result.fetchone()
             return row[0] if row else {}
-        
+
     async def update_entrance_number_for_many(self, new_apart_ids, entrance_number):
         async with self.db() as session:
             try:
@@ -278,7 +294,7 @@ class NewApartRepository:
                         SET entrance_number = :entrance_number
                         WHERE new_apart_id IN ({", ".join(map(str, new_apart_ids))})
                     """),
-                    {"entrance_number": entrance_number}
+                    {"entrance_number": entrance_number},
                 )
             except Exception as e:
                 await session.rollback()
@@ -286,11 +302,11 @@ class NewApartRepository:
             else:
                 await session.commit()
                 return result.rowcount
-    
+
     async def set_status_for_many_new_apart(self, new_apart_ids: list[int], status):
         async with self.db() as session:
             try:
-                id_placeholder = ', '.join(map(str, new_apart_ids))
+                id_placeholder = ", ".join(map(str, new_apart_ids))
                 result = await session.execute(
                     text(
                         f"""
@@ -318,9 +334,3 @@ class NewApartRepository:
             column_names = list(result_proxy.keys())
             results_list = result_proxy.all()
         return results_list, column_names
-
-    async def get_new_house_address(self):
-        async with self.db() as session: 
-            query = text('SELECT DISTINCT house_address FROM new_apart')
-            result = await session.execute(query)
-            return result.fetchall() or []

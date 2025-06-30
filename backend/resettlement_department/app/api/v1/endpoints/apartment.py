@@ -1,17 +1,20 @@
 from depends import apartment_service
 from fastapi import APIRouter, Body, HTTPException, Query
 from schema.apartment import (
-    ApartTypeSchema,
-    DeclineReasonSchema,
-    ManualMatchingSchema,
-    RematchSchema,
-    SetNotesSchema,
+    ApartType,
+    DeclineReason,
+    ManualMatching,
+    Rematch,
+    SetNotes,
     SetStatusForNewAparts,
-    SetSpecialNeedsSchema,
+    SetSpecialNeeds,
 )
-from schema.status import Status, StatusUpdate
+from schema.status import StatusUpdate
 from service.rematch_service import rematch
-from service.container_service import generate_excel_from_two_dataframes, upload_container
+from service.container_service import (
+    generate_excel_from_two_dataframes,
+    upload_container,
+)
 from service.container_service import update_apart_status
 
 router = APIRouter(prefix="/tables/apartment", tags=["Apartment Action"])
@@ -20,7 +23,7 @@ router = APIRouter(prefix="/tables/apartment", tags=["Apartment Action"])
 @router.get("/{apart_id}")
 async def get_apartment_by_id(
     apart_id: int,
-    apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
+    apart_type: ApartType = Query(..., description="Тип апартаментов"),
 ):
     apartment = await apartment_service.get_apartment_by_id(apart_id, apart_type)
     if not apartment:
@@ -37,14 +40,18 @@ async def get_decline_reason(decline_reason_id: int):
 async def get_void_aparts_for_apartment(apart_id: int):
     return await apartment_service.get_void_aparts_for_apartment(apart_id)
 
+
 @router.get("/actions/get_house_address")
-async def get_house_address(apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов")):
+async def get_house_address(
+    apart_type: ApartType = Query(..., description="Тип апартаментов"),
+):
     return await apartment_service.get_house_address(apart_type=apart_type)
+
 
 @router.post("/{apart_id}/manual_matching")
 async def manual_matching(
     apart_id: int,
-    manual_selection: ManualMatchingSchema = Body(
+    manual_selection: ManualMatching = Body(
         ..., description="Передается списко new_apart_id"
     ),
 ):
@@ -54,14 +61,12 @@ async def manual_matching(
 
 
 @router.post("/{apart_id}/cancell_matching_for_apart")
-async def cancell_matching_for_apart(
-    apart_id: int, apart_type: ApartTypeSchema = Query(...)
-):
+async def cancell_matching_for_apart(apart_id: int, apart_type: ApartType = Query(...)):
     return await apartment_service.cancell_matching_for_apart(apart_id, apart_type)
 
 
 @router.post("/rematch")
-async def rematch_for_family(rematch_list: RematchSchema):
+async def rematch_for_family(rematch_list: Rematch):
     res = await rematch(rematch_list.apartment_ids)
     return {"res": res}
 
@@ -71,12 +76,15 @@ async def change_status(
     apart_id: int,
     new_apart_id: int,
     new_status: StatusUpdate = Body(...),
-    apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
+    apart_type: ApartType = Query(..., description="Тип апартаментов"),
 ):
     try:
         print(new_status.new_status.value)
         await apartment_service.update_status_for_apart(
-            apart_id=apart_id, new_apart_id=new_apart_id, status=new_status.new_status.value, apart_type=apart_type
+            apart_id=apart_id,
+            new_apart_id=new_apart_id,
+            status=new_status.new_status.value,
+            apart_type=apart_type,
         )
         return {"message": "Status updated successfully"}
     except Exception as e:
@@ -86,7 +94,7 @@ async def change_status(
 
 @router.post("/{apart_id}/{new_apart_id}/set_decline_reason")
 async def set_cancell_reason(
-    apart_id: int, new_apart_id: int, decline_reason: DeclineReasonSchema
+    apart_id: int, new_apart_id: int, decline_reason: DeclineReason
 ):
     return await apartment_service.set_decline_reason(
         apart_id=apart_id,
@@ -103,8 +111,8 @@ async def set_cancell_reason(
 @router.post("/{apart_id}/set_notes")
 async def set_notes(
     apart_id: int,
-    apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
-    notes: SetNotesSchema = None,
+    apart_type: ApartType = Query(..., description="Тип апартаментов"),
+    notes: SetNotes = None,
 ):
     """
     Проставляет поле notes и rsm_notes.
@@ -113,12 +121,13 @@ async def set_notes(
 
     Можно использовать вместо этой ручки /tables/apartment/set_notes_for_many
     """
-    return await apartment_service.set_notes_for_many([apart_id], notes.notes, apart_type)
+    return await apartment_service.set_notes_for_many(
+        [apart_id], notes.notes, apart_type
+    )
+
 
 @router.patch("/decline_reason/{decline_reason_id}/update_declined_reason")
-async def update_declined_reason(
-    decline_reason_id: int, decline_reason: DeclineReasonSchema
-):
+async def update_declined_reason(decline_reason_id: int, decline_reason: DeclineReason):
     return await apartment_service.update_decline_reason(
         decline_reason_id=decline_reason_id,
         min_floor=decline_reason.min_floor,
@@ -129,19 +138,21 @@ async def update_declined_reason(
         notes=decline_reason.notes,
     )
 
+
 @router.patch("/set_status_for_many")
 async def set_consent(
-    apart_ids_and_status : SetStatusForNewAparts,
-    apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
+    apart_ids_and_status: SetStatusForNewAparts,
+    apart_type: ApartType = Query(..., description="Тип апартаментов"),
 ):
     print(apart_ids_and_status.apart_ids, apart_ids_and_status.status)
     return await apartment_service.set_status_for_many(
         apart_ids_and_status.apart_ids, apart_ids_and_status.status, apart_type
     )
 
+
 @router.patch("/set_special_needs_for_many")
 async def set_special_needs_for_many(
-    apart_ids_and_marker : SetSpecialNeedsSchema,
+    apart_ids_and_marker: SetSpecialNeeds,
 ):
     """
     Проставляет поле is_special_needs_marker. Это поле int и *не подвержено валидации*
@@ -150,25 +161,27 @@ async def set_special_needs_for_many(
         apart_ids_and_marker.apart_ids, apart_ids_and_marker.is_special_needs_marker
     )
 
+
 @router.patch("/set_notes_for_many")
 async def set_notes_for_many(
     apart_ids: list[int] = Body(..., description="Список apart_id"),
-    apart_type: ApartTypeSchema = Query(..., description="Тип апартаментов"),
-    notes: SetNotesSchema = None,
+    apart_type: ApartType = Query(..., description="Тип апартаментов"),
+    notes: SetNotes = None,
 ):
     """
     Проставляет поле notes и rsm_notes.
     Строка разбивается по ";".
     Первый элемент идет в rsm_notes, остальные в notes
     """
-    return await apartment_service.set_notes_for_many(apart_ids, notes.notes, apart_type)
+    return await apartment_service.set_notes_for_many(
+        apart_ids, notes.notes, apart_type
+    )
 
 
 @router.patch("/push_container_for_aparts")
-def push_container_for_aparts(apart_ids : RematchSchema):
+def push_container_for_aparts(apart_ids: Rematch):
     print(apart_ids.apartment_ids)
     generate_excel_from_two_dataframes(affair_ids=apart_ids.apartment_ids)
     update_apart_status(apart_ids=apart_ids.apartment_ids)
-    file_path = f"./uploads/container_0.xlsx"
+    file_path = "./uploads/container_0.xlsx"
     upload_container(history_id=0, file_path=file_path)
-    

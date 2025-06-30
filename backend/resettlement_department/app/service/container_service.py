@@ -1,12 +1,15 @@
-import requests
 import os
+from datetime import datetime
+from typing import List
+
 import openpyxl
 import pandas as pd
-from repository.database import get_db_connection
-from datetime import datetime
+import requests
 from core.config import RECOMMENDATION_FILE_PATH
+from repository.database import get_db_connection
 from utils.sql_reader import read_sql_query
-from typing import List
+
+
 def upload_container(history_id, file_path):
     """
     Загружает файл на сервер по указанному пути.

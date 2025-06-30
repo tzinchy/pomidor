@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 
+
 class UserNotFoundException(HTTPException):
     def __init__(self, email: str, detail: str = "User not found"):
         detail = f"{detail}: {email}"
@@ -34,10 +35,12 @@ class SomethingWrong(HTTPException):
     def __init__(self, detail: str = "Something wrong!"):
         super().__init__(status_code=404, detail=detail)
 
+
 class NotFoundException(HTTPException):
-    def __init__(self, detail = None):
+    def __init__(self, detail=None):
         super().__init__(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
-    
+
+
 class MethodNotAllowedException(HTTPException):
-    def __init__(self, detail = None):
+    def __init__(self, detail=None):
         super().__init__(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=detail)

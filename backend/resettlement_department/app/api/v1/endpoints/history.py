@@ -1,13 +1,21 @@
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import FileResponse
-from depends import history_service, env_service
-from schema.history import HistoryResponse
-from typing import List
-from service.balance_alghorithm import save_views_to_excel
-from schema.apartment import MatchingSchema, BalanceSchema
 import os
-from service.container_service import generate_excel_from_two_dataframes, upload_container, set_is_uploaded
 from pathlib import Path
+from typing import List
+
+from schema.history import HistoryResponse
+from schema.apartment import Balance
+
+from depends import history_service
+
+from service.balance_alghorithm import save_views_to_excel
+
+from service.container_service import (
+    generate_excel_from_two_dataframes,
+    upload_container,
+    set_is_uploaded,
+)
 from service.container_service import update_apart_status_by_history_id
 
 router = APIRouter(tags=["History"])
@@ -17,15 +25,17 @@ router = APIRouter(tags=["History"])
 async def get_history():
     return await history_service.get_history()
 
+
 @router.get("/manual")
 async def get_manual_history():
     return await history_service.get_manual_load_history()
 
+
 @router.post("/balance")
-async def balance(requirements: BalanceSchema = Body(...)):
+async def balance(requirements: Balance = Body(...)):
     try:
         # Создаем папки если их нет
-        print('requirements', requirements)
+        print("requirements", requirements)
         folders = [Path("uploads")]
         for folder in folders:
             folder.mkdir(parents=True, exist_ok=True)
@@ -33,7 +43,7 @@ async def balance(requirements: BalanceSchema = Body(...)):
         if requirements.is_wave:
             file_name = f"matching_result_{requirements.history_id}.xlsx"
         else:
-            file_name = f"matching_result.xlsx"
+            file_name = "matching_result.xlsx"
         output_path = os.path.join(uploads_folder, file_name)
         print(output_path)
         print(os.listdir(uploads_folder))
@@ -52,7 +62,8 @@ async def balance(requirements: BalanceSchema = Body(...)):
         )
     except Exception as e:
         return {"error": str(e)}
-    
+
+
 @router.post("/container/{history_id}")
 def container(history_id: int):
     try:
@@ -74,7 +85,8 @@ def container(history_id: int):
         )
     except Exception as e:
         return {"error": str(e)}
-    
+
+
 @router.post("/push_container/{history_id}")
 def push_container(history_id: int):
     try:
@@ -87,27 +99,27 @@ def push_container(history_id: int):
         update_apart_status_by_history_id(history_id=history_id)
     except Exception as e:
         return HTTPException(detail=str(e))
-    
+
+
 @router.patch("/approve/{history_id}")
 async def approve_history(history_id: int):
     return await history_service.approve_history(history_id)
+
 
 @router.delete("/clear_matching_files")
 def clear_matching_files():
     try:
         history_service.clear_matching_files()
-        return {'succes' : True}
+        return {"succes": True}
     except Exception as e:
-        HTTPException(status_code=400, detail=e) 
+        HTTPException(status_code=400, detail=e)
+
 
 @router.delete("/delete/{history_id}")
 async def cancell_history(history_id: int):
     return await history_service.cancell_history(history_id)
 
+
 @router.delete("/delete/manual_load/{manual_load_id}")
 async def cancell_history_manual_load(manual_load_id: int):
     return await history_service.cancell_manual_load(manual_load_id)
-
-
-        
-

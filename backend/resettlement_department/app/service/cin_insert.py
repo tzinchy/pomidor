@@ -1,5 +1,6 @@
-import pandas as pd 
+import pandas as pd
 from repository.database import get_db_connection
+
 
 def insert_cin(cin_df : pd.DataFrame) -> int:
     connection = get_db_connection() 

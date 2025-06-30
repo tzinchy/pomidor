@@ -1,11 +1,22 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, BigInteger, text, Numeric, Boolean
-from models.base import Base 
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Date,
+    DateTime,
+    BigInteger,
+    text,
+    Numeric,
+    Boolean,
+)
+from models.base import Base
+
 
 class OldApart(Base):
-    __tablename__ = 'old_apart'
-    
-    created_at = Column(DateTime(timezone=True), server_default=text('now()'))
-    updated_at = Column(DateTime(timezone=True), server_default=text('now()'))
+    __tablename__ = "old_apart"
+
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+    updated_at = Column(DateTime(timezone=True), server_default=text("now()"))
     affair_id = Column(BigInteger, primary_key=True)
     kpu_number = Column(String)
     fio = Column(String)
@@ -32,7 +43,7 @@ class OldApart(Base):
     buying_date = Column(Date)
     is_queue = Column(Integer, default=0)
     queue_square = Column(Numeric(10, 2), default=0)
-    type_of_settlement = Column(String(120), default='Н/А')
+    type_of_settlement = Column(String(120), default="Н/А")
     history_id = Column(Integer)
     rank = Column(Integer)
     kpu_another = Column(String)

@@ -2,10 +2,9 @@ import json
 from typing import List, Optional
 
 from core.config import RECOMMENDATION_FILE_PATH
-from schema.apartment import ApartTypeSchema
+from schema.apartment import ApartType
 from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
-import pandas as pd
 from utils.sql_reader import async_read_sql_query
 
 
@@ -28,41 +27,54 @@ class OldApartRepository:
             SELECT DISTINCT municipal_district
             FROM old_apart
         """
-        
+
         if districts:  # Исправлено: districts вместо district
             for i, district in enumerate(districts):
                 key = f"district_{i}"
                 placeholders.append(f":{key}")
                 params[key] = district
-            
+
             placeholders_str = ", ".join(placeholders)
             query += f"""
                 WHERE district IN ({placeholders_str})
                 ORDER BY municipal_district
             """
-        
+
         async with self.db() as session:
             result = await session.execute(text(query), params)
             return [row[0] for row in result if row[0] is not None] or []
 
-    async def get_house_addresses(self, municipal_districts: list[str] = None) -> list[str]:
+    async def get_house_addresses(
+        self, municipal_districts: list[str] = None, district : list[str] = None,
+    ) -> list[str]:
         params = {}
-        query = "SELECT DISTINCT house_address FROM old_apart"
-        
+        query = "SELECT DISTINCT house_address FROM old_apart WHERE 1=1"
+        if district: 
+            # Создаем список параметров для IN-условия
+            placeholders = [f":district_{i}" for i in range(len(municipal_districts))]
+            params = {
+                f"district_{i}": dist for i, dist in enumerate(municipal_districts)
+            }
+
+            # Добавляем условие с пробелом перед WHERE
+            query += f" AND district IN ({', '.join(placeholders)})"
+
         if municipal_districts:
             # Создаем список параметров для IN-условия
             placeholders = [f":municipal_{i}" for i in range(len(municipal_districts))]
-            params = {f"municipal_{i}": dist for i, dist in enumerate(municipal_districts)}
-            
+            params = {
+                f"municipal_{i}": dist for i, dist in enumerate(municipal_districts)
+            }
+
             # Добавляем условие с пробелом перед WHERE
-            query += f" WHERE municipal_district IN ({', '.join(placeholders)})"
-        
+            query += f" AND municipal_district IN ({', '.join(placeholders)})"
+
         # Всегда добавляем сортировку
         query += " ORDER BY house_address"
-        
+
         print("Final query:", query)
         print("Params:", params)
-        
+
         async with self.db() as session:
             try:
                 result = await session.execute(text(query), params)
@@ -105,6 +117,7 @@ class OldApartRepository:
         area_type: str = "full_living_area",
         is_queue: bool = None,
         is_private: bool = None,
+        statuses: List[str] = None,
     ) -> list[dict]:
         if area_type not in ["full_living_area", "total_living_area", "living_area"]:
             raise ValueError(f"Invalid area type: {area_type}")
@@ -150,10 +163,10 @@ class OldApartRepository:
                 params[key] = room
             conditions.append(f"room_count IN ({', '.join(room_placeholders)})")
 
-        if is_queue is not None and apart_type == ApartTypeSchema.OLD:
+        if is_queue is not None and apart_type == ApartType.OLD:
             conditions.append("is_queue != 0")
 
-        if is_private is not None and apart_type == ApartTypeSchema.NEW:
+        if is_private is not None and apart_type == ApartType.NEW:
             conditions.append("is_private != 0")
 
         area_conditions = []
@@ -165,6 +178,14 @@ class OldApartRepository:
             params["max_area"] = max_area
         if area_conditions:
             conditions.append(" AND ".join(area_conditions))
+        print(statuses)
+        if statuses:
+            print(statuses)
+            statuses = [
+                f"'{i}'" for i in statuses
+            ]  # Добавляем кавычки вокруг каждого значения
+            print(statuses)
+            conditions.append(f"status IN ({', '.join(statuses)})")
 
         where_clause = " AND ".join(conditions)
 
@@ -173,10 +194,12 @@ class OldApartRepository:
         )
 
         query = f"{query} WHERE {where_clause}"
+        print(query)
         async with self.db() as session:
             result = await session.execute(text(query), params)
-
-            return [row._mapping for row in result]
+            clear_result = [row._mapping for row in result]
+            print(len(clear_result))
+            return clear_result
 
     async def get_apartment_by_id(self, apart_id: int) -> dict:
         params = {"apart_id": apart_id}
@@ -483,9 +506,9 @@ class OldApartRepository:
                 if not filtered_params:
                     return {"status": "no_changes"}
 
-                set_clause = ", ".join(
-                    [f"{key} = :{key}" for key in filtered_params.keys()]
-                )
+                set_clause = ", ".join([
+                    f"{key} = :{key}" for key in filtered_params.keys()
+                ])
                 filtered_params["decline_reason_id"] = decline_reason_id
 
                 update_query = text(f"""
@@ -501,7 +524,9 @@ class OldApartRepository:
                 await session.rollback()
                 raise error
 
-    async def set_status_for_many_old_apart(self, old_apart_ids: List[int], status: str):
+    async def set_status_for_many_old_apart(
+        self, old_apart_ids: List[int], status: str
+    ):
         async with self.db() as session:
             try:
                 affair_ids = ", ".join(map(str, old_apart_ids))
@@ -603,7 +628,7 @@ class OldApartRepository:
             except Exception as e:
                 await session.rollback()
                 raise e
-    
+
     async def get_excel_old_apart(self):
         query = text("""SELECT * FROM public.old_apart
                      JOIN status USING (status_id)""")
@@ -615,10 +640,3 @@ class OldApartRepository:
             column_names = list(result_proxy.keys())
             results_list = result_proxy.all()
         return results_list, column_names
-    
-# В репозитории
-    async def get_old_house_address(self):
-        async with self.db() as session:
-            query = text("SELECT DISTINCT house_address FROM old_apart ORDER BY house_address")
-            result = await session.execute(query)
-            return result.fetchall() or []
