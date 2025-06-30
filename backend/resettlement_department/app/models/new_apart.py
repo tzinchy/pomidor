@@ -1,11 +1,20 @@
-from sqlalchemy import Column, Integer, String, Numeric, Boolean, DateTime, BigInteger, text
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Numeric,
+    Boolean,
+    DateTime,
+    BigInteger,
+    text,
+)
 
 from models.base import Base
 
 
 class NewApart(Base):
-    __tablename__ = 'new_apart'
-    
+    __tablename__ = "new_apart"
+
     rsm_apart_id = Column(BigInteger)
     municipal_district = Column(String)
     house_address = Column(String)
@@ -17,8 +26,8 @@ class NewApart(Base):
     rank = Column(Integer)
     history_id = Column(Integer)
     notes = Column(String)
-    created_at = Column(DateTime(timezone=True), server_default=text('now()'))
-    updated_at = Column(DateTime(timezone=True), server_default=text('now()'))
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+    updated_at = Column(DateTime(timezone=True), server_default=text("now()"))
     unom = Column(Integer)
     total_living_area = Column(Numeric(10, 2))
     type_of_settlement = Column(String)
@@ -45,8 +54,3 @@ class NewApart(Base):
     order_id = Column(Integer)
     district_id = Column(Integer)
     district = Column(String(200))
-
-
-
-
-

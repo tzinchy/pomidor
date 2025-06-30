@@ -1,8 +1,6 @@
-import psycopg2
-from datetime import date, timedelta
 from config import get_connection
-import json
-from data.mock import old_apart_test_data, new_apart_test_data, offer_test_data
+from data.mock import new_apart_test_data, offer_test_data, old_apart_test_data
+
 
 def insert_test_data():
     connection = get_connection()        

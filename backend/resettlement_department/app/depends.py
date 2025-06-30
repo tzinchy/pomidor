@@ -1,20 +1,19 @@
-from repository.old_apart_repository import OldApartRepository
-from repository.new_apart_repository import NewApartRepository
+from repository.cin_repository import CinRepository
 from repository.dashboard_repository import DashboardRepository
 from repository.database import project_managment_session
-from repository.history_repository import HistoryRepository
 from repository.env_repository import EnvRepository
-from repository.order_repository import OrderRepository
+from repository.history_repository import HistoryRepository
+from repository.new_apart_repository import NewApartRepository
 from repository.offer_repository import OfferRepository
-from repository.cin_repository import CinRepository
-
+from repository.old_apart_repository import OldApartRepository
+from repository.order_repository import OrderRepository
 from service.apart_service import ApartService
-from service.dashboard_service import DashboardService
-from service.history_service import HistoryService 
-from service.env_service import EnvService
-from service.order_service import OrderService
-from service.offer_service import OfferService
 from service.cin_service import CinService
+from service.dashboard_service import DashboardService
+from service.env_service import EnvService
+from service.history_service import HistoryService
+from service.offer_service import OfferService
+from service.order_service import OrderService
 
 old_apartment_repository = OldApartRepository(project_managment_session)
 new_apartment_repository = NewApartRepository(project_managment_session)

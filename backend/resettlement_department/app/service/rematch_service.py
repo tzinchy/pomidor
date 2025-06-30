@@ -1,7 +1,9 @@
+import json
+
+from fastapi import HTTPException  # Импортируем HTTPException для возврата ошибок
 from repository.database import project_managment_session
 from sqlalchemy import text
-import json 
-from fastapi import HTTPException  # Импортируем HTTPException для возврата ошибок
+
 
 async def rematch(apart_ids):
     cant_offer_aparts_raise_ids = {}

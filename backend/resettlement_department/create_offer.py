@@ -1,6 +1,8 @@
-import pandas as pd
 import json
+
+import pandas as pd
 import psycopg2
+
 from app.core.config import settings
 
 # Категории статусов с правильными сопоставлениями

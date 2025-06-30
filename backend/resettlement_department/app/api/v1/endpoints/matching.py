@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from depends import apartment_service
-from schema.apartment import ApartTypeSchema, MatchingSchema
+from schema.apartment import ApartType, Matching
 from service.alghorithm import match_new_apart_to_family_batch
 from fastapi import File, HTTPException, UploadFile
 from io import BytesIO
@@ -11,21 +11,23 @@ from pathlib import Path
 
 router = APIRouter(prefix="/fisrt_matching", tags=["First Matching and Upload File"])
 
+
 @router.get("/old_apartment/house_addresses")
 async def get_family_structure_house_addresses():
     return await apartment_service.get_house_address_with_room_count(
-        apart_type=ApartTypeSchema.OLD
+        apart_type=ApartType.OLD
     )
+
 
 @router.get("/new_apartment/house_addresses")
 async def get_new_apartment_house_addresses():
     return await apartment_service.get_house_address_with_room_count(
-        apart_type=ApartTypeSchema.NEW
+        apart_type=ApartType.NEW
     )
 
-@router.post("/matching")
-async def start_matching(requirements: MatchingSchema):
 
+@router.post("/matching")
+async def start_matching(requirements: Matching):
     matching_result = match_new_apart_to_family_batch(
         new_selected_districts=requirements.new_apartment_district,
         old_selected_districts=requirements.old_apartment_district,
@@ -35,7 +37,7 @@ async def start_matching(requirements: MatchingSchema):
         old_selected_addresses=requirements.old_apartment_house_address,
         date=requirements.is_date,
     )
-    
+
     return matching_result
 
 
@@ -61,8 +63,8 @@ async def upload_file(file: UploadFile = File(...)):
             new_apart_df=new_apart,
             old_apart_df=old_apart,
             cin_df=cin,
-            file_name=file.filename, 
-            file_path=str(manual_path), 
+            file_name=file.filename,
+            file_path=str(manual_path),
         )
         return {"message": "Файл успешно загружен и обработан"}
 

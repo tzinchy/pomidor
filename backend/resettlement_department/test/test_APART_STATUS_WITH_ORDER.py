@@ -1,8 +1,6 @@
 import pytest
-from insert import insert_test_data, truncate
-from data.mock import order_decisions_test_data
 from config import get_connection
-import json
+from data.mock import order_decisions_test_data
 
 STATUS_MAPPING = {
     1: "Согласие",
