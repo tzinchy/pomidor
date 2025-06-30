@@ -18,6 +18,14 @@ class CinService:
     
     async def create_cin(self, cin):
         try:
-            return await self.repository.create_cin(cin=cin)
+            return await self.repository.create_cin(cin)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=str(e)
+            )
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=e)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )

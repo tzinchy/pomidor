@@ -36,21 +36,18 @@ class CinRepository:  # Fixed typo in class name
             
             await session.execute(stmt)
             await session.commit()
-    
+
     async def create_cin(self, cin):
         async with self.db() as session:
             try:
-                # Convert Pydantic model to dict, exclude unset fields
                 data = cin.dict(exclude_unset=True)
-                
-                # Execute insert
                 stmt = insert(Cin).values(**data).returning(Cin)
                 result = await session.execute(stmt)
-                new_cin = result.scalar_one_or_none()
-                
+                new_cin = result.scalar_one()
                 await session.commit()
                 return new_cin
+                
             except Exception as e:
                 await session.rollback()
-                raise e
+                raise Exception("Ошибка при создании записи") from e
             
