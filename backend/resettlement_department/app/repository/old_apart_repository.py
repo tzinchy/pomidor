@@ -548,7 +548,7 @@ class OldApartRepository:
                         with_offers AS (
                             SELECT DISTINCT o.affair_id
                             FROM offer o
-                            WHERE o.affair_id IN (SELECT affair_id FROM all_affairs)
+                            WHERE o.affair_id IN (SELECT affair_id FROM all_affairs) and ((select status_id from get_status_id) not in (14))
                         ),
                         without_offers AS (
                             SELECT a.affair_id
