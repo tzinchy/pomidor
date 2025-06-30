@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import AirDatepicker from 'air-datepicker';
 import 'air-datepicker/air-datepicker.css';
 import localeRu from 'air-datepicker/locale/ru';
@@ -17,16 +17,23 @@ export default function DateCell(props) {
         ? JSON.parse(datesData) 
         : datesData || {};
       
-      setDates(parsedDates);
+      setDates(prevDates => {
+        const mergedDates = { ...prevDates };
+        for (const key in parsedDates) {
+          if (parsedDates[key]) {
+            const date = parseISO(parsedDates[key]);
+            if (isValid(date)) {
+              mergedDates[key] = parsedDates[key];
+            }
+          }
+        }
+        return mergedDates;
+      });
     } catch (e) {
       console.error('Error processing dates:', e);
       setDates({});
     }
   }, [props.props?.start_dates_by_entrence]);
-
-  useEffect(() => {
-    console.log('dates', dates);
-  }, [dates])
 
   // Инициализация datepicker'ов
   const initDatepicker = (entranceId, inputElement) => {
@@ -36,29 +43,40 @@ export default function DateCell(props) {
       locale: localeRu,
       dateFormat: 'dd.MM.yyyy',
       onSelect({ date: selectedDate }) {
-        const isoDate = format(selectedDate, 'yyyy-MM-dd');
-        const newDates = { 
-          ...dates, // сохраняем все существующие данные
-          [entranceId]: isoDate // обновляем только текущий подъезд
-        };
-        setDates(newDates);
+        if (!selectedDate || !isValid(selectedDate)) return;
         
-        if (props.onChange) {
-          props.onChange(JSON.stringify(newDates));
-        }
+        const isoDate = format(selectedDate, 'yyyy-MM-dd');
+        setDates(prevDates => {
+          const newDates = { 
+            ...prevDates,
+            [entranceId]: isoDate
+          };
+          
+          if (props.onChange) {
+            props.onChange(JSON.stringify(newDates));
+          }
+          
+          return newDates;
+        });
       },
       autoClose: true,
+      buttons: [{
+        content: '×',
+        className: 'custom-close-button',
+        onClick: (dp) => dp.hide()
+      }]
     });
 
-    // Устанавливаем текущую дату если она есть
     if (dates[entranceId]) {
-      datepickerRefs.current[entranceId].selectDate(parseISO(dates[entranceId]));
+      const date = parseISO(dates[entranceId]);
+      if (isValid(date)) {
+        datepickerRefs.current[entranceId].selectDate(date);
+      }
     }
   };
 
   // Получаем список всех подъездов
   const getEntrances = () => {
-    // Используем существующие подъезды из dates или props
     const entranceIds = Object.keys(dates).length > 0 
       ? Object.keys(dates) 
       : props.props.entrances || ['1'];
@@ -66,15 +84,20 @@ export default function DateCell(props) {
     return entranceIds.sort((a, b) => parseInt(a) - parseInt(b));
   };
 
+  const entrances = getEntrances();
+
   return (
     <div className="flex flex-col gap-2">
-      {getEntrances().map(entranceId => (
+      {entrances.map(entranceId => (
         <div key={entranceId} className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0 flex items-center">
             <span className="mr-2">Подъезд {entranceId}:</span>
             <div className="whitespace-nowrap overflow-hidden text-ellipsis">
               {dates[entranceId] 
-                ? format(parseISO(dates[entranceId]), 'dd.MM.yyyy')
+                ? (() => {
+                    const date = parseISO(dates[entranceId]);
+                    return isValid(date) ? format(date, 'dd.MM.yyyy') : 'Неверная дата';
+                  })()
                 : 'Дата не указана'}
             </div>
             <input
@@ -112,6 +135,11 @@ export default function DateCell(props) {
         .air-datepicker {
           box-shadow: 0 4px 12px rgba(0,0,0,0.15);
           border-radius: 8px;
+        }
+        .custom-close-button {
+          font-size: 18px;
+          font-weight: bold;
+          padding: 0 10px;
         }
       `}</style>
     </div>

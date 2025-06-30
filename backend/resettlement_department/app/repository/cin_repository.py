@@ -10,7 +10,7 @@ class CinRepository:  # Fixed typo in class name
 
     async def get_cin(self):
         async with self.db() as session:
-            query = text("SELECT * FROM cin")
+            query = text("SELECT * FROM test_cin")
             logger.query(query)
             result = await session.execute(query)
 
