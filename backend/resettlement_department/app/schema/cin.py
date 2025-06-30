@@ -14,3 +14,14 @@ class Cin(BaseModel):
     otdel: str
     start_date: datetime.date
     phone_otvet: str
+
+class CreateCin(BaseModel):
+    unom: str
+    old_address: str
+    cin_address: str
+    cin_schedule: str
+    dep_schedule: str
+    phone_osmotr: str
+    otdel: str
+    start_date: datetime.date
+    phone_otvet: str
