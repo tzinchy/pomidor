@@ -345,21 +345,28 @@ class OldApartRepository:
     async def update_status_for_apart(self, apart_id, new_apart_id, status):
         async with self.db() as session:
             try:
-                query = text(
-                    await async_read_sql_query(
-                        f"{RECOMMENDATION_FILE_PATH}/UpdateOfferStatusForNewApart.sql"
+                query = text('SELECT status_id FROM new_apart where new_apart_id = :new_apart_id')
+                pre_res = await session.execute(query, {'new_apart_id' : new_apart_id})
+                is_freedom = pre_res.fetchone()[0]
+                print(is_freedom)
+                if is_freedom == 11: 
+                    query = text(
+                        await async_read_sql_query(
+                            f"{RECOMMENDATION_FILE_PATH}/UpdateOfferStatusForNewApart.sql"
+                        )
                     )
-                )
-                result = await session.execute(
-                    query,
-                    {
-                        "status": status,
-                        "apart_id": apart_id,
-                        "new_apart_id": str(new_apart_id),
-                    },
-                )
-                await session.commit()
-                return result
+                    result = await session.execute(
+                        query,
+                        {
+                            "status": status,
+                            "apart_id": apart_id,
+                            "new_apart_id": str(new_apart_id),
+                        },
+                    )
+                    await session.commit()
+                    return [row._mapping for row in result]
+                else: 
+                    return {'status' : 'Квартира уже подобрана другому человеку'}
             except Exception as error:
                 await session.rollback()
                 raise error
