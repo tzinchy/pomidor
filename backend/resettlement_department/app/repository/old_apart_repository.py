@@ -45,10 +45,19 @@ class OldApartRepository:
             return [row[0] for row in result if row[0] is not None] or []
 
     async def get_house_addresses(
-        self, municipal_districts: list[str] = None
+        self, municipal_districts: list[str] = None, district : list[str] = None,
     ) -> list[str]:
         params = {}
-        query = "SELECT DISTINCT house_address FROM old_apart"
+        query = "SELECT DISTINCT house_address FROM old_apart WHERE 1=1"
+        if district: 
+            # Создаем список параметров для IN-условия
+            placeholders = [f":district_{i}" for i in range(len(municipal_districts))]
+            params = {
+                f"district_{i}": dist for i, dist in enumerate(municipal_districts)
+            }
+
+            # Добавляем условие с пробелом перед WHERE
+            query += f" AND district IN ({', '.join(placeholders)})"
 
         if municipal_districts:
             # Создаем список параметров для IN-условия
@@ -58,7 +67,7 @@ class OldApartRepository:
             }
 
             # Добавляем условие с пробелом перед WHERE
-            query += f" WHERE municipal_district IN ({', '.join(placeholders)})"
+            query += f" AND municipal_district IN ({', '.join(placeholders)})"
 
         # Всегда добавляем сортировку
         query += " ORDER BY house_address"

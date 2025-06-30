@@ -48,15 +48,15 @@ class ApartService:
             raise HTTPException(detail=error, status_code=http_status.HTTP_409_CONFLICT)
 
     async def get_house_addresses(
-        self, apart_type: str, municipal_districts: List[str]
+        self, apart_type: str, municipal_districts: List[str] = None, district : List[str] = None
     ):
         if apart_type == ApartType.OLD:
             return await self.old_apart_repository.get_house_addresses(
-                municipal_districts
+                municipal_districts, district=district
             )
         elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.get_house_addresses(
-                municipal_districts
+                municipal_districts, district=district
             )
         else:
             raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)

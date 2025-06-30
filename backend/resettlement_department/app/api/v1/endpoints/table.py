@@ -28,8 +28,8 @@ async def get_districts(
 
 @router.get("/municipal_district")
 async def get_areas(
-    apart_type: ApartType = Query(..., description="Тип апартаментов"),
-    district: List[str] = Query(..., description="Список районов"),
+    apart_type: ApartType = Query(None, description="Тип апартаментов"),
+    district: Optional[List[str]] = Query(None, description="Список районов"),
 ):
     return await apartment_service.get_municipal_districts(apart_type, district)
 
@@ -37,11 +37,54 @@ async def get_areas(
 @router.get("/house_addresses")
 async def get_house_addresses(
     apart_type: ApartType = Query(..., description="Тип апартаментов"),
-    municipal_districts: Optional[List[str]] = Query(...),
+    district : Optional[List[str]] = Query(None,),
+    municipal_districts: Optional[List[str]] = Query(None,),
 ):
-    return await apartment_service.get_house_addresses(apart_type, municipal_districts)
+    return await apartment_service.get_house_addresses(apart_type, municipal_districts, district=district)
 
-
+@router.get("/apartments")
+async def get_apartments(
+    apart_type: ApartType = Query(..., description="Тип квартиры"),
+    house_addresses: Optional[List[str]] = Query(
+        None, description="Список адресов домов"
+    ),
+    districts: Optional[List[str]] = Query(None, description="Фильтр по районам"),
+    municipal_districts: Optional[List[str]] = Query(
+        None, description="Фильтр по муниципальным округам"
+    ),
+    floor: Optional[int] = Query(None, description="Фильтр по этажу"),
+    min_area: Optional[float] = Query(None, description="Минимальная площадь"),
+    max_area: Optional[float] = Query(None, description="Максимальная площадь"),
+    area_type: Literal["full_living_area", "total_living_area", "living_area"] = Query(
+        "full_living_area", description="Тип площади для фильтрации"
+    ),
+    room_count: Optional[List[int]] = Query(
+        None,
+        description="Фильтр по количеству комнат (можно несколько значений)",
+        example=[1, 2, 3],
+    ),
+    is_queue: bool = None,
+    is_private: bool = None,
+    statuses: Optional[List[str]] = Query(None, example=["Свободная"]),
+):
+    try:
+        return await apartment_service.get_apartments(
+            apart_type=apart_type,
+            house_addresses=house_addresses,
+            districts=districts,
+            municipal_districts=municipal_districts,
+            floor=floor,
+            min_area=min_area,
+            max_area=max_area,
+            area_type=area_type,
+            room_count=room_count,
+            is_queue=is_queue,
+            is_private=is_private,
+            statuses=statuses,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
 @router.get("/get_entrance_ranges")
 async def get_entrance_number_new_apart(
     house_address: str = Query(None, description="Адрес дома"),
@@ -114,51 +157,6 @@ async def offer():
 @router.get("/get_stat")
 async def get_stat():
     return await order_service.get_stat()
-
-
-@router.get("/apartments")
-async def get_apartments(
-    apart_type: ApartType = Query(..., description="Тип квартиры"),
-    house_addresses: Optional[List[str]] = Query(
-        None, description="Список адресов домов"
-    ),
-    districts: Optional[List[str]] = Query(None, description="Фильтр по районам"),
-    municipal_districts: Optional[List[str]] = Query(
-        None, description="Фильтр по муниципальным округам"
-    ),
-    floor: Optional[int] = Query(None, description="Фильтр по этажу"),
-    min_area: Optional[float] = Query(None, description="Минимальная площадь"),
-    max_area: Optional[float] = Query(None, description="Максимальная площадь"),
-    area_type: Literal["full_living_area", "total_living_area", "living_area"] = Query(
-        "full_living_area", description="Тип площади для фильтрации"
-    ),
-    room_count: Optional[List[int]] = Query(
-        None,
-        description="Фильтр по количеству комнат (можно несколько значений)",
-        example=[1, 2, 3],
-    ),
-    is_queue: bool = None,
-    is_private: bool = None,
-    statuses: Optional[List[str]] = Query(None, example=["Свободная"]),
-):
-    try:
-        return await apartment_service.get_apartments(
-            apart_type=apart_type,
-            house_addresses=house_addresses,
-            districts=districts,
-            municipal_districts=municipal_districts,
-            floor=floor,
-            min_area=min_area,
-            max_area=max_area,
-            area_type=area_type,
-            room_count=room_count,
-            is_queue=is_queue,
-            is_private=is_private,
-            statuses=statuses,
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
 
 @router.post("/switch_aparts")
 async def switch_apartments(

@@ -1,10 +1,9 @@
-import pandas as pd
 from core.config import RECOMMENDATION_FILE_PATH
-from schema.apartment import ApartTypeSchema
+from schema.apartment import ApartType
 from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 from utils.sql_reader import async_read_sql_query
-import json
+
 
 
 class NewApartRepository:
@@ -24,38 +23,44 @@ class NewApartRepository:
         placeholders = []
         query = """
             SELECT DISTINCT municipal_district
-            FROM new_apart"""
+            FROM new_apart
+        """
 
-        if districts:
+        if districts:  # Исправлено: districts вместо district
             for i, district in enumerate(districts):
                 key = f"district_{i}"
                 placeholders.append(f":{key}")
                 params[key] = district
+
             placeholders_str = ", ".join(placeholders)
-            query += f" WHERE district IN ({placeholders_str})"
+            query += f"""
+                WHERE district IN ({placeholders_str})
+                ORDER BY municipal_district
+            """
 
-        query += " ORDER BY municipal_district"
-
-        try:
-            async with self.db() as session:
-                result = await session.execute(text(query), params)
-                return [row[0] for row in result if row[0] is not None]
-        except Exception as e:
-            # Log the error for debugging
-            print(f"Database error: {str(e)}")
-            # Return an empty list or raise an HTTPException if you're using FastAPI
-            return []
+        async with self.db() as session:
+            result = await session.execute(text(query), params)
+            return [row[0] for row in result if row[0] is not None] or []
 
     async def get_house_addresses(
-        self, municipal_districts: list[str] | None = None
+        self, municipal_districts: list[str] | None = None, district: list[str] | None = None
     ) -> list[str]:
         params = {}
         query = """
             SELECT DISTINCT house_address
             FROM new_apart
+            WHERE 1=1
         """
 
-        # Если переданы муниципальные районы, добавляем условие WHERE
+        if district:
+            placeholders = []
+            for i, municipal in enumerate(district):
+                key = f"district_{i}"
+                placeholders.append(f":{key}")
+                params[key] = municipal
+            placeholders_str = ", ".join(placeholders)
+            query += f" AND district IN ({placeholders_str})"     
+            
         if municipal_districts:
             placeholders = []
             for i, municipal in enumerate(municipal_districts):
@@ -63,7 +68,7 @@ class NewApartRepository:
                 placeholders.append(f":{key}")
                 params[key] = municipal
             placeholders_str = ", ".join(placeholders)
-            query += f" WHERE municipal_district IN ({placeholders_str})"
+            query += f" AND municipal_district IN ({placeholders_str})"
 
         query += " ORDER BY house_address"
 
@@ -170,10 +175,10 @@ class NewApartRepository:
                 params[key] = room
             conditions.append(f"room_count IN ({', '.join(room_placeholders)})")
 
-        if is_queue is not None and apart_type == ApartTypeSchema.OLD:
+        if is_queue is not None and apart_type == ApartType.OLD:
             conditions.append("is_queue != 0")
 
-        if is_private is not None and apart_type == ApartTypeSchema.NEW:
+        if is_private is not None and apart_type == ApartType.NEW:
             conditions.append("is_private != 0")
 
         area_conditions = []
