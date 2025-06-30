@@ -1,5 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
-import axios from "axios";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -7,7 +6,10 @@ import {
   getFilteredRowModel,
   flexRender,
 } from '@tanstack/react-table';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { HOSTLINK } from "../..";
+import DateCell from "./Cells/DateCell";
+import Schedule from "./Cells/Schedule";
 
 export default function CinTable() {
     const [cinData, setCinData] = useState([]);
@@ -16,46 +18,64 @@ export default function CinTable() {
     
     const columns = useMemo(() => [
         {
-            accessorKey: 'old_address',
-            header: 'Адрес отселения',
-        },
-        {
             accessorKey: 'cin_address',
             header: 'Адрес ЦИНа',
+            size: 200, // Фиксированная ширина
         },
         {
-            accessorKey: 'cin_schedule',
-            header: 'График работы ЦИН',
+            accessorKey: 'address',
+            header: 'Адрес заселения',
+            size: 150, // Фиксированная ширина
         },
         {
             accessorKey: 'start_date',
             header: 'Дата начала работы',
+            cell: ({ row }) => <DateCell props={row.original} />,
+            size: 150, // Фиксированная ширина
         },
         {
-            accessorKey: 'phone_osmotr',
-            header: 'Телефон для осмотра',
-        },
-        {
-            accessorKey: 'phone_otvet',
-            header: 'Телефон для ответа',
+            accessorKey: 'cin_schedule',
+            header: 'График работы ЦИН',
+            cell: ({ row, column }) => <Schedule props={row.original} column={column} type={'cin'}/>,
+            size: 100, // Фиксированная ширина
         },
         {
             accessorKey: 'dep_schedule',
             header: 'График работы Департамента в ЦИНе',
+            cell: ({ row, column }) => <Schedule props={row.original} column={column} type={'dep'}/>,
+            size: 150, // Фиксированная ширина
+        },
+        {
+            accessorKey: 'phone_osmotr',
+            header: 'Телефон для осмотра',
+            size: 100, // Фиксированная ширина
+        },
+        {
+            accessorKey: 'phone_otvet',
+            header: 'Телефон для ответа',
+            size: 100, // Фиксированная ширина
         },
         {
             accessorKey: 'otdel',
             header: 'Адрес Отдела',
+            size: 250, // Фиксированная ширина
         },
     ], []);
 
+    const tableContainerRef = useRef(null);
+
     useEffect(() => { 
-        fetch(`${HOSTLINK}/cin`)
-        .then((res) => res.json())
-        .then((fetchedData) => {
-            setCinData(fetchedData);
-            console.log(fetchedData);
-        });
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`${HOSTLINK}/cin`);
+                const fetchedData = await response.json();
+                setCinData(fetchedData);
+            } catch (error) {
+                console.log('Error fetching cin: ', error);
+            }
+        };
+        
+        fetchData();
     }, []);
 
     const table = useReactTable({
@@ -70,25 +90,58 @@ export default function CinTable() {
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
+        defaultColumn: {
+            minSize: 0, // Минимальный размер
+            maxSize: 9999, // Максимальный размер
+        },
     });
-    
+
+    const { rows } = table.getRowModel();
+    const rowVirtualizer = useVirtualizer({
+        count: rows.length,
+        estimateSize: () => 53,
+        getScrollElement: () => tableContainerRef.current,
+        overscan: 10,
+    });
+
+    const virtualRows = rowVirtualizer.getVirtualItems();
+    const totalSize = rowVirtualizer.getTotalSize();
+
+    const paddingTop = virtualRows.length > 0 ? virtualRows[0]?.start || 0 : 0;
+    const paddingBottom = virtualRows.length > 0 
+        ? totalSize - (virtualRows[virtualRows.length - 1]?.end || 0) 
+        : 0;
+
     return (
         <div className="relative flex flex-col lg:flex-row h-[96.8vh] gap-2 bg-neutral-100 w-full transition-all duration-300">
             <div className="relative flex w-full">
-                <div className="overflow-auto rounded-md border absolute left-0 h-full transition-all ease-in-out w-[calc(100%)] scrollbar-custom">
+                <div 
+                    ref={tableContainerRef}
+                    className="overflow-auto rounded-md border absolute left-0 h-full transition-all ease-in-out w-[calc(100%)] scrollbar-custom"
+                >
                     <table className="text-sm caption-bottom w-full border-collapse bg-white transition-all duration-300">
+                        <colgroup>
+                            {columns.map(column => (
+                                <col key={column.accessorKey} style={{ width: `${column.size}px` }} />
+                            ))}
+                        </colgroup>
                         <thead className="border-b shadow text-sm w-full border-collapse backdrop-blur-md sticky top-0 z-30">
                             {table.getHeaderGroups().map(headerGroup => (
                                 <tr key={headerGroup.id}>
                                     {headerGroup.headers.map(header => (
                                         <th 
-                                            key={header.id} 
-                                            className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm font-semibold text-gray-600 tracking-wider cursor-pointer hover:bg-gray-50"
+                                            key={header.id}
+                                            style={{ 
+                                                width: `${header.column.columnDef.size}px`,
+                                                minWidth: `${header.column.columnDef.size}px`,
+                                                maxWidth: `${header.column.columnDef.size}px`
+                                            }}
+                                            className="pl-6 px-2 py-3 border-b-2 border-gray-300 text-left text-sm font-semibold text-gray-600 tracking-wider cursor-pointer hover:bg-gray-50"
                                             onClick={header.column.getToggleSortingHandler()}
                                         >
                                             <div className="flex items-center">
                                                 {flexRender(header.column.columnDef.header, header.getContext())}
-                                                    {header.column.getIsSorted() === 'asc' ? (
+                                                {header.column.getIsSorted() === 'asc' ? (
                                                     <svg
                                                         xmlns="http://www.w3.org/2000/svg"
                                                         width="24"
@@ -103,7 +156,7 @@ export default function CinTable() {
                                                     >
                                                         <path d="m18 15-6-6-6 6"></path>
                                                     </svg>
-                                                    ) : header.column.getIsSorted() === 'desc' ? (
+                                                ) : header.column.getIsSorted() === 'desc' ? (
                                                     <svg
                                                         xmlns="http://www.w3.org/2000/svg"
                                                         width="24"
@@ -118,7 +171,7 @@ export default function CinTable() {
                                                     >
                                                         <path d="m18 15-6-6-6 6"></path>
                                                     </svg>
-                                                    ) : (
+                                                ) : (
                                                     <svg
                                                         xmlns="http://www.w3.org/2000/svg"
                                                         width="24"
@@ -142,11 +195,29 @@ export default function CinTable() {
                             ))}
                         </thead>
                         <tbody>
-                            {table.getRowModel().rows.length ? (
-                                table.getRowModel().rows.map(row => (
-                                    <tr key={row.id} className="border-b hover:bg-gray-50">
+                            {paddingTop > 0 && (
+                                <tr>
+                                    <td colSpan={columns.length} style={{ height: `${paddingTop}px` }} />
+                                </tr>
+                            )}
+
+                            {virtualRows.map(virtualRow => {
+                                const row = rows[virtualRow.index];
+                                return (
+                                    <tr 
+                                        key={row.id} 
+                                        className="border-b hover:bg-gray-50"
+                                    >
                                         {row.getVisibleCells().map(cell => (
-                                            <td key={cell.id} className="p-4 pl-8">
+                                            <td 
+                                                key={cell.id} 
+                                                className="p-4 pl-8"
+                                                style={{ 
+                                                    width: `${cell.column.columnDef.size}px`,
+                                                    minWidth: `${cell.column.columnDef.size}px`,
+                                                    maxWidth: `${cell.column.columnDef.size}px`
+                                                }}
+                                            >
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
                                                     cell.getContext()
@@ -154,8 +225,16 @@ export default function CinTable() {
                                             </td>
                                         ))}
                                     </tr>
-                                ))
-                            ) : (
+                                );
+                            })}
+
+                            {paddingBottom > 0 && (
+                                <tr>
+                                    <td colSpan={columns.length} style={{ height: `${paddingBottom}px` }} />
+                                </tr>
+                            )}
+
+                            {rows.length === 0 && (
                                 <tr>
                                     <td colSpan={columns.length} className="h-24 text-center">
                                         <div className="flex flex-1 justify-center h-64">
