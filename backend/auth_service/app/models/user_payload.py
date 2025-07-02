@@ -14,15 +14,13 @@ class UserPayload(Base):
     last_name = Column(String)
     roles_ids = Column(JSON)  # или ARRAY(Integer) для PostgreSQL
     roles = Column(JSON)      # или ARRAY(String) для PostgreSQL
-    district_group_id = Column(Integer)
-    districts = Column(JSON)   # или ARRAY(String)
+    districts = Column(ARRAY(String))   # или ARRAY(String)
     groups_ids = Column(JSON)  # или ARRAY(Integer)
     groups_info = Column(JSON)
     positions_ids = Column(JSON)  # или ARRAY(Integer)
     positions_info = Column(JSON)
     telegram_token = Column(String)
     telegram_chat_id = Column(String)
-    districts_ids = Column(ARRAY(Integer))
 
     def __repr__(self):
         return f"<UserPayload(user_uuid='{self.user_uuid}', first_name='{self.first_name}')>"

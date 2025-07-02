@@ -10,7 +10,7 @@ from handlers.httpexceptions import NotFoundException
 from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
 from schema.apartment import ApartType
-
+from schema.user import User
 
 class ApartService:
     def __init__(
@@ -21,11 +21,11 @@ class ApartService:
         self.old_apart_repository = old_apart_repository
         self.new_apart_repository = new_apart_repositroy
 
-    async def get_district(self, apart_type: str):
+    async def get_district(self, apart_type: str, user : User):
         try:
             if apart_type == ApartType.OLD:
-                return await self.old_apart_repository.get_districts()
-            elif apart_type == ApartType.NEW:
+                return await self.old_apart_repository.get_districts(user_districts=user.districts)
+            elif apart_type == ApartType.NEW and user.roles_ids in (5):
                 return await self.new_apart_repository.get_districts()
             else:
                 raise NotFoundException

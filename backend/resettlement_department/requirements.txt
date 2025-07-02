@@ -74,3 +74,4 @@ webdriver-manager==4.0.2
 websocket-client==1.8.0
 websockets==14.1
 wsproto==1.2.0
+aiohttp==3.13.5

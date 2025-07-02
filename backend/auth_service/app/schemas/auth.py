@@ -31,7 +31,7 @@ class CreateUser(BaseModel):
     login : str
     email : str
     password : str
-    district_group_id : Optional[int] = None 
+    districts : Optional[str] = None 
     roles_ids : List[int]
     groups_ids : List[int] 
     position_ids : List[int]

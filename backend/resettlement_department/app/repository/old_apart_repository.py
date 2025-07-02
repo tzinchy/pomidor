@@ -12,13 +12,31 @@ class OldApartRepository:
     def __init__(self, session_maker: sessionmaker):
         self.db = session_maker
 
-    async def get_districts(self) -> list[str]:
-        async with self.db() as session:
-            query = """SELECT DISTINCT district 
+    async def get_districts(self, user_districts: list[str]) -> list[str]:
+        if not user_districts:
+            return []
+
+        try:
+            async with self.db() as session:
+                # Создаём список именованных параметров для SQL-запроса
+                params = {f"district_{i}": district for i, district in enumerate(user_districts)}
+                
+                # Формируем строку с плейсхолдерами (:district_0, :district_1, ...)
+                placeholders = ", ".join(f":{key}" for key in params.keys())
+                
+                query = f"""
+                    SELECT DISTINCT district 
                     FROM old_apart
-                    ORDER BY district"""
-            result = await session.execute(text(query))
-            return [row[0] for row in result if row[0] is not None]
+                    WHERE district IN ({placeholders})
+                    ORDER BY district
+                """
+                
+                result = await session.execute(text(query), params)
+                return [row[0] for row in result if row[0] is not None]
+
+        except Exception as e:
+            # Логируем ошибку и возвращаем пустой список или пробрасываем HTTPException
+            print(f"Database error: {str(e)}")
 
     async def get_municipal_district(self, districts: list[str] = None) -> list[str]:
         params = {}

@@ -20,7 +20,7 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     roles = Column(ARRAY(Integer))
-    district_group_id = Column(Integer, ForeignKey('auth.district_group.district_group_id'))
+    districts = Column(ARRAY(String))
     groups = Column(ARRAY(Integer))
     positions = Column(ARRAY(Integer))
     fio = Column(String)

@@ -3,8 +3,10 @@ from typing import List, Literal, Optional
 from fastapi.responses import FileResponse
 
 from depends import apartment_service, order_service, offer_service
-from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from schema.apartment import ApartType
+from schema.user import User
+from service.auth_serivce import get_user
 
 router = APIRouter(prefix="/tables", tags=["Table and Tree"])
 
@@ -22,8 +24,9 @@ async def get_current_apart_type(
 @router.get("/district")
 async def get_districts(
     apart_type: ApartType = Query(..., description="Тип апартаментов"),
-):
-    return await apartment_service.get_district(apart_type)
+    user : User = Depends(get_user)
+):  
+    return await apartment_service.get_district(apart_type, user)
 
 
 @router.get("/municipal_district")

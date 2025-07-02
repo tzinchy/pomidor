@@ -103,15 +103,15 @@ class AuthRepository:
         roles_ids: List[int],
         groups_ids: List[int],
         position_ids: List[int],
-        district_group_id: Optional[int] = None,
+        districts : List[str]
     ):
         async with self.db() as session:
             query = text("""
                 INSERT INTO auth.user 
                 (first_name, middle_name, last_name, login, email, password, 
-                roles_ids, groups_ids, positions_ids, district_group_id) 
+                roles_ids, groups_ids, positions_ids, districts) 
                 VALUES (:first_name, :middle_name, :last_name, :login, :email, :password, 
-                        :roles_ids, :groups_ids, :positions_ids, :district_group_id)
+                        :roles_ids, :groups_ids, :positions_ids, :districts)
             """)
             params = {
                 "first_name": first_name,
@@ -123,7 +123,7 @@ class AuthRepository:
                 "roles_ids": roles_ids,  # Просто передаём список Python
                 "groups_ids": groups_ids,
                 "positions_ids": position_ids,
-                "district_group_id": district_group_id,
+                "districts": districts,
             }
             await session.execute(query, params)
             await session.commit()
