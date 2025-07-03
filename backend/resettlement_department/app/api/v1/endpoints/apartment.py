@@ -80,13 +80,13 @@ async def change_status(
 ):
     try:
         print(new_status.new_status.value)
-        await apartment_service.update_status_for_apart(
+        res = await apartment_service.update_status_for_apart(
             apart_id=apart_id,
             new_apart_id=new_apart_id,
             status=new_status.new_status.value,
             apart_type=apart_type,
         )
-        return {"message": "Status updated successfully"}
+        return res
     except Exception as e:
         print(e)
         raise HTTPException(status_code=400, detail=str(e))

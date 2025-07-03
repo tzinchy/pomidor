@@ -11,5 +11,3 @@ class AdminService:
         async with self.db() as session:
             await session.add(User(**user_config))
 
-    async def get_groups(self): 
-        async with self.repository.

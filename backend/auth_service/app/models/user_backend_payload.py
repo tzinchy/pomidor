@@ -12,13 +12,12 @@ class UserBackendPayload(Base):
     
     user_uuid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     roles_ids = Column(JSON)
-    district_group_id = Column(Integer)
     groups_ids = Column(JSON)
     positions_ids = Column(JSON)
     telegram_token = Column(String)
     telegram_chat_id = Column(String)
-    districts_ids = Column(ARRAY(Integer))
-
+    districts = Column(ARRAY(String))
+    
     def as_dict(self):
         """Convert model instance to dictionary with serializable types"""
         result = {}

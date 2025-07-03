@@ -11,8 +11,8 @@ class UserFrontendPayload(Base):
     first_name = Column(String)
     middle_name = Column(String)
     last_name = Column(String)
-    roles = Column(ARRAY(String))  # Исправлено: Column(ARRAY(String))
-    districts = Column(ARRAY(String))  # Исправлено: Column(ARRAY(String))
+    roles = Column(ARRAY(String)) 
+    districts = Column(ARRAY(String))  
     groups_info = Column(JSON)
     positions_info = Column(JSON)
 

@@ -69,4 +69,4 @@ class HistoryRepository:
                 )
             )
             rows = result.fetchall()
-            return [row.mapping for row in rows]
+            return [row._mapping for row in rows]
