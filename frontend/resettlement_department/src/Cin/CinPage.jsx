@@ -1,6 +1,7 @@
 import Aside from "../Navigation/Aside";
+import CinTable from "./CinTable/CinTable";
 
-export default function HistoryPage(){
+export default function CinPage(){
     return (
         <div className="bg-muted/60 flex min-h-screen w-full flex-col">
             <Aside />
