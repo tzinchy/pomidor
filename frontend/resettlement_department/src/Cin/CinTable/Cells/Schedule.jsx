@@ -2,8 +2,6 @@ import { useState, useCallback } from 'react';
 
 export default function Schedule({ props, column, type=null }) {
   const [value, setValue] = useState((type === 'cin' ? props.cin_schedule : props.dep_schedule) || '');
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState('');
 
   // Получаем размер колонки из пропсов
   const columnWidth = column?.getSize() || 'auto';

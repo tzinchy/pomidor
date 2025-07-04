@@ -19,12 +19,48 @@ export default function ChangeCin({ props: rowData }) {
     const [dates, setDates] = useState({});
     const [entrances, setEntrances] = useState(['1']);
     const [newEntranceNumber, setNewEntranceNumber] = useState('');
+    const [phoneParts, setPhoneParts] = useState({
+        osmotr: { main: '', ext: '' },
+        otvet: { main: '', ext: '' }
+    });
 
     // Форматирование даты в YYYY-MM-DD
     const formatDateToShort = (dateString) => {
         if (!dateString) return '';
         const date = new Date(dateString);
         return format(date, 'yyyy-MM-dd');
+    };
+
+    // Разбор телефонного номера на основную часть и добавочную
+    const parsePhoneNumber = (phone) => {
+        if (!phone) return { main: '', ext: '' };
+        const parts = phone.split('доп.');
+        return {
+            main: parts[0].trim(),
+            ext: parts[1] ? parts[1].trim() : ''
+        };
+    };
+
+    // Форматирование телефона при вводе
+    const formatPhoneInput = (value) => {
+        // Оставляем только цифры
+        const cleanedValue = value.replace(/\D/g, '');
+        
+        // Форматируем как +7 (XXX) XXX XX XX
+        let formattedValue = '';
+        if (cleanedValue.length > 0) {
+            formattedValue = `+7 (${cleanedValue.substring(1, 4)}`;
+            if (cleanedValue.length > 4) {
+                formattedValue += `) ${cleanedValue.substring(4, 7)}`;
+            }
+            if (cleanedValue.length > 7) {
+                formattedValue += `-${cleanedValue.substring(7, 9)}`;
+            }
+            if (cleanedValue.length > 9) {
+                formattedValue += `-${cleanedValue.substring(9, 11)}`;
+            }
+        }
+        return formattedValue;
     };
 
     // Синхронизация dates с formData с правильным форматом даты
@@ -71,6 +107,10 @@ export default function ChangeCin({ props: rowData }) {
                 ? Object.keys(validDates).sort((a, b) => parseInt(a) - parseInt(b))
                 : rowData.entrances || ['1'];
 
+            // Разбираем телефонные номера
+            const osmotrPhone = parsePhoneNumber(rowData.phone_osmotr || '');
+            const otvetPhone = parsePhoneNumber(rowData.phone_otvet || '');
+
             setFormData({
                 cin_address: rowData.cin_address || '',
                 address: rowData.address || '',
@@ -80,6 +120,11 @@ export default function ChangeCin({ props: rowData }) {
                 cin_schedule: rowData.cin_schedule || '',
                 dep_schedule: rowData.dep_schedule || '',
                 start_dates_by_entrence: validDates
+            });
+
+            setPhoneParts({
+                osmotr: osmotrPhone,
+                otvet: otvetPhone
             });
             
             setDates(validDates);
@@ -139,6 +184,57 @@ export default function ChangeCin({ props: rowData }) {
         });
     };
 
+    // Обработчик изменения основного телефона
+    const handlePhoneChange = (e, phoneType) => {
+        const value = e.target.value;
+        const formattedValue = formatPhoneInput(value);
+        
+        setPhoneParts(prev => {
+            const newParts = {
+                ...prev,
+                [phoneType]: {
+                    ...prev[phoneType],
+                    main: formattedValue
+                }
+            };
+            
+            // Обновляем formData
+            setFormData(prevFormData => ({
+                ...prevFormData,
+                [`phone_${phoneType}`]: newParts[phoneType].ext 
+                    ? `${newParts[phoneType].main} доп. ${newParts[phoneType].ext}`
+                    : newParts[phoneType].main
+            }));
+            
+            return newParts;
+        });
+    };
+
+    // Обработчик изменения добавочного номера
+    const handlePhoneExtChange = (e, phoneType) => {
+        const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+        
+        setPhoneParts(prev => {
+            const newParts = {
+                ...prev,
+                [phoneType]: {
+                    ...prev[phoneType],
+                    ext: value
+                }
+            };
+            
+            // Обновляем formData
+            setFormData(prevFormData => ({
+                ...prevFormData,
+                [`phone_${phoneType}`]: value 
+                    ? `${newParts[phoneType].main} доп. ${value}`
+                    : newParts[phoneType].main
+            }));
+            
+            return newParts;
+        });
+    };
+
     const handleSubmit = () => {
         console.log('Отправляемые данные:', formData);
         // Здесь будет логика отправки данных на сервер
@@ -159,6 +255,7 @@ export default function ChangeCin({ props: rowData }) {
             });
         }
     }, [isModalOpen, entrances, dates]);
+
     return (
         <>
             <button
@@ -222,13 +319,26 @@ export default function ChangeCin({ props: rowData }) {
                                 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Телефон для осмотра</label>
-                                    <input
-                                        name="phone_osmotr"
-                                        type="text"
-                                        value={formData.phone_osmotr}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    />
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={phoneParts.osmotr.main}
+                                            onChange={(e) => handlePhoneChange(e, 'osmotr')}
+                                            placeholder="+7 (XXX) XXX XX XX"
+                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        />
+                                        <div className="flex items-center">
+                                            <span className="px-2 text-gray-500">доп.</span>
+                                            <input
+                                                type="text"
+                                                value={phoneParts.osmotr.ext}
+                                                onChange={(e) => handlePhoneExtChange(e, 'osmotr')}
+                                                placeholder="XXXX"
+                                                maxLength={4}
+                                                className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -254,16 +364,28 @@ export default function ChangeCin({ props: rowData }) {
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                     />
                                 </div>
-                                
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Телефон для ответа</label>
-                                    <input
-                                        name="phone_otvet"
-                                        type="text"
-                                        value={formData.phone_otvet}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    />
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={phoneParts.otvet.main}
+                                            onChange={(e) => handlePhoneChange(e, 'otvet')}
+                                            placeholder="+7 (XXX) XXX XX XX"
+                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        />
+                                        <div className="flex items-center">
+                                            <span className="px-2 text-gray-500">доп.</span>
+                                            <input
+                                                type="text"
+                                                value={phoneParts.otvet.ext}
+                                                onChange={(e) => handlePhoneExtChange(e, 'otvet')}
+                                                placeholder="XXXX"
+                                                maxLength={4}
+                                                className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -337,7 +459,7 @@ export default function ChangeCin({ props: rowData }) {
                             </button>
                             <button
                                 type="button"
-                                onClick={console.log('formData', formData)}
+                                onClick={handleSubmit}
                                 className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                             >
                                 Сохранить
