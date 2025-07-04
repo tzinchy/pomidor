@@ -10,6 +10,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { HOSTLINK } from "../..";
 import DateCell from "./Cells/DateCell";
 import Schedule from "./Cells/Schedule";
+import ChangeCin from "./ChangeCin";
 
 export default function CinTable() {
     const [cinData, setCinData] = useState([]);
@@ -20,7 +21,7 @@ export default function CinTable() {
         {
             accessorKey: 'cin_address',
             header: 'Адрес ЦИНа',
-            size: 200, // Фиксированная ширина
+            size: 150, // Фиксированная ширина
         },
         {
             accessorKey: 'address',
@@ -37,7 +38,7 @@ export default function CinTable() {
             accessorKey: 'cin_schedule',
             header: 'График работы ЦИН',
             cell: ({ row, column }) => <Schedule props={row.original} column={column} type={'cin'}/>,
-            size: 100, // Фиксированная ширина
+            size: 150, // Фиксированная ширина
         },
         {
             accessorKey: 'dep_schedule',
@@ -59,6 +60,12 @@ export default function CinTable() {
             accessorKey: 'otdel',
             header: 'Адрес Отдела',
             size: 250, // Фиксированная ширина
+        },
+        {
+            id: 'change',
+            enableSorting: false,
+            cell: ({ row }) => <ChangeCin props={row.original} />,
+            size: 50, // Фиксированная ширина
         },
     ], []);
 
@@ -128,7 +135,9 @@ export default function CinTable() {
                         <thead className="border-b shadow text-sm w-full border-collapse backdrop-blur-md sticky top-0 z-30">
                             {table.getHeaderGroups().map(headerGroup => (
                                 <tr key={headerGroup.id}>
-                                    {headerGroup.headers.map(header => (
+                                    {headerGroup.headers.map(header => {
+                                        const isSelectColumn = header.id === 'change';
+                                        return (
                                         <th 
                                             key={header.id}
                                             style={{ 
@@ -141,56 +150,61 @@ export default function CinTable() {
                                         >
                                             <div className="flex items-center">
                                                 {flexRender(header.column.columnDef.header, header.getContext())}
-                                                {header.column.getIsSorted() === 'asc' ? (
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="24"
-                                                        height="24"
-                                                        viewBox="0 0 24 24"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        strokeWidth="2"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        className="lucide lucide-chevron-up h-4 w-4 -translate-x-[-25%] transition-transform scale-100"
-                                                    >
-                                                        <path d="m18 15-6-6-6 6"></path>
-                                                    </svg>
-                                                ) : header.column.getIsSorted() === 'desc' ? (
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="24"
-                                                        height="24"
-                                                        viewBox="0 0 24 24"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        strokeWidth="2"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        className="lucide lucide-chevron-up h-4 w-4 -translate-x-[-25%] transition-transform rotate-180 scale-100"
-                                                    >
-                                                        <path d="m18 15-6-6-6 6"></path>
-                                                    </svg>
-                                                ) : (
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="24"
-                                                        height="24"
-                                                        viewBox="0 0 24 24"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        strokeWidth="2"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        className="lucide lucide-chevrons-up-down text-muted-foreground/40 group-hover:text-muted-foreground ml-1 h-4 w-4 transition-transform scale-100"
-                                                    >
-                                                        <path d="m7 15 5 5 5-5"></path>
-                                                        <path d="m7 9 5-5 5 5"></path>
-                                                    </svg>
+                                                {!isSelectColumn && (
+                                                    <>
+                                                        {header.column.getIsSorted() === 'asc' ? (
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                width="24"
+                                                                height="24"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                className="lucide lucide-chevron-up h-4 w-4 -translate-x-[-25%] transition-transform scale-100"
+                                                            >
+                                                                <path d="m18 15-6-6-6 6"></path>
+                                                            </svg>
+                                                        ) : header.column.getIsSorted() === 'desc' ? (
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                width="24"
+                                                                height="24"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                className="lucide lucide-chevron-up h-4 w-4 -translate-x-[-25%] transition-transform rotate-180 scale-100"
+                                                            >
+                                                                <path d="m18 15-6-6-6 6"></path>
+                                                            </svg>
+                                                        ) : (
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                width="24"
+                                                                height="24"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                className="lucide lucide-chevrons-up-down text-muted-foreground/40 group-hover:text-muted-foreground ml-1 h-4 w-4 transition-transform scale-100"
+                                                            >
+                                                                <path d="m7 15 5 5 5-5"></path>
+                                                                <path d="m7 9 5-5 5 5"></path>
+                                                            </svg>
+                                                        )}
+                                                    </>
                                                 )}
+                                                
                                             </div>
                                         </th>
-                                    ))}
+                                    )})}
                                 </tr>
                             ))}
                         </thead>
