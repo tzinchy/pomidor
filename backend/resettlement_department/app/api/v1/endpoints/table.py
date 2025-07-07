@@ -24,9 +24,8 @@ async def get_current_apart_type(
 @router.get("/district")
 async def get_districts(
     apart_type: ApartType = Query(..., description="Тип апартаментов"),
-    user : User = Depends(get_user)
 ):  
-    return await apartment_service.get_district(apart_type, user)
+    return await apartment_service.get_district(apart_type)
 
 
 @router.get("/municipal_district")

@@ -12,31 +12,31 @@ class OldApartRepository:
     def __init__(self, session_maker: sessionmaker):
         self.db = session_maker
 
-    async def get_districts(self, user_districts: list[str]) -> list[str]:
-        if not user_districts:
-            return []
-
+    async def get_districts(self, user_districts: Optional[list[str]] = None) -> list[str]:
         try:
             async with self.db() as session:
-                # Создаём список именованных параметров для SQL-запроса
-                params = {f"district_{i}": district for i, district in enumerate(user_districts)}
+                # Base query
+                query = "SELECT DISTINCT district FROM old_apart"
+                params = {}
                 
-                # Формируем строку с плейсхолдерами (:district_0, :district_1, ...)
-                placeholders = ", ".join(f":{key}" for key in params.keys())
+                # Add WHERE clause if districts are provided
+                if user_districts:
+                    params = {f"district_{i}": district 
+                            for i, district in enumerate(user_districts)}
+                    placeholders = ", ".join(f":{key}" for key in params.keys())
+                    query += f" WHERE district IN ({placeholders})"
                 
-                query = f"""
-                    SELECT DISTINCT district 
-                    FROM old_apart
-                    WHERE district IN ({placeholders})
-                    ORDER BY district
-                """
+                # Always add ORDER BY
+                query += " ORDER BY district"
                 
-                result = await session.execute(text(query), params)
-                return [row[0] for row in result if row[0] is not None]
+                # Execute query
+                result = await session.execute(text(query), params or None)
+                districts = [row[0] for row in result if row[0] is not None]
+                return districts
 
         except Exception as e:
-            # Логируем ошибку и возвращаем пустой список или пробрасываем HTTPException
-            print(f"Database error: {str(e)}")
+            print(f"Database error in get_districts: {str(e)}", exc_info=True)
+            raise e
 
     async def get_municipal_district(self, districts: list[str] = None) -> list[str]:
         params = {}
