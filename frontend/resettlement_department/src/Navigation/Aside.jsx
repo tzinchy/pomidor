@@ -10,6 +10,8 @@ export default function Aside() {
         <LinkButton name="table_page" />
         <LinkButton name="aparts" />
         <LinkButton name="balance" />
+        <LinkButton name="cin" />
+        
         <UpdateDataButton />
       </nav>
     </aside>

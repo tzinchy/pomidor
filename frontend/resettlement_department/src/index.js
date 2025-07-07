@@ -14,6 +14,7 @@ import PrivateRoute from './Auth/PrivateRoute';
 import ParentChildTable from './Test';
 import { data } from './MessegeData';
 import ChessGrid from './ChessGrid';
+import CinPage from './Cin/CinPage';
 
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement); 
@@ -37,6 +38,7 @@ root.render(
       <Route path="/aparts" element={<ApartPage />} />
       <Route path="/balance" element={<BalancePage />} />
       <Route path="/history" element={<HistoryPage />} />
+      <Route path="/cin" element={<CinPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/test" element={<ChessGrid />} />
     </Routes>
