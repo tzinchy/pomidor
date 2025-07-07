@@ -65,7 +65,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [isEntranceDialogOpen, setIsEntranceDialogOpen] = useState(false);
   const [entranceInput, setEntranceInput] = useState('');
   const [pendingAction, setPendingAction] = useState(null);
-
+  const [minApartNumber, setMinApartNumber] = useState([]);
+  const [maxApartNumber, setMaxApartNumber] = useState([]);
 
   const error_toast = () => {
     return toast.error('Ошибка', {
@@ -309,6 +310,20 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         return valid;
       });
     }
+
+    // Фильтрация по этажу
+    if (minApartNumber || maxApartNumber ) {
+      filtered = filtered.filter((item) => {
+        const apart_number = parseFloat(item.apart_number);
+        const min = parseFloat(minApartNumber);
+        const max = parseFloat(maxApartNumber);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && apart_number >= min;
+        if (!isNaN(max)) valid = valid && apart_number <= max;
+        return valid;
+      });
+    }
     
 
       // Применяем каждый фильтр
@@ -337,7 +352,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       });
 
       setFilteredApartments(filtered);
-  }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor, minPeople, maxPeople, searchApartQuery, searchFioQuery, searchNotesQuery]);
+  }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor, minApartNumber, maxApartNumber, minPeople, maxPeople, searchApartQuery, searchFioQuery, searchNotesQuery]);
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
@@ -595,7 +610,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             type="checkbox"
             checked={row.getIsSelected()}
             onChange={row.getToggleSelectedHandler()}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {e.stopPropagation(); console.log('rowSelection',  Object.keys(rowSelection).length)}}
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
@@ -731,6 +746,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     setTypeOfSettlement("");
     setMinPeople("");
     setMaxPeople("");
+    setMinApartNumber("");
+    setMaxApartNumber("");
   };
 
   return (
@@ -827,6 +844,10 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             maxPeople={maxPeople} 
             setMaxPeople={setMaxPeople}
             filterStatuses={filterStatuses}
+            minApartNumber={minApartNumber}
+            setMinApartNumber={setMinApartNumber}
+            maxApartNumber={maxApartNumber}
+            setMaxApartNumber={setMaxApartNumber}
           />
 
           {allStatuses ? (
@@ -944,73 +965,75 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                   </div>
                 )}
                 <div className="px-1 py-1">
-                  <Menu>
-                    {({ open, close }) => (
-                      <div className="relative">
-                        <Menu.Button
-                          className={`${
-                            open ? 'bg-gray-100' : ''
-                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center`}
-                        >
-                          <span>Проставить подъезд</span>
-                        </Menu.Button>
-                        
-                        <Transition
-                          show={open}
-                          as={Fragment}
-                          enter="transition ease-out duration-100"
-                          enterFrom="transform opacity-0 scale-95"
-                          enterTo="transform opacity-100 scale-100"
-                          leave="transition ease-in duration-75"
-                          leaveFrom="transform opacity-100 scale-100"
-                          leaveTo="transform opacity-0 scale-95"
-                        >
-                          <Menu.Items 
-                            static
-                            className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2"
+                  {apartType !== 'OldApart' && (
+                    <Menu>
+                      {({ open, close }) => (
+                        <div className="relative">
+                          <Menu.Button
+                            className={`${
+                              open ? 'bg-gray-100' : ''
+                            } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center`}
                           >
-                            <div className="space-y-2">
-                              <input
-                                type="number"
-                                placeholder="Введите номер подъезда"
-                                className="w-full px-2 py-1 text-sm border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                onChange={(e) => setEntranceInput(e.target.value)}
-                                value={entranceInput}
-                                autoFocus
-                              />
-                              <div className="flex justify-end space-x-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setEntranceInput('');
-                                    close(); // Закрываем меню
-                                  }}
-                                  className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded"
-                                >
-                                  Отмена
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (entranceInput) {
-                                      setEntranceForMany(entranceInput);
+                            <span>Проставить подъезд</span>
+                          </Menu.Button>
+                          
+                          <Transition
+                            show={open}
+                            as={Fragment}
+                            enter="transition ease-out duration-100"
+                            enterFrom="transform opacity-0 scale-95"
+                            enterTo="transform opacity-100 scale-100"
+                            leave="transition ease-in duration-75"
+                            leaveFrom="transform opacity-100 scale-100"
+                            leaveTo="transform opacity-0 scale-95"
+                          >
+                            <Menu.Items 
+                              static
+                              className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2"
+                            >
+                              <div className="space-y-2">
+                                <input
+                                  type="number"
+                                  placeholder="Введите номер подъезда"
+                                  className="w-full px-2 py-1 text-sm border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                  onChange={(e) => setEntranceInput(e.target.value)}
+                                  value={entranceInput}
+                                  autoFocus
+                                />
+                                <div className="flex justify-end space-x-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
                                       setEntranceInput('');
-                                      close(); // Закрываем меню после подтверждения
-                                    }
-                                  }}
-                                  className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                                >
-                                  Подтвердить
-                                </button>
+                                      close(); // Закрываем меню
+                                    }}
+                                    className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded"
+                                  >
+                                    Отмена
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      if (entranceInput) {
+                                        setEntranceForMany(entranceInput);
+                                        setEntranceInput('');
+                                        close(); // Закрываем меню после подтверждения
+                                      }
+                                    }}
+                                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                                  >
+                                    Подтвердить
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          </Menu.Items>
-                        </Transition>
-                      </div>
-                    )}
-                  </Menu>
+                            </Menu.Items>
+                          </Transition>
+                        </div>
+                      )}
+                    </Menu>
+                  )}
                   {/* Подменю статусов */}
                   <Menu>
                     {({ open }) => (
@@ -1066,7 +1089,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               </Menu.Items>
             </Transition>
           </Menu>
-          <p className='ml-8 mr-2 text-gray-400'>{filteredApartments.length}</p>
+          <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
         </div>
       </div>
       <div className="relative flex flex-col lg:flex-row  w-full transition-all duration-300">
