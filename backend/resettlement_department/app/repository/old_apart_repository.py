@@ -381,8 +381,12 @@ class OldApartRepository:
                             "new_apart_id": str(new_apart_id),
                         },
                     )
+                    print(result.rowcount)
+                    if result.rowcount == 0:
+                        return {'status': 'Не удалось обновить статус: запись не найдена', 'error': True}
                     await session.commit()
-                    return [row._mapping for row in result]
+                    print('Done')
+                    return {'status': 'Статус успешно обновлен', 'error': False}
                 else: 
                     return {'status' : 'Квартира уже подобрана другому человеку'}
             except Exception as error:
