@@ -62,6 +62,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [maxPeople, setMaxPeople] = useState([]);
   const [filterStatuses, setFilterStatuses] = useState([]);
   const [allStatuses, setAllStatuses] = useState(null);
+  const [isEntranceDialogOpen, setIsEntranceDialogOpen] = useState(false);
+  const [entranceInput, setEntranceInput] = useState('');
+  const [pendingAction, setPendingAction] = useState(null);
+
+
   const error_toast = () => {
     return toast.error('Ошибка', {
         position: "bottom-right",
@@ -527,6 +532,37 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     }
   };
 
+  const handleEntranceSubmit = async () => {
+    if (entranceInput) {
+      setIsEntranceDialogOpen(false);
+      if (pendingAction) {
+        await pendingAction(entranceInput);
+      }
+      setEntranceInput('');
+      setPendingAction(null);
+    }
+  };
+
+  const setEntranceForMany = async (entrance_number) => {
+    const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+    console.log('setEntranceForMany', apartmentIds, entrance_number, apartType)
+    
+    try {
+      await axios.patch(
+        `${HOSTLINK}/tables/set_entrance_number_for_many`,
+        { 
+          new_apart_ids: apartmentIds,
+          entrance_number: entrance_number
+        }
+      );
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      success_toast('Подъезд успешно проставлен');
+    } catch (error) {
+      console.error("Error setting status:", error.response?.data);
+      error_toast();
+    }
+  };
+
   const handleNotesSave = async (rowData, newNotes) => {
     try {
       await axios.patch(
@@ -845,69 +881,136 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               >
                 {apartType === 'OldApart' && (
                   <div className="px-1 py-1">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={startRematchWithNotifications}
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                      >
-                        Переподбор
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={switchAparts}
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                      >
-                        Поменять квартиры
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={(e) => {setSpecialNeedsForMany(1)}}
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                      >
-                        Проставить инвалидность
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={(e) => {setSpecialNeedsForMany(0)}}
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                      >
-                        Снять инвалидность
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={setContainerForMany}
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                      >
-                        Контейнер
-                      </button>
-                    )}
-                  </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={startRematchWithNotifications}
+                          className={`${
+                            active ? 'bg-gray-100' : ''
+                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                        >
+                          Переподбор
+                        </button>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={switchAparts}
+                          className={`${
+                            active ? 'bg-gray-100' : ''
+                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                        >
+                          Поменять квартиры
+                        </button>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={(e) => {setSpecialNeedsForMany(1)}}
+                          className={`${
+                            active ? 'bg-gray-100' : ''
+                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                        >
+                          Проставить инвалидность
+                        </button>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={(e) => {setSpecialNeedsForMany(0)}}
+                          className={`${
+                            active ? 'bg-gray-100' : ''
+                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                        >
+                          Снять инвалидность
+                        </button>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={setContainerForMany}
+                          className={`${
+                            active ? 'bg-gray-100' : ''
+                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
+                        >
+                          Контейнер
+                        </button>
+                      )}
+                    </Menu.Item>
                   </div>
                 )}
                 <div className="px-1 py-1">
+                  <Menu>
+                    {({ open, close }) => (
+                      <div className="relative">
+                        <Menu.Button
+                          className={`${
+                            open ? 'bg-gray-100' : ''
+                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center`}
+                        >
+                          <span>Проставить подъезд</span>
+                        </Menu.Button>
+                        
+                        <Transition
+                          show={open}
+                          as={Fragment}
+                          enter="transition ease-out duration-100"
+                          enterFrom="transform opacity-0 scale-95"
+                          enterTo="transform opacity-100 scale-100"
+                          leave="transition ease-in duration-75"
+                          leaveFrom="transform opacity-100 scale-100"
+                          leaveTo="transform opacity-0 scale-95"
+                        >
+                          <Menu.Items 
+                            static
+                            className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2"
+                          >
+                            <div className="space-y-2">
+                              <input
+                                type="number"
+                                placeholder="Введите номер подъезда"
+                                className="w-full px-2 py-1 text-sm border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                onChange={(e) => setEntranceInput(e.target.value)}
+                                value={entranceInput}
+                                autoFocus
+                              />
+                              <div className="flex justify-end space-x-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setEntranceInput('');
+                                    close(); // Закрываем меню
+                                  }}
+                                  className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded"
+                                >
+                                  Отмена
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (entranceInput) {
+                                      setEntranceForMany(entranceInput);
+                                      setEntranceInput('');
+                                      close(); // Закрываем меню после подтверждения
+                                    }
+                                  }}
+                                  className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                                >
+                                  Подтвердить
+                                </button>
+                              </div>
+                            </div>
+                          </Menu.Items>
+                        </Transition>
+                      </div>
+                    )}
+                  </Menu>
                   {/* Подменю статусов */}
                   <Menu>
                     {({ open }) => (
@@ -915,7 +1018,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         <Menu.Button
                           className={`${
                             open ? 'bg-gray-100' : ''
-                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center`}
+                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100`}
                         >
                           <span>Изменить статус</span>
                         </Menu.Button>
