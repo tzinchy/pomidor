@@ -44,6 +44,10 @@ export default function AllFilters({
     maxPeople,
     setMaxPeople,
     filterStatuses,
+    minApartNumber,
+    setMinApartNumber,
+    maxApartNumber,
+    setMaxApartNumber,
 }) {
     const emptyStatus = apartType === 'OldApart' ? 'Не подобрано' : "Свободна";
     const StatusFilters = [emptyStatus, "Согласие", 'Отказ', "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", 'Ждёт одобрения', "МФР (вне района)", "МФР Компенсация (вне района)"];
@@ -337,6 +341,26 @@ export default function AllFilters({
                                 </div>
                             </div>
                         )}
+
+                        <div className="flex items-center gap-2">
+                            <label className="w-24">Номер квартиры:</label>
+                            <div className="flex gap-2 flex-1">
+                                <input
+                                    value={minApartNumber}
+                                    onChange={(e) => setMinApartNumber(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="от"
+                                    step="1"
+                                />
+                                <input
+                                    value={maxApartNumber}
+                                    onChange={(e) => setMaxApartNumber(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="до"
+                                    step="1"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className="flex mt-4 gap-2">
