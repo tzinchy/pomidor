@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { Menu } from '@headlessui/react';
 import AirDatepicker from 'air-datepicker';
 import 'air-datepicker/air-datepicker.css';
 import localeRu from 'air-datepicker/locale/ru';
 import { parseISO, isValid, format } from 'date-fns';
+import ScheduleSelector from "./ScheduleSelector";
+import ChangeEntrences from "./ChangeEntrences";
 
 export default function ChangeCin({ props: rowData }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,6 +26,22 @@ export default function ChangeCin({ props: rowData }) {
         osmotr: { main: '', ext: '' },
         otvet: { main: '', ext: '' }
     });
+    const [showCustomSchedule, setShowCustomSchedule] = useState(false);
+    const [customSchedule, setCustomSchedule] = useState({
+        days: [],
+        timeFrom: '08:00',
+        timeTo: '17:00'
+    });
+
+    const daysOfWeek = [
+        { id: 'mon', label: 'Пн' },
+        { id: 'tue', label: 'Вт' },
+        { id: 'wed', label: 'Ср' },
+        { id: 'thu', label: 'Чт' },
+        { id: 'fri', label: 'Пт' },
+        { id: 'sat', label: 'Сб' },
+        { id: 'sun', label: 'Вс' }
+    ];
 
     // Форматирование даты в YYYY-MM-DD
     const formatDateToShort = (dateString) => {
@@ -43,10 +62,8 @@ export default function ChangeCin({ props: rowData }) {
 
     // Форматирование телефона при вводе
     const formatPhoneInput = (value) => {
-        // Оставляем только цифры
         const cleanedValue = value.replace(/\D/g, '');
         
-        // Форматируем как +7 (XXX) XXX XX XX
         let formattedValue = '';
         if (cleanedValue.length > 0) {
             formattedValue = `+7 (${cleanedValue.substring(1, 4)}`;
@@ -79,7 +96,6 @@ export default function ChangeCin({ props: rowData }) {
     // Инициализация формы
     useEffect(() => {
         if (rowData && isModalOpen) {
-            // Парсим даты по подъездам
             const datesData = rowData.start_dates_by_entrence;
             let parsedDates = {};
             
@@ -91,7 +107,6 @@ export default function ChangeCin({ props: rowData }) {
                 console.error('Error parsing dates:', e);
             }
 
-            // Фильтруем невалидные даты
             const validDates = {};
             for (const key in parsedDates) {
                 if (parsedDates[key]) {
@@ -102,12 +117,10 @@ export default function ChangeCin({ props: rowData }) {
                 }
             }
 
-            // Получаем список подъездов
             const entranceList = Object.keys(validDates).length > 0 
                 ? Object.keys(validDates).sort((a, b) => parseInt(a) - parseInt(b))
                 : rowData.entrances || ['1'];
 
-            // Разбираем телефонные номера
             const osmotrPhone = parsePhoneNumber(rowData.phone_osmotr || '');
             const otvetPhone = parsePhoneNumber(rowData.phone_otvet || '');
 
@@ -129,8 +142,34 @@ export default function ChangeCin({ props: rowData }) {
             
             setDates(validDates);
             setEntrances(entranceList);
+
+            // Инициализация кастомного графика, если он есть
+            if (rowData.cin_schedule && !['time2plan', 'закрыто'].includes(rowData.cin_schedule)) {
+                initCustomSchedule(rowData.cin_schedule);
+            }
         }
     }, [rowData, isModalOpen]);
+
+    // Инициализация кастомного графика из строки
+    const initCustomSchedule = (scheduleString) => {
+        const timeRegex = /(\d{2}:\d{2})-(\d{2}:\d{2})/;
+        const timeMatch = scheduleString.match(timeRegex);
+        
+        if (timeMatch) {
+            const daysPart = scheduleString.split(timeMatch[0])[0].trim();
+            const selectedDays = daysOfWeek
+                .filter(day => daysPart.includes(day.label))
+                .map(day => day.id);
+            
+            setCustomSchedule({
+                days: selectedDays,
+                timeFrom: timeMatch[1],
+                timeTo: timeMatch[2]
+            });
+            
+            setShowCustomSchedule(true);
+        }
+    };
 
     const handleOpenModal = () => {
         setIsModalOpen(true);
@@ -139,6 +178,7 @@ export default function ChangeCin({ props: rowData }) {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setNewEntranceNumber('');
+        setShowCustomSchedule(false);
     };
 
     const handleInputChange = (e) => {
@@ -184,7 +224,6 @@ export default function ChangeCin({ props: rowData }) {
         });
     };
 
-    // Обработчик изменения основного телефона
     const handlePhoneChange = (e, phoneType) => {
         const value = e.target.value;
         const formattedValue = formatPhoneInput(value);
@@ -198,7 +237,6 @@ export default function ChangeCin({ props: rowData }) {
                 }
             };
             
-            // Обновляем formData
             setFormData(prevFormData => ({
                 ...prevFormData,
                 [`phone_${phoneType}`]: newParts[phoneType].ext 
@@ -210,7 +248,6 @@ export default function ChangeCin({ props: rowData }) {
         });
     };
 
-    // Обработчик изменения добавочного номера
     const handlePhoneExtChange = (e, phoneType) => {
         const value = e.target.value.replace(/\D/g, '').slice(0, 4);
         
@@ -223,7 +260,6 @@ export default function ChangeCin({ props: rowData }) {
                 }
             };
             
-            // Обновляем formData
             setFormData(prevFormData => ({
                 ...prevFormData,
                 [`phone_${phoneType}`]: value 
@@ -232,6 +268,62 @@ export default function ChangeCin({ props: rowData }) {
             }));
             
             return newParts;
+        });
+    };
+
+    const handleScheduleChange = (value) => {
+        if (value === 'Выбрать дни') {
+            setShowCustomSchedule(true);
+            return;
+        }
+        
+        setShowCustomSchedule(false);
+        setFormData(prev => ({
+            ...prev,
+            cin_schedule: value
+        }));
+    };
+
+    const handleDayToggle = (dayId) => {
+        setCustomSchedule(prev => {
+            const newDays = prev.days.includes(dayId)
+                ? prev.days.filter(d => d !== dayId)
+                : [...prev.days, dayId];
+            
+            const newSchedule = newDays.length > 0
+                ? `${newDays.map(d => daysOfWeek.find(day => day.id === d).label).join(', ')} ${prev.timeFrom}-${prev.timeTo}`
+                : '';
+            
+            setFormData(prevForm => ({
+                ...prevForm,
+                cin_schedule: newSchedule
+            }));
+            
+            return {
+                ...prev,
+                days: newDays
+            };
+        });
+    };
+
+    const handleTimeChange = (e, field) => {
+        const value = e.target.value;
+        setCustomSchedule(prev => {
+            const newSchedule = {
+                ...prev,
+                [field]: value
+            };
+            
+            const newScheduleText = newSchedule.days.length > 0
+                ? `${newSchedule.days.map(d => daysOfWeek.find(day => day.id === d).label).join(', ')} ${newSchedule.timeFrom}-${newSchedule.timeTo}`
+                : '';
+            
+            setFormData(prevForm => ({
+                ...prevForm,
+                cin_schedule: newScheduleText
+            }));
+            
+            return newSchedule;
         });
     };
 
@@ -305,17 +397,15 @@ export default function ChangeCin({ props: rowData }) {
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                     />
                                 </div>
-                                
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Адрес заселения</label>
-                                    <input
-                                        name="address"
-                                        type="text"
-                                        value={formData.address}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">График работы ЦИНа</label>
+                                    <ScheduleSelector 
+                                        value={formData.cin_schedule} 
+                                        onChange={(value) => setFormData(prev => ({ ...prev, cin_schedule: value }))}
+                                        type='cin' 
                                     />
                                 </div>
+                                
                                 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Телефон для осмотра</label>
@@ -340,28 +430,27 @@ export default function ChangeCin({ props: rowData }) {
                                         </div>
                                     </div>
                                 </div>
+
+                                
                             </div>
                             
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">График работы ЦИН</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Адрес заселения</label>
                                     <input
-                                        name="cin_schedule"
+                                        name="address"
                                         type="text"
-                                        value={formData.cin_schedule}
+                                        value={formData.address}
                                         onChange={handleInputChange}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                     />
                                 </div>
-                                
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">График работы Департамента</label>
-                                    <input
-                                        name="dep_schedule"
-                                        type="text"
-                                        value={formData.dep_schedule}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    <ScheduleSelector 
+                                        value={formData.dep_schedule} 
+                                        onChange={(value) => setFormData(prev => ({ ...prev, dep_schedule: value }))}
+                                        type='dep' 
                                     />
                                 </div>
                                 <div>
@@ -391,52 +480,13 @@ export default function ChangeCin({ props: rowData }) {
                         </div>
 
                         {/* Секция с датами по подъездам */}
-                        <div className="mt-6">
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-medium text-gray-700">Даты начала работы по подъездам</label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={newEntranceNumber}
-                                        onChange={(e) => setNewEntranceNumber(e.target.value)}
-                                        placeholder="Номер подъезда"
-                                        className="px-2 py-1 border border-gray-300 rounded-md shadow-sm w-32"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={handleAddEntrance}
-                                        className="text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap"
-                                    >
-                                        + Добавить подъезд
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                {entrances.map(entrance => (
-                                    <div key={entrance} className="flex items-center gap-2">
-                                        <label className="w-20 text-sm text-gray-700">Подъезд {entrance}</label>
-                                        <input
-                                            id={`datepicker-${entrance}`}
-                                            type="text"
-                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                            readOnly
-                                        />
-                                        {entrances.length > 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveEntrance(entrance)}
-                                                className="text-red-500 hover:text-red-700"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                        <ChangeEntrences 
+                            newEntranceNumber={newEntranceNumber}
+                            setNewEntranceNumber={setNewEntranceNumber}
+                            handleAddEntrance={handleAddEntrance}
+                            entrances={entrances}
+                            handleRemoveEntrance={handleRemoveEntrance}
+                        />
 
                         <div className="mt-6">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Адрес Отдела</label>
@@ -469,5 +519,5 @@ export default function ChangeCin({ props: rowData }) {
                 </div>
             )}
         </>
-    )
+    );
 }
