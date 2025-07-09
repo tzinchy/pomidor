@@ -141,7 +141,6 @@ def match_new_apart_to_family_batch(
                             AND (value->>'status_id')::int != 2
                         )
                         AND (na.status_id NOT IN (12, 13, 15) OR na.status_id IS NULL)
-                        AND updated_at = (SELECT MAX(updated_at) FROM public.new_apart)
                 """
 
                 new_apart_query_params = []
