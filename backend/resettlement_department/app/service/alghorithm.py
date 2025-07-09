@@ -117,24 +117,31 @@ def match_new_apart_to_family_batch(
                     return ("No old apartments found.")
                 # Запрос для новых квартир с учетом диапазонов
                 new_apart_query = """
-                SELECT 
-                    na.new_apart_id, 
-                    na.district, 
-                    na.municipal_district, 
-                    na.house_address, 
-                    na.apart_number, 
-                    na.floor, 
-                    na.room_count, 
-                    na.full_living_area, 
-                    na.total_living_area, 
-                    na.living_area, 
-                    na.for_special_needs_marker                
-                FROM 
-                    public.new_apart na
-                WHERE new_apart_id::text NOT IN 
-                            (SELECT key FROM public.offer, 
-                            json_each_text(new_aparts::json) AS j(key, value) 
-                            WHERE (value::json->>'status_id')::int != 2) AND (na.status_id NOT IN (12, 13, 15) or na.status_id is null)
+                    SELECT
+                        na.new_apart_id,
+                        na.district,
+                        na.municipal_district,
+                        na.house_address,
+                        na.apart_number,
+                        na.floor,
+                        na.room_count,
+                        na.full_living_area,
+                        na.total_living_area,
+                        na.living_area,
+                        na.for_special_needs_marker
+                        FROM
+                        public.new_apart na
+                    WHERE
+                        NOT EXISTS (
+                            SELECT 1
+                            FROM public.offer o,
+                                jsonb_each(o.new_aparts::jsonb) AS j(key, value)
+                            WHERE
+                            j.key = na.new_apart_id::text
+                            AND (value->>'status_id')::int != 2
+                        )
+                        AND (na.status_id NOT IN (12, 13, 15) OR na.status_id IS NULL)
+                        AND updated_at = (SELECT MAX(updated_at) FROM public.new_apart)
                 """
 
                 new_apart_query_params = []
