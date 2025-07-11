@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { Menu } from '@headlessui/react';
+import { useState, useEffect } from "react";
 import AirDatepicker from 'air-datepicker';
 import 'air-datepicker/air-datepicker.css';
 import localeRu from 'air-datepicker/locale/ru';
 import { parseISO, isValid, format } from 'date-fns';
 import ScheduleSelector from "./ScheduleSelector";
 import ChangeEntrences from "./ChangeEntrences";
+import { HOSTLINK } from "../..";
+import AddressDropdown from "./AddressDropdown";
 
 export default function ChangeCin({ props: rowData }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,7 +33,6 @@ export default function ChangeCin({ props: rowData }) {
         timeFrom: '08:00',
         timeTo: '17:00'
     });
-
     const daysOfWeek = [
         { id: 'mon', label: 'Пн' },
         { id: 'tue', label: 'Вт' },
@@ -42,6 +42,23 @@ export default function ChangeCin({ props: rowData }) {
         { id: 'sat', label: 'Сб' },
         { id: 'sun', label: 'Вс' }
     ];
+    const [newAddresses, setNewAddresses] = useState([]);
+
+   useEffect(() => { 
+    const fetchData = async () => {
+        try {
+            const url = new URL(`${HOSTLINK}/tables/house_addresses`);
+            url.searchParams.append('apart_type', 'NewApartment');            
+            const response = await fetch(url.toString());
+            const fetchedData = await response.json();
+            setNewAddresses(fetchedData);
+        } catch (error) {
+            console.log('Error fetching house addresses: ', error);
+        }
+    };
+    
+    fetchData();
+}, []); // Добавьте зависимости, если нужно перезапрашивать при их изменении
 
     // Форматирование даты в YYYY-MM-DD
     const formatDateToShort = (dateString) => {
@@ -389,12 +406,11 @@ export default function ChangeCin({ props: rowData }) {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Адрес ЦИНа</label>
-                                    <input
-                                        name="cin_address"
-                                        type="text"
+                                    <AddressDropdown 
+                                        addresses={newAddresses} 
                                         value={formData.cin_address}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        onChange={(value) => setFormData(prev => ({ ...prev, cin_address: value }))}
+                                        placeholder="Выберите адрес ЦИНа"
                                     />
                                 </div>
                                 <div>
@@ -437,12 +453,11 @@ export default function ChangeCin({ props: rowData }) {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Адрес заселения</label>
-                                    <input
-                                        name="address"
-                                        type="text"
+                                    <AddressDropdown 
+                                        addresses={newAddresses} 
                                         value={formData.address}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
+                                        placeholder="Выберите адрес заселения"
                                     />
                                 </div>
                                 <div>

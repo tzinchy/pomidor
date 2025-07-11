@@ -117,24 +117,30 @@ def match_new_apart_to_family_batch(
                     return ("No old apartments found.")
                 # Запрос для новых квартир с учетом диапазонов
                 new_apart_query = """
-                SELECT 
-                    na.new_apart_id, 
-                    na.district, 
-                    na.municipal_district, 
-                    na.house_address, 
-                    na.apart_number, 
-                    na.floor, 
-                    na.room_count, 
-                    na.full_living_area, 
-                    na.total_living_area, 
-                    na.living_area, 
-                    na.for_special_needs_marker                
-                FROM 
-                    public.new_apart na
-                WHERE new_apart_id::text NOT IN 
-                            (SELECT key FROM public.offer, 
-                            json_each_text(new_aparts::json) AS j(key, value) 
-                            WHERE (value::json->>'status_id')::int != 2) AND (na.status_id NOT IN (12, 13, 15) or na.status_id is null)
+                    SELECT
+                        na.new_apart_id,
+                        na.district,
+                        na.municipal_district,
+                        na.house_address,
+                        na.apart_number,
+                        na.floor,
+                        na.room_count,
+                        na.full_living_area,
+                        na.total_living_area,
+                        na.living_area,
+                        na.for_special_needs_marker
+                        FROM
+                        public.new_apart na
+                    WHERE
+                        NOT EXISTS (
+                            SELECT 1
+                            FROM public.offer o,
+                                jsonb_each(o.new_aparts::jsonb) AS j(key, value)
+                            WHERE
+                            j.key = na.new_apart_id::text
+                            AND (value->>'status_id')::int != 2
+                        )
+                        AND (na.status_id NOT IN (12, 13, 15) OR na.status_id IS NULL)
                 """
 
                 new_apart_query_params = []
@@ -913,24 +919,71 @@ def match_new_apart_to_family_batch(
                 for old_apart_id, new_apart_id in offers_to_insert:
                     # Получаем rank из словаря
                     rank = old_apart_ranks.get(old_apart_id)
-                    
+
                     # Добавляем данные для обновления new_apart
                     if rank is not None:
                         new_apart_rank_update.append((rank, new_apart_id))
-                    
+
+                    # Обновляем запись в offer (без добавления rank в JSON)
+                    cursor.execute(
+                        "SELECT new_aparts FROM public.offer WHERE affair_id = %s",
+                        (old_apart_id,)
+                    )
+                    result = cursor.fetchone()
+
                     current_new_aparts = {}
-                    
+                    if result and result[0]:
+                        current_new_aparts = json.loads(result[0])
+
                     current_new_aparts[str(new_apart_id)] = {
                         "status_id": 7  # Только статус, без ранга
                     }
-                    
+
                     new_aparts_json = json.dumps(current_new_aparts, ensure_ascii=False)
-                    
-                    cursor.execute(
-                        "INSERT INTO public.offer (affair_id, new_aparts, status_id) VALUES (%s, %s, 7)",
-                        (old_apart_id, new_aparts_json)
+
+                    if result:
+                        cursor.execute(
+                            "UPDATE public.offer SET new_aparts = %s WHERE affair_id = %s",
+                            (new_aparts_json, old_apart_id)
+                        )
+                    else:
+                        cursor.execute(
+                            "INSERT INTO public.offer (affair_id, new_aparts, status_id) VALUES (%s, %s, 7)",
+                            (old_apart_id, new_aparts_json)
+                        )
+
+                # Массовое обновление рангов в new_apart
+                if new_apart_rank_update:
+                    cursor.executemany(
+                        """UPDATE public.new_apart
+                            SET rank = %s
+                            WHERE new_apart_id = %s""",
+                        new_apart_rank_update
                     )
-                    conn.commit()
+
+                if cannot_offer_to_insert and not df_new_apart_second.empty:                    
+                    # Подготавливаем данные для обновления
+                    update_data = []
+                    for _, row in df_new_apart_second.iterrows():
+                        room_count = row['room_count']
+                        new_id = row['new_apart_id']
+
+                        # Получаем минимальный ранг для данной комнатности
+                        min_rank = min_rank_by_room.get(room_count)
+                        if not min_rank:
+                            continue
+                        print('min_rank -------------- ', min_rank)
+                        update_data.append((min_rank-1, new_id))
+
+                    # Выполняем массовое обновление
+                    if update_data:
+                        cursor.executemany(
+                            """UPDATE public.new_apart
+                                SET rank = %s
+                                WHERE new_apart_id = %s""",
+                            update_data
+                        )
+                conn.commit()
                 uploads_folder = os.path.join(os.getcwd(), "././uploads/")
                 file_name = f"matching_result_{last_history_id}.xlsx"
                 output_path = os.path.join(uploads_folder, file_name)

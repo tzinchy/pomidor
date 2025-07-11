@@ -19,10 +19,8 @@ class CinRepository:  # Fixed typo in class name
 
     async def update_cin(self, cin):
         async with self.db() as session:
-            # Convert Pydantic model to dict
             cin_data = cin.dict()
             
-            # If cin_id is provided, we assume it's an update
             if cin.cin_id:
                 stmt = (
                     update(Cin)
@@ -31,7 +29,6 @@ class CinRepository:  # Fixed typo in class name
                     .execution_options(synchronize_session="fetch")
                 )
             else:
-                # If no cin_id, it's an insert
                 stmt = insert(Cin).values(**cin_data)
             
             await session.execute(stmt)
