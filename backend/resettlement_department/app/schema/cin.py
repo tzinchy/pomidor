@@ -7,7 +7,9 @@ from pydantic import BaseModel
 class Cin(BaseModel):
     cin_id: int
     unom: str
-    address: str
+    house_address: str
+    district : str
+    municipal_district : str
     cin_address: str
     cin_schedule: str
     dep_schedule: str
@@ -27,3 +29,6 @@ class CreateCin(BaseModel):
     otdel: str
     start_date: datetime.date
     phone_otvet: str
+    district : str
+    municipal_district : str
+    start_dates_by_entrence : dict

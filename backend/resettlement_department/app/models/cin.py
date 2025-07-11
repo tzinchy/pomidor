@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, SmallInteger
+from models.base import Base
+from sqlalchemy import Column, Date, DateTime, Integer, SmallInteger, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
-from models.base import Base
 
 
 class Cin(Base):
@@ -9,7 +9,9 @@ class Cin(Base):
 
     cin_id = Column(Integer, primary_key=True, autoincrement=True)
     unom = Column(String, unique=True)
-    address = Column(String)
+    house_address = Column(String)
+    district = Column(String)
+    municipal_district = Column(String)
     cin_address = Column(String)
     cin_schedule = Column(String)
     dep_schedule = Column(String)
