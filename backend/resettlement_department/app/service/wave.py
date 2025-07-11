@@ -511,7 +511,7 @@ def df_for_aparts(cursor, old_selected_addresses=None, new_selected_addresses=No
     
     # Query for new apartments
     new_apart_query = """
-        SELECT 
+        SELECT
             na.new_apart_id, 
             na.district, 
             na.municipal_district, 
@@ -523,13 +523,19 @@ def df_for_aparts(cursor, old_selected_addresses=None, new_selected_addresses=No
             na.total_living_area, 
             na.living_area, 
             na.for_special_needs_marker,
-            na.rank              
-        FROM 
+            na.rank  
+            FROM
             public.new_apart na
-        WHERE new_apart_id::text NOT IN 
-                    (SELECT key FROM public.offer, 
-                    json_each_text(new_aparts::json) AS j(key, value) 
-                    WHERE (value::json->>'status_id')::int != 2) AND (na.status_id = 11 or na.status_id is null)
+        WHERE
+            NOT EXISTS (
+                SELECT 1
+                FROM public.offer o,
+                    jsonb_each(o.new_aparts::jsonb) AS j(key, value)
+                WHERE
+                j.key = na.new_apart_id::text
+                AND (value->>'status_id')::int != 2
+            )
+            AND (na.status_id NOT IN (12, 13, 15) OR na.status_id IS NULL)
     """
 
     new_apart_query_params = []
@@ -1120,25 +1126,26 @@ def waves(data, cursor, conn):
     # Collect new addresses with ranges
     for key in sorted(data.keys()):
         if key.startswith('new_apartment_house_address_'):
-            address_data = {
-                'address': None,
-                'sections': []
-            }
-            
             for item in data[key]:
+                print('item', item)
                 if 'address' in item:
-                    address_data['address'] = item['address']
-                
-                if 'sections' in item:
-                    for section in item['sections']:
-                        section_data = {
-                            'section': section.get('section', ''),
-                            'range': section.get('range', {})
-                        }
-                        address_data['sections'].append(section_data)
-            
-            if address_data['address']:
-                new_selected_addresses.append(address_data)
+                    print('ADDED ------------')
+                    address_data = {
+                        'address': item['address'],
+                        'sections': []
+                    }
+                    
+                    if 'sections' in item:
+                        for section in item['sections']:
+                            section_data = {
+                                'section': section.get('section', ''),
+                                'range': section.get('range', {})
+                            }
+                            address_data['sections'].append(section_data)
+                    
+                    print('address_data', address_data)
+                    if address_data['address']:
+                        new_selected_addresses.append(address_data)
 
     # Print address information (for debugging)
     print("\n=== Old addresses ===")
