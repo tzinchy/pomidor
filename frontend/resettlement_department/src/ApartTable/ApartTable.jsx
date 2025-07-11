@@ -752,22 +752,22 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   return (
     <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
-            <ToastContainer
-              position="bottom-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop
-              closeOnClick={false}
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              style={{ zIndex: 9999 }} // Глобальный высокий z-index
-              toastStyle={{ position: 'relative' }}
-            />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        style={{ zIndex: 9999 }} // Глобальный высокий z-index
+        toastStyle={{ position: 'relative' }}
+      />
       <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
-      <div className='flex w-[40%] items-center justify-between'>
-        <button
+        <div className='flex w-[40%] items-center justify-between'>
+          <button
             onClick={() => setIsOpen(!isOpen)}
             className=""
           >
@@ -879,7 +879,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             </button>
           </div>
         </div>
-        
+          
         <div className='flex items-center'>
             <Menu as="div" className="relative inline-block text-left z-[102]">
             <div>

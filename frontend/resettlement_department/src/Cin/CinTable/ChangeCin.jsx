@@ -7,19 +7,11 @@ import ScheduleSelector from "./ScheduleSelector";
 import ChangeEntrences from "./ChangeEntrences";
 import { HOSTLINK } from "../..";
 import AddressDropdown from "./AddressDropdown";
+import axios from "axios"; 
 
-export default function ChangeCin({ props: rowData }) {
+export default function ChangeCin({ props: rowData , fetchTableData}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({
-        cin_address: '',
-        address: '',
-        phone_osmotr: '',
-        phone_otvet: '',
-        otdel: '',
-        cin_schedule: '',
-        dep_schedule: '',
-        start_dates_by_entrence: {}
-    });
+    const [formData, setFormData] = useState({});
     const [dates, setDates] = useState({});
     const [entrances, setEntrances] = useState(['1']);
     const [newEntranceNumber, setNewEntranceNumber] = useState('');
@@ -44,21 +36,21 @@ export default function ChangeCin({ props: rowData }) {
     ];
     const [newAddresses, setNewAddresses] = useState([]);
 
-   useEffect(() => { 
-    const fetchData = async () => {
-        try {
-            const url = new URL(`${HOSTLINK}/tables/house_addresses`);
-            url.searchParams.append('apart_type', 'NewApartment');            
-            const response = await fetch(url.toString());
-            const fetchedData = await response.json();
-            setNewAddresses(fetchedData);
-        } catch (error) {
-            console.log('Error fetching house addresses: ', error);
-        }
-    };
-    
-    fetchData();
-}, []); // Добавьте зависимости, если нужно перезапрашивать при их изменении
+    useEffect(() => { 
+        const fetchData = async () => {
+            try {
+                const url = new URL(`${HOSTLINK}/tables/house_addresses`);
+                url.searchParams.append('apart_type', 'NewApartment');            
+                const response = await fetch(url.toString());
+                const fetchedData = await response.json();
+                setNewAddresses(fetchedData);
+            } catch (error) {
+                console.log('Error fetching house addresses: ', error);
+            }
+        };
+        
+        fetchData();
+    }, []);
 
     // Форматирование даты в YYYY-MM-DD
     const formatDateToShort = (dateString) => {
@@ -113,6 +105,10 @@ export default function ChangeCin({ props: rowData }) {
     // Инициализация формы
     useEffect(() => {
         if (rowData && isModalOpen) {
+            // Копируем все данные из rowData в formData
+            setFormData({ ...rowData });
+
+            // Парсим даты
             const datesData = rowData.start_dates_by_entrence;
             let parsedDates = {};
             
@@ -140,17 +136,6 @@ export default function ChangeCin({ props: rowData }) {
 
             const osmotrPhone = parsePhoneNumber(rowData.phone_osmotr || '');
             const otvetPhone = parsePhoneNumber(rowData.phone_otvet || '');
-
-            setFormData({
-                cin_address: rowData.cin_address || '',
-                address: rowData.address || '',
-                phone_osmotr: rowData.phone_osmotr || '',
-                phone_otvet: rowData.phone_otvet || '',
-                otdel: rowData.otdel || '',
-                cin_schedule: rowData.cin_schedule || '',
-                dep_schedule: rowData.dep_schedule || '',
-                start_dates_by_entrence: validDates
-            });
 
             setPhoneParts({
                 osmotr: osmotrPhone,
@@ -288,65 +273,17 @@ export default function ChangeCin({ props: rowData }) {
         });
     };
 
-    const handleScheduleChange = (value) => {
-        if (value === 'Выбрать дни') {
-            setShowCustomSchedule(true);
-            return;
-        }
-        
-        setShowCustomSchedule(false);
-        setFormData(prev => ({
-            ...prev,
-            cin_schedule: value
-        }));
-    };
-
-    const handleDayToggle = (dayId) => {
-        setCustomSchedule(prev => {
-            const newDays = prev.days.includes(dayId)
-                ? prev.days.filter(d => d !== dayId)
-                : [...prev.days, dayId];
-            
-            const newSchedule = newDays.length > 0
-                ? `${newDays.map(d => daysOfWeek.find(day => day.id === d).label).join(', ')} ${prev.timeFrom}-${prev.timeTo}`
-                : '';
-            
-            setFormData(prevForm => ({
-                ...prevForm,
-                cin_schedule: newSchedule
-            }));
-            
-            return {
-                ...prev,
-                days: newDays
-            };
-        });
-    };
-
-    const handleTimeChange = (e, field) => {
-        const value = e.target.value;
-        setCustomSchedule(prev => {
-            const newSchedule = {
-                ...prev,
-                [field]: value
-            };
-            
-            const newScheduleText = newSchedule.days.length > 0
-                ? `${newSchedule.days.map(d => daysOfWeek.find(day => day.id === d).label).join(', ')} ${newSchedule.timeFrom}-${newSchedule.timeTo}`
-                : '';
-            
-            setFormData(prevForm => ({
-                ...prevForm,
-                cin_schedule: newScheduleText
-            }));
-            
-            return newSchedule;
-        });
-    };
-
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         console.log('Отправляемые данные:', formData);
-        // Здесь будет логика отправки данных на сервер
+        
+        try {
+            const response = await axios.patch(`${HOSTLINK}/cin/update_cin`, formData);
+            console.log('Успешное обновление:', response.data);
+            setIsModalOpen(false);
+            fetchTableData();
+        } catch (error) {
+            console.error('Ошибка:', error);
+        }
     };
 
     // Инициализация datepicker для каждого подъезда
@@ -408,7 +345,7 @@ export default function ChangeCin({ props: rowData }) {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Адрес ЦИНа</label>
                                     <AddressDropdown 
                                         addresses={newAddresses} 
-                                        value={formData.cin_address}
+                                        value={formData.cin_address || ''}
                                         onChange={(value) => setFormData(prev => ({ ...prev, cin_address: value }))}
                                         placeholder="Выберите адрес ЦИНа"
                                     />
@@ -416,12 +353,11 @@ export default function ChangeCin({ props: rowData }) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">График работы ЦИНа</label>
                                     <ScheduleSelector 
-                                        value={formData.cin_schedule} 
+                                        value={formData.cin_schedule || ''} 
                                         onChange={(value) => setFormData(prev => ({ ...prev, cin_schedule: value }))}
                                         type='cin' 
                                     />
                                 </div>
-                                
                                 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Телефон для осмотра</label>
@@ -446,8 +382,6 @@ export default function ChangeCin({ props: rowData }) {
                                         </div>
                                     </div>
                                 </div>
-
-                                
                             </div>
                             
                             <div className="space-y-4">
@@ -455,15 +389,15 @@ export default function ChangeCin({ props: rowData }) {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Адрес заселения</label>
                                     <AddressDropdown 
                                         addresses={newAddresses} 
-                                        value={formData.address}
-                                        onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
+                                        value={formData.house_address || ''}
+                                        onChange={(value) => setFormData(prev => ({ ...prev, house_address: value }))}
                                         placeholder="Выберите адрес заселения"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">График работы Департамента</label>
                                     <ScheduleSelector 
-                                        value={formData.dep_schedule} 
+                                        value={formData.dep_schedule || ''} 
                                         onChange={(value) => setFormData(prev => ({ ...prev, dep_schedule: value }))}
                                         type='dep' 
                                     />
@@ -508,7 +442,7 @@ export default function ChangeCin({ props: rowData }) {
                             <input
                                 name="otdel"
                                 type="text"
-                                value={formData.otdel}
+                                value={formData.otdel || ''}
                                 onChange={handleInputChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             />
