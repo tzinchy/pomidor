@@ -11,8 +11,9 @@ import DateCell from "./Cells/DateCell";
 import Schedule from "./Cells/Schedule";
 import ChangeCin from "./ChangeCin";
 import AdressCell from "../../ApartTable/Cells/AdressCell";
+import UpdateDateCell from "./Cells/UpdateDateCell";
 
-export default function CinTable({cinData}) {
+export default function CinTable({cinData, fetchData}) {
     
     const [sorting, setSorting] = useState([]);
     const [columnFilters, setColumnFilters] = useState([]);
@@ -63,9 +64,15 @@ export default function CinTable({cinData}) {
             size: 250, // Фиксированная ширина
         },
         {
+            accessorKey: 'updated_at',
+            header: 'Дата изменения',
+            cell: ({ row }) => <UpdateDateCell dateTimeString={row.original.updated_at} />,
+            size: 120, // Фиксированная ширина 
+        },
+        {
             id: 'change',
             enableSorting: false,
-            cell: ({ row }) => <ChangeCin props={row.original} />,
+            cell: ({ row }) => <ChangeCin props={row.original} fetchTableData={fetchData} />,
             size: 50, // Фиксированная ширина
         },
     ], []);
@@ -107,7 +114,7 @@ export default function CinTable({cinData}) {
         : 0;
 
     return (
-        <div className="relative flex flex-col lg:flex-row h-[96.8vh] gap-2 bg-neutral-100 w-full transition-all duration-300">
+        <div className="relative flex flex-col lg:flex-row h-[94vh] gap-2 bg-neutral-100 transition-all duration-300">
             <div className="relative flex w-full">
                 <div 
                     ref={tableContainerRef}

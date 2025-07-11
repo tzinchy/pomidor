@@ -2,7 +2,7 @@ import DropdownFilter from "../../ApartTable/Filters/DropdownFilter";
 import MunicipalDropdownFilter from "../../ApartTable/Filters/MunicipalDropdownFilter";
 import ResetButton from "../../Filters/ResetFilters";
 
-export default function CinFilters({ filterData, handleFilterChange, filtersResetFlag, filters }){
+export default function CinFilters({ filterData, handleFilterChange, filtersResetFlag, filters, handleResetFilters }){
     return (
         <div className="flex w-full flex-wrap items-center justify-start gap-2">
             <DropdownFilter 
@@ -31,7 +31,7 @@ export default function CinFilters({ filterData, handleFilterChange, filtersRese
                 filters={filters}
                 showAddresses={true}
             />
-            <ResetButton reserFunc={filtersResetFlag}/>
+            <ResetButton reserFunc={handleResetFilters}/>
         </div>
     )
 }

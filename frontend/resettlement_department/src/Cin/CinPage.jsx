@@ -9,20 +9,57 @@ export default function CinPage(){
     const [filterData, setFilterData] = useState([]);
     const [filters, setFilters] = useState([]);
     const [filtersResetFlag, setFiltersResetFlag] = useState(false);
+    const [filteredApartments, setFilteredApartments] = useState([]);
 
-    useEffect(() => { 
-        const fetchData = async () => {
+    const fetchData = async () => {
             try {
                 const response = await fetch(`${HOSTLINK}/cin`);
                 const fetchedData = await response.json();
                 setCinData(fetchedData);
+                console.log('fetchedData', fetchedData);
             } catch (error) {
                 console.log('Error fetching cin: ', error);
             }
         };
         
+    useEffect(() => { 
         fetchData();
     }, []);
+
+    // Применение всех фильтров к данным
+      useEffect(() => {
+        if (!cinData || cinData.length === 0) return;
+    
+        let filtered = cinData;
+    
+        // Применяем каждый фильтр
+        Object.entries(filters).forEach(([filterType, selectedValues]) => {
+            if (selectedValues.length > 0) {
+                const filterKey = filterType.toLowerCase();
+
+                filtered = filtered.filter((item) => {
+                // Проверяем все выбранные значения фильтра
+                for (const val of selectedValues) {
+                    // Если это специальное значение ("Не подобрано" или "Свободная")
+                    if (val === "Не подобрано" || val === "Свободная") {
+                        // Проверяем либо точное совпадение, либо null
+                        if (item[filterKey] === val || item[filterKey] === null) {
+                            return true;
+                        }
+                    } 
+                    // Для обычных значений
+                    else if (item[filterKey] === val) {
+                        return true;
+                    }
+                }
+                return false;
+                });
+            }
+        });
+    
+          setFilteredApartments(filtered);
+      }, [cinData, filters]);
+    
 
     const handleFilterChange = useCallback((filterType, selectedValues) => {
         // Обновляем состояние фильтров
@@ -84,8 +121,8 @@ export default function CinPage(){
         <div className="bg-muted/60 flex min-h-screen w-full flex-col">
             <Aside />
             <main className="relative flex flex-1 flex-col gap-2 p-2 sm:pl-16 bg-neutral-100">
-                <CinFilters filterData={filterData} handleFilterChange={handleFilterChange} filtersResetFlag={filtersResetFlag} filters={filters} />
-                <CinTable cinData={cinData} />
+                <CinFilters filterData={filterData} handleFilterChange={handleFilterChange} filtersResetFlag={filtersResetFlag} filters={filters} handleResetFilters={handleResetFilters} />
+                <CinTable cinData={filteredApartments} fetchData={fetchData}/>
             </main>
         </div>
     )
