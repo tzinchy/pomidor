@@ -32,4 +32,5 @@ class OfferRepository:
     async def use_strict_update_offer_status(self):
         async with self.db() as session:
             await session.execute(text("UPDATE offer SET updated_at = NOW()"))
+            await session.commit()
         return {"done": "ok"}
