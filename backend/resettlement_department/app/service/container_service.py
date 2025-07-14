@@ -78,22 +78,43 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
 
     # Основной запрос
     query = """
-        with unnst AS (
+        WITH unnst AS (
             SELECT 
-            affair_id, 
-            (KEY)::bigint as new_apart_id
+                offer_id,
+                affair_id, 
+                (KEY)::bigint as new_apart_id
             FROM offer,
             jsonb_each(new_aparts)
+            WHERE offer_id IN (SELECT max(offer_id) FROM offer GROUP BY affair_id)
+            ORDER BY offer_id DESC
         )
-        
-        SELECT oa.house_address, oa.apart_number, oa.type_of_settlement, oa.kpu_number, o.new_apart_id, 
-               na.house_address, na.apart_number, na.full_living_area, na.total_living_area, na.room_count, 
-               na.living_area, na.floor, cin_address, cin_schedule, dep_schedule, phone_osmotr, phone_otvet, oa.unom, start_date, cin.otdel
+        SELECT 
+            oa.house_address, 
+            oa.apart_number, 
+            oa.type_of_settlement, 
+            oa.kpu_number, 
+            o.new_apart_id, 
+            na.house_address, 
+            na.apart_number, 
+            na.full_living_area, 
+            na.total_living_area, 
+            na.room_count, 
+            na.living_area, 
+            na.floor, 
+            cin_address, 
+            cin_schedule, 
+            dep_schedule, 
+            phone_osmotr, 
+            phone_otvet, 
+            oa.unom, 
+            na.entrance_number,
+            (start_dates_by_entrence->>(na.entrance_number::text))::date AS start_date,
+            c.otdel
         FROM unnst o
         JOIN old_apart oa USING (affair_id)
         JOIN new_apart na USING (new_apart_id) 
-        JOIN cin ON cin.old_address = oa.house_address
-        WHERE oa.is_queue <> 1 
+        JOIN test_cin c ON c.cin_address = na.house_address
+        WHERE oa.is_queue <> 1
     """
     params = []
         
@@ -114,7 +135,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
     df = pd.DataFrame(aparts, columns=[
         'old_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
         'new_address', 'new_number', 'full_living_area', 'total_living_area', 'room_count', 
-        'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'unom', 'start_date', 'otdel'
+        'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'unom', 'entrance_number', 'start_date', 'otdel'
     ])
 
     print(df['full_living_area'], df['total_living_area'], df['living_area'])
