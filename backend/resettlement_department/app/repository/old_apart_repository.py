@@ -196,9 +196,7 @@ class OldApartRepository:
             params["max_area"] = max_area
         if area_conditions:
             conditions.append(" AND ".join(area_conditions))
-        print(statuses)
         if statuses:
-            print(statuses)
             statuses = [
                 f"'{i}'" for i in statuses
             ]  # Добавляем кавычки вокруг каждого значения
@@ -363,11 +361,25 @@ class OldApartRepository:
     async def update_status_for_apart(self, apart_id, new_apart_id, status):
         async with self.db() as session:
             try:
-                query = text('SELECT status_id FROM new_apart where new_apart_id = :new_apart_id')
-                pre_res = await session.execute(query, {'new_apart_id' : new_apart_id})
-                is_freedom = pre_res.fetchone()[0]
+                # First query to check apartment status
+                query = text('''
+                    select affair_id, new_apart.status_id as status_id FROM offer, jsonb_each(new_aparts)
+                    join new_apart ON KEY::bigint = new_apart_id
+                    WHERE KEY::bigint = :new_apart_id
+                    ORDER BY offer_id DESC
+                    limit 1
+                ''')
+                
+                pre_res = await session.execute(query, {'new_apart_id': new_apart_id})
+                is_freedom = pre_res.fetchall()[0]
                 print(is_freedom)
-                if is_freedom == 11: 
+                offer_affair_id, new_apart_status = is_freedom
+
+                if not is_freedom:
+                    return {'status': 'Квартира не найдена', 'error': True}
+            
+                if new_apart_status == 11 or offer_affair_id == apart_id: 
+                    print('here')
                     query = text(
                         await async_read_sql_query(
                             f"{RECOMMENDATION_FILE_PATH}/UpdateOfferStatusForNewApart.sql"
@@ -388,11 +400,13 @@ class OldApartRepository:
                     print('Done')
                     return {'status': 'Статус успешно обновлен', 'error': False}
                 else: 
-                    return {'status' : 'Квартира уже подобрана другому человеку'}
+                    print({'status': 'Квартира уже подобрана другому человеку', 'error': True})
+                    return {'status': 'Квартира уже подобрана другому человеку', 'error': True}
+                    
             except Exception as error:
                 await session.rollback()
                 raise error
-
+            
     async def set_decline_reason(
         self,
         apartment_id,
