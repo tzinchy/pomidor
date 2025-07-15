@@ -19,7 +19,7 @@ old_apartment_repository = OldApartRepository(project_managment_session)
 new_apartment_repository = NewApartRepository(project_managment_session)
 apartment_service = ApartService(old_apart_repository=old_apartment_repository, new_apart_repositroy=new_apartment_repository)
 
-dashboard_repository = DashboardRepository()
+dashboard_repository = DashboardRepository(project_managment_session)
 dashboard_service = DashboardService(dashboard_repository)
 
 history_repository = HistoryRepository(project_managment_session)

@@ -122,3 +122,4 @@ print(settings.project_management_setting.DATABASE_URL)
 
 RENOVATION_FILE_PATH = "./sql/renovation/"
 RECOMMENDATION_FILE_PATH = "./sql/recommendation"
+RECOMMENDATION_DASHBOARD_FILE_PATH = './sql/recommendation/dashboard'
