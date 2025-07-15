@@ -74,7 +74,8 @@ class ApartService:
         room_count: Optional[List[int]] = None,
         is_queue: bool = None,
         is_private: bool = None,
-        statuses : List[str] = None
+        statuses : List[str] = None,
+        fio : str = None
     ):
         if apart_type == ApartType.OLD:
             return await self.old_apart_repository.get_apartments(
@@ -89,7 +90,8 @@ class ApartService:
                 room_count=room_count,
                 is_queue=is_queue,
                 is_private=is_private,
-                statuses=statuses
+                statuses=statuses,
+                fio=fio
             )
         elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.get_apartments(

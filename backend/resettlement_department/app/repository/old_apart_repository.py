@@ -136,6 +136,7 @@ class OldApartRepository:
         is_queue: bool = None,
         is_private: bool = None,
         statuses: List[str] = None,
+        fio : str = None
     ) -> list[dict]:
         if area_type not in ["full_living_area", "total_living_area", "living_area"]:
             raise ValueError(f"Invalid area type: {area_type}")
@@ -202,6 +203,9 @@ class OldApartRepository:
             ]  # Добавляем кавычки вокруг каждого значения
             print(statuses)
             conditions.append(f"status IN ({', '.join(statuses)})")
+        if fio: 
+            conditions.append(f"fio like '%{fio}%'")
+
 
         where_clause = " AND ".join(conditions)
 
