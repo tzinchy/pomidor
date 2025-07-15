@@ -26,7 +26,7 @@ async def reset_password(user_email: UserResetEmail):
 
 @router.post("/create_user")
 async def create_user(create_user : CreateUser, user : UserTokenData = Depends(SAD_required)):
-    result = await auth_service.create_user(**create_user)
+    result = await auth_service.create_user(**create_user.model_dump())
     return result
 
 @router.get('/get_backend_paylod')
