@@ -10,6 +10,7 @@ class HistoryResponse(BaseModel):
     status_id: Optional[int]
     is_downloaded: Optional[bool]
     is_wave: Optional[bool]
+    is_shadow : Optional[bool]
 
     class Config:
         from_attributes = True

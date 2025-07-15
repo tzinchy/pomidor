@@ -36,6 +36,7 @@ async def start_matching(requirements: Matching):
         new_selected_addresses=requirements.new_apartment_house_address,
         old_selected_addresses=requirements.old_apartment_house_address,
         date=requirements.is_date,
+        is_shadow=requirements.is_shadow
     )
 
     return matching_result

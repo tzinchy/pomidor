@@ -42,13 +42,16 @@ async def balance(requirements: Balance = Body(...)):
         uploads_folder = os.path.join(os.getcwd(), "././uploads/")
         if requirements.is_wave:
             file_name = f"matching_result_{requirements.history_id}.xlsx"
+        if requirements.is_shadow:
+            print('is shadow')
+            file_name = f"matching_result_{requirements.history_id}.xlsx" 
         else:
             file_name = "matching_result.xlsx"
         output_path = os.path.join(uploads_folder, file_name)
         print(output_path)
         print(os.listdir(uploads_folder))
         print("ТО ЧТО ВЫШЕ ЭТО ПАРАМЕТР")
-        if not requirements.is_wave:
+        if not (requirements.is_wave or requirements.is_shadow):
             save_views_to_excel(
                 output_path=output_path,
                 history_id=requirements.history_id,
