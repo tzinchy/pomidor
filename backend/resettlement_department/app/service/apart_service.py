@@ -10,7 +10,7 @@ from handlers.httpexceptions import NotFoundException
 from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
 from schema.apartment import ApartType
-from schema.user import User
+
 
 class ApartService:
     def __init__(

@@ -2,7 +2,6 @@ from repository.database import get_db_connection_dashboard
 from utils.sql_reader import read_sql_query, async_read_sql_query
 from core.config import RENOVATION_FILE_PATH, RECOMMENDATION_DASHBOARD_FILE_PATH
 from core.logger import logger
-from functools import lru_cache
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 
@@ -19,6 +18,7 @@ class DashboardRepository:
         cursor.execute(query)
 
         _building_info = cursor.fetchall()
+        print(_building_info)
         return _building_info
 
     def get_dashboard_details(self):
