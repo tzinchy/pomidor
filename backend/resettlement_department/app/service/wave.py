@@ -27,7 +27,7 @@ def wave_matching(
 ):
     try:
         max_rank_by_room_count = df_old_apart.groupby("room_count")["rank"].max().to_dict()
-        df_new_apart_rev = df_new_apart.loc[::-1]
+        df_new_apart_second = df_new_apart.loc[::-1]
         offers_to_insert = []
         cannot_offer_to_insert = []
 
@@ -155,10 +155,9 @@ def wave_matching(
                             new_apart_id = int(suitable_apart["new_apart_id"])
                             old_apart_list.append(old_apart_id)
                             df_new_apart = df_new_apart[df_new_apart["new_apart_id"] != new_apart_id]
-
-                df_new_apart_second = df_new_apart_rev.loc[::-1]
-                print('REVERSED NEW', df_new_apart_second[df_new_apart_second['room_count'] == 2])
-                print('REVERSED OLD', df_old_apart_reversed[df_old_apart_reversed["room_count"] == 2])
+ 
+                print('REVERSED NEW', i, df_new_apart_second[df_new_apart_second['room_count'] == i])
+                print('REVERSED OLD', i, df_old_apart_reversed[df_old_apart_reversed["room_count"] == i])
 
                 for _, old_apart in df_old_apart_reversed[df_old_apart_reversed["room_count"] == i].iterrows():
                     old_apart_id = int(old_apart["affair_id"])
