@@ -9,7 +9,7 @@ import { HOSTLINK } from "../..";
 import AddressDropdown from "./AddressDropdown";
 import axios from "axios"; 
 
-export default function ChangeCin({ props: rowData , fetchTableData}) {
+export default function ChangeCin({ props: rowData , fetchTableData, type = "edit" }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({});
     const [dates, setDates] = useState({});
@@ -104,7 +104,7 @@ export default function ChangeCin({ props: rowData , fetchTableData}) {
 
     // Инициализация формы
     useEffect(() => {
-        if (rowData && isModalOpen) {
+        if (rowData && isModalOpen && type === "edit") {
             // Копируем все данные из rowData в formData
             setFormData({ ...rowData });
 
@@ -149,8 +149,19 @@ export default function ChangeCin({ props: rowData , fetchTableData}) {
             if (rowData.cin_schedule && !['time2plan', 'закрыто'].includes(rowData.cin_schedule)) {
                 initCustomSchedule(rowData.cin_schedule);
             }
+        } else if (isModalOpen && type === "create") {
+            // Инициализация для создания нового ЦИНа
+            setFormData({
+                start_dates_by_entrence: { '1': new Date().toISOString() }
+            });
+            setDates({ '1': new Date().toISOString() });
+            setEntrances(['1']);
+            setPhoneParts({
+                osmotr: { main: '', ext: '' },
+                otvet: { main: '', ext: '' }
+            });
         }
-    }, [rowData, isModalOpen]);
+    }, [rowData, isModalOpen, type]);
 
     // Инициализация кастомного графика из строки
     const initCustomSchedule = (scheduleString) => {
@@ -277,10 +288,16 @@ export default function ChangeCin({ props: rowData , fetchTableData}) {
         console.log('Отправляемые данные:', formData);
         
         try {
-            const response = await axios.patch(`${HOSTLINK}/cin/update_cin`, formData);
+            let response;
+            if (type === "create") {
+                response = await axios.post(`${HOSTLINK}/cin/create_cin`, formData);
+            } else {
+                response = await axios.patch(`${HOSTLINK}/cin/update_cin`, formData);
+            }
+            
             console.log('Успешное обновление:', response.data);
-            setIsModalOpen(false);
             fetchTableData();
+            setIsModalOpen(false);
         } catch (error) {
             console.error('Ошибка:', error);
         }
@@ -308,27 +325,35 @@ export default function ChangeCin({ props: rowData , fetchTableData}) {
                 className="flex-shrink-0 p-1 text-gray-400 hover:text-blue-500 transition-colors"
                 onClick={handleOpenModal}
             >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                </svg>
+                {type === "create" ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                ) : (
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                    </svg>
+                )}
             </button>
 
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold">Редактирование ЦИНа</h2>
+                            <h2 className="text-xl font-semibold">
+                                {type === "create" ? "Создание нового ЦИНа" : "Редактирование ЦИНа"}
+                            </h2>
                             <button 
                                 onClick={handleCloseModal}
                                 className="text-gray-500 hover:text-gray-700"
@@ -446,6 +471,19 @@ export default function ChangeCin({ props: rowData , fetchTableData}) {
                                 onChange={handleInputChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             />
+                            {type === "create" && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">UNOM</label>
+                                    <input
+                                        name="unom"
+                                        type="text"
+                                        value={formData.unom || ''}
+                                        onChange={handleInputChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Введите UNOM"
+                                    />
+                                </div>
+                            )}
                         </div>
                         
                         <div className="mt-6 flex justify-end space-x-3">
@@ -461,7 +499,7 @@ export default function ChangeCin({ props: rowData , fetchTableData}) {
                                 onClick={handleSubmit}
                                 className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                             >
-                                Сохранить
+                                {type === "create" ? "Создать" : "Сохранить"}
                             </button>
                         </div>
                     </div>

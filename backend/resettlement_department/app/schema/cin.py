@@ -21,7 +21,7 @@ class Cin(BaseModel):
 
 class CreateCin(BaseModel):
     unom: str
-    old_address: str
+    house_address: str
     cin_address: str
     cin_schedule: str
     dep_schedule: str
