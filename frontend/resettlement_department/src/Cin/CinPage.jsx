@@ -3,6 +3,7 @@ import Aside from "../Navigation/Aside";
 import CinTable from "./CinTable/CinTable";
 import { HOSTLINK } from "..";
 import CinFilters from "./CinFilters/CinFilters";
+import ChangeCin from "./CinTable/ChangeCin";
 
 export default function CinPage(){
     const [cinData, setCinData] = useState([]);
@@ -16,7 +17,6 @@ export default function CinPage(){
                 const response = await fetch(`${HOSTLINK}/cin`);
                 const fetchedData = await response.json();
                 setCinData(fetchedData);
-                console.log('fetchedData', fetchedData);
             } catch (error) {
                 console.log('Error fetching cin: ', error);
             }
@@ -27,11 +27,11 @@ export default function CinPage(){
     }, []);
 
     // Применение всех фильтров к данным
-      useEffect(() => {
+    useEffect(() => {
         if (!cinData || cinData.length === 0) return;
-    
+
         let filtered = cinData;
-    
+
         // Применяем каждый фильтр
         Object.entries(filters).forEach(([filterType, selectedValues]) => {
             if (selectedValues.length > 0) {
@@ -56,10 +56,9 @@ export default function CinPage(){
                 });
             }
         });
-    
-          setFilteredApartments(filtered);
-      }, [cinData, filters]);
-    
+
+        setFilteredApartments(filtered);
+    }, [cinData, filters]); 
 
     const handleFilterChange = useCallback((filterType, selectedValues) => {
         // Обновляем состояние фильтров
@@ -121,7 +120,10 @@ export default function CinPage(){
         <div className="bg-muted/60 flex min-h-screen w-full flex-col">
             <Aside />
             <main className="relative flex flex-1 flex-col gap-2 p-2 sm:pl-16 bg-neutral-100">
-                <CinFilters filterData={filterData} handleFilterChange={handleFilterChange} filtersResetFlag={filtersResetFlag} filters={filters} handleResetFilters={handleResetFilters} />
+                <div className="flex text-sm">
+                    <CinFilters filterData={filterData} handleFilterChange={handleFilterChange} filtersResetFlag={filtersResetFlag} filters={filters} handleResetFilters={handleResetFilters} />
+                    <ChangeCin fetchTableData={fetchData} type="create" />
+                </div>
                 <CinTable cinData={filteredApartments} fetchData={fetchData}/>
             </main>
         </div>

@@ -68,7 +68,6 @@ tzdata==2024.2
 ujson==5.10.0
 urllib3==2.3.0
 uvicorn==0.32.1
-uvloop==0.21.0
 watchfiles==1.0.0
 webdriver-manager==4.0.2
 websocket-client==1.8.0
