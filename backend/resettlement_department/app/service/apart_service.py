@@ -10,7 +10,7 @@ from handlers.httpexceptions import NotFoundException
 from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
 from schema.apartment import ApartType
-from schema.user import User
+
 
 class ApartService:
     def __init__(
@@ -74,7 +74,8 @@ class ApartService:
         room_count: Optional[List[int]] = None,
         is_queue: bool = None,
         is_private: bool = None,
-        statuses : List[str] = None
+        statuses : List[str] = None,
+        fio : str = None
     ):
         if apart_type == ApartType.OLD:
             return await self.old_apart_repository.get_apartments(
@@ -89,7 +90,8 @@ class ApartService:
                 room_count=room_count,
                 is_queue=is_queue,
                 is_private=is_private,
-                statuses=statuses
+                statuses=statuses,
+                fio=fio
             )
         elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.get_apartments(
@@ -163,9 +165,14 @@ class ApartService:
         self, apart_id: int, new_apart_id: int, status: str, apart_type: str
     ):
         if apart_type == ApartType.OLD:
-            return await self.old_apart_repository.update_status_for_apart(
-                apart_id=apart_id, new_apart_id=new_apart_id, status=status
-            )
+            is_can_change_the_status = await self.old_apart_repository.validate_apart_status(apart_id=apart_id, new_apart_id=new_apart_id)
+            if is_can_change_the_status:
+                return await self.old_apart_repository.update_status_for_apart(
+                    apart_id=apart_id, new_apart_id=new_apart_id, status=status
+                )
+            else:
+                print({'status': 'Квартира уже подобрана другому человеку', 'error': True})
+                return {'status': 'Квартира уже подобрана другому человеку', 'error': True}
         else:
             raise NotFoundException
 
@@ -187,16 +194,21 @@ class ApartService:
         apartment_layout,
         notes,
     ):
-        return await self.old_apart_repository.set_decline_reason(
-            apartment_id=apart_id,
-            new_apart_id=new_apart_id,
-            min_floor=min_floor,
-            max_floor=max_floor,
-            unom=unom,
-            entrance=entrance,
-            apartment_layout=apartment_layout,
-            notes=notes,
-        )
+        is_can_change_the_status = await self.old_apart_repository.validate_apart_status(apart_id=apart_id, new_apart_id=new_apart_id)
+        if is_can_change_the_status:
+            return await self.old_apart_repository.set_decline_reason(
+                apart_id=apart_id,
+                new_apart_id=new_apart_id,
+                min_floor=min_floor,
+                max_floor=max_floor,
+                unom=unom,
+                entrance=entrance,
+                apartment_layout=apartment_layout,
+                notes=notes,
+            )
+        else:
+            print({'status': 'Квартира уже подобрана другому человеку', 'error': True})
+            return {'status': 'Квартира уже подобрана другому человеку', 'error': True}
 
     async def set_notes_for_many(
         self, apart_ids: list[int], notes: str, apart_type: str

@@ -68,6 +68,7 @@ async def get_apartments(
     is_queue: bool = None,
     is_private: bool = None,
     statuses: Optional[List[str]] = Query(None, example=["Свободная"]),
+    fio : str = Query(None, example='Иванов')
 ):
     try:
         return await apartment_service.get_apartments(
@@ -83,6 +84,7 @@ async def get_apartments(
             is_queue=is_queue,
             is_private=is_private,
             statuses=statuses,
+            fio=fio
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

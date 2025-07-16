@@ -164,9 +164,9 @@ class AuthService:
         else:
             raise HTTPException()
     
-    async def create_user(self, first_name, middle_name, last_name, login, email, password, roles_ids, groups_ids, position_ids, distrcits):
+    async def create_user(self, first_name, middle_name, last_name, login, email, password, roles_ids, groups_ids, position_ids, districts):
         password =  get_password_hash(password)
-        await self.auth_repository.create_user(first_name, middle_name, last_name, login, email, password, roles_ids, groups_ids, position_ids, distrcits)
+        await self.auth_repository.create_user(first_name, middle_name, last_name, login, email, password, roles_ids, groups_ids, position_ids, districts)
 
 
     async def get_services(self): 

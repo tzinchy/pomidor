@@ -14,7 +14,7 @@ dependencies = [
     "charset-normalizer==3.4.1",
     "click==8.1.8",
     "dnspython==2.7.0",
-    "email-validator==2.2.0",
+    "email-validator>=2.2.0",
     "fastapi==0.115.8",
     "fastapi-cache2>=0.2.2",
     "greenlet==3.1.1",

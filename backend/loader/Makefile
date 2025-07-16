@@ -1,4 +1,4 @@
 .PHONY: run
 
 renovation:
-	cd app && uv run renovation_etl.py
+	cd app && python3 renovation_etl.py

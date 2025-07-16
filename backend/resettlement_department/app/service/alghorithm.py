@@ -27,6 +27,7 @@ def match_new_apart_to_family_batch(
     old_selected_areas=None,
     date=False,
     ochered=False,
+    is_shadow=False
 ):
     if (new_selected_addresses is None or old_selected_addresses is None) and not date:
         print('POPALSA SUKA')
@@ -1001,6 +1002,14 @@ def match_new_apart_to_family_batch(
                     cursor.execute('DELETE FROM old_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM old_apart)')
                     cursor.execute('DELETE FROM manual_load WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM manual_load)')
                     print('Загруженное ручками удалено')
+                if is_shadow:
+                    cursor.execute(
+                        '''
+                        UPDATE history
+                        SET is_shadow = True
+                        WHERE history_id = %s
+                        ''', (last_history_id,)
+                    )
                 conn.commit()
                 res = {'cannot_offer': len(cannot_offer_to_insert), 'offer':  len(offers_to_insert)}
                 return res

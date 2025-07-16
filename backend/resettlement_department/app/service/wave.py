@@ -1,5 +1,4 @@
 import psycopg2
-import pandas as pd
 from core.config import settings
 from datetime import datetime
 import json

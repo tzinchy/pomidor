@@ -34,6 +34,7 @@ class Matching(BaseModel):
     new_apartment_municipal_district: List[str] = None
     new_apartment_house_address: Optional[List] = None 
     is_date : bool = None
+    is_shadow : Optional[bool] = None
 
 class Rematch(BaseModel):
     apartment_ids : List[int]
@@ -95,3 +96,4 @@ class Balance(BaseModel):
     history_id : int 
     is_date : bool = None
     is_wave : Optional[bool] = None
+    is_shadow : Optional[bool] = None

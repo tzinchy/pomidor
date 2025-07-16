@@ -136,6 +136,7 @@ class OldApartRepository:
         is_queue: bool = None,
         is_private: bool = None,
         statuses: List[str] = None,
+        fio : str = None
     ) -> list[dict]:
         if area_type not in ["full_living_area", "total_living_area", "living_area"]:
             raise ValueError(f"Invalid area type: {area_type}")
@@ -202,6 +203,9 @@ class OldApartRepository:
             ]  # Добавляем кавычки вокруг каждого значения
             print(statuses)
             conditions.append(f"status IN ({', '.join(statuses)})")
+        if fio: 
+            conditions.append(f"fio like '%{fio}%'")
+
 
         where_clause = " AND ".join(conditions)
 
@@ -358,10 +362,8 @@ class OldApartRepository:
                 session.rollback()
                 raise error
 
-    async def update_status_for_apart(self, apart_id, new_apart_id, status):
+    async def validate_apart_status(self, apart_id : int, new_apart_id : int):
         async with self.db() as session:
-            try:
-                # First query to check apartment status
                 query = text('''
                     select affair_id, new_apart.status_id as status_id FROM offer, jsonb_each(new_aparts)
                     join new_apart ON KEY::bigint = new_apart_id
@@ -374,42 +376,39 @@ class OldApartRepository:
                 is_freedom = pre_res.fetchall()[0]
                 print(is_freedom)
                 offer_affair_id, new_apart_status = is_freedom
-
-                if not is_freedom:
-                    return {'status': 'Квартира не найдена', 'error': True}
             
-                if new_apart_status == 11 or offer_affair_id == apart_id: 
-                    print('here')
-                    query = text(
-                        await async_read_sql_query(
-                            f"{RECOMMENDATION_FILE_PATH}/UpdateOfferStatusForNewApart.sql"
-                        )
+                return new_apart_status == 11 or offer_affair_id == apart_id
+        
+    async def update_status_for_apart(self, apart_id, new_apart_id, status):
+        async with self.db() as session:
+            try:
+                query = text(
+                    await async_read_sql_query(
+                        f"{RECOMMENDATION_FILE_PATH}/UpdateOfferStatusForNewApart.sql"
                     )
-                    result = await session.execute(
-                        query,
-                        {
-                            "status": status,
-                            "apart_id": apart_id,
-                            "new_apart_id": str(new_apart_id),
-                        },
-                    )
-                    print(result.rowcount)
-                    if result.rowcount == 0:
-                        return {'status': 'Не удалось обновить статус: запись не найдена', 'error': True}
-                    await session.commit()
-                    print('Done')
-                    return {'status': 'Статус успешно обновлен', 'error': False}
-                else: 
-                    print({'status': 'Квартира уже подобрана другому человеку', 'error': True})
-                    return {'status': 'Квартира уже подобрана другому человеку', 'error': True}
-                    
+                )
+                result = await session.execute(
+                    query,
+                    {
+                        "status": status,
+                        "apart_id": apart_id,
+                        "new_apart_id": str(new_apart_id),
+                    },
+                )
+                print(result.rowcount)
+                if result.rowcount == 0:
+                    return {'status': 'Не удалось обновить статус: запись не найдена', 'error': True}
+                await session.commit()
+                print('update status_for_apart done')
+                return {'status': 'Статус успешно обновлен', 'error': False}
+
             except Exception as error:
                 await session.rollback()
                 raise error
-            
+        
     async def set_decline_reason(
         self,
-        apartment_id,
+        apart_id,
         new_apart_id,
         min_floor: Optional[int] = None,
         max_floor: Optional[int] = None,
@@ -439,18 +438,13 @@ class OldApartRepository:
                 )
                 decline_reason_id = result.scalar()
 
-                # Обновляем статус в таблице offer
                 update_query = text("""
                     WITH updated_data AS (
                         SELECT
                             offer_id,
                             new_apart_id,
                             jsonb_set(
-                                jsonb_set(
-                                    new_aparts->(new_apart_id::text),
-                                    '{status_id}',
-                                    to_jsonb((SELECT status_id FROM status WHERE status = :status))
-                                ),
+                                new_aparts->(new_apart_id::text),
                                 '{decline_reason_id}',
                                 to_jsonb((:declined_reason_id)::int)
                             ) AS updated_value
@@ -468,16 +462,14 @@ class OldApartRepository:
                             new_aparts,
                             ARRAY[updated_data.new_apart_id::text],
                             updated_data.updated_value
-                        ),
-                        status_id = (SELECT status_id FROM status WHERE status = :status)
+                        )
                     FROM updated_data
                     WHERE offer.offer_id = updated_data.offer_id;
                 """)
                 await session.execute(
                     update_query,
                     {
-                        "status": "Отказ",
-                        "apart_id": apartment_id,
+                        "apart_id": apart_id,
                         "declined_reason_id": decline_reason_id,
                         "new_apart_id": str(new_apart_id),
                     },

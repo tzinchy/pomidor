@@ -27,7 +27,6 @@ class CreateCin(BaseModel):
     dep_schedule: str
     phone_osmotr: str
     otdel: str
-    start_date: datetime.date
     phone_otvet: str
     district : str
     municipal_district : str

@@ -25,6 +25,8 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
         timeFrom: '08:00',
         timeTo: '17:00'
     });
+    const [districtOptions, setDistrictOptions] = useState([]);
+    const [municipalOptions, setMunicipalOptions] = useState([]);
     const daysOfWeek = [
         { id: 'mon', label: 'Пн' },
         { id: 'tue', label: 'Вт' },
@@ -39,13 +41,28 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
     useEffect(() => { 
         const fetchData = async () => {
             try {
+                // Загрузка адресов
                 const url = new URL(`${HOSTLINK}/tables/house_addresses`);
                 url.searchParams.append('apart_type', 'NewApartment');            
                 const response = await fetch(url.toString());
                 const fetchedData = await response.json();
                 setNewAddresses(fetchedData);
+
+                // Загрузка районов с параметром apart_type
+                const districtsUrl = new URL(`${HOSTLINK}/tables/district`);
+                districtsUrl.searchParams.append('apart_type', 'NewApartment');
+                const districtsResponse = await fetch(districtsUrl.toString());
+                const districtsData = await districtsResponse.json();
+                setDistrictOptions(districtsData);
+
+                // Загрузка муниципальных округов с параметром apart_type
+                const municipalUrl = new URL(`${HOSTLINK}/tables/municipal_district`);
+                municipalUrl.searchParams.append('apart_type', 'NewApartment');
+                const municipalResponse = await fetch(municipalUrl.toString());
+                const municipalData = await municipalResponse.json();
+                setMunicipalOptions(municipalData);
             } catch (error) {
-                console.log('Error fetching house addresses: ', error);
+                console.log('Error fetching data: ', error);
             }
         };
         
@@ -98,7 +115,9 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
         
         setFormData(prev => ({
             ...prev,
-            start_dates_by_entrence: formattedDates
+            start_dates_by_entrence: formattedDates,
+            // Для создания используем дату первого подъезда как start_date
+            start_date: formattedDates['1'] || formatDateToShort(new Date())
         }));
     }, [dates]);
 
@@ -151,10 +170,14 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
             }
         } else if (isModalOpen && type === "create") {
             // Инициализация для создания нового ЦИНа
+            const initialDate = formatDateToShort(new Date());
             setFormData({
-                start_dates_by_entrence: { '1': new Date().toISOString() }
+                start_dates_by_entrence: { '1': initialDate },
+                start_date: initialDate,
+                district: '',
+                municipal_district: ''
             });
-            setDates({ '1': new Date().toISOString() });
+            setDates({ '1': initialDate });
             setEntrances(['1']);
             setPhoneParts({
                 osmotr: { main: '', ext: '' },
@@ -284,22 +307,49 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
         });
     };
 
+    const prepareFormData = () => {
+        const data = { ...formData };
+        
+        // Убедимся, что все обязательные поля присутствуют
+        if (type === "create") {
+            if (!data.unom) {
+                alert('Поле UNOM обязательно для заполнения');
+                return null;
+            }
+        }
+        
+        // Преобразуем даты в правильный формат
+        if (data.start_dates_by_entrence) {
+            const formattedDates = {};
+            for (const key in data.start_dates_by_entrence) {
+                formattedDates[key] = formatDateToShort(data.start_dates_by_entrence[key]);
+            }
+            data.start_dates_by_entrence = formattedDates;
+        }
+
+        return data;
+    };
+
     const handleSubmit = async () => {
-        console.log('Отправляемые данные:', formData);
+        const preparedData = prepareFormData();
+        if (!preparedData) return;
+        
+        console.log('Отправляемые данные:', preparedData);
         
         try {
             let response;
             if (type === "create") {
-                response = await axios.post(`${HOSTLINK}/cin/create_cin`, formData);
+                response = await axios.post(`${HOSTLINK}/cin/create_cin`, preparedData);
             } else {
-                response = await axios.patch(`${HOSTLINK}/cin/update_cin`, formData);
+                response = await axios.patch(`${HOSTLINK}/cin/update_cin`, preparedData);
             }
             
             console.log('Успешное обновление:', response.data);
             fetchTableData();
             setIsModalOpen(false);
         } catch (error) {
-            console.error('Ошибка:', error);
+            console.error('Ошибка:', error.response?.data || error.message);
+            alert(`Ошибка при ${type === "create" ? 'создании' : 'обновлении'} ЦИНа: ${error.response?.data?.detail || error.message}`);
         }
     };
 
@@ -376,6 +426,15 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
                                     />
                                 </div>
                                 <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Район</label>
+                                    <AddressDropdown 
+                                        addresses={districtOptions} 
+                                        value={formData.district || ''}
+                                        onChange={(value) => setFormData(prev => ({ ...prev, district: value }))}
+                                        placeholder="Выберите район"
+                                    />
+                                </div>
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">График работы ЦИНа</label>
                                     <ScheduleSelector 
                                         value={formData.cin_schedule || ''} 
@@ -417,6 +476,15 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
                                         value={formData.house_address || ''}
                                         onChange={(value) => setFormData(prev => ({ ...prev, house_address: value }))}
                                         placeholder="Выберите адрес заселения"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Муниципальный округ</label>
+                                    <AddressDropdown 
+                                        addresses={municipalOptions} 
+                                        value={formData.municipal_district || ''}
+                                        onChange={(value) => setFormData(prev => ({ ...prev, municipal_district: value }))}
+                                        placeholder="Выберите муниципальный округ"
                                     />
                                 </div>
                                 <div>
@@ -470,10 +538,12 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
                                 value={formData.otdel || ''}
                                 onChange={handleInputChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                required
                             />
+
                             {type === "create" && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">UNOM</label>
+                                    <label className="block text-sm font-medium text-gray-700 mt-1">UNOM</label>
                                     <input
                                         name="unom"
                                         type="text"
@@ -481,6 +551,7 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
                                         onChange={handleInputChange}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Введите UNOM"
+                                        required
                                     />
                                 </div>
                             )}
