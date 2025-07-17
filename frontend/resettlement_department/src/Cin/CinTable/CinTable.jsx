@@ -22,12 +22,27 @@ export default function CinTable({cinData, fetchData}) {
         {
             accessorKey: 'cin_address',
             header: 'Адрес ЦИНа',
+            size: 100, // Фиксированная ширина
+        },
+        {
+            accessorKey: 'full_cin_address',
+            header: '"Правильный" ЦИН',
             size: 150, // Фиксированная ширина
         },
         {
-            accessorKey: 'address',
+            accessorKey: 'house_address',
             header: 'Адрес заселения',
             cell: ({ row }) => <AdressCell props={row.original} />,
+            size: 150, // Фиксированная ширина
+        },
+        {
+            accessorKey: 'full_cin_address',
+            header: '"Правильный" адрес заселения',
+            size: 150, // Фиксированная ширина
+        },
+        {
+            accessorKey: 'cin_address',
+            header: 'Адрес ЦИНа',
             size: 150, // Фиксированная ширина
         },
         {

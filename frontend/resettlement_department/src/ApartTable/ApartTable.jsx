@@ -22,6 +22,7 @@ import { HOSTLINK } from '..';
 import AllFilters from './Filters/AllFilters';
 import ProgressStatusBar from './ProgressStatusBar';
 import StageCell from './Cells/StageCell';
+import ConfirmationModal from './ConfirmationModal';
 
 // Добавьте SVG для иконки меню
 const MenuIcon = () => (
@@ -67,7 +68,6 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [pendingAction, setPendingAction] = useState(null);
   const [minApartNumber, setMinApartNumber] = useState([]);
   const [maxApartNumber, setMaxApartNumber] = useState([]);
-
   const error_toast = () => {
     return toast.error('Ошибка', {
         position: "bottom-right",
@@ -91,9 +91,26 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         theme: "light",
       });
   }
-
   const statuses = apartType === 'OldApart' ? ["Суд", "МФР Компенсация", "МФР Докупка", "МФР (вне района)", "МФР Компенсация (вне района)",  "Ждёт одобрения",  "Подготовить смотровой", "Ожидание", "Подборов не будет", "Согласие"] : ["Резерв", "Блок", "Свободная", "Передано во вне"];
-  
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSecondConfirmModal, setShowSecondConfirmModal] = useState(false);
+
+  const handleContainerClick = () => {
+    const count = Object.keys(rowSelection).length;
+    
+    if (count > 1000) {
+      setShowConfirmModal(true);
+    } else {
+      setShowSecondConfirmModal(true);
+    }
+  };
+
+  const handleFinalConfirm = () => {
+    setContainerForMany();
+    setShowConfirmModal(false);
+    setShowSecondConfirmModal(false);
+  };
+
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
     if (!data) return [];
@@ -752,6 +769,30 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   return (
     <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
+      {showConfirmModal && (
+        <ConfirmationModal
+          isOpen={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={() => {
+            setShowConfirmModal(false);
+            setShowSecondConfirmModal(true);
+          }}
+          title="Подтверждение действия"
+          message={`Вы выбрали ${Object.keys(rowSelection).length} строк. Это большое количество. Вы уверены, что хотите установить контейнер для всех выбранных строк?`}
+          confirmText="Да, продолжить"
+        />
+      )}
+
+      {showSecondConfirmModal && (
+        <ConfirmationModal
+          isOpen={showSecondConfirmModal}
+          onClose={() => setShowSecondConfirmModal(false)}
+          onConfirm={handleFinalConfirm}
+          title="Окончательное подтверждение"
+          message={`Вы точно хотите применить действие к ${Object.keys(rowSelection).length} строкам? Это действие нельзя будет отменить.`}
+        />
+      )}
+
       <ToastContainer
         position="bottom-right"
         autoClose={5000}
@@ -953,7 +994,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                     <Menu.Item>
                       {({ active }) => (
                         <button
-                          onClick={setContainerForMany}
+                          onClick={handleContainerClick}
                           className={`${
                             active ? 'bg-gray-100' : ''
                           } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}

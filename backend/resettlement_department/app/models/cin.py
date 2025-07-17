@@ -22,6 +22,8 @@ class Cin(Base):
     updated_at = Column(DateTime(timezone=True))
     manual_load_id = Column(SmallInteger)
     start_dates_by_entrence = Column(JSONB)
+    full_cin_address = Column(String)
+    full_house_address = Column(String)
 
     def __repr__(self):
         return f"<Cin(unom='{self.unom}', cin_address='{self.cin_address}')>"

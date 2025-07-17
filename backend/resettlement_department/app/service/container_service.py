@@ -205,11 +205,11 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
                 sheet.cell(row=row_num, column=10, value=f"{row['new_address']} кв. {row['new_number']}")  # flatList.address
 
                 # Заполняем данные flatList
-                sheet.cell(row=row_num, column=11, value=row['full_living_area'])  # flatList.square
-                sheet.cell(row=row_num, column=12, value=row['total_living_area'])  # flatList.livingSquare
+                sheet.cell(row=row_num, column=11, value=row['total_living_area'])  # flatList.square
+                sheet.cell(row=row_num, column=12, value=row['living_area'])  # flatList.livingSquare
                 sheet.cell(row=row_num, column=13, value=row['floor'])  # flatList.floorNumber
                 sheet.cell(row=row_num, column=14, value=row['room_count'])  # flatList.room_number
-                sheet.cell(row=row_num, column=15, value=row['living_area'])  # flatList.sDwellingArea
+                sheet.cell(row=row_num, column=15, value=row['full_living_area'])  # flatList.sDwellingArea
                 sheet.cell(row=row_num, column=16, value=3)  # flatList.flatStatus
                 sheet.cell(row=row_num, column=17, value=row['new_apart_id'])  # flatList.sourceid
                 sheet.cell(row=row_num, column=18, value=row['kpu_number'])  # actDocList.documentNumber
