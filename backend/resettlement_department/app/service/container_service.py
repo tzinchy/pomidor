@@ -113,7 +113,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
         FROM unnst o
         JOIN old_apart oa USING (affair_id)
         JOIN new_apart na USING (new_apart_id) 
-        JOIN test_cin c ON c.cin_address = na.house_address
+        JOIN test_cin c ON c.house_address = na.house_address
         WHERE oa.is_queue <> 1
     """
     params = []
@@ -130,6 +130,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
     # Выполняем запрос
     cursor.execute(query, params)
     aparts = cursor.fetchall()
+    print('aparts', aparts)
 
     # Создаем DataFrame из результатов запроса
     df = pd.DataFrame(aparts, columns=[
