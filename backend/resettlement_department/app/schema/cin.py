@@ -18,6 +18,8 @@ class Cin(BaseModel):
     otdel: str
     start_dates_by_entrence: dict
     phone_otvet: str
+    full_cin_address: str
+    full_house_address: str
 
 class CreateCin(BaseModel):
     unom: str
@@ -31,3 +33,5 @@ class CreateCin(BaseModel):
     district : str
     municipal_district : str
     start_dates_by_entrence : dict
+    full_cin_address: str
+    full_house_address: str
