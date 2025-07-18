@@ -89,7 +89,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
             ORDER BY offer_id DESC
         )
         SELECT 
-            oa.house_address, 
+            oa.full_house_address, 
             oa.apart_number, 
             oa.type_of_settlement, 
             oa.kpu_number, 
@@ -106,7 +106,6 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
             dep_schedule, 
             phone_osmotr, 
             phone_otvet, 
-            oa.unom, 
             na.entrance_number,
             (start_dates_by_entrence->>(na.entrance_number::text))::date AS start_date,
             c.otdel,
@@ -138,9 +137,9 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
 
     # Создаем DataFrame из результатов запроса
     df = pd.DataFrame(aparts, columns=[
-        'old_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
+        'full_old_house_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
         'new_address', 'new_number', 'full_living_area', 'total_living_area', 'room_count', 
-        'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'unom', 'entrance_number', 'start_date', 'otdel',
+        'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'entrance_number', 'start_date', 'otdel',
         'full_house_address', 'full_cin_address', 'old_district', 'old_cad_num'
     ])
 
@@ -191,14 +190,14 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
 
         for i, tag in enumerate(additional_values):
             additional_texts = {
-                "VSOOTVET": f"Согласно постановлению Правительства Москвы от 01.08.2017 № 497-ПП «О программе реновации жилищного фонда в городе Москве» (далее - Программа реновации) в отношении многоквартирного дома по адресу: г. Москва, {row['old_address']} принято решение о включении в Программу реновации.",
+                "VSOOTVET": f"Согласно постановлению Правительства Москвы от 01.08.2017 № 497-ПП «О программе реновации жилищного фонда в городе Москве» (далее - Программа реновации) в отношении многоквартирного дома по адресу: г. Москва, {row['full_old_house_address']} принято решение о включении в Программу реновации.",
                 "INFO_SOB": """- заявление о включении в предмет Договора предлагаемого жилого помещения;
                 - оригиналы документов личного характера и правоустанавливающие документы на освобождаемое жилое помещение.
                 Просим довести указанную в письме информацию до всех правообладателей.""",
                 "ISPOLNITEL": "Кандабаров Н.А.",
-                "OSMOTR": f"""Для осмотра квартиры необходимо {('с ' + (str(row['start_date'])[5:7] + '.' + str(row['start_date'])[8:] + '.' +str(row['start_date'])[:4])) if row['start_date'] != None and row['start_date'] > datetime.now().date() else '' } в течение 7 рабочих дней обратиться в инф. центр по адресу: г. Москва, {row['cin_address']} ({row['cin_schedule']}) по пред. записи онлайн на сайте https://www.mos.ru/ в разделе «Осмотр квартиры» (для перехода наведите камеру смартфона на QR~код) или по тел. {row['phone_osmotr']}.""" if row['cin_schedule'] != 'time2plan' else "Предварительная запись на показ жилого помещения доступна на сервисе онлайн-записи «Время планировать вместе с ДГИ»: https://time2plan.online.",
+                "OSMOTR": f"""Для осмотра квартиры необходимо {('с ' + (str(row['start_date'])[5:7] + '.' + str(row['start_date'])[8:] + '.' +str(row['start_date'])[:4])) if row['start_date'] != None and row['start_date'] > datetime.now().date() else '' } в течение 7 рабочих дней обратиться в инф. центр по адресу: г. Москва, {row['full_cin_address']} ({row['cin_schedule']}) по пред. записи онлайн на сайте https://www.mos.ru/ в разделе «Осмотр квартиры» (для перехода наведите камеру смартфона на QR~код) или по тел. {row['phone_osmotr']}.""" if row['cin_schedule'] != 'time2plan' else "Предварительная запись на показ жилого помещения доступна на сервисе онлайн-записи «Время планировать вместе с ДГИ»: https://time2plan.online.",
                 "GETKEY": " ",
-                "OTVET": f"Всем правообладателям необходимо предоставить свое согласие либо отказ от предлагаемого жилого помещения в срок не позднее 7 рабочих дней в инф. центр по адресу: г. Москва, {row['cin_address'] if row['dep_schedule']!= 'отдел' else row['otdel']} {('(' + row['dep_schedule'] + ')') if row['dep_schedule']!= 'отдел' else ''}, по пред. записи по вышеуказанному тел., при себе необходимо иметь следующие документы:"
+                "OTVET": f"Всем правообладателям необходимо предоставить свое согласие либо отказ от предлагаемого жилого помещения в срок не позднее 7 рабочих дней в инф. центр по адресу: г. Москва, {row['full_cin_address'] if row['dep_schedule']!= 'отдел' else row['otdel']} {('(' + row['dep_schedule'] + ')') if row['dep_schedule']!= 'отдел' else ''}, по пред. записи по вышеуказанному тел., при себе необходимо иметь следующие документы:"
             }
 
             # Номер заявки
@@ -208,11 +207,11 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
                 sheet.cell(row=row_num, column=2, value=1)  # appApplicantList.type
                 sheet.cell(row=row_num, column=3, value=1)  # appApplicantList.tab
                 sheet.cell(row=row_num, column=4, value="Уважаемый правообладатель!")  # appApplicantList.firstname
-                sheet.cell(row=row_num, column=6, value=f"{row['old_address']} кв. {row['old_number']}")  # Адрес
+                sheet.cell(row=row_num, column=6, value=f"{row['full_old_house_address']} кв. {row['old_number']}")  # Адрес
                 sheet.cell(row=row_num, column=7, value=124365)  # Индекс
                 sheet.cell(row=row_num, column=8, value="г. Москва")  # Населенный пункт
                 sheet.cell(row=row_num, column=9, value=row['old_cad_num'])  # Кадастровый номер
-                sheet.cell(row=row_num, column=10, value=f"{row['new_address']} кв. {row['new_number']}")  # flatList.address
+                sheet.cell(row=row_num, column=10, value=f"{row['full_house_address']} кв. {row['new_number']}")  # flatList.address
 
                 # Заполняем данные flatList
                 sheet.cell(row=row_num, column=11, value=row['total_living_area'])  # flatList.square
