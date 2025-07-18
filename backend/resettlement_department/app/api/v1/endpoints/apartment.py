@@ -184,4 +184,4 @@ def push_container_for_aparts(apart_ids: Rematch):
     generate_excel_from_two_dataframes(affair_ids=apart_ids.apartment_ids)
     update_apart_status(apart_ids=apart_ids.apartment_ids)
     file_path = "./uploads/container_0.xlsx"
-    #upload_container(history_id=0, file_path=file_path)
+    upload_container(history_id=0, file_path=file_path)
