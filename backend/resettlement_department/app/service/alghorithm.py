@@ -642,18 +642,12 @@ def match_new_apart_to_family_batch(
                                             suitable_apart = suitable_aparts.iloc[0]
                                             new_apart_id = int(suitable_apart["new_apart_id"])
                                             df_new_apart_second = df_new_apart_second[df_new_apart_second["new_apart_id"]!= new_apart_id]
-                                            offers_to_insert.append(
-                                                (old_apart_id, new_apart_id,)
-                                            )
+                                            offers_to_insert.append((old_apart_id, new_apart_id,))
                                     else:
                                         suitable_apart = suitable_aparts.iloc[0]
-                                        new_apart_id = int(
-                                            suitable_apart["new_apart_id"]
-                                        )
-                                        df_new_apart_second = df_new_apart_second[
-                                            df_new_apart_second["new_apart_id"]
-                                            != new_apart_id
-                                        ]
+                                        new_apart_id = int(suitable_apart["new_apart_id"])
+                                        df_new_apart_second = df_new_apart_second[df_new_apart_second["new_apart_id"] != new_apart_id]
+                                        print(df_new_apart_second[df_new_apart_second["new_apart_id"] == new_apart_id])
                                         offers_to_insert.append((old_apart_id, new_apart_id,))
                                 else:
                                     cannot_offer_to_insert.append((old_apart_id, ))
@@ -704,18 +698,20 @@ def match_new_apart_to_family_batch(
                                             suitable_apart = suitable_aparts.iloc[0]
                                             new_apart_id = int(suitable_apart["new_apart_id"])
                                             df_new_apart_second = df_new_apart_second[df_new_apart_second["new_apart_id"]!= new_apart_id]
+                                            print(df_new_apart_second[df_new_apart_second["new_apart_id"] == new_apart_id])
                                             offers_to_insert.append((old_apart_id, new_apart_id,))
 
                                     else:
                                         suitable_apart = suitable_aparts.iloc[0]
                                         new_apart_id = int(suitable_apart["new_apart_id"])
                                         df_new_apart_second = df_new_apart_second[df_new_apart_second["new_apart_id"] != new_apart_id]
+                                        print(df_new_apart_second[df_new_apart_second["new_apart_id"] == new_apart_id])
                                         offers_to_insert.append((old_apart_id, new_apart_id, ))
                                 else:
                                     suitable_apart = suitable_aparts.iloc[0]
                                     new_apart_id = int(suitable_apart["new_apart_id"])
-                                    df_new_apart_second = df_new_apart_second[
-                                        df_new_apart_second["new_apart_id"] != new_apart_id]
+                                    df_new_apart_second = df_new_apart_second[df_new_apart_second["new_apart_id"] != new_apart_id]
+                                    print(df_new_apart_second[df_new_apart_second["new_apart_id"] == new_apart_id])
                                     offers_to_insert.append((old_apart_id, new_apart_id,))
                     else:
                         a[i] = 1
@@ -973,7 +969,7 @@ def match_new_apart_to_family_batch(
                         min_rank = min_rank_by_room.get(room_count)
                         if not min_rank:
                             continue
-                        print('min_rank -------------- ', min_rank)
+                        print('min_rank -------------- ', min_rank, room_count)
                         update_data.append((min_rank-1, new_id))
 
                     # Выполняем массовое обновление

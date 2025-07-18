@@ -778,7 +778,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             setShowSecondConfirmModal(true);
           }}
           title="Подтверждение действия"
-          message={`Вы выбрали ${Object.keys(rowSelection).length} строк. Это большое количество. Вы уверены, что хотите установить контейнер для всех выбранных строк?`}
+          message={`Вы выбрали ${Object.keys(rowSelection).length} строк(и). Это большое количество. Вы уверены, что хотите отправить контейнер для всех выбранных строк?`}
           confirmText="Да, продолжить"
         />
       )}
@@ -789,7 +789,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           onClose={() => setShowSecondConfirmModal(false)}
           onConfirm={handleFinalConfirm}
           title="Окончательное подтверждение"
-          message={`Вы точно хотите применить действие к ${Object.keys(rowSelection).length} строкам? Это действие нельзя будет отменить.`}
+          message={`Вы точно хотите отправть отправить контейнер для всех выбранных строк? Это действие нельзя будет отменить. Выбрано ${Object.keys(rowSelection).length} строк(и)?`}
         />
       )}
 
