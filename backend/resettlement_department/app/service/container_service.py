@@ -109,7 +109,11 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
             oa.unom, 
             na.entrance_number,
             (start_dates_by_entrence->>(na.entrance_number::text))::date AS start_date,
-            c.otdel
+            c.otdel,
+			c.full_house_address,
+			c.full_cin_address,
+			oa.district,
+			oa.cad_num
         FROM unnst o
         JOIN old_apart oa USING (affair_id)
         JOIN new_apart na USING (new_apart_id) 
@@ -136,7 +140,8 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
     df = pd.DataFrame(aparts, columns=[
         'old_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
         'new_address', 'new_number', 'full_living_area', 'total_living_area', 'room_count', 
-        'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'unom', 'entrance_number', 'start_date', 'otdel'
+        'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'unom', 'entrance_number', 'start_date', 'otdel',
+        'full_house_address', 'full_cin_address', 'old_district', 'old_cad_num'
     ])
 
     print(df['full_living_area'], df['total_living_area'], df['living_area'])
@@ -177,7 +182,12 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
     # Заполняем данные из DataFrame
     row_num = 3  # Начинаем с третьей строки
     for index, row in df.iterrows():
-        report_id = 49101 if row['type_of_settlement'] == "частная собственность" else 49181
+        if row['old_district'] in ("ЗелАО", "ВАО", "ЮВАО", "САО", "СВАО"):
+            report_id = 108404 if row['type_of_settlement'] == "частная собственность" else 108407
+        elif row['old_district'] in ("ЗАО", "СЗАО", "ЮАО", "ЮЗАО", "ТАО", "НАО"):
+            report_id = 108406 if row['type_of_settlement'] == "частная собственность" else 108409
+        elif row['old_district'] in ("ЦАО"):
+            report_id = 108405 if row['type_of_settlement'] == "частная собственность" else 108408
 
         for i, tag in enumerate(additional_values):
             additional_texts = {
@@ -201,7 +211,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
                 sheet.cell(row=row_num, column=6, value=f"{row['old_address']} кв. {row['old_number']}")  # Адрес
                 sheet.cell(row=row_num, column=7, value=124365)  # Индекс
                 sheet.cell(row=row_num, column=8, value="г. Москва")  # Населенный пункт
-                sheet.cell(row=row_num, column=9, value='тест')  # Кадастровый номер
+                sheet.cell(row=row_num, column=9, value=row['old_cad_num'])  # Кадастровый номер
                 sheet.cell(row=row_num, column=10, value=f"{row['new_address']} кв. {row['new_number']}")  # flatList.address
 
                 # Заполняем данные flatList

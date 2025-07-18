@@ -41,11 +41,6 @@ export default function CinTable({cinData, fetchData}) {
             size: 150, // Фиксированная ширина
         },
         {
-            accessorKey: 'cin_address',
-            header: 'Адрес ЦИНа',
-            size: 150, // Фиксированная ширина
-        },
-        {
             accessorKey: 'start_date',
             header: 'Дата начала работы',
             cell: ({ row }) => <DateCell props={row.original} />,
