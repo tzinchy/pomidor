@@ -436,7 +436,7 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Район</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Округ</label>
                                     <AddressDropdown 
                                         addresses={districtOptions} 
                                         value={formData.district || ''}
@@ -499,7 +499,7 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Муниципальный округ</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Район</label>
                                     <AddressDropdown 
                                         addresses={municipalOptions} 
                                         value={formData.municipal_district || ''}
