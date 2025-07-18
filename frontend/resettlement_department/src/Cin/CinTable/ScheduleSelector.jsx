@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Menu } from '@headlessui/react';
 
 const daysOfWeek = [
-    { id: 'mon', label: 'Пн' },
-    { id: 'tue', label: 'Вт' },
-    { id: 'wed', label: 'Ср' },
-    { id: 'thu', label: 'Чт' },
-    { id: 'fri', label: 'Пт' },
-    { id: 'sat', label: 'Сб' },
-    { id: 'sun', label: 'Вс' }
+    { id: 'mon', label: 'пн' },
+    { id: 'tue', label: 'вт' },
+    { id: 'wed', label: 'ср' },
+    { id: 'thu', label: 'чт' },
+    { id: 'fri', label: 'пт' },
+    { id: 'sat', label: 'сб' },
+    { id: 'sun', label: 'вс' }
 ];
 
 const ScheduleSelector = ({ value, onChange, type }) => {
