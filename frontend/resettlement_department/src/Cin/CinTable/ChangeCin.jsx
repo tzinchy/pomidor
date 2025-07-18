@@ -28,13 +28,13 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
     const [districtOptions, setDistrictOptions] = useState([]);
     const [municipalOptions, setMunicipalOptions] = useState([]);
     const daysOfWeek = [
-        { id: 'mon', label: 'Пн' },
-        { id: 'tue', label: 'Вт' },
-        { id: 'wed', label: 'Ср' },
-        { id: 'thu', label: 'Чт' },
-        { id: 'fri', label: 'Пт' },
-        { id: 'sat', label: 'Сб' },
-        { id: 'sun', label: 'Вс' }
+        { id: 'mon', label: 'пн' },
+        { id: 'tue', label: 'вт' },
+        { id: 'wed', label: 'ср' },
+        { id: 'thu', label: 'чт' },
+        { id: 'fri', label: 'пт' },
+        { id: 'sat', label: 'сб' },
+        { id: 'sun', label: 'вс' }
     ];
     const [newAddresses, setNewAddresses] = useState([]);
 
