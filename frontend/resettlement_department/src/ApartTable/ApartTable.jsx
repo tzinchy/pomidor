@@ -23,6 +23,7 @@ import AllFilters from './Filters/AllFilters';
 import ProgressStatusBar from './ProgressStatusBar';
 import StageCell from './Cells/StageCell';
 import ConfirmationModal from './ConfirmationModal';
+import DropdownFilter from './Filters/DropdownFilter';
 
 // Добавьте SVG для иконки меню
 const MenuIcon = () => (
@@ -91,6 +92,8 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         theme: "light",
       });
   }
+  const stages = ['Завершено', 'Снос', 'Отселение', 'Переселение', 'Не начато'];
+  const otdelType = ["Полное переселение", "Частичное отселение", "Многоэтапное отселение"];
   const statuses = apartType === 'OldApart' ? ["Суд", "МФР Компенсация", "МФР Докупка", "МФР (вне района)", "МФР Компенсация (вне района)",  "Ждёт одобрения",  "Подготовить смотровой", "Ожидание", "Подборов не будет", "Согласие"] : ["Резерв", "Блок", "Свободная", "Передано во вне"];
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSecondConfirmModal, setShowSecondConfirmModal] = useState(false);
@@ -156,7 +159,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     setTypeOfSettlement(getUniqueStringValues('type_of_settlement'));
     setFilterStatuses(getUniqueStringValues('status'));
     console.log('filterStatuses', filterStatuses);
-  }, [getUniqueValues]);
+  }, [filteredApartments]);
 
 
   const getFilteData = (data) => {
@@ -345,6 +348,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
       // Применяем каждый фильтр
       Object.entries(filters).forEach(([filterType, selectedValues]) => {
+        if (filterType === 'buildingRelocationStatus' || filterType ===  'relocationType') {return 1;} 
         if (selectedValues.length > 0) {
           const filterKey = filterType.toLowerCase();
 
@@ -807,7 +811,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         toastStyle={{ position: 'relative' }}
       />
       <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
-        <div className='flex w-[40%] items-center justify-between'>
+        <div className='flex w-[50%] items-center justify-between'>
           <button
             onClick={() => setIsOpen(!isOpen)}
             className=""
@@ -890,12 +894,36 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             maxApartNumber={maxApartNumber}
             setMaxApartNumber={setMaxApartNumber}
           />
-
+{/*fetchApartments*/}
           {allStatuses ? (
             <ProgressStatusBar data={allStatuses} handleFilterChange={handleFilterChange} />
           ) : (
-            <div>Загрузка данных...</div>
+            <div className='w-full'>Загрузка данных...</div>
           )}
+          <div className="flex-shrink-0 ml-2">
+            <DropdownFilter 
+                item={'Стадия'} 
+                data={stages} 
+                func={handleFilterChange}
+                filterType={'buildingRelocationStatus'} 
+                isFiltersReset={filtersResetFlag} 
+                filters={filters}
+                fetchFunc={fetchApartments}
+                type={'buildingRelocationStatus'} 
+            />
+          </div>
+          <div className="flex-shrink-0 ml-2">
+            <DropdownFilter 
+                item={'Тип'} 
+                data={otdelType} 
+                func={handleFilterChange}
+                filterType={'type'} 
+                isFiltersReset={filtersResetFlag} 
+                filters={filters}
+                fetchFunc={fetchApartments}
+                type={'relocationType'}
+            />
+          </div>
           <div className="flex-shrink-0 ml-2">
             <button
                 onClick={handleResetFilters}

@@ -75,7 +75,9 @@ class ApartService:
         is_queue: bool = None,
         is_private: bool = None,
         statuses : List[str] = None,
-        fio : str = None
+        fio : str = None,
+        stage: List[str] = None,
+        otsel_type: List[str] = None
     ):
         if apart_type == ApartType.OLD:
             return await self.old_apart_repository.get_apartments(
@@ -91,7 +93,9 @@ class ApartService:
                 is_queue=is_queue,
                 is_private=is_private,
                 statuses=statuses,
-                fio=fio
+                fio=fio,
+                stage=stage,
+                otsel_type=otsel_type
             )
         elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.get_apartments(

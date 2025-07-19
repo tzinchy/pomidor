@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-export default function DropdownFilter({ item, data, func, filterType, isFiltersReset, filters }) {
+export default function DropdownFilter({ item, data, func, filterType, isFiltersReset, filters, fetchFunc, type }) {
     const [dropdownState, setDropdownState] = useState(false);
     const [selectedValues, setSelectedValues] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -37,7 +37,16 @@ export default function DropdownFilter({ item, data, func, filterType, isFilters
                 : [...prev, value];
 
             // Передаем новые значения в handleFilterChange
-            func(filterType, newValues);
+            if (type === 'buildingRelocationStatus') {
+                fetchFunc([], [], newValues, filters.type);
+                func(filterType, newValues);
+            } else if ((type === 'relocationType')) {
+                fetchFunc([], [], filters.buildingRelocationStatus, newValues);
+                func(filterType, newValues);
+            } else {
+                func(filterType, newValues);
+            }
+            
             return newValues;
         });
     };

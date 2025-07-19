@@ -31,7 +31,8 @@ WITH ranked_apartments AS (
 			WHEN (b.terms->'actual'->>'firstResetlementEnd')::date IS NOT NULL THEN 'Отселение'
 			WHEN (b.terms->'actual'->>'firstResetlementStart')::date IS NULL THEN 'Не начато'
 			ELSE 'Переселение'
-		END as "buildingRelocationStatus"
+		END as "buildingRelocationStatus",
+		type
     FROM
         old_apart oa
     LEFT JOIN
@@ -40,6 +41,7 @@ WITH ranked_apartments AS (
         status ON oa.status_id = status.status_id
 	LEFT JOIN renovation.apartments_old_temp using (affair_id)
 	LEFT join renovation.buildings_old b on apartments_old_temp.building_id = b.id 
+	LEFT join renovation.relocation_types rt on b.relocation_type = rt.id 
     WHERE is_hidden = False
 )
 SELECT *

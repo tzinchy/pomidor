@@ -136,7 +136,9 @@ class OldApartRepository:
         is_queue: bool = None,
         is_private: bool = None,
         statuses: List[str] = None,
-        fio : str = None
+        fio : str = None,
+        stage: List[str] = None,
+        otsel_type: List[str] = None
     ) -> list[dict]:
         if area_type not in ["full_living_area", "total_living_area", "living_area"]:
             raise ValueError(f"Invalid area type: {area_type}")
@@ -205,6 +207,18 @@ class OldApartRepository:
             conditions.append(f"status IN ({', '.join(statuses)})")
         if fio: 
             conditions.append(f"fio like '%{fio}%'")
+        if stage:
+            stage = [
+                f"'{i}'" for i in stage
+            ]  # Добавляем кавычки вокруг каждого значения
+            print(stage)
+            conditions.append(f' "buildingRelocationStatus" IN ({', '.join(stage)})') 
+        if otsel_type:
+            otsel_type = [
+                f"'{i}'" for i in otsel_type
+            ]  # Добавляем кавычки вокруг каждого значения
+            print(otsel_type)
+            conditions.append(f' type IN ({', '.join(otsel_type)})')
 
 
         where_clause = " AND ".join(conditions)
