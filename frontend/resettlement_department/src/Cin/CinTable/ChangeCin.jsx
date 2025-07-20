@@ -37,6 +37,15 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
         { id: 'sun', label: 'вс' }
     ];
     const [newAddresses, setNewAddresses] = useState([]);
+    const vseOtdel = ['ул. Бахрушина, д. 18, стр. 1, каб. 403 (с понедельника по четверг с 8:00 до 17:00, пятница с 8:00 до 15:45, перерыв на обед ежедневно с 12:00 до 12:45)', 
+        'ул. Ивана Франко, д. 8, корп. 2, каб. 10 (с понедельника по четверг с 8:00 до 17:00, пятница с 8:00 до 15:45, перерыв на обед ежедневно с 12:00 до 12:45)',
+        'ул. Фабрициуса, д. 9, каб. 1 (с понедельника по четверг с 8:00 до 17:00, пятница с 8:00 до 15:45, перерыв на обед ежедневно с 12:00 до 12:45)',
+        'ул. Руставели, д. 10, корп. 3 каб. 22, 27, 28 (с понедельника по четверг с 8:00 до 17:00, пятница с 8:00 до 15:45, перерыв на обед ежедневно с 12:00 до 12:45)',
+        'ул. Руставели, д. 10, корп. 3, каб. 8, 9, 10 (с понедельника по четверг с 8:00 до 17:00, пятница с 8:00 до 15:45, перерыв на обед ежедневно с 12:00 до 12:45)',
+        'ул. Стромынка, д. 3, каб. 304 (график работы: понедельник – четверг с 8:00 до 17:00, пятница с 8:00 до 15:45, перерыв на обед с 12:00 до 12:45)', 
+        'Университетский просп., д. 6, корп. 1, каб. 4, 5 (с понедельника по четверг с 8:00 до 17:00, пятница с 8:00 до 15:45, перерыв на обед ежедневно с 12:15 до 13:00)',
+        'Университетский просп., д. 6, корп. 1, каб. 1, 2, 3 (с понедельника по четверг с 8:00 до 17:00, пятница с 8:00 до 15:45, перерыв на обед ежедневно с 12:00 до 12:45)',
+        'Университетский просп., д. 6, корп. 1, каб. 4, 5 (с понедельника по четверг с 8:00 до 17:00, пятница с 8:00 до 15:45, перерыв на обед ежедневно с 12:00 до 12:45)']
 
     useEffect(() => { 
         const fetchData = async () => {
@@ -552,29 +561,12 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
 
                         <div className="mt-6">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Адрес Отдела</label>
-                            <input
-                                name="otdel"
-                                type="text"
-                                value={formData.otdel || ''}
-                                onChange={handleInputChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                required
+                            <AddressDropdown 
+                                addresses={vseOtdel} 
+                                value={formData.otdel}
+                                onChange={(value) => setFormData(prev => ({ ...prev, otdel: value }))}
+                                placeholder="Выберите адрес ЦИНа"
                             />
-
-                            {type === "create" && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mt-1">UNOM</label>
-                                    <input
-                                        name="unom"
-                                        type="text"
-                                        value={formData.unom || ''}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Введите UNOM"
-                                        required
-                                    />
-                                </div>
-                            )}
                         </div>
                         
                         <div className="mt-6 flex justify-end space-x-3">

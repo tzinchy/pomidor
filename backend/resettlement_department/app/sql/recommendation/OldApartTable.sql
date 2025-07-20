@@ -24,7 +24,15 @@ WITH ranked_apartments AS (
         oa.rank,
 		apartments_old_temp.classificator,
         apartments_old_temp.dates,
-        was_queue
+        was_queue,
+		CASE
+			WHEN (b.terms->'actual'->>'demolitionEnd')::date IS NOT NULL THEN 'Завершено'
+			WHEN (b.terms->'actual'->>'secontResetlementEnd')::date IS NOT NULL THEN 'Снос'
+			WHEN (b.terms->'actual'->>'firstResetlementEnd')::date IS NOT NULL THEN 'Отселение'
+			WHEN (b.terms->'actual'->>'firstResetlementStart')::date IS NULL THEN 'Не начато'
+			ELSE 'Переселение'
+		END as "buildingRelocationStatus",
+		type
     FROM
         old_apart oa
     LEFT JOIN
@@ -32,6 +40,8 @@ WITH ranked_apartments AS (
     LEFT JOIN
         status ON oa.status_id = status.status_id
 	LEFT JOIN renovation.apartments_old_temp using (affair_id)
+	LEFT join renovation.buildings_old b on apartments_old_temp.building_id = b.id 
+	LEFT join renovation.relocation_types rt on b.relocation_type = rt.id 
     WHERE is_hidden = False
 )
 SELECT *

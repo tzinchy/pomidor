@@ -77,8 +77,9 @@ export default function ActionsCell( {props, setData}) {
     }
   };
 
-  const download_balance = async (history_id, is_wave) => {
-    const requestBody = { "history_id": parseInt(history_id), "is_wave": is_wave};
+  const download_balance = async (history_id, is_wave, is_shadow) => {
+    const requestBody = { "history_id": parseInt(history_id), "is_wave": is_wave, "is_shadow": is_shadow};
+    console.log('requestBody', requestBody);
     
     try {
       // Делаем запрос с responseType: 'arraybuffer' для скачивания файла
@@ -167,7 +168,7 @@ export default function ActionsCell( {props, setData}) {
         <div className="flex justify-around">
           <button
             onClick={() => {
-              download_balance(value.history_id, value.is_wave);
+              download_balance(value.history_id, value.is_wave, value.is_shadow);
               setShowDownloadOptions(false);
             }}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"

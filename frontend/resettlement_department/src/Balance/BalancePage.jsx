@@ -6,7 +6,7 @@ import Aside from "../Navigation/Aside";
 import Header from "./Components/Header";
 import FileUploader from "./Components/FileUploader";
 import TestBtn from "./Components/TestBtn";
-import RemoveStageButton from "./Components/RemoveStageButton"; // Импортируем новый компонент
+import RemoveStageButton from "./Components/RemoveStageButton";
 
 const ResponseDisplay = ({ data }) => {
   if (!data) return null;
@@ -25,6 +25,7 @@ export default function BalancePage() {
   const [responseData, setResponseData] = useState(null);
   const [error, setError] = useState(null);
   const [stages, setStages] = useState([{ id: 1 }]);
+  const [isShadow, setIsShadow] = useState(false); // Состояние для чек-бокса
 
   const handleResponse = (data, error) => {
     if (error) {
@@ -45,7 +46,6 @@ export default function BalancePage() {
     if (stages.length > 1) {
       setStages(prev => {
         const newStages = prev.filter(stage => stage.id !== id);
-        // Перенумеровываем оставшиеся этапы
         return newStages.map((stage, index) => ({ ...stage, id: index + 1 }));
       });
     }
@@ -92,11 +92,20 @@ export default function BalancePage() {
             ))}
 
             <div className="m-4 justify-items-center flex">
-              {/*<TestBtn />*/}
-              <SubmitButton onResponse={handleResponse} type={''} />
-              <SubmitButton onResponse={handleResponse} type={'last'} />
+              <SubmitButton onResponse={handleResponse} type={''} isShadow={isShadow} />
+              <SubmitButton onResponse={handleResponse} type={'last'} isShadow={isShadow} />
             </div>
-
+            {/* Чек-бокс "теневой подбор" */}
+            <div className="mb-2 flex items-center">
+              <input
+                type="checkbox"
+                id="shadowCheckbox"
+                checked={isShadow}
+                onChange={() => setIsShadow(!isShadow)}
+                className="mr-2"
+              />
+              <label htmlFor="shadowCheckbox">Теневой подбор</label>
+            </div>
             <FileUploader link={`/fisrt_matching/upload-file/`}/>
           </div>
         </DropdownProvider>
