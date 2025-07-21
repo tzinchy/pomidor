@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from "react-dom/client";
-import reportWebVitals from './reportWebVitals';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
 import Table_page from './PloshadkiTable/Table_page';
@@ -19,8 +18,8 @@ import CinPage from './Cin/CinPage';
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement); 
 
-export const HOSTLINK = process.env.REACT_APP_HOST_LINK;
-export const ASIDELINK = process.env.REACT_APP_REACT_LINK;
+export const HOSTLINK = import.meta.env.VITE_HOST_LINK;
+export const ASIDELINK = import.meta.env.VITE_REACT_LINK;
 
 root.render(
   <BrowserRouter>
@@ -45,4 +44,3 @@ root.render(
   </BrowserRouter>
 );
 
-reportWebVitals();

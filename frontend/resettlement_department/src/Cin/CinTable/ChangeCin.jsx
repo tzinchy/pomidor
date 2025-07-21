@@ -320,12 +320,12 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
         const data = { ...formData };
         
         // Убедимся, что все обязательные поля присутствуют
-        if (type === "create") {
-            if (!data.unom) {
-                alert('Поле UNOM обязательно для заполнения');
-                return null;
-            }
-        }
+        // if (type === "create") {
+        //     if (!data.unom) {
+        //         alert('Поле UNOM обязательно для заполнения');
+        //         return null;
+        //     }
+        // }
         
         // Преобразуем даты в правильный формат
         if (data.start_dates_by_entrence) {
