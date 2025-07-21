@@ -218,7 +218,7 @@ class OldApartRepository:
                 f"'{i}'" for i in otsel_type
             ]  # Добавляем кавычки вокруг каждого значения
             print(otsel_type)
-            conditions.append(f' type IN ({', '.join(otsel_type)})')
+            conditions.append(f' type IN ({", ".join(otsel_type)})')
 
 
         where_clause = " AND ".join(conditions)
