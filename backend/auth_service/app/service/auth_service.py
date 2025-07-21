@@ -39,7 +39,6 @@ class AuthService:
     
     async def login_user(self, login_or_email : str , password: str, response : Response, ) -> UserUuid | HTTPException:
         user_uuid = await self.user_exist(login_or_email=login_or_email)
-        print('это uuid', type(user_uuid))
         user_password = await self.auth_repository.get_password_by_uuid(user_uuid=user_uuid)
         user_email = await self.get_email_by_user_uuid(user_uuid=user_uuid)
         if validate_password(provided_password=password, stored_hash=user_password):
@@ -132,9 +131,6 @@ class AuthService:
     async def get_email_by_user_uuid(self, user_uuid : str) -> str: 
         result = await self.auth_repository.get_email_by_user_uuid(user_uuid=user_uuid)
         return result
-
-    # async def register_user(self, name: str, email: EmailStr, password: str) -> dict:
-    #     pass
 
     async def reset_password(self, email: EmailStr) -> UserUuid:
         user_uuid = await self.auth_repository.get_user_uuid_by_email_or_none(email=email)
