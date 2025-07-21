@@ -1,37 +1,30 @@
-import datetime
-import json
-
+from datetime import datetime
+from typing import Optional, Dict
 from pydantic import BaseModel
 
+class CINBase(BaseModel):
+    unom: Optional[str] = None
+    house_address: str
+    district: str
+    municipal_district: str
+    cin_address: str
+    cin_schedule: str
+    dep_schedule: str
+    phone_osmotr: str
+    otdel: str
+    phone_otvet: str
+    manual_load_id: Optional[int] = None
+    start_dates_by_entrence: Optional[Dict] = None
+    full_cin_address: Optional[str] = None
+    full_house_address: Optional[str] = None
 
-class Cin(BaseModel):
+class CreateCin(CINBase):
+    pass
+
+class Cin(CINBase):
     cin_id: int
-    unom: str
-    house_address: str
-    district : str
-    municipal_district : str
-    cin_address: str
-    cin_schedule: str
-    dep_schedule: str
-    phone_osmotr: str
-    phone_otvet : str
-    otdel: str
-    start_dates_by_entrence: dict
-    phone_otvet: str
-    full_cin_address: str
-    full_house_address: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
-class CreateCin(BaseModel):
-    unom: str
-    house_address: str
-    cin_address: str
-    cin_schedule: str
-    dep_schedule: str
-    phone_osmotr: str
-    otdel: str
-    phone_otvet: str
-    district : str
-    municipal_district : str
-    start_dates_by_entrence : dict
-    full_cin_address: str
-    full_house_address: str
+    class Config:
+        orm_mode = True
