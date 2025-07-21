@@ -2,7 +2,7 @@ import datetime
 import json
 
 from pydantic import BaseModel
-
+from typing import Optional
 
 class Cin(BaseModel):
     cin_id: int
@@ -22,7 +22,7 @@ class Cin(BaseModel):
     full_house_address: str
 
 class CreateCin(BaseModel):
-    unom: str
+    unom: Optional[str] = None
     house_address: str
     cin_address: str
     cin_schedule: str
