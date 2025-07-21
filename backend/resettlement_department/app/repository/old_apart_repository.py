@@ -13,6 +13,7 @@ class OldApartRepository:
         self.db = session_maker
 
     async def get_districts(self, user_districts: Optional[list[str]] = None) -> list[str]:
+        print(user_districts)
         try:
             async with self.db() as session:
                 # Base query
@@ -28,10 +29,11 @@ class OldApartRepository:
                 
                 # Always add ORDER BY
                 query += " ORDER BY district"
-                
+                print(query.format(params))
                 # Execute query
                 result = await session.execute(text(query), params or None)
                 districts = [row[0] for row in result if row[0] is not None]
+                print(districts)
                 return districts
 
         except Exception as e:
