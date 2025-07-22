@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { Menu, Transition } from '@headlessui/react';
+import { Popover } from '@headlessui/react';
 import { Fragment } from 'react';
 import {
   useReactTable,
@@ -771,6 +772,15 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     setMaxApartNumber("");
   };
 
+  const transitionProps = {
+  enter: "transition ease-out duration-100",
+  enterFrom: "transform opacity-0 scale-95",
+  enterTo: "transform opacity-100 scale-100",
+  leave: "transition ease-in duration-75",
+  leaveFrom: "transform opacity-100 scale-100",
+  leaveTo: "transform opacity-0 scale-95"
+};
+
   return (
     <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
       {showConfirmModal && (
@@ -950,214 +960,95 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         </div>
           
         <div className='flex items-center'>
-            <Menu as="div" className="relative inline-block text-left z-[102]">
-            <div>
-              <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
-                <MenuIcon />
-              </Menu.Button>
-            </div>
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <Menu.Items 
-                className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                static // Добавляем static чтобы меню не закрывалось при взаимодействии с вложенными элементами
-              >
-                {apartType === 'OldApart' && (
-                  <div className="px-1 py-1">
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={startRematchWithNotifications}
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                        >
-                          Переподбор
-                        </button>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={switchAparts}
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                        >
-                          Поменять квартиры
-                        </button>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={(e) => {setSpecialNeedsForMany(1)}}
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                        >
-                          Проставить инвалидность
-                        </button>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={(e) => {setSpecialNeedsForMany(0)}}
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                        >
-                          Снять инвалидность
-                        </button>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={handleContainerClick}
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                        >
-                          Контейнер
-                        </button>
-                      )}
-                    </Menu.Item>
+<Popover className="relative inline-block text-left z-[102]">
+  <Popover.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
+    <MenuIcon />
+  </Popover.Button>
+
+  <Transition
+    as={Fragment}
+    enter="transition ease-out duration-100"
+    enterFrom="transform opacity-0 scale-95"
+    enterTo="transform opacity-100 scale-100"
+    leave="transition ease-in duration-75"
+    leaveFrom="transform opacity-100 scale-100"
+    leaveTo="transform opacity-0 scale-95"
+  >
+    <Popover.Panel className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+      {apartType === 'OldApart' && (
+        <div className="px-1 py-1">
+          <button onClick={startRematchWithNotifications} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Переподбор</button>
+          <button onClick={switchAparts} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Поменять квартиры</button>
+          <button onClick={() => setSpecialNeedsForMany(1)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Проставить инвалидность</button>
+          <button onClick={() => setSpecialNeedsForMany(0)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Снять инвалидность</button>
+          <button onClick={handleContainerClick} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Контейнер</button>
+        </div>
+      )}
+
+      {apartType !== 'OldApart' && (
+        <div className="px-1 py-1">
+          {/* Подменю Проставить подъезд */}
+          <Popover className="relative">
+            <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
+              <span>Проставить подъезд</span>
+            </Popover.Button>
+
+            <Transition as={Fragment} {...transitionProps}>
+              <Popover.Panel className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
+                <div className="space-y-2">
+                  <input
+                    type="number"
+                    placeholder="Введите номер подъезда"
+                    className="w-full px-2 py-1 text-sm border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    onChange={(e) => setEntranceInput(e.target.value)}
+                    value={entranceInput}
+                    autoFocus
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <Popover.Button as="button" className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded" onClick={() => setEntranceInput('')}>Отмена</Popover.Button>
+                    <Popover.Button as="button" className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600" onClick={() => {
+                      if (entranceInput) {
+                        setEntranceForMany(entranceInput);
+                        setEntranceInput('');
+                      }
+                    }}>Подтвердить</Popover.Button>
                   </div>
-                )}
-                <div className="px-1 py-1">
-                  {apartType !== 'OldApart' && (
-                    <Menu>
-                      {({ open, close }) => (
-                        <div className="relative">
-                          <Menu.Button
-                            className={`${
-                              open ? 'bg-gray-100' : ''
-                            } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center`}
-                          >
-                            <span>Проставить подъезд</span>
-                          </Menu.Button>
-                          
-                          <Transition
-                            show={open}
-                            as={Fragment}
-                            enter="transition ease-out duration-100"
-                            enterFrom="transform opacity-0 scale-95"
-                            enterTo="transform opacity-100 scale-100"
-                            leave="transition ease-in duration-75"
-                            leaveFrom="transform opacity-100 scale-100"
-                            leaveTo="transform opacity-0 scale-95"
-                          >
-                            <Menu.Items 
-                              static
-                              className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2"
-                            >
-                              <div className="space-y-2">
-                                <input
-                                  type="number"
-                                  placeholder="Введите номер подъезда"
-                                  className="w-full px-2 py-1 text-sm border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                  onChange={(e) => setEntranceInput(e.target.value)}
-                                  value={entranceInput}
-                                  autoFocus
-                                />
-                                <div className="flex justify-end space-x-2">
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setEntranceInput('');
-                                      close(); // Закрываем меню
-                                    }}
-                                    className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded"
-                                  >
-                                    Отмена
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      if (entranceInput) {
-                                        setEntranceForMany(entranceInput);
-                                        setEntranceInput('');
-                                        close(); // Закрываем меню после подтверждения
-                                      }
-                                    }}
-                                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                                  >
-                                    Подтвердить
-                                  </button>
-                                </div>
-                              </div>
-                            </Menu.Items>
-                          </Transition>
-                        </div>
-                      )}
-                    </Menu>
-                  )}
-                  {/* Подменю статусов */}
-                  <Menu>
-                    {({ open }) => (
-                      <div className="relative">
-                        <Menu.Button
-                          className={`${
-                            open ? 'bg-gray-100' : ''
-                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100`}
-                        >
-                          <span>Изменить статус</span>
-                        </Menu.Button>
-                        
-                        <Transition
-                          show={open}
-                          as={Fragment}
-                          enter="transition ease-out duration-100"
-                          enterFrom="transform opacity-0 scale-95"
-                          enterTo="transform opacity-100 scale-100"
-                          leave="transition ease-in duration-75"
-                          leaveFrom="transform opacity-100 scale-100"
-                          leaveTo="transform opacity-0 scale-95"
-                        >
-                          <Menu.Items 
-                            static
-                            className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
-                          >
-                            <div className="px-1 py-1">
-                              {statuses.map((status) => (
-                                <Menu.Item key={status}>
-                                  {({ active }) => (
-                                    <button
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        setStatusForMany(status, apartType);
-                                      }}
-                                      className={`${
-                                        active ? 'bg-gray-100' : ''
-                                      } group flex w-full rounded-md px-2 py-2 text-xs text-gray-900`}
-                                    >
-                                      {status}
-                                    </button>
-                                  )}
-                                </Menu.Item>
-                              ))}
-                            </div>
-                          </Menu.Items>
-                        </Transition>
-                      </div>
-                    )}
-                  </Menu>
                 </div>
-              </Menu.Items>
+              </Popover.Panel>
             </Transition>
-          </Menu>
+          </Popover>
+
+          {/* Подменю Изменить статус */}
+          <Popover className="relative">
+            <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
+              <span>Изменить статус</span>
+            </Popover.Button>
+
+            <Transition as={Fragment} {...transitionProps}>
+              <Popover.Panel className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
+                <div className="px-1 py-1 space-y-1">
+                  {statuses.map((status) => (
+                    <button
+                      key={status}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setStatusForMany(status, apartType);
+                      }}
+                      className="group flex w-full rounded-md px-2 py-2 text-xs text-gray-900 hover:bg-gray-100"
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              </Popover.Panel>
+            </Transition>
+          </Popover>
+        </div>
+      )}
+    </Popover.Panel>
+  </Transition>
+</Popover>
           <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
         </div>
       </div>
