@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, Request, status
 from pydantic import BaseModel 
 
-from schemas.user_token_data import UserTokenData, UserFrontedPayload, Districts
+from schemas.user import User, UserFrontedPayload, Districts
 
 load_dotenv()
 
@@ -69,7 +69,7 @@ def get_districts_token(request : Request) -> str:
 class AuthChecker:
     def __init__(
         self,
-        response_model: Type[BaseModel] = UserTokenData,
+        response_model: Type[BaseModel] = User,
         required_roles: Optional[List[int]] = None,
         required_groups: Optional[List[int]] = None,
         required_positions: Optional[List[int]] = None
@@ -79,7 +79,7 @@ class AuthChecker:
         self.required_groups = required_groups or []
         self.required_positions = required_positions or []
 
-    def __call__(self, token: str = Depends(get_token)) -> UserTokenData:
+    def __call__(self, token: str = Depends(get_token)) -> User:
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             user_data = self.response_model(**payload)
@@ -123,11 +123,11 @@ class AuthChecker:
                 detail=str(e)
             )
         
-async def get_user(token: str = Depends(get_token)) -> UserTokenData:
+async def get_user(token: str = Depends(get_token)) -> User:
     """Базовая зависимость для получения данных пользователя без проверок прав"""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return UserTokenData(**payload)
+        return User(**payload)
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -139,7 +139,7 @@ async def get_user(token: str = Depends(get_token)) -> UserTokenData:
             detail=f"Invalid token: {str(e)}"
         )
     
-async def get_fronted_payload(token: str = Depends(get_fronted_token)) -> UserTokenData:
+async def get_fronted_payload(token: str = Depends(get_fronted_token)) -> User:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return UserFrontedPayload(**payload)
