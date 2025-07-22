@@ -190,13 +190,11 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
         for i, tag in enumerate(additional_values):
             additional_texts = {
                 "VSOOTVET": f"Согласно постановлению Правительства Москвы от 01.08.2017 № 497-ПП «О программе реновации жилищного фонда в городе Москве» (далее - Программа реновации) в отношении многоквартирного дома по адресу: г. Москва, {row['full_old_house_address']} принято решение о включении в Программу реновации.",
-                "INFO_SOB": """- заявление о включении в предмет Договора предлагаемого жилого помещения;
-                - оригиналы документов личного характера и правоустанавливающие документы на освобождаемое жилое помещение.
-                Просим довести указанную в письме информацию до всех правообладателей.""",
+                "INFO_SOB": """- заявление о включении в предмет Договора предлагаемого жилого помещения;\n- оригиналы документов личного характера и правоустанавливающие документы на освобождаемое жилое помещение.\nПросим довести указанную в письме информацию до всех правообладателей.""",
                 "ISPOLNITEL": "Кандабаров Н.А.",
-                "OSMOTR": f"""Для осмотра квартиры необходимо {('с ' + (str(row['start_date'])[8:] + '.' + str(row['start_date'])[5:7] + '.' +str(row['start_date'])[:4])) if row['start_date'] != None and row['start_date'] > datetime.now().date() else '' } в течение 7 рабочих дней обратиться в инф. центр по адресу: г. Москва, {row['full_cin_address']} ({row['cin_schedule']}) по пред. записи онлайн на сайте https://www.mos.ru/ в разделе «Осмотр квартиры» (для перехода наведите камеру смартфона на QR~код) или по тел. {row['phone_osmotr']}.""" if row['cin_schedule'] != 'time2plan' else "Предварительная запись на показ жилого помещения доступна на сервисе онлайн-записи «Время планировать вместе с ДГИ»: https://time2plan.online.",
+                "OSMOTR": f"""Для осмотра квартиры необходимо {('с ' + (str(row['start_date'])[8:] + '.' + str(row['start_date'])[5:7] + '.' +str(row['start_date'])[:4])) if row['start_date'] != None and row['start_date'] > datetime.now().date() else '' } в течение 7 рабочих дней обратиться в инф. центр по адресу: г. Москва, {row['full_cin_address']} ({row['cin_schedule']}) по пред. записи онлайн на сайте https://www.mos.ru/ в разделе «Осмотр квартиры» (для перехода наведите камеру смартфона на QR~код) или по тел. {row['phone_osmotr']}.""" if row['cin_schedule'] != 'time2plan' else "Предварительная запись на показ жилого помещения доступна на сервисе онлайн-записи «Время планировать вместе с ДГИ»: https://time2plan.online.",
                 "GETKEY": " ",
-                "OTVET": f"Всем правообладателям необходимо предоставить свое согласие либо отказ от предлагаемого жилого помещения в срок не позднее 7 рабочих дней в инф. центр по адресу: г.\u00A0Москва, {row['full_cin_address'] if row['dep_schedule']!= 'отдел' else row['otdel']} {('(' + row['dep_schedule'] + ')') if row['dep_schedule']!= 'отдел' else ''}, по пред. записи по вышеуказанному тел., при себе необходимо иметь следующие документы:"
+                "OTVET": f"Всем правообладателям необходимо предоставить свое согласие либо отказ от предлагаемого жилого помещения в срок не позднее 7 рабочих дней в инф. центр по адресу: г. Москва, {row['full_cin_address'] if row['dep_schedule']!= 'отдел' else row['otdel']} {('(' + row['dep_schedule'] + ')') if row['dep_schedule']!= 'отдел' else ''}, по пред. записи по вышеуказанному тел., при себе необходимо иметь следующие документы:"
             }
 
             # Номер заявки
@@ -206,11 +204,11 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
                 sheet.cell(row=row_num, column=2, value=1)  # appApplicantList.type
                 sheet.cell(row=row_num, column=3, value=1)  # appApplicantList.tab
                 sheet.cell(row=row_num, column=4, value="Уважаемый правообладатель!")  # appApplicantList.firstname
-                sheet.cell(row=row_num, column=6, value=f"{row['full_old_house_address']} кв.\u00A0{row['old_number']}")  # Адрес
+                sheet.cell(row=row_num, column=6, value=f"{row['full_old_house_address']} кв. {row['old_number']}")  # Адрес
                 sheet.cell(row=row_num, column=7, value=124365)  # Индекс
-                sheet.cell(row=row_num, column=8, value="г.\u00A0Москва")  # Населенный пункт
+                sheet.cell(row=row_num, column=8, value="г. Москва")  # Населенный пункт
                 sheet.cell(row=row_num, column=9, value=row['old_cad_num'])  # Кадастровый номер
-                sheet.cell(row=row_num, column=10, value=f"{row['full_house_address']} кв.\u00A0{row['new_number']}")  # flatList.address
+                sheet.cell(row=row_num, column=10, value=f"{row['full_house_address']}, кв. {row['new_number']}")  # flatList.address
 
                 # Заполняем данные flatList
                 sheet.cell(row=row_num, column=11, value=row['total_living_area'])  # flatList.square
