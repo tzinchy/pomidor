@@ -41,3 +41,5 @@ class Settings:
 
 settings = Settings()
 print(settings.project_management_setting.DATABASE_URL)
+print(settings.project_management_setting.ALGORITHM, 'ЭТО АЛГОРИТМ')
+print(settings.project_management_setting.SECRET_KEY, 'А ЭТО КЛЮЧ')
