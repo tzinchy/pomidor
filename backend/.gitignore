@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-.DS_Store 
-.log
-=======
+
 .DS_Store
 loader/*.log
 cron.log
+.log
 loader/cron.log
-
->>>>>>> 74e7126 (add to .gitignore cron.job log)
