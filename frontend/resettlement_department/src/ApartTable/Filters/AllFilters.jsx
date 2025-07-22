@@ -44,6 +44,10 @@ export default function AllFilters({
     maxPeople,
     setMaxPeople,
     filterStatuses,
+    minApartNumber,
+    setMinApartNumber,
+    maxApartNumber,
+    setMaxApartNumber,
 }) {
     const emptyStatus = apartType === 'OldApart' ? 'Не подобрано' : "Свободна";
     const StatusFilters = [emptyStatus, "Согласие", 'Отказ', "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", 'Ждёт одобрения', "МФР (вне района)", "МФР Компенсация (вне района)"];
@@ -52,6 +56,11 @@ export default function AllFilters({
         const isChecked = e.target.checked;
         setIsQueueChecked(isChecked);
         handleFilterChange('is_queue', isChecked ? [1] : [0, 1]);
+    };
+    const handleExQueueChange = (e) => {
+        const isChecked = e.target.checked;
+        setIsQueueChecked(isChecked);
+        handleFilterChange('was_queue', isChecked ? [1] : [0, 1]);
     };
 
     if (!isOpen) return null;
@@ -192,6 +201,39 @@ export default function AllFilters({
                             </label>
                         </div>
                     )}
+                    {/* Чекбокс Очередники (только для OldApart) */}
+                    {apartType === 'OldApart' && (
+                        <div className="flex-shrink-0">
+                            <label className="font-medium flex items-center bg-white border border-dashed border-input hover:bg-gray-100 rounded-md px-3 h-8 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={isQueueChecked}
+                                    onChange={handleExQueueChange}
+                                    className="mr-2"
+                                />
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="lucide lucide-list-ordered mr-2 h-4 w-4"
+                                >
+                                    <line x1="10" y1="6" x2="21" y2="6"></line>
+                                    <line x1="10" y1="12" x2="21" y2="12"></line>
+                                    <line x1="10" y1="18" x2="21" y2="18"></line>
+                                    <path d="M4 6h1v4"></path>
+                                    <path d="M4 10h2"></path>
+                                    <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path>
+                                </svg>
+                                Быв. очередники
+                            </label>
+                        </div>
+                    )}
                     
                     <div className="grid grid-cols-5 gap-4">
                         {/* Площадь жилая */}
@@ -299,6 +341,26 @@ export default function AllFilters({
                                 </div>
                             </div>
                         )}
+
+                        <div className="flex items-center gap-2">
+                            <label className="w-24">Номер квартиры:</label>
+                            <div className="flex gap-2 flex-1">
+                                <input
+                                    value={minApartNumber}
+                                    onChange={(e) => setMinApartNumber(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="от"
+                                    step="1"
+                                />
+                                <input
+                                    value={maxApartNumber}
+                                    onChange={(e) => setMaxApartNumber(e.target.value)}
+                                    className="w-full px-2 py-1 border rounded"
+                                    placeholder="до"
+                                    step="1"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className="flex mt-4 gap-2">

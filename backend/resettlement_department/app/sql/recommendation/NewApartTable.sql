@@ -2,7 +2,7 @@ WITH clr_dt AS (
     SELECT 
         offer_id,
         affair_id, 
-        (KEY)::int AS new_apart_id, 
+        (KEY)::bigint AS new_apart_id, 
         sentence_date, 
         answer_date, 
 		created_at,
@@ -15,6 +15,7 @@ WITH clr_dt AS (
 ranked_apartments AS (
     SELECT 
         o.offer_id,
+        o.created_at::DATE,
         na.house_address, 
         na.apart_number, 
         na.district, 
@@ -36,7 +37,8 @@ ranked_apartments AS (
             ORDER BY o.sentence_date DESC, o.answer_date DESC, o.created_at DESC
         ) AS rn,
         COUNT(o.affair_id) OVER (PARTITION BY na.new_apart_id) AS selection_count, 
-        rank
+        rank,
+        rsm_apart_id
     FROM 
         new_apart na
     LEFT JOIN 

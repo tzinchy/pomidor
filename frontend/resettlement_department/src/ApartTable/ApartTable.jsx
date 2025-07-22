@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { Menu, Transition } from '@headlessui/react';
+import { Popover } from '@headlessui/react';
 import { Fragment } from 'react';
 import {
   useReactTable,
@@ -10,6 +11,8 @@ import {
 } from '@tanstack/react-table';
 import axios from "axios";
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { ToastContainer, toast } from 'react-toastify';
+
 import AdressCell from './Cells/AdressCell';
 import FamilyCell from './Cells/Fio';
 import PloshCell from './Cells/PloshCell';
@@ -18,6 +21,10 @@ import NotesCell from './Cells/Notes';
 import ApartDetails from './ApartDetails';
 import { HOSTLINK } from '..';
 import AllFilters from './Filters/AllFilters';
+import ProgressStatusBar from './ProgressStatusBar';
+import StageCell from './Cells/StageCell';
+import ConfirmationModal from './ConfirmationModal';
+import DropdownFilter from './Filters/DropdownFilter';
 
 // Добавьте SVG для иконки меню
 const MenuIcon = () => (
@@ -30,14 +37,13 @@ const MenuIcon = () => (
 
 const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisible, setIsDetailsVisible, apartType, 
   fetchApartmentDetails, apartmentDetails, collapsed, lastSelectedMunicipal, lastSelectedAddres, fetchApartments, filters, setFilters, rowSelection, setRowSelection,
-  setApartType, setLoading}) => {
+  setApartType, setLoading, setCollapsed}) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
   const tableContainerRef = useRef(null);
   const [filteredApartments, setFilteredApartments] = useState(data);
   const [matchCount, setMatchCount] = useState([]);
   const [selectedRowId, setSelectedRowId] = useState();
-
   const [rooms, setRooms] = useState([]);
   const [filtersResetFlag, setFiltersResetFlag] = useState(false);
   const [isQueueChecked, setIsQueueChecked] = useState(false);
@@ -58,9 +64,57 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [minPeople, setMinPeople] = useState([]);
   const [maxPeople, setMaxPeople] = useState([]);
   const [filterStatuses, setFilterStatuses] = useState([]);
+  const [allStatuses, setAllStatuses] = useState(null);
+  const [isEntranceDialogOpen, setIsEntranceDialogOpen] = useState(false);
+  const [entranceInput, setEntranceInput] = useState('');
+  const [pendingAction, setPendingAction] = useState(null);
+  const [minApartNumber, setMinApartNumber] = useState([]);
+  const [maxApartNumber, setMaxApartNumber] = useState([]);
+  const error_toast = () => {
+    return toast.error('Ошибка', {
+        position: "bottom-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });}
+  const success_toast = (text) => {
+    return toast.success(text, {
+        position: "bottom-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+  }
+  const stages = ['Завершено', 'Снос', 'Отселение', 'Переселение', 'Не начато'];
+  const otdelType = ["Полное переселение", "Частичное отселение", "Многоэтапное отселение"];
+  const statuses = apartType === 'OldApart' ? ["Суд", "МФР Компенсация", "МФР Докупка", "МФР (вне района)", "МФР Компенсация (вне района)",  "Ждёт одобрения",  "Подготовить смотровой", "Ожидание", "Подборов не будет", "Согласие"] : ["Резерв", "Блок", "Свободная", "Передано во вне"];
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSecondConfirmModal, setShowSecondConfirmModal] = useState(false);
 
-  const statuses = apartType === 'OldApart' ? ["Согласие", "Суд", "МФР Компенсация", "МФР Докупка", "Ожидание", "Ждёт одобрения", "МФР (вне района)", "МФР Компенсация (вне района)"] : ["Резерв", "Блок"];
-  
+  const handleContainerClick = () => {
+    const count = Object.keys(rowSelection).length;
+    
+    if (count > 1000) {
+      setShowConfirmModal(true);
+    } else {
+      setShowSecondConfirmModal(true);
+    }
+  };
+
+  const handleFinalConfirm = () => {
+    setContainerForMany();
+    setShowConfirmModal(false);
+    setShowSecondConfirmModal(false);
+  };
+
   // Получаем уникальные значения room_count
   const getUniqueValues = useMemo(() => {
     if (!data) return [];
@@ -87,7 +141,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             
             // Специальная обработка для статусов
             if (x === "status" && !value) {
-              value = apartType === "OldApart" ? "Не подобрано" : "Свободна";
+              value = apartType === "OldApart" ? "Не подобрано" : "Свободная";
             }
             
             return value;
@@ -106,7 +160,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     setTypeOfSettlement(getUniqueStringValues('type_of_settlement'));
     setFilterStatuses(getUniqueStringValues('status'));
     console.log('filterStatuses', filterStatuses);
-  }, [getUniqueValues]);
+  }, [filteredApartments]);
 
 
   const getFilteData = (data) => {
@@ -140,10 +194,21 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     return result;
   };
 
+  const countStatuses = (data) => {
+    return data.reduce((acc, item) => {
+      const status = item.status;
+      if (status) {
+        acc[status] = (acc[status] || 0) + 1;
+      }
+      return acc;
+    }, {});
+  };
+
   // 2. Добавляем эффект для синхронизации с исходными данными
   useEffect(() => {
     setFilteredApartments(data);
     setFilterData(getFilteData(data));
+    setAllStatuses(countStatuses(data))
     console.log(data);
   }, [data]);
   
@@ -175,11 +240,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     let filtered = data;
 
     if (searchApartQuery) {
-      filtered = filtered.filter((item) => {
-          return (
-              item.apart_number?.toLowerCase().includes(searchApartQuery.toLowerCase())
-          );
-      });
+      filtered = filtered.filter((item) => 
+        apartType === 'OldApart'
+          ? item.apart_number?.toLowerCase().includes(searchApartQuery.toLowerCase())
+          : String(item.apart_number || '').toLowerCase().includes(searchApartQuery.toLowerCase())
+      );
     }
 
     if (searchFioQuery) {
@@ -266,49 +331,164 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         return valid;
       });
     }
+
+    // Фильтрация по этажу
+    if (minApartNumber || maxApartNumber ) {
+      filtered = filtered.filter((item) => {
+        const apart_number = parseFloat(item.apart_number);
+        const min = parseFloat(minApartNumber);
+        const max = parseFloat(maxApartNumber);
+  
+        let valid = true;
+        if (!isNaN(min)) valid = valid && apart_number >= min;
+        if (!isNaN(max)) valid = valid && apart_number <= max;
+        return valid;
+      });
+    }
     
 
       // Применяем каждый фильтр
       Object.entries(filters).forEach(([filterType, selectedValues]) => {
+        if (filterType === 'buildingRelocationStatus' || filterType ===  'relocationType') {return 1;} 
         if (selectedValues.length > 0) {
-            const filterKey = filterType.toLowerCase();
+          const filterKey = filterType.toLowerCase();
 
-            filtered = filtered.filter((item) => {
-                // Проверяем наличие специальных значений в выбранных значениях
-                const hasSpecialValues = selectedValues.some(
-                    val => val === "Не подобрано" || val === "Свободна"
-                );
-                
-                // Проверяем обычные значения статусов
-                const hasRegularStatus = selectedValues.some(
-                    (val) => val !== "Не подобрано" && val !== "Свободна" && item[filterKey] === val
-                );
-
-                // Если выбраны специальные значения - проверяем на null, иначе проверяем обычные статусы
-                return (hasSpecialValues && item[filterKey] === null) || hasRegularStatus;
-            });
+          filtered = filtered.filter((item) => {
+            // Проверяем все выбранные значения фильтра
+            for (const val of selectedValues) {
+                // Если это специальное значение ("Не подобрано" или "Свободная")
+                if (val === "Не подобрано" || val === "Свободная") {
+                    // Проверяем либо точное совпадение, либо null
+                    if (item[filterKey] === val || item[filterKey] === null) {
+                        return true;
+                    }
+                } 
+                // Для обычных значений
+                else if (item[filterKey] === val) {
+                    return true;
+                }
+            }
+            return false;
+          });
         }
       });
 
       setFilteredApartments(filtered);
-  }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor, minPeople, maxPeople, searchApartQuery, searchFioQuery, searchNotesQuery]);
+  }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor, minApartNumber, maxApartNumber, minPeople, maxPeople, searchApartQuery, searchFioQuery, searchNotesQuery]);
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
-    try {
-      await axios.post(
-        `${HOSTLINK}/tables/apartment/rematch`,
-        JSON.stringify({ apartment_ids: apartmentIds }),
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
-    } catch (error) {
+    
+    return axios.post(
+      `${HOSTLINK}/tables/apartment/rematch`,
+      JSON.stringify({ apartment_ids: apartmentIds }),
+      { headers: { 'Content-Type': 'application/json' } }
+    )
+    .then(async response => {
+      console.log('REMACH RETURN - ', response.data['res']);
+      
+      // Вызываем обновление квартир
+      await fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      
+      // Возвращаем данные для обработки в toast
+      const failedCount = Object.keys(response.data || {}).length;
+      const successCount = apartmentIds.length - failedCount;
+      
+      return response.data['res']
+    })
+    .catch(error => {
       console.error("Error rematch:", error.response?.data);
-    }
+      throw new Error(error.response?.data?.detail || "Неизвестная ошибка при переподборе");
+    });
+  };
+
+  // Функция для запуска переподбора с уведомлениями
+  const startRematchWithNotifications = () => {
+    toast.promise(
+      rematch(),
+      {
+        pending: {
+          render: () => {return (
+            <div className="flex items-center">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Идет переподбор квартир...</span>
+            </div>
+          )},
+          icon: false,
+        },
+        success: {
+          render: ({data}) => {
+            // Проверка на нулевые результаты
+            if (data[0] === 0 && data[1] === 0) {
+              // Возвращаем warning вместо success
+              return (
+                <div>
+                  <b>Внимание!</b>
+                  <p>Переподбор невозможен</p>
+                </div>
+              );
+            }
+            
+            // Стандартный вывод при наличии результатов
+            return (
+              <div>
+                <b>Переподбор завершен!</b>
+                {data[0] > 0 && (
+                  <p>Переподобрано: {data[0]} кв.</p>
+                )}
+                {data[1] > 0 && (
+                  <p className="text-yellow-600">Не переподобрано: {data[1]} кв.</p>
+                )}
+              </div>
+            );
+          },
+          icon: "✅",
+        },
+        error: {
+          render: ({err}) => {return (
+            <div>
+              <b>Ошибка при переподборе!</b>
+              <p>{err}</p>
+            </div>
+          )},
+          icon: "❌",
+          autoClose: 5000,
+        },
+      },
+      {
+        position: "bottom-right",
+        closeButton: true,
+        draggable: true,
+        style: {
+          zIndex: 9999, // Высокий z-index
+          position: 'relative',
+        },
+        progressStyle: {
+          background: "linear-gradient(to right, #4f46e5, #ec4899)",
+        },
+        className: "bg-white text-gray-800 shadow-lg rounded-xl border border-gray-200",
+        toastClassName: "!z-[9999]", // Дополнительное повышение z-index
+      }
+    );
   };
 
   const switchAparts = async () => {
-    if ((Object.keys(rowSelection).length > 2) || (apartType === 'NewApartment')) return;
+    if ((Object.keys(rowSelection).length !== 2) || (apartType === 'NewApartment')) {
+      toast.warn('Нужно выбрать 2 квартиры', {
+        position: "bottom-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        });
+      return;
+    }
     try {
       await axios.post(
         `${HOSTLINK}/tables/switch_aparts`,
@@ -317,8 +497,10 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           second_apart_id: parseInt(Object.keys(rowSelection)[1])
         }
       );
+      success_toast('Квартиры успешно заменены');
     } catch (error) {
       console.error("Error ", error.response?.data);
+      error_toast();
     }
   };
 
@@ -340,10 +522,81 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           }
         }
       );
-      
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      success_toast('Статус успешно изменён');
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
+      error_toast();
+    }
+  };
+
+  const setSpecialNeedsForMany = async (marker) => {
+    const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+    console.log('setSpecialNeedsForMany', apartmentIds, marker, apartType)
+    
+    try {
+      await axios.patch(
+        `${HOSTLINK}/tables/apartment/set_special_needs_for_many`,
+        { 
+          apart_ids: apartmentIds,
+          is_special_needs_marker: marker 
+        }
+      );
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      success_toast('Инвалидность успешно проставлена');
+    } catch (error) {
+      console.error("Error setting status:", error.response?.data);
+      error_toast();
+    }
+  };
+
+  const setContainerForMany = async (marker) => {
+    const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+    console.log('setContainerForMany', apartmentIds, marker, apartType)
+    
+    try {
+      await axios.patch(
+        `${HOSTLINK}/tables/apartment/push_container_for_aparts`,
+        { 
+          apartment_ids: apartmentIds
+        }
+      );
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      success_toast('Контейнер успешно отправлен');
+    } catch (error) {
+      console.error("Error setting status:", error.response?.data);
+      error_toast();
+    }
+  };
+
+  const handleEntranceSubmit = async () => {
+    if (entranceInput) {
+      setIsEntranceDialogOpen(false);
+      if (pendingAction) {
+        await pendingAction(entranceInput);
+      }
+      setEntranceInput('');
+      setPendingAction(null);
+    }
+  };
+
+  const setEntranceForMany = async (entrance_number) => {
+    const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+    console.log('setEntranceForMany', apartmentIds, entrance_number, apartType)
+    
+    try {
+      await axios.patch(
+        `${HOSTLINK}/tables/set_entrance_number_for_many`,
+        { 
+          new_apart_ids: apartmentIds,
+          entrance_number: entrance_number
+        }
+      );
+      fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      success_toast('Подъезд успешно проставлен');
+    } catch (error) {
+      console.error("Error setting status:", error.response?.data);
+      error_toast();
     }
   };
 
@@ -357,6 +610,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
     } catch (error) {
       console.error("Ошибка при сохранении:", error);
+      error_toast();
     }
   };
 
@@ -378,19 +632,29 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             type="checkbox"
             checked={row.getIsSelected()}
             onChange={row.getToggleSelectedHandler()}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {e.stopPropagation(); console.log('rowSelection',  Object.keys(rowSelection).length)}}
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
         ),
-        size: 20,
+        size: 30,
         enableSorting: false,
       },
       {
         header: 'Адрес',
-        accessorKey: 'apart_number',
+        accessorKey: 'house_address',
         enableSorting: true,
         cell: ({ row }) => <AdressCell props={row.original} />,
         size: 200,
+      },
+      {
+        header: '№ Кв.',
+        accessorKey: 'apart_number',
+        enableSorting: true,
+        cell: ({ row }) => 
+          <div className="text-xs">
+            {row.original['apart_number']}
+          </div>,
+        size: 60,
       },
       ...(apartType === 'OldApart' ? [{
         header: 'ФИО',
@@ -406,11 +670,27 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         size: 120,
       },
       {
+        header: 'Ранг',
+        accessorKey: 'rank',
+        enableSorting: true,
+        cell: ({ row }) => 
+          <div className="text-xs">
+            {row.original['rank'] ? row.original['rank'] : '-'}
+          </div>,
+        size: 60,
+      },
+      {
         header: 'Статус',
         accessorKey: 'status',
         cell: ({ row }) => <StatusCell props={row.original} />,
         size: 120,
       },
+      ...(apartType === 'OldApart' ? [{
+        header: 'Этап работы',
+        accessorKey: 'classificator.stageName',
+        cell: ({ row }) => <StageCell props={row.original} />,
+        size: 140,
+      }] : []),
       {
         header: "Примечания",
         accessorKey: "notes",
@@ -421,7 +701,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             onSave={(rowData, newNotes) => handleNotesSave(rowData, newNotes)}
           />
         ),
-        size: 250,
+        size: 230,
       },
     ],
     [apartType]
@@ -447,7 +727,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   const rowVirtualizer = useVirtualizer({
     count: table.getRowModel().rows.length,
-    estimateSize: () => 65,
+    estimateSize: () => 75,
     getScrollElement: () => tableContainerRef.current,
     overscan: 10,
   });
@@ -463,6 +743,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       setSelectedRowId(id);
     } else if (!visibility) {
       setSelectedRow(index);
+      setCollapsed(true);
       setIsDetailsVisible(true);
       fetchApartmentDetails(id);
       setSelectedRowId(id);
@@ -487,238 +768,301 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     setTypeOfSettlement("");
     setMinPeople("");
     setMaxPeople("");
+    setMinApartNumber("");
+    setMaxApartNumber("");
   };
 
-  const changeApartType= (apType) => {
-    if (apType !== apartType){
-      setIsDetailsVisible(false); 
-      setSelectedRow(false); 
-      setApartType(apType); 
-      setLoading(true); 
-      setFilters({}); 
-      setRowSelection({}); 
-      setFiltersResetFlag(prev => !prev);
-    }
-  }
-  
+  const transitionProps = {
+  enter: "transition ease-out duration-100",
+  enterFrom: "transform opacity-0 scale-95",
+  enterTo: "transform opacity-100 scale-100",
+  leave: "transition ease-in duration-75",
+  leaveFrom: "transform opacity-100 scale-100",
+  leaveTo: "transform opacity-0 scale-95"
+};
 
   return (
     <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
-      <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
-      <button
-          onClick={() => setIsOpen(!isOpen)}
-          className=""
-        >
-          <div className="relative">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="filter-icon"
-            >
-              <path
-                d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z"
-                stroke="url(#filterGradient)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <defs>
-                <linearGradient
-                  id="filterGradient"
-                  x1="2"
-                  y1="3"
-                  x2="22"
-                  y2="3"
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop stopColor="#3B82F6" />
-                  <stop offset="1" stopColor="#8B5CF6" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-        </button>
-
-        <AllFilters 
-          handleFilterChange={handleFilterChange} 
-          rooms={rooms} 
-          matchCount={matchCount} 
-          apartType={apartType} 
-          filtersResetFlag={filtersResetFlag} 
-          handleResetFilters={handleResetFilters}
-          isQueueChecked={isQueueChecked}
-          setIsQueueChecked={setIsQueueChecked}
-          filters={filters}
-          filterData={filterData}
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
-          setFirstMinArea={setFirstMinArea}
-          setFirstMaxArea={setFirstMaxArea}
-          firstMinArea={firstMinArea}
-          firstMaxArea={firstMaxArea}
-          setSecondMinArea={setSecondMinArea}
-          setSecondMaxArea={setSecondMaxArea}
-          secondMinArea={secondMinArea}
-          secondMaxArea={secondMaxArea}
-          setThirdMinArea={setThirdMinArea}
-          setThirdMaxArea={setThirdMaxArea}
-          thirdMinArea={thirdMinArea}
-          thirdMaxArea={thirdMaxArea}
-          setMinFloor={setMinFloor}
-          setMaxFloor={setMaxFloor}
-          minFloor={minFloor}
-          maxFloor={maxFloor}
-          setSearchApartQuery={setSearchApartQuery}
-          searchApartQuery={searchApartQuery}
-          setSearchFioQuery={setSearchFioQuery}
-          searchFioQuery={searchFioQuery}
-          setSearchNotesQuery={setSearchNotesQuery}
-          searchNotesQuery={searchNotesQuery}
-          typeOfSettlement={typeOfSettlement}
-          minPeople={minPeople}
-          setMinPeople={setMinPeople}
-          maxPeople={maxPeople} 
-          setMaxPeople={setMaxPeople}
-          filterStatuses={filterStatuses}
+      {showConfirmModal && (
+        <ConfirmationModal
+          isOpen={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={() => {
+            setShowConfirmModal(false);
+            setShowSecondConfirmModal(true);
+          }}
+          title="Подтверждение действия"
+          message={`Вы выбрали ${Object.keys(rowSelection).length} строк(и). Это большое количество. Вы уверены, что хотите отправить контейнер для всех выбранных строк?`}
+          confirmText="Да, продолжить"
         />
-        
-        <div className='flex items-center'>
+      )}
 
-          {/*<div className="flex justify-around">
-            <button
-              onClick={() => changeApartType('OldApart')}
-              className={`px-4 py-2 mr-2 rounded-md ${apartType === "OldApart" ? "bg-gray-200 font-semibold" : "bg-white"}`}
-            >
-              Семьи
-            </button>
-            <button
-              onClick={() => changeApartType('NewApartment')}
-              className={`px-4 py-2 rounded-md ${ apartType === "NewApartment" ? "bg-gray-200 font-semibold" : "bg-white"}`}
-            >
-              Ресурс
-            </button>
-          </div>*/}
+      {showSecondConfirmModal && (
+        <ConfirmationModal
+          isOpen={showSecondConfirmModal}
+          onClose={() => setShowSecondConfirmModal(false)}
+          onConfirm={handleFinalConfirm}
+          title="Окончательное подтверждение"
+          message={`Вы точно хотите отправть отправить контейнер для всех выбранных строк? Это действие нельзя будет отменить. Выбрано ${Object.keys(rowSelection).length} строк(и)?`}
+        />
+      )}
 
-            <Menu as="div" className="relative inline-block text-left z-[102]">
-            <div>
-              <Menu.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
-                <MenuIcon />
-              </Menu.Button>
-            </div>
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <Menu.Items 
-                className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                static // Добавляем static чтобы меню не закрывалось при взаимодействии с вложенными элементами
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        style={{ zIndex: 9999 }} // Глобальный высокий z-index
+        toastStyle={{ position: 'relative' }}
+      />
+      <div className={`${collapsed ? 'ml-[25px]' : 'ml-[260px]'} flex flex-wrap items-center mb-2 justify-between`}>
+        <div className='flex w-[50%] items-center justify-between'>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className=""
+          >
+            <div className="relative">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="filter-icon"
               >
-                {apartType === 'OldApart' && (
-                  <div className="px-1 py-1">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={rematch}
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                      >
-                        Переподбор
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={switchAparts}
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                      >
-                        Поменять квартиры
-                      </button>
-                    )}
-                  </Menu.Item>
+                <path
+                  d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z"
+                  stroke="url(#filterGradient)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <defs>
+                  <linearGradient
+                    id="filterGradient"
+                    x1="2"
+                    y1="3"
+                    x2="22"
+                    y2="3"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop stopColor="#3B82F6" />
+                    <stop offset="1" stopColor="#8B5CF6" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+          </button>
+          <AllFilters 
+            handleFilterChange={handleFilterChange} 
+            rooms={rooms} 
+            matchCount={matchCount} 
+            apartType={apartType} 
+            filtersResetFlag={filtersResetFlag} 
+            handleResetFilters={handleResetFilters}
+            isQueueChecked={isQueueChecked}
+            setIsQueueChecked={setIsQueueChecked}
+            filters={filters}
+            filterData={filterData}
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            setFirstMinArea={setFirstMinArea}
+            setFirstMaxArea={setFirstMaxArea}
+            firstMinArea={firstMinArea}
+            firstMaxArea={firstMaxArea}
+            setSecondMinArea={setSecondMinArea}
+            setSecondMaxArea={setSecondMaxArea}
+            secondMinArea={secondMinArea}
+            secondMaxArea={secondMaxArea}
+            setThirdMinArea={setThirdMinArea}
+            setThirdMaxArea={setThirdMaxArea}
+            thirdMinArea={thirdMinArea}
+            thirdMaxArea={thirdMaxArea}
+            setMinFloor={setMinFloor}
+            setMaxFloor={setMaxFloor}
+            minFloor={minFloor}
+            maxFloor={maxFloor}
+            setSearchApartQuery={setSearchApartQuery}
+            searchApartQuery={searchApartQuery}
+            setSearchFioQuery={setSearchFioQuery}
+            searchFioQuery={searchFioQuery}
+            setSearchNotesQuery={setSearchNotesQuery}
+            searchNotesQuery={searchNotesQuery}
+            typeOfSettlement={typeOfSettlement}
+            minPeople={minPeople}
+            setMinPeople={setMinPeople}
+            maxPeople={maxPeople} 
+            setMaxPeople={setMaxPeople}
+            filterStatuses={filterStatuses}
+            minApartNumber={minApartNumber}
+            setMinApartNumber={setMinApartNumber}
+            maxApartNumber={maxApartNumber}
+            setMaxApartNumber={setMaxApartNumber}
+          />
+{/*fetchApartments*/}
+          {allStatuses ? (
+            <ProgressStatusBar data={allStatuses} handleFilterChange={handleFilterChange} />
+          ) : (
+            <div className='w-full'>Загрузка данных...</div>
+          )}
+          <div className="flex-shrink-0 ml-2">
+            <DropdownFilter 
+                item={'Стадия'} 
+                data={stages} 
+                func={handleFilterChange}
+                filterType={'buildingRelocationStatus'} 
+                isFiltersReset={filtersResetFlag} 
+                filters={filters}
+                fetchFunc={fetchApartments}
+                type={'buildingRelocationStatus'} 
+            />
+          </div>
+          <div className="flex-shrink-0 ml-2">
+            <DropdownFilter 
+                item={'Тип'} 
+                data={otdelType} 
+                func={handleFilterChange}
+                filterType={'type'} 
+                isFiltersReset={filtersResetFlag} 
+                filters={filters}
+                fetchFunc={fetchApartments}
+                type={'relocationType'}
+            />
+          </div>
+          <div className="flex-shrink-0 ml-2">
+            <button
+                onClick={handleResetFilters}
+                className="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap text-sm font-medium hover:bg-gray-100 rounded-md px-3 h-8 border-dashed"
+            >
+                Сброс
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-x ml-2 h-4 w-4"
+                >
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                </svg>
+            </button>
+          </div>
+        </div>
+          
+        <div className='flex items-center'>
+<Popover className="relative inline-block text-left z-[102]">
+  <Popover.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
+    <MenuIcon />
+  </Popover.Button>
+
+  <Transition
+    as={Fragment}
+    enter="transition ease-out duration-100"
+    enterFrom="transform opacity-0 scale-95"
+    enterTo="transform opacity-100 scale-100"
+    leave="transition ease-in duration-75"
+    leaveFrom="transform opacity-100 scale-100"
+    leaveTo="transform opacity-0 scale-95"
+  >
+    <Popover.Panel className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+      {apartType === 'OldApart' && (
+        <div className="px-1 py-1">
+          <button onClick={startRematchWithNotifications} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Переподбор</button>
+          <button onClick={switchAparts} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Поменять квартиры</button>
+          <button onClick={() => setSpecialNeedsForMany(1)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Проставить инвалидность</button>
+          <button onClick={() => setSpecialNeedsForMany(0)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Снять инвалидность</button>
+          <button onClick={handleContainerClick} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Контейнер</button>
+        </div>
+      )}
+
+      {apartType !== 'OldApart' && (
+        <div className="px-1 py-1">
+          {/* Подменю Проставить подъезд */}
+          <Popover className="relative">
+            <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
+              <span>Проставить подъезд</span>
+            </Popover.Button>
+
+            <Transition as={Fragment} {...transitionProps}>
+              <Popover.Panel className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
+                <div className="space-y-2">
+                  <input
+                    type="number"
+                    placeholder="Введите номер подъезда"
+                    className="w-full px-2 py-1 text-sm border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    onChange={(e) => setEntranceInput(e.target.value)}
+                    value={entranceInput}
+                    autoFocus
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <Popover.Button as="button" className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded" onClick={() => setEntranceInput('')}>Отмена</Popover.Button>
+                    <Popover.Button as="button" className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600" onClick={() => {
+                      if (entranceInput) {
+                        setEntranceForMany(entranceInput);
+                        setEntranceInput('');
+                      }
+                    }}>Подтвердить</Popover.Button>
                   </div>
-                )}
-                <div className="px-1 py-1">
-                  {/* Подменю статусов */}
-                  <Menu>
-                    {({ open }) => (
-                      <div className="relative">
-                        <Menu.Button
-                          className={`${
-                            open ? 'bg-gray-100' : ''
-                          } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center`}
-                        >
-                          <span>Изменить статус</span>
-                        </Menu.Button>
-                        
-                        <Transition
-                          show={open}
-                          as={Fragment}
-                          enter="transition ease-out duration-100"
-                          enterFrom="transform opacity-0 scale-95"
-                          enterTo="transform opacity-100 scale-100"
-                          leave="transition ease-in duration-75"
-                          leaveFrom="transform opacity-100 scale-100"
-                          leaveTo="transform opacity-0 scale-95"
-                        >
-                          <Menu.Items 
-                            static
-                            className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
-                          >
-                            <div className="px-1 py-1">
-                              {statuses.map((status) => (
-                                <Menu.Item key={status}>
-                                  {({ active }) => (
-                                    <button
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        setStatusForMany(status, apartType);
-                                      }}
-                                      className={`${
-                                        active ? 'bg-gray-100' : ''
-                                      } group flex w-full rounded-md px-2 py-2 text-sm text-gray-900`}
-                                    >
-                                      {status}
-                                    </button>
-                                  )}
-                                </Menu.Item>
-                              ))}
-                            </div>
-                          </Menu.Items>
-                        </Transition>
-                      </div>
-                    )}
-                  </Menu>
                 </div>
-              </Menu.Items>
+              </Popover.Panel>
             </Transition>
-          </Menu>
-          <p className='ml-8 mr-2 text-gray-400'>{filteredApartments.length}</p>
+          </Popover>
+
+          {/* Подменю Изменить статус */}
+          <Popover className="relative">
+            <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
+              <span>Изменить статус</span>
+            </Popover.Button>
+
+            <Transition as={Fragment} {...transitionProps}>
+              <Popover.Panel className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
+                <div className="px-1 py-1 space-y-1">
+                  {statuses.map((status) => (
+                    <button
+                      key={status}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setStatusForMany(status, apartType);
+                      }}
+                      className="group flex w-full rounded-md px-2 py-2 text-xs text-gray-900 hover:bg-gray-100"
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              </Popover.Panel>
+            </Transition>
+          </Popover>
+        </div>
+      )}
+    </Popover.Panel>
+  </Transition>
+</Popover>
+          <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
         </div>
       </div>
       <div className="relative flex flex-col lg:flex-row  w-full transition-all duration-300">
         {loading ? (
           <div className="flex flex-1 justify-center h-64">
             <div className="relative flex flex-col place-items-center py-4 text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-cat stroke-muted-foreground h-12 w-12 stroke-1">
-                      <path d="M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.07 1 2.24 1 3.44C21 17.9 16.97 21 12 21s-9-3-9-7.56c0-1.25.5-2.4 1-3.44 0 0-1.89-6.42-.5-7 1.39-.58 4.72.23 6.5 2.23A9.04 9.04 0 0 1 12 5Z"></path>
-                      <path d="M8 14v.5"></path>
-                      <path d="M16 14v.5"></path>
-                      <path d="M11.25 16.25h1.5L12 17l-.75-.75Z"></path>
-                    </svg>
-                  </div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-cat stroke-muted-foreground h-12 w-12 stroke-1">
+                <path d="M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.07 1 2.24 1 3.44C21 17.9 16.97 21 12 21s-9-3-9-7.56c0-1.25.5-2.4 1-3.44 0 0-1.89-6.42-.5-7 1.39-.58 4.72.23 6.5 2.23A9.04 9.04 0 0 1 12 5Z"></path>
+                <path d="M8 14v.5"></path>
+                <path d="M16 14v.5"></path>
+                <path d="M11.25 16.25h1.5L12 17l-.75-.75Z"></path>
+              </svg>
+            </div>
           </div>
         ) : (
           <div className="flex flex-1 overflow-hidden">
@@ -873,7 +1217,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                               {row.getVisibleCells().map((cell) => (
                                 <td
                                   key={cell.id}
-                                  className="px-2 border-b border-gray-200 text-sm text-gray-700 truncate"
+                                  className={`px-2 border-b border-gray-200 text-xs text-gray-700 truncate`}
                                   style={{ width: `${cell.column.columnDef.size}px` }}
                                 >
                                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -892,18 +1236,18 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             {/* ApartDetails */}
             {apartmentDetails && isDetailsVisible && (
               <div
-                className={`ml-2 bg-white fixed inset-0 lg:static lg:inset-auto lg:overflow-auto lg:rounded-md lg:border lg:h-[calc(100vh-1rem)] transition-all duration-300 ease-in-out z-50 min-w-[650px] max-w-[650px]`}
+                className={`ml-2 fixed inset-0 lg:static lg:inset-auto lg:overflow-auto lg:rounded-md lg:border transition-all duration-300 ease-in-out z-50 min-w-[650px] max-w-[650px]`}
               >
                 <div className="fixed inset-0 bg-opacity-50 lg:bg-transparent lg:relative">
                   <div
-                    className={`fixed min-w-[40.5vw] max-w-[40.5vw] h-[calc(100vh-1rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+                    className={`fixed min-w-[40.5vw] max-w-[40.5vw] h-[calc(100vh-3.67rem)] overflow-y-auto transform transition-transform duration-300 ease-in-out ${
                       isDetailsVisible ? 'translate-x-0' : 'translate-x-full'
                     }`}
                     style={{
                       WebkitOverflowScrolling: 'touch', // Поддержка мобильных устройств
                     }}
                   >
-                    <div className="h-[calc(100vh-1rem)] flex flex-col">
+                    <div className="h-[calc(100vh-3.67rem)] flex flex-col">
                       <ApartDetails
                         apartmentDetails={apartmentDetails}
                         setIsDetailsVisible={setIsDetailsVisible}
@@ -915,7 +1259,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                         lastSelectedMunicipal={lastSelectedMunicipal}
                         fetchApartmentDetails={fetchApartmentDetails}
                         getFilteData={getFilteData}
-                        className="flex-1" // Оставляем для гибкости внутри компонента
+                        className="flex-1"
                       />
                     </div>
                   </div>

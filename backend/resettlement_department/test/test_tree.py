@@ -1,6 +1,7 @@
 import pytest
 import requests
 
+
 @pytest.mark.parametrize('apart_type', ['OldApart', 'NewApartment'])
 def test_district_building_flow(apart_type):
     # Шаг 1: Получаем районы

@@ -2,7 +2,7 @@ WITH unnested_offer AS (
     SELECT 
         offer_id,
         affair_id,
-        (KEY)::integer as new_apart_id,
+        (KEY)::bigint as new_apart_id,
         (VALUE->'status_id')::integer AS status_id,
         sentence_date, 
         answer_date,
@@ -33,7 +33,8 @@ joined_aparts AS (
                 'status', s.status,
                 'sentence_date', o.sentence_date::DATE,
                 'answer_date', o.answer_date::DATE,
-                'decline_reason_id', o.decline_reason_id
+                'decline_reason_id', o.decline_reason_id,
+                'created_at', o.created_at::DATE
             )
         ) AS offers
     FROM 
@@ -62,6 +63,10 @@ SELECT
     new_apart.living_area,
     new_apart.room_count,
     new_apart.type_of_settlement,
+    new_apart.rank,
+    new_apart.floor,
+    new_apart.rsm_apart_id, 
+    new_apart.status_id,
     JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
         joined_aparts.offers
@@ -80,4 +85,8 @@ GROUP BY
     new_apart.total_living_area,
     new_apart.living_area,
     new_apart.room_count,
-    new_apart.type_of_settlement
+    new_apart.type_of_settlement,
+    new_apart.rank,
+    new_apart.floor,
+    new_apart.rsm_apart_id,
+    new_apart.status_id;

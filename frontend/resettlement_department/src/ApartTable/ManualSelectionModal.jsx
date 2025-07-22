@@ -126,7 +126,7 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
     // Фильтрация по searchQuery (apart_number)
     if (searchQuery) {
       filtered = filtered.filter((item) => {
-        return item.apart_number?.toLowerCase().includes(searchQuery.toLowerCase());
+        return String(item.apart_number || '')?.toLowerCase().includes(searchQuery.toLowerCase());
       });
     }
   
@@ -232,6 +232,16 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
         enableSorting: true,
         cell: ({ row }) => <AdressCell props={row.original} />,
         size: 150, // Начальная ширина столбца
+      },
+      {
+        header: '№ Кв.',
+        accessorKey: 'apart_number',
+        enableSorting: true,
+        cell: ({ row }) => 
+          <div className="text-xs">
+            {row.original['apart_number']}
+          </div>,
+        size: 30,
       },
       {
         header: "Площадь, тип, этаж",

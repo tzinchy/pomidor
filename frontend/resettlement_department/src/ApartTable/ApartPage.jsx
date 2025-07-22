@@ -125,18 +125,21 @@ export default function ApartPage() {
     }
   };
 
-  const fetchApartments = async (addresses, municipal_districts) => {
+  const fetchApartments = async (addresses, municipal_districts, stage, otsel_type) => {
     try {
       const response = await axios.get(`${HOSTLINK}/tables/apartments`, {
         params: {
           apart_type: apartType,
           house_addresses: addresses,
           districts: [],
-          municipal_districts: municipal_districts
+          municipal_districts: municipal_districts,
+          stage: stage,
+          otsel_type: otsel_type
         },
         paramsSerializer
       });
       setApartments(response.data);
+      console.log('response.data', response.data);
       setLoading(false);
       setIsDetailsVisible(false);
     } catch (error) {
@@ -210,6 +213,7 @@ export default function ApartPage() {
               setRowSelection={setRowSelection}
               setApartType={setApartType}
               setLoading={setLoading}
+              setCollapsed={setCollapsed}
             />
           </div>
         </div>

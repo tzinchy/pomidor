@@ -2,7 +2,7 @@ WITH unnested_offer AS (
     SELECT 
         offer_id,
         affair_id,
-        (key)::integer AS new_apart_id,
+        (key)::bigint AS new_apart_id,
         (value->'status_id')::integer AS status_id,
         sentence_date, 
         answer_date, 
@@ -33,6 +33,8 @@ joined_aparts AS (
                 'sentence_date', o.sentence_date::DATE,
                 'answer_date', o.answer_date::DATE,
                 'decline_reason_id', o.decline_reason_id,
+                'created_at', o.created_at::DATE,
+                'floor', na.floor,
                 'decline_reason', JSONB_BUILD_OBJECT(
                     'min_floor', dr.min_floor, 
                     'max_floor', dr.max_floor, 
@@ -71,15 +73,20 @@ SELECT
     old_apart.type_of_settlement,
     old_apart.is_queue,
     old_apart.people_v_dele,
+    old_apart.rank,
+    old_apart.floor,
+	affair_timeline.timeline_events,
+    old_apart.status_id,
     JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
         joined_aparts.new_apartments
         ORDER BY joined_aparts.offer_id
     ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL) AS offers
-FROM 
+FROM
     old_apart  
 LEFT JOIN 
     joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
+LEFT JOIN affair_timeline ON affair_timeline.old_apart_id = old_apart.affair_id
 WHERE old_apart.affair_id = :apart_id
 GROUP BY 
     old_apart.affair_id, 
@@ -94,4 +101,8 @@ GROUP BY
     old_apart.room_count,
     old_apart.type_of_settlement,
     old_apart.is_queue,
-    old_apart.people_v_dele;
+    old_apart.people_v_dele,
+    old_apart.rank,
+    old_apart.floor,
+	affair_timeline.timeline_events,
+    old_apart.status_id;

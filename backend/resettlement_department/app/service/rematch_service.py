@@ -1,10 +1,16 @@
+import json
+
+from fastapi import HTTPException  # Импортируем HTTPException для возврата ошибок
 from repository.database import project_managment_session
 from sqlalchemy import text
-import json 
 
 
 async def rematch(apart_ids):
     cant_offer_aparts_raise_ids = {}
+    # Инициализируем переменные для хранения результатов
+    matched_aparts = {}  # affair_id: количество добавленных квартир
+    unmatched_aparts = {}  # affair_id: причина
+
     print(apart_ids)
     async with project_managment_session() as session:
         for apart_id in apart_ids:
@@ -50,6 +56,7 @@ async def rematch(apart_ids):
             apart_info_result = await session.execute(apart_query, {"apart_id": apart_id})
             apart_info = dict(apart_info_result.fetchone()._mapping) if apart_info_result.rowcount > 0 else None
             if not apart_info:
+                print('NO APART INFO')
                 continue
 
             # Check approved apartments
@@ -64,11 +71,9 @@ async def rematch(apart_ids):
             """)
             approved_result = await session.execute(check_approved_query, {"apart_id": apart_id})
             approved_aparts = approved_result.scalar() or {}
-            print(apart_info)
-            approved_aparts_start = len(approved_aparts.keys())
             if (apart_info.get('is_special_needs_marker') == 1) and (apart_info.get('is_queue') == 1): 
                 apart_info['is_special_needs_marker'] = 0 
-            print(apart_info)
+            
             # Check declined apartments
             check_declined_query = text("""
                 WITH declined_aparts AS (
@@ -97,6 +102,8 @@ async def rematch(apart_ids):
                 if room_count in max_ranks:
                     declined['decline_info']['max_rank'] = max_ranks[room_count]
             
+            # Счетчик новых квартир для текущего apart_id
+            new_aparts_count = 0
             for declined in declined_aparts:
                 house_address_list = ", ".join(f"'{addr}'" for addr in apart_info["new_house_addresses"])
                 house_address_condition = f"AND house_address IN ({house_address_list})" if house_address_list else ""
@@ -167,10 +174,16 @@ async def rematch(apart_ids):
                             LIMIT 1'''
                     res = await session.execute(text(new_apart_query), decline_reason)
                     res = res.fetchone()  
-                    print(res)
-                approved_aparts[res[0]] = {'status_id' : 7}
+                    if res is None: 
+                        print('NO NEW APARTS')
+                # Если нашли квартиру, добавляем в approved_aparts
+                if res is not None:
+                    new_apart_id = res[0]
+                    # Увеличиваем счетчик новых квартир
+                    new_aparts_count += 1
+                    approved_aparts[str(new_apart_id)] = {'status_id': 7}
 
-            if approved_aparts_start<len(approved_aparts.keys()):
+            if new_aparts_count > 0:
                 aparts_json = json.dumps(approved_aparts)
                 await session.execute(
                     text("""
@@ -180,10 +193,24 @@ async def rematch(apart_ids):
                     {"apart_id": apart_info.get('affair_id'), "aparts": aparts_json},
                 )
                 await session.commit()
-                print(approved_aparts)
+                # Сохраняем информацию о найденных квартирах
+                print('YES apart_id', apart_id)
+
+                matched_aparts[apart_id] = new_aparts_count
             else:
-                cant_offer_aparts_raise_ids[apart_info.get('affair_id')] = 'Не нашлось подходящих квартир'
-    print(cant_offer_aparts_raise_ids)
-    return cant_offer_aparts_raise_ids
+                print('NO apart_id', apart_id)
+                reason = 'Не нашлось подходящих квартир'
+                cant_offer_aparts_raise_ids[apart_id] = reason
+                unmatched_aparts[apart_id] = reason
+        # Выводим итоговую статистику
+        total_matched = sum(matched_aparts.values())
+        print(f"\n=== ИТОГИ ПОДБОРА КВАРТИР ===")
+        print(f"Найдено квартир для {len(matched_aparts)} заявок: всего {total_matched} квартир")
+        print(f"Не найдено квартир для {len(unmatched_aparts)} заявок")
+    print('-----------sdfsdfsdfsf-----------------', matched_aparts, unmatched_aparts)
+    data = [len(matched_aparts), len(unmatched_aparts)]
 
-
+    if not matched_aparts and not unmatched_aparts:
+        raise HTTPException(status_code=500, detail="Не удалось обработать ни одну заявку")
+    
+    return data

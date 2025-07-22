@@ -1,32 +1,29 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, String, Date, DateTime, BigInteger, text
+from sqlalchemy.dialects.postgresql import JSONB
 from models.base import Base
-from models.status import Status
-from models.new_apart import NewApart
-from models.family_apartment_needs import FamilyApartmentNeeds
-from sqlalchemy.orm import relationship
+
 
 class Offer(Base):
-    __tablename__ = 'offer'
-    
-    offer_id = Column(Integer, primary_key=True)
-    status_id = Column(Integer, ForeignKey('status.status_id'))
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    __tablename__ = "offer"
+
+    offer_id = Column(Integer, primary_key=True, autoincrement=True)
+    status_id = Column(Integer)
     notes = Column(String)
     user_id = Column(Integer)
-    sentence_date = Column(DateTime)
-    give_date = Column(DateTime)
-    answer_date = Column(DateTime)
+    sentence_date = Column(DateTime(timezone=True))
+    give_date = Column(DateTime(timezone=True))
+    answer_date = Column(DateTime(timezone=True))
     sentence_number = Column(Integer)
     selection_action = Column(String)
     conditions = Column(String)
     claim = Column(String)
     subject_id = Column(Integer)
     object_id = Column(Integer)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    new_apart_id = Column(Integer, ForeignKey('new_apart.new_apart_id'))
-    family_apartment_needs_id = Column(Integer, ForeignKey('family_apartment_needs.family_apartment_needs_id'), unique=True)
-
-    status = relationship("Status")
-    new_apart = relationship("NewApart")
-    family_apartment_needs = relationship("FamilyApartmentNeeds")
+    updated_at = Column(DateTime(timezone=True), server_default=text("now()"))
+    affair_id = Column(BigInteger)
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+    new_aparts = Column(JSONB)
+    outgoing_offer_number = Column(Integer)
+    offer_date = Column(Date)
+    order_id = Column(BigInteger)
+    outcoming_date = Column(Date)

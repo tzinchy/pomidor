@@ -1,7 +1,7 @@
 .venv
 .env
-__pycache__
-/__pycache__
+pycache
+/pycache
 uploads/
 app/uploads/
 ./uploads
@@ -17,3 +17,16 @@ app/.log
 app/logs
 app/logs/
 app/logs/app.log
+app/waves
+app/order_data.xlsx
+app/order_data.xlsx
+processed_offers.xlsx
+multi_subject_affairs.xlsx
+subject_counts.xlsx
+app/order_data.xlsx
+multi_subject_affairs
+processed_offers
+app/order_sorted.xlsx
+temp_offer_insert.py
+2025.06.02 Подбор квартир (полный).xlsx
+*.xlsx

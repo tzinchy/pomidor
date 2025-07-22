@@ -33,7 +33,7 @@ def generate_key():
     # Генерация UUID
     uuid_part = str(uuid.uuid4())
     # Генерация случайных символов
-    random_part = ''.join(random.choices(string.ascii_lowercase + string.digits, k=3))
+    random_part = "".join(random.choices(string.ascii_lowercase + string.digits, k=3))
     # Объединение частей
     key = f"{uuid_part}-{random_part}"
     return key
@@ -51,10 +51,9 @@ def process_date_range(dates):
 
         for date_str in dates:
             if isinstance(date_str, str):
-
-                if '.' in date_str:  # Формат dd.mm.yyyy
+                if "." in date_str:  # Формат dd.mm.yyyy
                     date_obj = datetime.strptime(date_str, "%d.%m.%Y")
-                elif '-' in date_str:  # Формат yyyy-mm-dd
+                elif "-" in date_str:  # Формат yyyy-mm-dd
                     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
                 else:
                     raise ValueError(f"Неподдерживаемый формат даты: {date_str}")
@@ -62,7 +61,6 @@ def process_date_range(dates):
 
             else:
                 date_objects.append(date_str)
-
 
         # Убедимся, что список содержит ровно 2 даты
         if len(date_objects) != 2:
@@ -75,7 +73,9 @@ def process_date_range(dates):
         date_start = date_objects[0].strftime("%Y-%m-%dT%H:%M:%S")
 
         # Большая дата с временем 23:59:59
-        date_end = (date_objects[1] + timedelta(hours=23, minutes=59, seconds=59)).strftime("%Y-%m-%dT%H:%M:%S")
+        date_end = (
+            date_objects[1] + timedelta(hours=23, minutes=59, seconds=59)
+        ).strftime("%Y-%m-%dT%H:%M:%S")
 
         return date_start, date_end
     except ValueError as e:
@@ -94,10 +94,9 @@ def process_date_wotime_range(dates):
 
         for date_str in dates:
             if isinstance(date_str, str):
-
-                if '.' in date_str:  # Формат dd.mm.yyyy
+                if "." in date_str:  # Формат dd.mm.yyyy
                     date_obj = datetime.strptime(date_str, "%d.%m.%Y")
-                elif '-' in date_str:  # Формат yyyy-mm-dd
+                elif "-" in date_str:  # Формат yyyy-mm-dd
                     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
                 else:
                     raise ValueError(f"Неподдерживаемый формат даты: {date_str}")
@@ -105,7 +104,6 @@ def process_date_wotime_range(dates):
 
             else:
                 date_objects.append(date_str)
-
 
         # Убедимся, что список содержит ровно 2 даты
         if len(date_objects) != 2:
@@ -133,36 +131,44 @@ def get_cookie():
     """
 
     chrome_options = webdriver.ChromeOptions()
-    prefs = {'profile.default_content_settings.popups': 0,
-             "download.prompt_for_download": False,
-             "directory_upgrade": True,
-             "safebrowsing.enabled": True,
-             "safebrowsing.disable_download_protection": True}
-    chrome_options.add_experimental_option('prefs', prefs)
+    prefs = {
+        "profile.default_content_settings.popups": 0,
+        "download.prompt_for_download": False,
+        "directory_upgrade": True,
+        "safebrowsing.enabled": True,
+        "safebrowsing.disable_download_protection": True,
+    }
+    chrome_options.add_experimental_option("prefs", prefs)
     chrome_options.add_argument("--allow-running-insecure-content")
     chrome_options.add_argument("--disable_web_security")
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument('--headless') 
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--headless")
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()), options=chrome_options
+    )
     # driver = webdriver.Chrome()
     driver.get(RSM.PING_LINK)
     try:
-        WebDriverWait(driver, 600).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="login"]'))).click()
+        WebDriverWait(driver, 600).until(
+            EC.visibility_of_element_located((By.XPATH, '//*[@id="login"]'))
+        ).click()
         driver.find_element(By.XPATH, '//*[@id="login"]').send_keys(RSM.LOGIN)
     except:
         print("Timed out waiting for page to load")
     time.sleep(3)
     try:
-        WebDriverWait(driver, 600).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="password"]'))).click()
+        WebDriverWait(driver, 600).until(
+            EC.visibility_of_element_located((By.XPATH, '//*[@id="password"]'))
+        ).click()
         driver.find_element(By.XPATH, '//*[@id="password"]').send_keys(RSM.PASS)
     except:
         print("Timed out waiting for page to load")
     time.sleep(3)
     driver.find_element(By.XPATH, '//*[@id="bind"]').click()
-    cooks = driver.get_cookie('Rsm.Cookie')
-    cookie = cooks['value']
+    cooks = driver.get_cookie("Rsm.Cookie")
+    cookie = cooks["value"]
     driver.close()
     return cookie
 
@@ -178,34 +184,30 @@ def check_token():
         "user": settings.project_management_setting.DB_USER,
         "password": settings.project_management_setting.DB_PASSWORD,
         "host": settings.project_management_setting.DB_HOST,
-        "port": settings.project_management_setting.DB_PORT,    }
+        "port": settings.project_management_setting.DB_PORT,
+    }
 
     query = "SELECT value FROM env.env WHERE name = 'rsm_token' LIMIT 1;"
 
     try:
-
         with psycopg2.connect(**conn_params) as conn:
-
             with conn.cursor() as cursor:
-
                 cursor.execute(query)
                 result = cursor.fetchone()
 
                 if result:
-
                     value = result[0]
                     print(f"Value: {value}")
 
                 else:
-
                     print("No value found.")
 
     except psycopg2.Error as e:
-
         print(f"Database error: {e}")
 
-    response = requests.get(RSM.PING_LINK, cookies={'Rsm.Cookie': value},
-                            allow_redirects=False)
+    response = requests.get(
+        RSM.PING_LINK, cookies={"Rsm.Cookie": value}, allow_redirects=False
+    )
 
     if response.status_code == 200:
         return value
@@ -219,16 +221,12 @@ def check_token():
                 """
 
         try:
-
             with psycopg2.connect(**conn_params) as conn:
-
                 with conn.cursor() as cursor:
-
                     cursor.execute(query)
                     conn.commit()
 
         except psycopg2.Error as e:
-
             print(f"Database error: {e}")
 
         return token
@@ -238,17 +236,16 @@ def check_token():
 
 def send_request(url, cookie):
     try:
-        
-        return requests.get(url, cookies={'Rsm.Cookie': cookie}, stream=True)
+        return requests.get(url, cookies={"Rsm.Cookie": cookie}, stream=True)
     except requests.exceptions.RequestException as e:
         print(e)
         return None
         # pass
 
-    
 
-
-def get_row_count(dates, dates_type, category, session_key, layout_id, cookie, registered=None):
+def get_row_count(
+    dates, dates_type, category, session_key, layout_id, cookie, registered=None
+):
     """
     search a row count in requested data
     :param dates:
@@ -264,19 +261,33 @@ def get_row_count(dates, dates_type, category, session_key, layout_id, cookie, r
     dates[0], dates[1] = dates
 
     if dates_type == 1:
-        search_link, count_link = search_kpu(session_key, layout_id,
-                                             kpu_direction=category, decl_date=dates,
-                                             registered=registered)
+        search_link, count_link = search_kpu(
+            session_key,
+            layout_id,
+            kpu_direction=category,
+            decl_date=dates,
+            registered=registered,
+        )
     elif dates_type == 2:
-        search_link, count_link = search_kpu(session_key, layout_id,
-                                             kpu_direction=category, reason2_calc=dates,
-                                             registered=registered)
+        search_link, count_link = search_kpu(
+            session_key,
+            layout_id,
+            kpu_direction=category,
+            reason2_calc=dates,
+            registered=registered,
+        )
     elif dates_type == 3:
-        search_link, count_link = search_kpu(session_key, layout_id,
-                                             kpu_direction=category, reason2_date_resolution=dates,
-                                             registered=registered)
+        search_link, count_link = search_kpu(
+            session_key,
+            layout_id,
+            kpu_direction=category,
+            reason2_date_resolution=dates,
+            registered=registered,
+        )
     elif dates_type == 4:
-        search_link, count_link = search_kurs_living_space(dates, layout_id, session_key)
+        search_link, count_link = search_kurs_living_space(
+            dates, layout_id, session_key
+        )
     elif dates_type == 5:
         date_start, date_end = process_date_range(dates)
         search_link, count_link = search_vypiski(dates, layout_id, session_key)
@@ -284,13 +295,18 @@ def get_row_count(dates, dates_type, category, session_key, layout_id, cookie, r
     # a = requests.get(search_link,
     #                  cookies={'Rsm.Cookie': cookie})
 
-    p = multiprocessing.Process(target=send_request, args=(search_link, cookie,))
+    p = multiprocessing.Process(
+        target=send_request,
+        args=(
+            search_link,
+            cookie,
+        ),
+    )
     p.daemon = True  # Позволяет процессу завершаться вместе с родителем
     p.start()
     time.sleep(3)
     # print("____40__")
-    c = requests.get(count_link,
-                     cookies={'Rsm.Cookie': cookie})
+    c = requests.get(count_link, cookies={"Rsm.Cookie": cookie})
     # print(c.text)
     try:
         count = int(c.text)
@@ -319,7 +335,9 @@ def split_interval(dates, dates_type, category, cookie, max_rows=1000, registere
 
     # Получаем количество строк для данного интервала
 
-    row_count = get_row_count(dates, dates_type, category, session_key, RSM.COUNTER_LAYOUT, cookie, registered)
+    row_count = get_row_count(
+        dates, dates_type, category, session_key, RSM.COUNTER_LAYOUT, cookie, registered
+    )
 
     # Если количество строк меньше max_rows, добавляем интервал в результат
     if row_count <= max_rows:
@@ -342,10 +360,16 @@ def split_interval(dates, dates_type, category, cookie, max_rows=1000, registere
                 part_start = part_start.replace(microsecond=0) - timedelta(seconds=1)
                 part_end = part_end.replace(microsecond=0)
 
-
                 # Запускаем split_interval в отдельном процессе, передавая новый session_key
-                future = executor.submit(split_interval, [part_start, part_end], dates_type,
-                                         category, cookie, max_rows, registered)
+                future = executor.submit(
+                    split_interval,
+                    [part_start, part_end],
+                    dates_type,
+                    category,
+                    cookie,
+                    max_rows,
+                    registered,
+                )
                 future_intervals.append(future)
 
             # Собираем результаты из всех завершённых задач
@@ -355,7 +379,9 @@ def split_interval(dates, dates_type, category, cookie, max_rows=1000, registere
     return result_intervals
 
 
-def split_interval_vypiski(dates, dates_type, category, cookie, max_rows=1000, registered=None):
+def split_interval_vypiski(
+    dates, dates_type, category, cookie, max_rows=1000, registered=None
+):
     """
     makes an intervals of dates for searching only less then 1500 rows of result at one request
     :param dates:
@@ -373,7 +399,9 @@ def split_interval_vypiski(dates, dates_type, category, cookie, max_rows=1000, r
 
     # Получаем количество строк для данного интервала
 
-    row_count = get_row_count(dates, dates_type, category, session_key, 22262, cookie, registered)
+    row_count = get_row_count(
+        dates, dates_type, category, session_key, 22262, cookie, registered
+    )
 
     # Если количество строк меньше max_rows, добавляем интервал в результат
     if row_count <= max_rows:
@@ -396,10 +424,16 @@ def split_interval_vypiski(dates, dates_type, category, cookie, max_rows=1000, r
                 part_start = part_start.replace(microsecond=0) - timedelta(seconds=1)
                 part_end = part_end.replace(microsecond=0)
 
-
                 # Запускаем split_interval в отдельном процессе, передавая новый session_key
-                future = executor.submit(split_interval_vypiski, [part_start, part_end], dates_type,
-                                         category, cookie, max_rows, registered)
+                future = executor.submit(
+                    split_interval_vypiski,
+                    [part_start, part_end],
+                    dates_type,
+                    category,
+                    cookie,
+                    max_rows,
+                    registered,
+                )
                 future_intervals.append(future)
 
             # Собираем результаты из всех завершённых задач
@@ -409,7 +443,9 @@ def split_interval_vypiski(dates, dates_type, category, cookie, max_rows=1000, r
     return result_intervals
 
 
-def split_interval_ids(interval, interval_type, cookie, max_rows=1500, registered=None, category=None):
+def split_interval_ids(
+    interval, interval_type, cookie, max_rows=1500, registered=None, category=None
+):
     """
     Разбивает числовой интервал на поддиапазоны, чтобы в одном запросе не запрашивалось более max_rows строк.
     :param interval: Список [start, end] с целочисленными границами.
@@ -426,7 +462,9 @@ def split_interval_ids(interval, interval_type, cookie, max_rows=1500, registere
     session_key = generate_key()
 
     # Определяем количество строк для данного интервала
-    row_count = get_row_count(interval, interval_type, category, session_key, 21744, cookie, registered)
+    row_count = get_row_count(
+        interval, interval_type, category, session_key, 21744, cookie, registered
+    )
     print(row_count)
 
     if row_count <= max_rows:
@@ -446,10 +484,17 @@ def split_interval_ids(interval, interval_type, cookie, max_rows=1500, registere
                 # Убедимся, что последний интервал заканчивается ровно на границе
                 if i == num_parts - 1 or part_end >= interval[1]:
                     part_end = interval[1]
-                print(f'интервал {part_start} - {part_end}')
+                print(f"интервал {part_start} - {part_end}")
 
-                future = executor.submit(split_interval_ids, [part_start, part_end], interval_type, cookie, max_rows,
-                                         registered, category)
+                future = executor.submit(
+                    split_interval_ids,
+                    [part_start, part_end],
+                    interval_type,
+                    cookie,
+                    max_rows,
+                    registered,
+                    category,
+                )
                 future_intervals.append(future)
 
             for future in as_completed(future_intervals):
@@ -458,7 +503,9 @@ def split_interval_ids(interval, interval_type, cookie, max_rows=1500, registere
     return result_intervals
 
 
-def merge_intervals(intervals, dates_type, cookie, category, layout, max_rows=1500, registered=None):
+def merge_intervals(
+    intervals, dates_type, cookie, category, layout, max_rows=1500, registered=None
+):
     """
     makes intervals more comfortable for multiprocessing search
     :param intervals:
@@ -487,8 +534,17 @@ def merge_intervals(intervals, dates_type, cookie, category, layout, max_rows=15
         # else:
         #     # Сохраняем текущий интервал и обнуляем для следующей группы
         print(row_count)
-        merged_intervals.append((start, end, dates_type, row_count,
-                                    category, generate_key(), cookie, layout, registered))
+        merged_intervals.append((
+            start,
+            end,
+            dates_type,
+            row_count,
+            category,
+            generate_key(),
+            cookie,
+            layout,
+            registered,
+        ))
         # current_start = start
         # current_end = end
         # current_sum = row_count
@@ -501,7 +557,9 @@ def merge_intervals(intervals, dates_type, cookie, category, layout, max_rows=15
     return merged_intervals
 
 
-def merge_intervals_ids(intervals, interval_type, cookie, layout, max_rows=1500, registered=None):
+def merge_intervals_ids(
+    intervals, interval_type, cookie, layout, max_rows=1500, registered=None
+):
     """
     Объединяет интервалы для более эффективного многопоточного поиска.
     :param intervals: Список кортежей (start, end, row_count).
@@ -526,20 +584,47 @@ def merge_intervals_ids(intervals, interval_type, cookie, layout, max_rows=1500,
             current_end = end
             current_sum += row_count
         else:
-            merged_intervals.append((current_start, current_end, interval_type, current_sum,
-                                     None, generate_key(), cookie, layout, registered))
+            merged_intervals.append((
+                current_start,
+                current_end,
+                interval_type,
+                current_sum,
+                None,
+                generate_key(),
+                cookie,
+                layout,
+                registered,
+            ))
             current_start = start
             current_end = end
             current_sum = row_count
 
     if current_start is not None:
-        merged_intervals.append((current_start, current_end, interval_type, current_sum,
-                                 None, generate_key(), cookie, layout, registered))
+        merged_intervals.append((
+            current_start,
+            current_end,
+            interval_type,
+            current_sum,
+            None,
+            generate_key(),
+            cookie,
+            layout,
+            registered,
+        ))
 
     return merged_intervals
 
 
-def get_rsm(date_start, date_end, dates_type, category, session_key, cookie, layout_id, registered):
+def get_rsm(
+    date_start,
+    date_end,
+    dates_type,
+    category,
+    session_key,
+    cookie,
+    layout_id,
+    registered,
+):
     """
     takes an info from RSM
     :param date_start:
@@ -555,37 +640,52 @@ def get_rsm(date_start, date_end, dates_type, category, session_key, cookie, lay
     df = pd.DataFrame
     dates = [date_start, date_end]
     if dates_type == 1:
-        search_link, count_link = search_kpu(session_key, layout_id,
-                                             kpu_direction=category, decl_date=dates,
-                                             registered=registered)
+        search_link, count_link = search_kpu(
+            session_key,
+            layout_id,
+            kpu_direction=category,
+            decl_date=dates,
+            registered=registered,
+        )
     elif dates_type == 2:
-        search_link, count_link = search_kpu(session_key, layout_id,
-                                             kpu_direction=category, reason2_calc=dates,
-                                             registered=registered)
+        search_link, count_link = search_kpu(
+            session_key,
+            layout_id,
+            kpu_direction=category,
+            reason2_calc=dates,
+            registered=registered,
+        )
     elif dates_type == 3:
-        search_link, count_link = search_kpu(session_key, layout_id,
-                                             kpu_direction=category, reason2_date_resolution=dates,
-                                             registered=registered)
+        search_link, count_link = search_kpu(
+            session_key,
+            layout_id,
+            kpu_direction=category,
+            reason2_date_resolution=dates,
+            registered=registered,
+        )
     elif dates_type == 4:
-        search_link, count_link = search_kurs_living_space(dates, layout_id, session_key)
+        search_link, count_link = search_kurs_living_space(
+            dates, layout_id, session_key
+        )
     elif dates_type == 5:
         search_link, count_link = search_vypiski(dates, layout_id, session_key)
 
-    a = requests.get(search_link,
-                     cookies={'Rsm.Cookie': cookie})
+    a = requests.get(search_link, cookies={"Rsm.Cookie": cookie})
     if a.status_code != 503:
         jsonn = json.loads(a.text)
-        if jsonn['Data'] != 'The service is unavailable.':
-            df = pd.DataFrame(jsonn['Data'])
+        if jsonn["Data"] != "The service is unavailable.":
+            df = pd.DataFrame(jsonn["Data"])
             i = 0
             while i <= 50:
-                b = requests.get(f'http://webrsm.mlc.gov:5222/Registers/GetAddData?registerId=KursKpu&uniqueSessionKey={session_key}',
-                                 cookies={'Rsm.Cookie': cookie})
+                b = requests.get(
+                    f"http://webrsm.mlc.gov:5222/Registers/GetAddData?registerId=KursKpu&uniqueSessionKey={session_key}",
+                    cookies={"Rsm.Cookie": cookie},
+                )
                 jsonn = json.loads(b.text)
-                df1 = pd.DataFrame(jsonn['Data'])
+                df1 = pd.DataFrame(jsonn["Data"])
                 # if not df1.empty:
-                    # print(f'{date_start} - {date_end} has NaN on i = {i}')
-                
+                # print(f'{date_start} - {date_end} has NaN on i = {i}')
+
                 with warnings.catch_warnings(record=True) as w_list:
                     # Установим фильтр, чтобы всегда «ловить» все предупреждения,
                     # а не только первый раз.
@@ -603,12 +703,17 @@ def get_rsm(date_start, date_end, dates_type, category, session_key, cookie, lay
                             print("Детали о предупреждении:", warning_item.message)
                             print("Текущая форма df:", df.shape)
                             print("Текущая форма df1:", df1.shape)
-                            print(f'{date_start} - {date_end}, i = {i}')
+                            print(f"{date_start} - {date_end}, i = {i}")
                             # Можно делать дополнительную логику, логирование и т.п.
                 # df = pd.concat([df, df1], axis=0)
                 # print(b.text)
                 if len(df) > 1500:
-                    print('warning! not all kpus are downloadet at ', date_start, '-', date_end)
+                    print(
+                        "warning! not all kpus are downloadet at ",
+                        date_start,
+                        "-",
+                        date_end,
+                    )
                 if df1.empty:
                     i = 50
                 i = i + 1
@@ -624,35 +729,46 @@ def new_kpu(intervals):
     """
     pool_size = min(10, len(intervals))
     with multiprocessing.Pool(processes=pool_size) as pool:
-        args = [(interval[0], interval[1], interval[2], interval[4], interval[5], interval[6], interval[7], interval[8])
-                for interval in intervals]
+        args = [
+            (
+                interval[0],
+                interval[1],
+                interval[2],
+                interval[4],
+                interval[5],
+                interval[6],
+                interval[7],
+                interval[8],
+            )
+            for interval in intervals
+        ]
         results = pool.starmap(get_rsm, args)
     # Объединение всех датафреймов в один
     # print(f'len results = {len(results)}')
     combined_df = pd.concat(results, ignore_index=True)
-    combined_df.drop(columns='Selected', inplace=True)
+    combined_df.drop(columns="Selected", inplace=True)
     combined_df.drop_duplicates(inplace=True)
 
     return combined_df
 
 
 def search_kpu(
-        session_key,
-        layout_id,
-        kpu_num=None,
-        # list of directions
-        kpu_direction=None,
-        registered=None,
-        affair_grlgot=None,
-        # list, if interval - [start_year, end_year], if value [year] Год постановки на учет
-        stand_year=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата заявления о постановке на учет
-        decl_date=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата операции снятия с учета
-        reason2_calc=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата распоряжения о снятии с учета
-        reason2_date_resolution=None
-                ):
+    session_key,
+    layout_id,
+    kpu_num=None,
+    # list of directions
+    kpu_direction=None,
+    registered=None,
+    affair_grlgot=None,
+    # list, if interval - [start_year, end_year], if value [year] Год постановки на учет
+    stand_year=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата заявления о постановке на учет
+    decl_date=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата операции снятия с учета
+    reason2_calc=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата распоряжения о снятии с учета
+    reason2_date_resolution=None,
+):
     """
     makes a search and search_count links for the RSM requests
     :param session_key:
@@ -672,50 +788,39 @@ def search_kpu(
     search_dynamic_control_data = []
 
     try:
-
         if kpu_direction:
-            s_data = {
-                "key": "KpuDirection",
-                "value": f"{str(kpu_direction)}"
-            }
+            s_data = {"key": "KpuDirection", "value": f"{str(kpu_direction)}"}
             search_data.append(s_data)
 
         if registered is not None:
             if registered is True:
-                s_data = {
-                    "key": "InList",
-                    "value": "true"
-                }
+                s_data = {"key": "InList", "value": "true"}
                 search_data.append(s_data)
 
             elif registered is False:
-                s_data = {
-                    "key": "Free",
-                    "value": "true"
-                }
+                s_data = {"key": "Free", "value": "true"}
                 search_data.append(s_data)
 
         if decl_date is not None:
-
             if len(decl_date) == 2:
                 start_date, end_date = process_date_range(decl_date)
 
-                if 'ERROR' in start_date:
-                    raise ValueError('Date formatting error')
+                if "ERROR" in start_date:
+                    raise ValueError("Date formatting error")
 
                 dyn_con_data = {
                     "IdControl": "DateCreateKpu",  # Идентификатор фильтра по дате
                     "ControlType": "DynamicDate",  # Тип фильтра (динамическая дата)
                     "IdAttribute": "43605000",  # Идентификатор атрибута
                     "From": start_date,  # Начальная дата интервала
-                    "To": end_date  # Конечная дата интервала
+                    "To": end_date,  # Конечная дата интервала
                 }
                 # print(dyn_con_data)
                 search_dynamic_control_data.append(dyn_con_data)
 
     except ValueError as e:
         print(e)
-        return f'ERROR {e}'
+        return f"ERROR {e}"
 
     formatted_search_data = {}
     for index, item in enumerate(search_data):
@@ -723,26 +828,26 @@ def search_kpu(
         formatted_search_data[f"searchData[{index}].value"] = str(item["value"]).lower()
 
     get_count_params = {
-            "RegisterId": "KursKpu",  # Идентификатор реестра
-            "SearchApplied": "true",  # Поиск активен (true)
-            "PageChanged": "false",  # Страница не менялась
-            "Page": 1,  # Номер страницы
-            "PageSize": 30,  # Размер страницы
-            "SelectAll": "false",  # Все записи не выбраны
-            "ClearSelection": "false",  # Сброс выбора не применён
-            "RegisterViewId": "KursKpu",  # Идентификатор представления реестра
-            "LayoutRegisterId": "0",  # Идентификатор макета реестра (0 - по умолчанию)
-            "FilterRegisterId": "0",  # Идентификатор фильтра реестра (0 - не задан)
-            "ListRegisterId": "0",  # Идентификатор списка реестра (0 - не задан)
-            "searchData": search_data,
-            "SearchDynamicControlData": json.dumps(search_dynamic_control_data),
-            "databaseFilters": [],  # База фильтров (пусто)
-            "selectedLists": [],  # Списки, выбранные пользователем (пусто)
-            "UniqueSessionKey": session_key,  # Уникальный ключ сессии
-            "UniqueSessionKeySetManually": "true",  # Уникальный ключ установлен вручную
-            "ContentLoadCounter": 1,  # Счётчик загрузки контента
-            "CurrentLayoutId": layout_id  # Текущий макет (ID макета)
-        }
+        "RegisterId": "KursKpu",  # Идентификатор реестра
+        "SearchApplied": "true",  # Поиск активен (true)
+        "PageChanged": "false",  # Страница не менялась
+        "Page": 1,  # Номер страницы
+        "PageSize": 30,  # Размер страницы
+        "SelectAll": "false",  # Все записи не выбраны
+        "ClearSelection": "false",  # Сброс выбора не применён
+        "RegisterViewId": "KursKpu",  # Идентификатор представления реестра
+        "LayoutRegisterId": "0",  # Идентификатор макета реестра (0 - по умолчанию)
+        "FilterRegisterId": "0",  # Идентификатор фильтра реестра (0 - не задан)
+        "ListRegisterId": "0",  # Идентификатор списка реестра (0 - не задан)
+        "searchData": search_data,
+        "SearchDynamicControlData": json.dumps(search_dynamic_control_data),
+        "databaseFilters": [],  # База фильтров (пусто)
+        "selectedLists": [],  # Списки, выбранные пользователем (пусто)
+        "UniqueSessionKey": session_key,  # Уникальный ключ сессии
+        "UniqueSessionKeySetManually": "true",  # Уникальный ключ установлен вручную
+        "ContentLoadCounter": 1,  # Счётчик загрузки контента
+        "CurrentLayoutId": layout_id,  # Текущий макет (ID макета)
+    }
 
     get_data_params_1 = {
         "sort": "",  # Параметр сортировки (не задан)
@@ -759,14 +864,14 @@ def search_kpu(
         "RegisterViewId": "KursKpu",  # Идентификатор представления реестра
         "LayoutRegisterId": "0",  # Идентификатор макета реестра
         "FilterRegisterId": "0",  # Идентификатор фильтра реестра
-        "ListRegisterId": "0"
+        "ListRegisterId": "0",
     }
 
     get_data_params_2 = {
         "SearchDynamicControlData": search_dynamic_control_data,
         "UniqueSessionKey": session_key,  # Уникальный ключ сессии
         "UniqueSessionKeySetManually": "true",  # Уникальный ключ установлен вручную
-        "ContentLoadCounter": "1"  # Счётчик загрузки контента
+        "ContentLoadCounter": "1",  # Счётчик загрузки контента
     }
 
     get_data_params_1.update(formatted_search_data)
@@ -778,9 +883,11 @@ def search_kpu(
 
     get_count_params_json = json.dumps(get_count_params)
 
-    query_string_count = urlencode({"parametersJson": get_count_params_json,
-                                    "registerId": "KursKpu",
-                                    "uniqueSessionKey": session_key})
+    query_string_count = urlencode({
+        "parametersJson": get_count_params_json,
+        "registerId": "KursKpu",
+        "uniqueSessionKey": session_key,
+    })
     # Сборка полного URL
     full_url = urljoin(url_data, f"?{query_string}")
     full_url_count = urljoin(url_count, f"?{query_string_count}")
@@ -789,22 +896,22 @@ def search_kpu(
 
 
 def start_kpu_xlsx(
-        session_key,
-        layout_id,
-        kpu_num=None,
-        # list of directions
-        kpu_direction=None,
-        registered=None,
-        affair_grlgot=None,
-        # list, if interval - [start_year, end_year], if value [year] Год постановки на учет
-        stand_year=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата заявления о постановке на учет
-        decl_date=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата операции снятия с учета
-        reason2_calc=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата распоряжения о снятии с учета
-        reason2_date_resolution=None
-                ):
+    session_key,
+    layout_id,
+    kpu_num=None,
+    # list of directions
+    kpu_direction=None,
+    registered=None,
+    affair_grlgot=None,
+    # list, if interval - [start_year, end_year], if value [year] Год постановки на учет
+    stand_year=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата заявления о постановке на учет
+    decl_date=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата операции снятия с учета
+    reason2_calc=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата распоряжения о снятии с учета
+    reason2_date_resolution=None,
+):
     """
     makes a search and search_count links for the RSM requests
     :param session_key:
@@ -824,50 +931,39 @@ def start_kpu_xlsx(
     search_dynamic_control_data = []
 
     try:
-
         if kpu_direction:
-            s_data = {
-                "key": "KpuDirection",
-                "value": f"{str(kpu_direction)}"
-            }
+            s_data = {"key": "KpuDirection", "value": f"{str(kpu_direction)}"}
             search_data.append(s_data)
 
         if registered is not None:
             if registered is True:
-                s_data = {
-                    "key": "InList",
-                    "value": "true"
-                }
+                s_data = {"key": "InList", "value": "true"}
                 search_data.append(s_data)
 
             elif registered is False:
-                s_data = {
-                    "key": "Free",
-                    "value": "true"
-                }
+                s_data = {"key": "Free", "value": "true"}
                 search_data.append(s_data)
 
         if decl_date is not None:
-
             if len(decl_date) == 2:
                 start_date, end_date = process_date_range(decl_date)
 
-                if 'ERROR' in start_date:
-                    raise ValueError('Date formatting error')
+                if "ERROR" in start_date:
+                    raise ValueError("Date formatting error")
 
                 dyn_con_data = {
                     "IdControl": "DateCreateKpu",  # Идентификатор фильтра по дате
                     "ControlType": "DynamicDate",  # Тип фильтра (динамическая дата)
                     "IdAttribute": "43605000",  # Идентификатор атрибута
                     "From": start_date,  # Начальная дата интервала
-                    "To": end_date  # Конечная дата интервала
+                    "To": end_date,  # Конечная дата интервала
                 }
                 # print(dyn_con_data)
                 search_dynamic_control_data.append(dyn_con_data)
 
     except ValueError as e:
         print(e)
-        return f'ERROR {e}'
+        return f"ERROR {e}"
 
     formatted_search_data = {}
     for index, item in enumerate(search_data):
@@ -875,61 +971,61 @@ def start_kpu_xlsx(
         formatted_search_data[f"searchData[{index}].value"] = str(item["value"]).lower()
 
     get_count_params = {
-            "RegisterId": "KursKpu",  # Идентификатор реестра
-            "SearchApplied": "true",  # Поиск активен (true)
-            "PageChanged": "false",  # Страница не менялась
-            "Page": 1,  # Номер страницы
-            "PageSize": 30,  # Размер страницы
-            "SelectAll": "false",  # Все записи не выбраны
-            "ClearSelection": "false",
-            "LayoutId": layout_id,  # Сброс выбора не применён
-            "RegisterViewId": "KursKpu",  # Идентификатор представления реестра
-            "LayoutRegisterId": "0",  # Идентификатор макета реестра (0 - по умолчанию)
-            "FilterRegisterId": "0",  # Идентификатор фильтра реестра (0 - не задан)
-            "ListRegisterId": "0",  # Идентификатор списка реестра (0 - не задан)
-            "searchData": search_data,
-            "SearchDynamicControlData": json.dumps(search_dynamic_control_data),
-            "databaseFilters": [],  # База фильтров (пусто)
-            "selectedLists": [],  # Списки, выбранные пользователем (пусто)
-            "UniqueSessionKey": session_key,  # Уникальный ключ сессии
-            "UniqueSessionKeySetManually": "true",  # Уникальный ключ установлен вручную
-            "ContentLoadCounter": 0,  # Счётчик загрузки контента
-            "CurrentLayoutId": layout_id  # Текущий макет (ID макета)
-        }
+        "RegisterId": "KursKpu",  # Идентификатор реестра
+        "SearchApplied": "true",  # Поиск активен (true)
+        "PageChanged": "false",  # Страница не менялась
+        "Page": 1,  # Номер страницы
+        "PageSize": 30,  # Размер страницы
+        "SelectAll": "false",  # Все записи не выбраны
+        "ClearSelection": "false",
+        "LayoutId": layout_id,  # Сброс выбора не применён
+        "RegisterViewId": "KursKpu",  # Идентификатор представления реестра
+        "LayoutRegisterId": "0",  # Идентификатор макета реестра (0 - по умолчанию)
+        "FilterRegisterId": "0",  # Идентификатор фильтра реестра (0 - не задан)
+        "ListRegisterId": "0",  # Идентификатор списка реестра (0 - не задан)
+        "searchData": search_data,
+        "SearchDynamicControlData": json.dumps(search_dynamic_control_data),
+        "databaseFilters": [],  # База фильтров (пусто)
+        "selectedLists": [],  # Списки, выбранные пользователем (пусто)
+        "UniqueSessionKey": session_key,  # Уникальный ключ сессии
+        "UniqueSessionKeySetManually": "true",  # Уникальный ключ установлен вручную
+        "ContentLoadCounter": 0,  # Счётчик загрузки контента
+        "CurrentLayoutId": layout_id,  # Текущий макет (ID макета)
+    }
 
     get_data_params_1 = {
-            "sort": "['1000882']-desc",
-            "page": "1",
-            "pageSize": "10",
-            "group": "",
-            "filter": "",
-            "RegisterId": "CoreRegisterLayoutExport",
-            "SearchApplied": "false",
-            "PageChanged": "false",
-            "Page": "1",
-            "PageSize": "10",
-            "SelectAll": "false",
-            "ClearSelection": "false",
-            "RegisterViewId": "CoreRegisterLayoutExport",
-            "LayoutRegisterId": "0",
-            "FilterRegisterId": "0",
-            "ListRegisterId": "0",
-            "searchData[0].key": "IsMine",
-            "searchData[0].value": "true",
-            "SearchDynamicControlData": "[]",
-            "UniqueSessionKey": session_key,
-            "UniqueSessionKeySetManually": "true",
-            "ExportLayoutId": layout_id,
-            "ExportRegisterViewId": "KursKpu",
-            "NotSetTitle": "true",
-            "ContentLoadCounter": "17"
-        }
+        "sort": "['1000882']-desc",
+        "page": "1",
+        "pageSize": "10",
+        "group": "",
+        "filter": "",
+        "RegisterId": "CoreRegisterLayoutExport",
+        "SearchApplied": "false",
+        "PageChanged": "false",
+        "Page": "1",
+        "PageSize": "10",
+        "SelectAll": "false",
+        "ClearSelection": "false",
+        "RegisterViewId": "CoreRegisterLayoutExport",
+        "LayoutRegisterId": "0",
+        "FilterRegisterId": "0",
+        "ListRegisterId": "0",
+        "searchData[0].key": "IsMine",
+        "searchData[0].value": "true",
+        "SearchDynamicControlData": "[]",
+        "UniqueSessionKey": session_key,
+        "UniqueSessionKeySetManually": "true",
+        "ExportLayoutId": layout_id,
+        "ExportRegisterViewId": "KursKpu",
+        "NotSetTitle": "true",
+        "ContentLoadCounter": "17",
+    }
 
     get_data_params_2 = {
         "SearchDynamicControlData": search_dynamic_control_data,
         "UniqueSessionKey": session_key,  # Уникальный ключ сессии
         "UniqueSessionKeySetManually": "true",  # Уникальный ключ установлен вручную
-        "ContentLoadCounter": "1"  # Счётчик загрузки контента
+        "ContentLoadCounter": "1",  # Счётчик загрузки контента
     }
 
     # get_data_params_1.update(formatted_search_data)
@@ -942,8 +1038,10 @@ def start_kpu_xlsx(
     get_count_params_json = json.dumps(get_count_params)
     get_count_params_json = urllib.parse.quote(get_count_params_json)
 
-    query_string_count = {"parametersJson": get_count_params_json,
-                                    "coreExportType": "Xlsx"}
+    query_string_count = {
+        "parametersJson": get_count_params_json,
+        "coreExportType": "Xlsx",
+    }
     # Сборка полного URL
     full_url = urljoin(url_data, f"?{query_string}")
     full_url_count = urljoin(url_count, f"?{query_string_count}")
@@ -952,22 +1050,22 @@ def start_kpu_xlsx(
 
 
 def start_orders_xlsx(
-        session_key,
-        layout_id,
-        kpu_num=None,
-        # list of directions
-        kpu_direction=None,
-        registered=None,
-        affair_grlgot=None,
-        # list, if interval - [start_year, end_year], if value [year] Год постановки на учет
-        stand_year=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата заявления о постановке на учет
-        decl_date=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата операции снятия с учета
-        reason2_calc=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата распоряжения о снятии с учета
-        reason2_date_resolution=None
-                ):
+    session_key,
+    layout_id,
+    kpu_num=None,
+    # list of directions
+    kpu_direction=None,
+    registered=None,
+    affair_grlgot=None,
+    # list, if interval - [start_year, end_year], if value [year] Год постановки на учет
+    stand_year=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата заявления о постановке на учет
+    decl_date=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата операции снятия с учета
+    reason2_calc=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата распоряжения о снятии с учета
+    reason2_date_resolution=None,
+):
     """
     makes a search and search_count links for the RSM requests
     :param session_key:
@@ -987,50 +1085,39 @@ def start_orders_xlsx(
     search_dynamic_control_data = []
 
     try:
-
         if kpu_direction:
-            s_data = {
-                "key": "KpuDirection",
-                "value": f"{str(kpu_direction)}"
-            }
+            s_data = {"key": "KpuDirection", "value": f"{str(kpu_direction)}"}
             search_data.append(s_data)
 
         if registered is not None:
             if registered is True:
-                s_data = {
-                    "key": "InList",
-                    "value": "true"
-                }
+                s_data = {"key": "InList", "value": "true"}
                 search_data.append(s_data)
 
             elif registered is False:
-                s_data = {
-                    "key": "Free",
-                    "value": "true"
-                }
+                s_data = {"key": "Free", "value": "true"}
                 search_data.append(s_data)
 
         if decl_date is not None:
-
             if len(decl_date) == 2:
                 start_date, end_date = process_date_range(decl_date)
 
-                if 'ERROR' in start_date:
-                    raise ValueError('Date formatting error')
+                if "ERROR" in start_date:
+                    raise ValueError("Date formatting error")
 
                 dyn_con_data = {
                     "IdControl": "CREATION_DATE",  # Идентификатор фильтра по дате
                     "ControlType": "DynamicDate",  # Тип фильтра (динамическая дата)
                     "IdAttribute": "43821000",  # Идентификатор атрибута
                     "From": start_date,  # Начальная дата интервала
-                    "To": end_date  # Конечная дата интервала
+                    "To": end_date,  # Конечная дата интервала
                 }
                 # print(dyn_con_data)
                 search_dynamic_control_data.append(dyn_con_data)
 
     except ValueError as e:
         print(e)
-        return f'ERROR {e}'
+        return f"ERROR {e}"
 
     formatted_search_data = {}
     for index, item in enumerate(search_data):
@@ -1038,61 +1125,61 @@ def start_orders_xlsx(
         formatted_search_data[f"searchData[{index}].value"] = str(item["value"]).lower()
 
     get_count_params = {
-            "RegisterId": "KursOrder",  # Идентификатор реестра
-            "SearchApplied": "false",  # Поиск активен (true)
-            "PageChanged": "false",  # Страница не менялась
-            "Page": 1,  # Номер страницы
-            "PageSize": 30,  # Размер страницы
-            "SelectAll": "false",  # Все записи не выбраны
-            "ClearSelection": "false",
-            "LayoutId": layout_id,  # Сброс выбора не применён
-            "RegisterViewId": "KursOrder",  # Идентификатор представления реестра
-            "LayoutRegisterId": "0",  # Идентификатор макета реестра (0 - по умолчанию)
-            "FilterRegisterId": "0",  # Идентификатор фильтра реестра (0 - не задан)
-            "ListRegisterId": "0",  # Идентификатор списка реестра (0 - не задан)
-            "searchData": [],
-            "SearchDynamicControlData": json.dumps(search_dynamic_control_data),
-            "databaseFilters": [],  # База фильтров (пусто)
-            "selectedLists": [],  # Списки, выбранные пользователем (пусто)
-            "UniqueSessionKey": session_key,  # Уникальный ключ сессии
-            "UniqueSessionKeySetManually": "true",  # Уникальный ключ установлен вручную
-            "ContentLoadCounter": 0,  # Счётчик загрузки контента
-            "CurrentLayoutId": layout_id  # Текущий макет (ID макета)
-        }
+        "RegisterId": "KursOrder",  # Идентификатор реестра
+        "SearchApplied": "false",  # Поиск активен (true)
+        "PageChanged": "false",  # Страница не менялась
+        "Page": 1,  # Номер страницы
+        "PageSize": 30,  # Размер страницы
+        "SelectAll": "false",  # Все записи не выбраны
+        "ClearSelection": "false",
+        "LayoutId": layout_id,  # Сброс выбора не применён
+        "RegisterViewId": "KursOrder",  # Идентификатор представления реестра
+        "LayoutRegisterId": "0",  # Идентификатор макета реестра (0 - по умолчанию)
+        "FilterRegisterId": "0",  # Идентификатор фильтра реестра (0 - не задан)
+        "ListRegisterId": "0",  # Идентификатор списка реестра (0 - не задан)
+        "searchData": [],
+        "SearchDynamicControlData": json.dumps(search_dynamic_control_data),
+        "databaseFilters": [],  # База фильтров (пусто)
+        "selectedLists": [],  # Списки, выбранные пользователем (пусто)
+        "UniqueSessionKey": session_key,  # Уникальный ключ сессии
+        "UniqueSessionKeySetManually": "true",  # Уникальный ключ установлен вручную
+        "ContentLoadCounter": 0,  # Счётчик загрузки контента
+        "CurrentLayoutId": layout_id,  # Текущий макет (ID макета)
+    }
 
     get_data_params_1 = {
-            "sort": "['1000882']-desc",
-            "page": "1",
-            "pageSize": "10",
-            "group": "",
-            "filter": "",
-            "RegisterId": "CoreRegisterLayoutExport",
-            "SearchApplied": "false",
-            "PageChanged": "false",
-            "Page": "1",
-            "PageSize": "10",
-            "SelectAll": "false",
-            "ClearSelection": "false",
-            "RegisterViewId": "CoreRegisterLayoutExport",
-            "LayoutRegisterId": "0",
-            "FilterRegisterId": "0",
-            "ListRegisterId": "0",
-            "searchData[0].key": "IsMine",
-            "searchData[0].value": "true",
-            "SearchDynamicControlData": "[]",
-            "UniqueSessionKey": session_key,
-            "UniqueSessionKeySetManually": "true",
-            "ExportLayoutId": layout_id,
-            "ExportRegisterViewId": "KursOrder",
-            "NotSetTitle": "true",
-            "ContentLoadCounter": "17"
-        }
+        "sort": "['1000882']-desc",
+        "page": "1",
+        "pageSize": "10",
+        "group": "",
+        "filter": "",
+        "RegisterId": "CoreRegisterLayoutExport",
+        "SearchApplied": "false",
+        "PageChanged": "false",
+        "Page": "1",
+        "PageSize": "10",
+        "SelectAll": "false",
+        "ClearSelection": "false",
+        "RegisterViewId": "CoreRegisterLayoutExport",
+        "LayoutRegisterId": "0",
+        "FilterRegisterId": "0",
+        "ListRegisterId": "0",
+        "searchData[0].key": "IsMine",
+        "searchData[0].value": "true",
+        "SearchDynamicControlData": "[]",
+        "UniqueSessionKey": session_key,
+        "UniqueSessionKeySetManually": "true",
+        "ExportLayoutId": layout_id,
+        "ExportRegisterViewId": "KursOrder",
+        "NotSetTitle": "true",
+        "ContentLoadCounter": "17",
+    }
 
     get_data_params_2 = {
         "SearchDynamicControlData": search_dynamic_control_data,
         "UniqueSessionKey": session_key,  # Уникальный ключ сессии
         "UniqueSessionKeySetManually": "true",  # Уникальный ключ установлен вручную
-        "ContentLoadCounter": "1"  # Счётчик загрузки контента
+        "ContentLoadCounter": "1",  # Счётчик загрузки контента
     }
 
     # get_data_params_1.update(formatted_search_data)
@@ -1105,8 +1192,10 @@ def start_orders_xlsx(
     get_count_params_json = json.dumps(get_count_params)
     get_count_params_json = urllib.parse.quote(get_count_params_json)
 
-    query_string_count = {"parametersJson": get_count_params_json,
-                                    "coreExportType": "Xlsx"}
+    query_string_count = {
+        "parametersJson": get_count_params_json,
+        "coreExportType": "Xlsx",
+    }
     # Сборка полного URL
     full_url = urljoin(url_data, f"?{query_string}")
     full_url_count = urljoin(url_count, f"?{query_string_count}")
@@ -1115,22 +1204,22 @@ def start_orders_xlsx(
 
 
 def start_resurs_xlsx(
-        session_key,
-        layout_id,
-        kpu_num=None,
-        # list of directions
-        kpu_direction=None,
-        registered=None,
-        affair_grlgot=None,
-        # list, if interval - [start_year, end_year], if value [year] Год постановки на учет
-        stand_year=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата заявления о постановке на учет
-        decl_date=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата операции снятия с учета
-        reason2_calc=None,
-        # list, if interval - [start_date, end_date], if value [date] Дата распоряжения о снятии с учета
-        reason2_date_resolution=None
-                ):
+    session_key,
+    layout_id,
+    kpu_num=None,
+    # list of directions
+    kpu_direction=None,
+    registered=None,
+    affair_grlgot=None,
+    # list, if interval - [start_year, end_year], if value [year] Год постановки на учет
+    stand_year=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата заявления о постановке на учет
+    decl_date=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата операции снятия с учета
+    reason2_calc=None,
+    # list, if interval - [start_date, end_date], if value [date] Дата распоряжения о снятии с учета
+    reason2_date_resolution=None,
+):
     """
     makes a search and search_count links for the RSM requests
     :param session_key:
@@ -1150,50 +1239,39 @@ def start_resurs_xlsx(
     search_dynamic_control_data = []
 
     try:
-
         if kpu_direction:
-            s_data = {
-                "key": "KpuDirection",
-                "value": f"{str(kpu_direction)}"
-            }
+            s_data = {"key": "KpuDirection", "value": f"{str(kpu_direction)}"}
             search_data.append(s_data)
 
         if registered is not None:
             if registered is True:
-                s_data = {
-                    "key": "InList",
-                    "value": "true"
-                }
+                s_data = {"key": "InList", "value": "true"}
                 search_data.append(s_data)
 
             elif registered is False:
-                s_data = {
-                    "key": "Free",
-                    "value": "true"
-                }
+                s_data = {"key": "Free", "value": "true"}
                 search_data.append(s_data)
 
         if decl_date is not None:
-
             if len(decl_date) == 2:
                 start_date, end_date = process_date_range(decl_date)
 
-                if 'ERROR' in start_date:
-                    raise ValueError('Date formatting error')
+                if "ERROR" in start_date:
+                    raise ValueError("Date formatting error")
 
                 dyn_con_data = {
                     "IdControl": "DateCreateKpu",  # Идентификатор фильтра по дате
                     "ControlType": "DynamicDate",  # Тип фильтра (динамическая дата)
                     "IdAttribute": "43605000",  # Идентификатор атрибута
                     "From": start_date,  # Начальная дата интервала
-                    "To": end_date  # Конечная дата интервала
+                    "To": end_date,  # Конечная дата интервала
                 }
                 # print(dyn_con_data)
                 search_dynamic_control_data.append(dyn_con_data)
 
     except ValueError as e:
         print(e)
-        return f'ERROR {e}'
+        return f"ERROR {e}"
 
     formatted_search_data = {}
     for index, item in enumerate(search_data):
@@ -1201,70 +1279,64 @@ def start_resurs_xlsx(
         formatted_search_data[f"searchData[{index}].value"] = str(item["value"]).lower()
 
     get_count_params = {
-            "RegisterId": "KursLivingSpace",
-            "SearchApplied": "false",
-            "PageChanged": "false",
-            "Page": 1,
-            "PageSize": 30,
-            "SelectAll": "false",
-            "ClearSelection": "false",
-            "LayoutId": layout_id,
-            "RegisterViewId": "KursLivingSpace",
-            "LayoutRegisterId": "0",
-            "FilterRegisterId": "0",
-            "ListRegisterId": "0",
-            "searchData": [
-                {
-                "key": "UntenantedConditions",
-                "value": "true"
-                },
-                {
-                "key": "AppartDepart",
-                "value": "[753891]"
-                }
-            ],
-            "SearchDynamicControlData": "[]",
-            "databaseFilters": [],
-            "selectedLists": [],
-            "UniqueSessionKey": session_key,
-            "UniqueSessionKeySetManually": "true",
-            "ContentLoadCounter": 0,
-            "CurrentLayoutId": layout_id
-        }
+        "RegisterId": "KursLivingSpace",
+        "SearchApplied": "false",
+        "PageChanged": "false",
+        "Page": 1,
+        "PageSize": 30,
+        "SelectAll": "false",
+        "ClearSelection": "false",
+        "LayoutId": layout_id,
+        "RegisterViewId": "KursLivingSpace",
+        "LayoutRegisterId": "0",
+        "FilterRegisterId": "0",
+        "ListRegisterId": "0",
+        "searchData": [
+            {"key": "UntenantedConditions", "value": "true"},
+            {"key": "AppartDepart", "value": "[753891]"},
+        ],
+        "SearchDynamicControlData": "[]",
+        "databaseFilters": [],
+        "selectedLists": [],
+        "UniqueSessionKey": session_key,
+        "UniqueSessionKeySetManually": "true",
+        "ContentLoadCounter": 0,
+        "CurrentLayoutId": layout_id,
+    }
 
     get_data_params_1 = {
-            "sort": "['1000882']-desc",
-            "page": "1",
-            "pageSize": "10",
-            "group": "",
-            "filter": "",
-            "RegisterId": "CoreRegisterLayoutExport",
-            "SearchApplied": "false",
-            "PageChanged": "false",
-            "Page": "1",
-            "PageSize": "10",
-            "SelectAll": "false",
-            "ClearSelection": "false",
-            "RegisterViewId": "CoreRegisterLayoutExport",
-            "LayoutRegisterId": "0",
-            "FilterRegisterId": "0",
-            "ListRegisterId": "0",
-            "searchData[0].key": "IsMine",
-            "searchData[0].value": "true",
-            "SearchDynamicControlData": "[]",
-            "UniqueSessionKey": session_key,
-            "UniqueSessionKeySetManually": "true",
-            "ExportLayoutId": layout_id,
-            "ExportRegisterViewId": "KursLivingSpace",
-            "NotSetTitle": "true",
-            "ContentLoadCounter": "17"
-        }
+        "sort": "['1000882']-desc",
+        "page": "1",
+        "pageSize": "10",
+        "group": "",
+        "filter": "",
+        "RegisterId": "CoreRegisterLayoutExport",
+        "SearchApplied": "false",
+        "PageChanged": "false",
+        "Page": "1",
+        "PageSize": "10",
+        "SelectAll": "false",
+        "ClearSelection": "false",
+        "RegisterViewId": "CoreRegisterLayoutExport",
+        "LayoutRegisterId": "0",
+        "FilterRegisterId": "0",
+        "ListRegisterId": "0",
+        "searchData[0].key": "IsMine",
+        "searchData[0].value": "true",
+        "SearchDynamicControlData": "[]",
+        "UniqueSessionKey": session_key,
+        "UniqueSessionKeySetManually": "true",
+        "ExportLayoutId": layout_id,
+        "ExportRegisterViewId": "KursLivingSpace",
+        "NotSetTitle": "true",
+        "ContentLoadCounter": "17",
+    }
 
     get_data_params_2 = {
         "SearchDynamicControlData": search_dynamic_control_data,
         "UniqueSessionKey": session_key,  # Уникальный ключ сессии
         "UniqueSessionKeySetManually": "true",  # Уникальный ключ установлен вручную
-        "ContentLoadCounter": "1"  # Счётчик загрузки контента
+        "ContentLoadCounter": "1",  # Счётчик загрузки контента
     }
 
     # get_data_params_1.update(formatted_search_data)
@@ -1277,19 +1349,19 @@ def start_resurs_xlsx(
     get_count_params_json = json.dumps(get_count_params)
     get_count_params_json = urllib.parse.quote(get_count_params_json)
 
-    query_string_count = {"parametersJson": get_count_params_json,
-                                    "coreExportType": "Xlsx"}
+    query_string_count = {
+        "parametersJson": get_count_params_json,
+        "coreExportType": "Xlsx",
+    }
     # Сборка полного URL
     full_url = urljoin(url_data, f"?{query_string}")
     full_url_count = urljoin(url_count, f"?{query_string_count}")
 
     return full_url, query_string_count
-    
-
 
 
 def search_kurs_living_space(apart_id_interval, layout_id: int, session_key: str):
-    '''
+    """
     small function for making links only for apart_id intervals in KursLivigSpace
     with Распорядитель_Имя = Переселение/Реновация and Незаселена
     in the next versions will be refactored in the same way with the search_kpu function... may be))
@@ -1298,7 +1370,7 @@ def search_kurs_living_space(apart_id_interval, layout_id: int, session_key: str
     :param layout_id: int
     :param session_key: str
     :return:
-    '''
+    """
 
     base_url_search = "http://webrsm.mlc.gov:5222/Registers/GetData"
     base_url_count = "http://webrsm.mlc.gov:5222/Registers/GetCount"
@@ -1320,38 +1392,45 @@ def search_kurs_living_space(apart_id_interval, layout_id: int, session_key: str
         "LayoutRegisterId": "0",
         "FilterRegisterId": "0",
         "ListRegisterId": "0",
-        "SearchDataNewDesign": urllib.parse.quote(json.dumps([
-            {
-                "typeControl": "value",
-                "text": "Распорядитель_Код",
-                "textValue": "753891",
-                "type": "DECIMAL",
-                "value": "753891",
-                "id": 43704000,
-                "allowDelete": True
-            },
-            {
-                "typeControl": "value",
-                "type": "BOOLEAN",
-                "text": "Незаселена",
-                "textValue": "Да",
-                "value": 1,
-                "id": 43726700,
-                "allowDelete": True  # Булево значение
-            },
-            {
-                "typeControl": "range",
-                "text": "Сл.инф_APART_ID",
-                "textValue": f"c {apart_id_interval[0]} до {apart_id_interval[1]}",
-                "type": "INTEGER",
-                "from": str(apart_id_interval[0]),
-                "to": str(apart_id_interval[1]),
-                "id": 43705100
-            }
-        ], ensure_ascii=False, separators=(',', ':')), safe=''),
+        "SearchDataNewDesign": urllib.parse.quote(
+            json.dumps(
+                [
+                    {
+                        "typeControl": "value",
+                        "text": "Распорядитель_Код",
+                        "textValue": "753891",
+                        "type": "DECIMAL",
+                        "value": "753891",
+                        "id": 43704000,
+                        "allowDelete": True,
+                    },
+                    {
+                        "typeControl": "value",
+                        "type": "BOOLEAN",
+                        "text": "Незаселена",
+                        "textValue": "Да",
+                        "value": 1,
+                        "id": 43726700,
+                        "allowDelete": True,  # Булево значение
+                    },
+                    {
+                        "typeControl": "range",
+                        "text": "Сл.инф_APART_ID",
+                        "textValue": f"c {apart_id_interval[0]} до {apart_id_interval[1]}",
+                        "type": "INTEGER",
+                        "from": str(apart_id_interval[0]),
+                        "to": str(apart_id_interval[1]),
+                        "id": 43705100,
+                    },
+                ],
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+            safe="",
+        ),
         "UniqueSessionKey": f"{session_key}",
         "UniqueSessionKeySetManually": "true",
-        "ContentLoadCounter": "1"
+        "ContentLoadCounter": "1",
     }
 
     # params for GetCount query
@@ -1368,50 +1447,56 @@ def search_kurs_living_space(apart_id_interval, layout_id: int, session_key: str
         "LayoutRegisterId": "0",
         "FilterRegisterId": "0",
         "ListRegisterId": "0",
-        "SearchDataNewDesign": json.dumps([
-            {
-                "typeControl": "value",
-                "text": "Распорядитель_Код",
-                "textValue": "753891",
-                "type": "DECIMAL",
-                "value": "753891",
-                "id": 43704000,
-                "allowDelete": "true"
-            },
-            {
-                "typeControl": "value",
-                "type": "BOOLEAN",
-                "text": "Незаселена",
-                "textValue": "Да",
-                "value": 1,
-                "id": 43726700,
-                "allowDelete": "true"
-            },
-            {
-                "typeControl": "range",
-                "text": "Сл.инф_APART_ID",
-                "textValue": f"c {apart_id_interval[0]} до {apart_id_interval[1]}",
-                "type": "INTEGER",
-                "from": f"{apart_id_interval[0]}",
-                "to": f"{apart_id_interval[1]}",
-                "id": 43705100,
-                "allowDelete": "true"
-            }
-        ], ensure_ascii=False, separators=(',', ':')),
+        "SearchDataNewDesign": json.dumps(
+            [
+                {
+                    "typeControl": "value",
+                    "text": "Распорядитель_Код",
+                    "textValue": "753891",
+                    "type": "DECIMAL",
+                    "value": "753891",
+                    "id": 43704000,
+                    "allowDelete": "true",
+                },
+                {
+                    "typeControl": "value",
+                    "type": "BOOLEAN",
+                    "text": "Незаселена",
+                    "textValue": "Да",
+                    "value": 1,
+                    "id": 43726700,
+                    "allowDelete": "true",
+                },
+                {
+                    "typeControl": "range",
+                    "text": "Сл.инф_APART_ID",
+                    "textValue": f"c {apart_id_interval[0]} до {apart_id_interval[1]}",
+                    "type": "INTEGER",
+                    "from": f"{apart_id_interval[0]}",
+                    "to": f"{apart_id_interval[1]}",
+                    "id": 43705100,
+                    "allowDelete": "true",
+                },
+            ],
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
         "databaseFilters": [],
         "selectedLists": [],
         "UniqueSessionKey": f"{session_key}",
         "UniqueSessionKeySetManually": "true",
         "ContentLoadCounter": 1,
-        "CurrentLayoutId": f"{layout_id}"
+        "CurrentLayoutId": f"{layout_id}",
     }
 
     get_count_params_json = json.dumps(get_count_params, ensure_ascii=False)
 
-    query_string_search = urlencode(params_search, safe=':/')
-    query_string_count = urlencode({"parametersJson": get_count_params_json,
-                                    "registerId": "KursKpu",
-                                    "uniqueSessionKey": session_key})
+    query_string_search = urlencode(params_search, safe=":/")
+    query_string_count = urlencode({
+        "parametersJson": get_count_params_json,
+        "registerId": "KursKpu",
+        "uniqueSessionKey": session_key,
+    })
 
     full_url_search = urljoin(base_url_search, f"?{query_string_search}")
     full_url_count = urljoin(base_url_count, f"?{query_string_count}")
@@ -1420,7 +1505,7 @@ def search_kurs_living_space(apart_id_interval, layout_id: int, session_key: str
 
 
 def search_vypiski(creation_dates, layout_id: int, session_key: str):
-    '''
+    """
     small function for making links only for apart_id intervals in KursLivigSpace
     with Распорядитель_Имя = Переселение/Реновация and Незаселена
     in the next versions will be refactored in the same way with the search_kpu function... may be))
@@ -1431,7 +1516,7 @@ def search_vypiski(creation_dates, layout_id: int, session_key: str):
     :param layout_id: int
     :param session_key: str
     :return:
-    '''
+    """
     date_start, date_end = process_date_wotime_range(creation_dates)
     date_start_t, date_end_t = process_date_range(creation_dates)
     # print(date_start, " - ", date_end)
@@ -1455,20 +1540,27 @@ def search_vypiski(creation_dates, layout_id: int, session_key: str):
         "LayoutRegisterId": "0",
         "FilterRegisterId": "0",
         "ListRegisterId": "0",
-        "SearchDataNewDesign": urllib.parse.quote(json.dumps([
-            {
-                "typeControl": "range",  # Диапазон значений
-                "text": "Выписка_Д",  # Название поля (похоже, что это "Дата выписки")
-                "textValue": f"c {date_start} до {date_end}",  # Значения фильтра
-                "type": "DATE",  # Тип данных — дата
-                "from": date_start_t,  # Начальная дата
-                "to": date_end_t,  # Конечная дата
-                "id": 43804100  # ID фильтра (системный идентификатор атрибута)
-            }
-        ], ensure_ascii=False, separators=(',', ':')), safe=''),
+        "SearchDataNewDesign": urllib.parse.quote(
+            json.dumps(
+                [
+                    {
+                        "typeControl": "range",  # Диапазон значений
+                        "text": "Выписка_Д",  # Название поля (похоже, что это "Дата выписки")
+                        "textValue": f"c {date_start} до {date_end}",  # Значения фильтра
+                        "type": "DATE",  # Тип данных — дата
+                        "from": date_start_t,  # Начальная дата
+                        "to": date_end_t,  # Конечная дата
+                        "id": 43804100,  # ID фильтра (системный идентификатор атрибута)
+                    }
+                ],
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+            safe="",
+        ),
         "UniqueSessionKey": f"{session_key}",
         "UniqueSessionKeySetManually": "true",
-        "ContentLoadCounter": "1"
+        "ContentLoadCounter": "1",
     }
 
     # params for GetCount query
@@ -1485,31 +1577,37 @@ def search_vypiski(creation_dates, layout_id: int, session_key: str):
         "LayoutRegisterId": "0",
         "FilterRegisterId": "0",
         "ListRegisterId": "0",
-        "SearchDataNewDesign": json.dumps([
-            {
-                "typeControl": "range",  # Диапазон значений
-                "text": "Выписка_Д",  # Название поля (похоже, что это "Дата выписки")
-                "textValue": f"c {date_start} до {date_end}",  # Значения фильтра
-                "type": "DATE",  # Тип данных — дата
-                "from": date_start_t,  # Начальная дата
-                "to": date_end_t,  # Конечная дата
-                "id": 43804100  # ID фильтра (системный идентификатор атрибута)
-            }
-        ], ensure_ascii=False, separators=(',', ':')),
+        "SearchDataNewDesign": json.dumps(
+            [
+                {
+                    "typeControl": "range",  # Диапазон значений
+                    "text": "Выписка_Д",  # Название поля (похоже, что это "Дата выписки")
+                    "textValue": f"c {date_start} до {date_end}",  # Значения фильтра
+                    "type": "DATE",  # Тип данных — дата
+                    "from": date_start_t,  # Начальная дата
+                    "to": date_end_t,  # Конечная дата
+                    "id": 43804100,  # ID фильтра (системный идентификатор атрибута)
+                }
+            ],
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
         "databaseFilters": [],
         "selectedLists": [],
         "UniqueSessionKey": f"{session_key}",
         "UniqueSessionKeySetManually": "true",
         "ContentLoadCounter": 1,
-        "CurrentLayoutId": f"{layout_id}"
+        "CurrentLayoutId": f"{layout_id}",
     }
 
     get_count_params_json = json.dumps(get_count_params, ensure_ascii=False)
 
-    query_string_search = urlencode(params_search, safe=':/')
-    query_string_count = urlencode({"parametersJson": get_count_params_json,
-                                    "registerId": "KursKpu",
-                                    "uniqueSessionKey": session_key})
+    query_string_search = urlencode(params_search, safe=":/")
+    query_string_count = urlencode({
+        "parametersJson": get_count_params_json,
+        "registerId": "KursKpu",
+        "uniqueSessionKey": session_key,
+    })
 
     full_url_search = urljoin(base_url_search, f"?{query_string_search}")
     full_url_count = urljoin(base_url_count, f"?{query_string_count}")
@@ -1518,12 +1616,12 @@ def search_vypiski(creation_dates, layout_id: int, session_key: str):
 
 
 def get_kpu(
-        start_date: datetime,
-        end_date: datetime,
-        date_type: int,
-        category: list,
-        layout_id: int,
-        registered: bool = None,
+    start_date: datetime,
+    end_date: datetime,
+    date_type: int,
+    category: list,
+    layout_id: int,
+    registered: bool = None,
 ):
     """
 
@@ -1539,8 +1637,12 @@ def get_kpu(
     """
 
     token = check_token()
-    result = split_interval([start_date, end_date], date_type, category, token, registered=registered)
-    merged_intervals = merge_intervals(result, date_type, token, category, layout_id, registered=registered)
+    result = split_interval(
+        [start_date, end_date], date_type, category, token, registered=registered
+    )
+    merged_intervals = merge_intervals(
+        result, date_type, token, category, layout_id, registered=registered
+    )
 
     return new_kpu(merged_intervals)
 
@@ -1582,23 +1684,26 @@ def get_kpu_xlsx_df(start_date, end_date, category, layout_id):
 
     key = generate_key()
     token = check_token()
-    url1, url2 = start_kpu_xlsx(key, layout_id, None, category, decl_date=[start_date, end_date])
+    url1, url2 = start_kpu_xlsx(
+        key, layout_id, None, category, decl_date=[start_date, end_date]
+    )
 
     print(url2)
 
-    headers = {
-    "Content-Type": "application/x-www-form-urlencoded"
-    }
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
     data = url2
-    cookie = {'Rsm.Cookie': token}
+    cookie = {"Rsm.Cookie": token}
     url_xlsx_start = "http://webrsm.mlc.gov:5222/Registers/ExportBackground"
 
-    print(requests.post(url_xlsx_start, data=data, headers=headers, cookies=cookie, stream=True))
+    print(
+        requests.post(
+            url_xlsx_start, data=data, headers=headers, cookies=cookie, stream=True
+        )
+    )
 
-    status_value = ''
+    status_value = ""
 
     while status_value != "Завершена":
-        
         respose = requests.get(url1, cookies=cookie)
 
         try:
@@ -1623,17 +1728,16 @@ def get_kpu_xlsx_df(start_date, end_date, category, layout_id):
 
         time.sleep(10)
 
-    url = f'http://webrsm.mlc.gov:5222/CoreRegisterLayout/ExportDownload?exportId={record_id}&UniqueSessionKey={key}'
+    url = f"http://webrsm.mlc.gov:5222/CoreRegisterLayout/ExportDownload?exportId={record_id}&UniqueSessionKey={key}"
     response = send_request(url, cookie=token)
-
 
     # Проверяем успех
     if response.status_code == 200:
         # Получаем имя файла (опционально)
         content_disposition = response.headers.get("content-disposition", "")
-        match = re.search(r'filename=([^;]+)', content_disposition)
+        match = re.search(r"filename=([^;]+)", content_disposition)
         filename = match.group(1).strip('"') if match else "download.xlsx"
-        
+
         # Читаем в память, без записи на диск
         file_bytes = io.BytesIO(response.content)
 
@@ -1658,19 +1762,20 @@ def get_resurs_xlsx_df(layout_id):
 
     print(url2)
 
-    headers = {
-    "Content-Type": "application/x-www-form-urlencoded"
-    }
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
     data = url2
-    cookie = {'Rsm.Cookie': token}
+    cookie = {"Rsm.Cookie": token}
     url_xlsx_start = "http://webrsm.mlc.gov:5222/Registers/ExportBackground"
 
-    print(requests.post(url_xlsx_start, data=data, headers=headers, cookies=cookie, stream=True).text)
+    print(
+        requests.post(
+            url_xlsx_start, data=data, headers=headers, cookies=cookie, stream=True
+        ).text
+    )
 
-    status_value = ''
+    status_value = ""
 
     while status_value != "Завершена":
-        
         respose = requests.get(url1, cookies=cookie)
 
         try:
@@ -1695,17 +1800,16 @@ def get_resurs_xlsx_df(layout_id):
 
         time.sleep(10)
 
-    url = f'http://webrsm.mlc.gov:5222/CoreRegisterLayout/ExportDownload?exportId={record_id}&UniqueSessionKey={key}'
+    url = f"http://webrsm.mlc.gov:5222/CoreRegisterLayout/ExportDownload?exportId={record_id}&UniqueSessionKey={key}"
     response = send_request(url, cookie=token)
-
 
     # Проверяем успех
     if response.status_code == 200:
         # Получаем имя файла (опционально)
         content_disposition = response.headers.get("content-disposition", "")
-        match = re.search(r'filename=([^;]+)', content_disposition)
+        match = re.search(r"filename=([^;]+)", content_disposition)
         filename = match.group(1).strip('"') if match else "download.xlsx"
-        
+
         # Читаем в память, без записи на диск
         file_bytes = io.BytesIO(response.content)
 
@@ -1726,23 +1830,24 @@ def get_orders_xlsx_df(start_date, end_date, layout_id):
 
     key = generate_key()
     token = check_token()
-    url1, url2 = start_kpu_xlsx(key, layout_id, decl_date=[start_date, end_date])
+    url1, url2 = start_orders_xlsx(key, layout_id, decl_date=[start_date, end_date])
 
     print(url2)
 
-    headers = {
-    "Content-Type": "application/x-www-form-urlencoded"
-    }
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
     data = url2
-    cookie = {'Rsm.Cookie': token}
+    cookie = {"Rsm.Cookie": token}
     url_xlsx_start = "http://webrsm.mlc.gov:5222/Registers/ExportBackground"
 
-    print(requests.post(url_xlsx_start, data=data, headers=headers, cookies=cookie, stream=True))
+    print(
+        requests.post(
+            url_xlsx_start, data=data, headers=headers, cookies=cookie, stream=True
+        )
+    )
 
-    status_value = ''
+    status_value = ""
 
     while status_value != "Завершена":
-        
         respose = requests.get(url1, cookies=cookie)
 
         try:
@@ -1767,17 +1872,16 @@ def get_orders_xlsx_df(start_date, end_date, layout_id):
 
         time.sleep(10)
 
-    url = f'http://webrsm.mlc.gov:5222/CoreRegisterLayout/ExportDownload?exportId={record_id}&UniqueSessionKey={key}'
+    url = f"http://webrsm.mlc.gov:5222/CoreRegisterLayout/ExportDownload?exportId={record_id}&UniqueSessionKey={key}"
     response = send_request(url, cookie=token)
-
 
     # Проверяем успех
     if response.status_code == 200:
         # Получаем имя файла (опционально)
         content_disposition = response.headers.get("content-disposition", "")
-        match = re.search(r'filename=([^;]+)', content_disposition)
+        match = re.search(r"filename=([^;]+)", content_disposition)
         filename = match.group(1).strip('"') if match else "download.xlsx"
-        
+
         # Читаем в память, без записи на диск
         file_bytes = io.BytesIO(response.content)
 
@@ -1793,7 +1897,7 @@ def get_orders_xlsx_df(start_date, end_date, layout_id):
     return df
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     start = datetime.now()
     # token = check_token()
     # result = split_interval_ids([999, 99999999], 4, token)
@@ -1808,9 +1912,9 @@ if __name__ == '__main__':
     # print(check_token())
     # category = [70, 97]
     # layout_id = 22223 # usually use 21705
-    
+
     # end_date = datetime.now() - timedelta(minutes=5)
-    
+
     # df = get_kpu(start_date, end_date, 1, category, layout_id)
     # # search_kpu(generate_key(), 21703, registered=True, kpu_direction=[1], decl_date=['01.01.2020', '31.12.2020'])
 
@@ -1818,13 +1922,10 @@ if __name__ == '__main__':
     # print(len(df))
     # df.to_excel('kpu_all.xlsx')
 
-
     start_date = datetime(2017, 1, 1, 0, 0, 0)
     end_date = datetime(2025, 3, 26, 23, 59, 59)
     df = get_orders_xlsx_df(start_date, end_date, 22262)
-    df.to_excel('orders_func.xlsx')
-
-
+    df.to_excel("orders_func.xlsx")
 
     # key = generate_key()
     # token = get_cookie()
@@ -1844,7 +1945,7 @@ if __name__ == '__main__':
     # status_value = ''
 
     # while status_value != "Завершена":
-        
+
     #     respose = requests.get(url1, cookies=cookie)
 
     #     try:
@@ -1869,28 +1970,18 @@ if __name__ == '__main__':
 
     #     time.sleep(10)
 
-    
-
-        
     #     # try:
     #     #     print(respose.json)
     #     # except Exception as e:
     #     #     print(e)
-        
+
     #     # try:
     #     #     print(respose.status_code)
     #     # except Exception as e:
     #     #     print(e)
 
-        
-
-
-
-
-
     # url = f'http://webrsm.mlc.gov:5222/CoreRegisterLayout/ExportDownload?exportId={record_id}&UniqueSessionKey={key}'
     # response = send_request(url, cookie=token)
-
 
     # # Проверяем успех
     # if response.status_code == 200:
@@ -1898,7 +1989,7 @@ if __name__ == '__main__':
     #     content_disposition = response.headers.get("content-disposition", "")
     #     match = re.search(r'filename=([^;]+)', content_disposition)
     #     filename = match.group(1).strip('"') if match else "download.xlsx"
-        
+
     #     # Читаем в память, без записи на диск
     #     file_bytes = io.BytesIO(response.content)
 
@@ -1910,7 +2001,6 @@ if __name__ == '__main__':
     #     df.to_excel('kpu.xlsx')
     # else:
     #     print(f"❌ Ошибка запроса: {response.status_code}")
-
 
     # # Проверка успешности запроса
     # # if response.status_code == 200:
@@ -1933,4 +2023,3 @@ if __name__ == '__main__':
     # # # # print(response.text)
     # # # # print(response.data)
     # # # print(response.json)
-    

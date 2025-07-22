@@ -1,9 +1,13 @@
-import requests
 import os
+from datetime import datetime
+from typing import List
+
 import openpyxl
 import pandas as pd
+import requests
+from core.config import RECOMMENDATION_FILE_PATH
 from repository.database import get_db_connection
-from datetime import datetime
+from utils.sql_reader import read_sql_query
 
 
 def upload_container(history_id, file_path):
@@ -46,15 +50,14 @@ def upload_container(history_id, file_path):
         print(f"Произошла ошибка: {e}")
         return 500
 
-def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_selected_addresses=None, old_selected_addresses=None,
-                                       new_selected_districts=None, old_selected_districts=None,
-                                       new_selected_areas=None, old_selected_areas=None, date=False):
+def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", affair_ids=None):
     """
     Генерирует Excel-файл и загружает его на сервер.
     :param history_id: ID истории для формирования имени файла.
     :param output_dir: Директория для сохранения файла.
     :param new_selected_addresses: Список новых адресов.
     :param old_selected_addresses: Список старых адресов.
+    :param affair_ids: Список affair_id квартир для генерации контейнера.
     :param date: Флаг для включения даты.
     :return: Код статуса HTTP-ответа от сервера.
     """
@@ -63,7 +66,10 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
         os.makedirs(output_dir)
 
     # Формируем полный путь к файлу
-    file_name = f"container_{history_id}.xlsx"
+    if history_id:
+        file_name = f"container_{history_id}.xlsx"
+    else:
+        file_name = f"container_0.xlsx"
     output_path = os.path.join(output_dir, file_name)
 
     # Создаем соединение с базой данных
@@ -72,43 +78,73 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
 
     # Основной запрос
     query = """
-		with unnst AS (
-			SELECT 
-			affair_id, 
-			(KEY)::int as new_apart_id
-			FROM offer,
-			jsonb_each(new_aparts)
-		)
-		
-		SELECT oa.house_address, oa.apart_number, oa.type_of_settlement, oa.kpu_number, o.new_apart_id, 
-               na.house_address, na.apart_number, na.full_living_area, na.total_living_area, na.room_count, 
-               na.living_area, na.floor, cin_address, cin_schedule, dep_schedule, phone_osmotr, phone_otvet, oa.unom, start_date, cin.otdel
+        WITH unnst AS (
+            SELECT 
+                offer_id,
+                affair_id, 
+                (KEY)::bigint as new_apart_id
+            FROM offer,
+            jsonb_each(new_aparts)
+            WHERE offer_id IN (SELECT max(offer_id) FROM offer GROUP BY affair_id)
+            ORDER BY offer_id DESC
+        )
+        SELECT 
+            oa.full_house_address, 
+            oa.apart_number, 
+            oa.type_of_settlement, 
+            oa.kpu_number, 
+            o.new_apart_id, 
+            na.house_address, 
+            na.apart_number, 
+            na.full_living_area, 
+            na.total_living_area, 
+            na.room_count, 
+            na.living_area, 
+            na.floor, 
+            cin_address, 
+            cin_schedule, 
+            dep_schedule, 
+            phone_osmotr, 
+            phone_otvet, 
+            na.entrance_number,
+            (start_dates_by_entrence->>(na.entrance_number::text))::date AS start_date,
+            c.otdel,
+			c.full_house_address,
+			c.full_cin_address,
+			oa.district,
+			oa.cad_num
         FROM unnst o
         JOIN old_apart oa USING (affair_id)
         JOIN new_apart na USING (new_apart_id) 
-        JOIN cin ON cin.old_address = oa.house_address
+        JOIN test_cin c ON c.house_address = na.house_address
         WHERE oa.is_queue <> 1
     """
     params = []
+        
+    if history_id:
+        query += " AND na.history_id = %s AND oa.history_id = %s"
+        params.extend([history_id, history_id])
 
-    # Добавляем условия в зависимости от входных параметров
-    if old_selected_addresses:
-        query += " AND oa.house_address IN %s"
-        params.append(tuple(old_selected_addresses))
-    if new_selected_addresses:
-        query += " AND na.house_address IN %s"
-        params.append(tuple(new_selected_addresses))
+    # Добавляем условие по affair_ids, если они переданы
+    if affair_ids:
+        query += " AND oa.affair_id IN %s"
+        params.append(tuple(affair_ids))
 
     # Выполняем запрос
     cursor.execute(query, params)
     aparts = cursor.fetchall()
+    print('aparts', aparts)
 
     # Создаем DataFrame из результатов запроса
     df = pd.DataFrame(aparts, columns=[
-        'old_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
+        'full_old_house_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
         'new_address', 'new_number', 'full_living_area', 'total_living_area', 'room_count', 
-        'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'unom', 'start_date', 'otdel'
+        'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'entrance_number', 'start_date', 'otdel',
+        'full_house_address', 'full_cin_address', 'old_district', 'old_cad_num'
     ])
+
+    print(df['full_living_area'], df['total_living_area'], df['living_area'])
+    print(df)
 
     # Создаем новую книгу Excel и выбираем активный лист
     wb = openpyxl.Workbook()
@@ -145,18 +181,23 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
     # Заполняем данные из DataFrame
     row_num = 3  # Начинаем с третьей строки
     for index, row in df.iterrows():
-        report_id = 49101 if row['type_of_settlement'] == "частная собственность" else 49181
+        if row['old_district'] in ("ЗелАО", "ВАО", "ЮВАО", "САО", "СВАО"):
+            report_id = 108404 if row['type_of_settlement'] == "частная собственность" else 108407
+        elif row['old_district'] in ("ЗАО", "СЗАО", "ЮАО", "ЮЗАО", "ТАО", "НАО"):
+            report_id = 108406 if row['type_of_settlement'] == "частная собственность" else 108409
+        elif row['old_district'] in ("ЦАО"):
+            report_id = 108405 if row['type_of_settlement'] == "частная собственность" else 108408
 
         for i, tag in enumerate(additional_values):
             additional_texts = {
-                "VSOOTVET": f"Согласно постановлению Правительства Москвы от 01.08.2017 № 497-ПП «О программе реновации жилищного фонда в городе Москве» (далее - Программа реновации) в отношении многоквартирного дома по адресу: г. Москва, {row['old_address']} принято решение о включении в Программу реновации.",
+                "VSOOTVET": f"Согласно постановлению Правительства Москвы от 01.08.2017 № 497-ПП «О программе реновации жилищного фонда в городе Москве» (далее - Программа реновации) в отношении многоквартирного дома по адресу: г. Москва, {row['full_old_house_address']} принято решение о включении в Программу реновации.",
                 "INFO_SOB": """- заявление о включении в предмет Договора предлагаемого жилого помещения;
                 - оригиналы документов личного характера и правоустанавливающие документы на освобождаемое жилое помещение.
                 Просим довести указанную в письме информацию до всех правообладателей.""",
-                "ISPOLNITEL": "Тест",
-                "OSMOTR": f"""Для осмотра квартиры необходимо {('с ' + (str(row['start_date'])[5:7] + '.' + str(row['start_date'])[8:] + '.' +str(row['start_date'])[:4])) if row['start_date'] != None and row['start_date'] > datetime.now().date() else '' } в течение 7 рабочих дней обратиться в инф. центр по адресу: г. Москва, {row['cin_address']} ({row['cin_schedule']}) по пред. записи онлайн на сайте https://www.mos.ru/ в разделе «Осмотр квартиры» (для перехода наведите камеру смартфона на QR~код) или по тел. {row['phone_osmotr']}""" if row['cin_schedule'] != 'time2plan' else "Предварительная запись на показ жилого помещения доступна на сервисе онлайн-записи «Время планировать вместе с ДГИ»: https://time2plan.online.",
+                "ISPOLNITEL": "Кандабаров Н.А.",
+                "OSMOTR": f"""Для осмотра квартиры необходимо {('с ' + (str(row['start_date'])[5:7] + '.' + str(row['start_date'])[8:] + '.' +str(row['start_date'])[:4])) if row['start_date'] != None and row['start_date'] > datetime.now().date() else '' } в течение 7 рабочих дней обратиться в инф. центр по адресу: г. Москва, {row['full_cin_address']} ({row['cin_schedule']}) по пред. записи онлайн на сайте https://www.mos.ru/ в разделе «Осмотр квартиры» (для перехода наведите камеру смартфона на QR~код) или по тел. {row['phone_osmotr']}.""" if row['cin_schedule'] != 'time2plan' else "Предварительная запись на показ жилого помещения доступна на сервисе онлайн-записи «Время планировать вместе с ДГИ»: https://time2plan.online.",
                 "GETKEY": " ",
-                "OTVET": f"Всем правообладателям необходимо предоставить свое согласие либо отказ от предлагаемого жилого помещения в срок не позднее 7 рабочих дней в инф. центр по адресу: г. Москва, {row['cin_address'] if row['dep_schedule']!= 'отдел' else row['otdel']} {('(' + row['dep_schedule'] + ')') if row['dep_schedule']!= 'отдел' else ''}, по пред. записи по вышеуказанному тел., при себе необходимо иметь следующие документы:"
+                "OTVET": f"Всем правообладателям необходимо предоставить свое согласие либо отказ от предлагаемого жилого помещения в срок не позднее 7 рабочих дней в инф. центр по адресу: г. Москва, {row['full_cin_address'] if row['dep_schedule']!= 'отдел' else row['otdel']} {('(' + row['dep_schedule'] + ')') if row['dep_schedule']!= 'отдел' else ''}, по пред. записи по вышеуказанному тел., при себе необходимо иметь следующие документы:"
             }
 
             # Номер заявки
@@ -166,18 +207,18 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
                 sheet.cell(row=row_num, column=2, value=1)  # appApplicantList.type
                 sheet.cell(row=row_num, column=3, value=1)  # appApplicantList.tab
                 sheet.cell(row=row_num, column=4, value="Уважаемый правообладатель!")  # appApplicantList.firstname
-                sheet.cell(row=row_num, column=6, value=f"{row['old_address']} кв. {row['old_number']}")  # Адрес
+                sheet.cell(row=row_num, column=6, value=f"{row['full_old_house_address']} кв. {row['old_number']}")  # Адрес
                 sheet.cell(row=row_num, column=7, value=124365)  # Индекс
                 sheet.cell(row=row_num, column=8, value="г. Москва")  # Населенный пункт
-                sheet.cell(row=row_num, column=9, value='тест')  # Кадастровый номер
-                sheet.cell(row=row_num, column=10, value=f"{row['new_address']} кв. {row['new_number']}")  # flatList.address
+                sheet.cell(row=row_num, column=9, value=row['old_cad_num'])  # Кадастровый номер
+                sheet.cell(row=row_num, column=10, value=f"{row['full_house_address']} кв. {row['new_number']}")  # flatList.address
 
                 # Заполняем данные flatList
-                sheet.cell(row=row_num, column=11, value=row['full_living_area'])  # flatList.square
-                sheet.cell(row=row_num, column=12, value=row['total_living_area'])  # flatList.livingSquare
+                sheet.cell(row=row_num, column=11, value=row['total_living_area'])  # flatList.square
+                sheet.cell(row=row_num, column=12, value=row['living_area'])  # flatList.livingSquare
                 sheet.cell(row=row_num, column=13, value=row['floor'])  # flatList.floorNumber
                 sheet.cell(row=row_num, column=14, value=row['room_count'])  # flatList.room_number
-                sheet.cell(row=row_num, column=15, value=row['living_area'])  # flatList.sDwellingArea
+                sheet.cell(row=row_num, column=15, value=row['full_living_area'])  # flatList.sDwellingArea
                 sheet.cell(row=row_num, column=16, value=3)  # flatList.flatStatus
                 sheet.cell(row=row_num, column=17, value=row['new_apart_id'])  # flatList.sourceid
                 sheet.cell(row=row_num, column=18, value=row['kpu_number'])  # actDocList.documentNumber
@@ -192,7 +233,69 @@ def generate_excel_from_two_dataframes(history_id, output_dir="./uploads", new_s
     wb.save(output_path)
     print(f"Excel файл '{output_path}' создан.")
     connection.close()
+    print('-------------------------------------------------------------\nDONE\n---------------------------------------------------------------------')
 
-    # Загружаем файл на сервер
-    #return upload_container(history_id, output_path)
+def set_is_uploaded(history_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute('UPDATE public.history set is_downloaded = True where history_id = %s', (history_id, ))
+    connection.commit()
+    print('DONE', history_id)
+    connection.close()
 
+def update_apart_status_by_history_id(history_id: int) -> str:
+    if not isinstance(history_id, int) or history_id <= 0:
+        raise ValueError("history_id должен быть положительным целым числом")
+    connection = None  # Инициализируем переменную заранее
+    sql_file_path = os.path.join(RECOMMENDATION_FILE_PATH, 'UpdateOfferStatusByHistoryId.sql')
+    
+    try:
+        with get_db_connection() as connection:
+            with connection.cursor() as cursor:
+                # Читаем SQL из файла
+                with open(sql_file_path, 'r', encoding='utf-8') as f:
+                    sql_query = f.read()
+                
+                # Выполняем запрос в транзакции
+                cursor.execute(sql_query, (history_id,))
+                connection.commit()
+
+                updated_rows = cursor.fetchone()[0]
+                
+                return f"Successfully updated. Affected rows: {updated_rows}"
+                
+    except FileNotFoundError:
+        raise Exception(f"SQL файл не найден: {sql_file_path}")
+    except Exception as e:
+        print(e)
+        if connection is not None:
+            connection.rollback()
+        raise Exception(f"Database error occurred: {str(e)}")
+    
+
+def update_apart_status(apart_ids: List[int]) -> str:
+    if not apart_ids or not all(isinstance(i, int) for i in apart_ids):
+        raise ValueError("apart_ids должен быть непустым списком целых чисел")
+
+    connection = None
+    sql_file_path = os.path.join(RECOMMENDATION_FILE_PATH, 'UpdateOfferStatusByAffairIds.sql')
+    
+    try:
+        with get_db_connection() as connection:
+            with connection.cursor() as cursor:
+                with open(sql_file_path, 'r', encoding='utf-8') as f:
+                    sql_query = f.read()
+                
+                cursor.execute(sql_query, (apart_ids,))
+                connection.commit()
+
+                result, affected_rows = cursor.fetchone()
+                
+                return f"Successfully updated. Result: {result}, Affected rows: {affected_rows}"
+                
+    except FileNotFoundError:
+        raise Exception(f"SQL файл не найден: {sql_file_path}")
+    except Exception as e:
+        if connection is not None:
+            connection.rollback()
+        raise Exception(f"Database error occurred: {str(e)}")

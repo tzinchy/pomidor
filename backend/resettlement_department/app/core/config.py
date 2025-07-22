@@ -43,9 +43,10 @@ class DashboardSetting:
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.DB_DASHBORD_USER}:{self.DB_DASHBORD_PASSWORD}@{self.DB_DASHBORD_HOST}:{self.DB_DASHBORD_PORT}/{self.DB_DASHBORD_NAME}"
 
+
 @dataclass
 class RedisSetting:
-    REDIS_HOST : str = os.environ.get("REDIS_HOST")
+    REDIS_HOST: str = os.environ.get("REDIS_HOST")
 
 
 class RSM:
@@ -53,7 +54,6 @@ class RSM:
     PASS = os.environ["RSM_PASS"]
     PING_LINK = os.environ["RSM_PING_LINK"]
     COUNTER_LAYOUT = 21703
-
 
     # Группы льгот
     AFFAIR_GRLGOT_DICT = {
@@ -104,19 +104,22 @@ class RSM:
         "ContentLoadCounter": 1,  # Счётчик загрузки контента (всегда 1)
     }
 
-    unchanged_params_count = {
+    unchanged_params_count = {}
 
-    }
 
 @dataclass
 class Settings:
-    project_management_setting: ProjectManagementSettings = field(default_factory=ProjectManagementSettings)
+    project_management_setting: ProjectManagementSettings = field(
+        default_factory=ProjectManagementSettings
+    )
     dashboard_setting: DashboardSetting = field(default_factory=DashboardSetting)
     email_settings: EmailSetting = field(default_factory=EmailSetting)
-    redis : RedisSetting = field(default_factory=RedisSetting)
+    redis: RedisSetting = field(default_factory=RedisSetting)
+
 
 settings = Settings()
 print(settings.project_management_setting.DATABASE_URL)
 
-RENOVATION_FILE_PATH = './sql/renovation/'
-RECOMMENDATION_FILE_PATH = './sql/recommendation'
+RENOVATION_FILE_PATH = "./sql/renovation/"
+RECOMMENDATION_FILE_PATH = "./sql/recommendation"
+RECOMMENDATION_DASHBOARD_FILE_PATH = './sql/recommendation/dashboard'

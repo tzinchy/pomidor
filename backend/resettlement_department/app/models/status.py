@@ -1,13 +1,9 @@
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
+from models.base import Base
 
-Base = declarative_base()
 
 class Status(Base):
-    __tablename__ = 'status'
-    
-    status_id = Column(Integer, primary_key=True)
+    __tablename__ = "status"
+
+    status_id = Column(Integer, primary_key=True, autoincrement=True)
     status = Column(String)
-    
-    def __repr__(self):
-        return f"<Status(id={self.status_id}, name='{self.status}')>"

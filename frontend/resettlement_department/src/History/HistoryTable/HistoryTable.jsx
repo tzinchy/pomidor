@@ -12,6 +12,7 @@ export default function HistoryTable(){
         .then((res) => res.json())
         .then((fetchedData) => {
             setData(fetchedData);
+            console.log(fetchedData);
         });
     }, []);
 

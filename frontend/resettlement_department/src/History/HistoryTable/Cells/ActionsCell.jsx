@@ -27,7 +27,7 @@ export default function ActionsCell( {props, setData}) {
         setData(prevData => prevData.filter(item => item.history_id !== history_id));
       }
     } catch (error) {
-      console.error("Error:", error.response?.data);
+      console.error("Error:", error.response?.data); 
     }
   };
 
@@ -55,8 +55,31 @@ export default function ActionsCell( {props, setData}) {
     }
   };
 
-  const download_balance = async (new_apartment_house_address,old_apartment_house_address) => {
-    const requestBody = { "new_apartment_house_address": new_apartment_house_address, "old_apartment_house_address": old_apartment_house_address };
+  const upload_container = async (history_id) => {
+    try {
+      const response = await axios.post(
+        `${HOSTLINK}/push_container/${history_id}`,
+        {
+          params: { history_id: history_id },
+          paramsSerializer,
+        }
+      );
+      if (response.status === 200) {
+        // Обновляем локальные данные, изменяя status_id для выбранного history_id
+        setData(prevData => 
+          prevData.map(item => 
+            item.history_id === history_id ? { ...item, status_id: 1 } : item
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error:", error.response?.data);
+    }
+  };
+
+  const download_balance = async (history_id, is_wave, is_shadow) => {
+    const requestBody = { "history_id": parseInt(history_id), "is_wave": is_wave, "is_shadow": is_shadow};
+    console.log('requestBody', requestBody);
     
     try {
       // Делаем запрос с responseType: 'arraybuffer' для скачивания файла
@@ -145,7 +168,7 @@ export default function ActionsCell( {props, setData}) {
         <div className="flex justify-around">
           <button
             onClick={() => {
-              download_balance(value.new_house_addresses, value.old_house_addresses);
+              download_balance(value.history_id, value.is_wave, value.is_shadow);
               setShowDownloadOptions(false);
             }}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -185,7 +208,7 @@ export default function ActionsCell( {props, setData}) {
             value.is_downloaded ? (
               <Button name="Контейнер загружен" isDisabled={true} />
             ) : (
-              <Button name="Загрузить контейнер" />
+              <Button name="Загрузить контейнер" func={() => upload_container(value.history_id)}/>
             )
           ) : (
             <Button name="Отменить" func={() => delete_history(value.history_id) }/>

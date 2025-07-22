@@ -28,6 +28,7 @@ export default function DetailsStatusCell({
 
   const colors = {
     "Ждёт одобрения": "bg-blue-100 text-blue-500",
+    "Подготовить смотровой": "bg-orange-100 text-orange-500",
     'Ожидание': "bg-yellow-100 text-amber-600",
     'Согласие': "bg-green-100 text-emerald-600",
     'Отказ': "bg-red-100  text-red-700 ",
@@ -75,6 +76,7 @@ export default function DetailsStatusCell({
 
   // Остальной код без изменений
   const changeStatus = async (apartmentId, newStatus) => {
+    console.log(apartmentId, parseInt(newApartId), JSON.stringify({ new_status: newStatus }), apartType)
     try {
       const url = `${HOSTLINK}/tables/apartment/${apartmentId}/${parseInt(newApartId)}/change_status?apart_type=${apartType}`;
       const response = await fetch(url, {
@@ -129,7 +131,7 @@ export default function DetailsStatusCell({
   }
 
   const handleStatusSelect = (status) => {
-    if (status === "Отказ") {
+    if ((status === "Отказ") || (status === "Суд")) {
       setSelectedStatus(status);
       setShowRejectModal(true);
     } else {
@@ -227,7 +229,7 @@ function Dropdown({ colors, position, onSelect, dropdownRef }) {
       {Object.keys(colors).map((key) => (
         <div
           key={key}
-          className={`px-2 py-2 hover:border hover:border-white cursor-pointer ${colors[key]}`}
+          className={`px-2 py-2 cursor-pointer ${colors[key]}`}
           onClick={() => onSelect(key)}
         >
           {key}

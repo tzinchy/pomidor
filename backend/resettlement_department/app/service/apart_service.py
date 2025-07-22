@@ -1,12 +1,15 @@
+import os
+from pathlib import Path
 from typing import List, Optional
 
+import pandas as pd
 from fastapi import HTTPException
 from fastapi import status as http_status
+from fastapi.concurrency import run_in_threadpool
 from handlers.httpexceptions import NotFoundException
 from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
-from schema.apartment import ApartTypeSchema
-from schema.status import Status
+from schema.apartment import ApartType
 
 
 class ApartService:
@@ -18,11 +21,11 @@ class ApartService:
         self.old_apart_repository = old_apart_repository
         self.new_apart_repository = new_apart_repositroy
 
-    async def get_district(self, apart_type: str):
+    async def get_district(self, apart_type: str,):
         try:
-            if apart_type == ApartTypeSchema.OLD:
+            if apart_type == ApartType.OLD:
                 return await self.old_apart_repository.get_districts()
-            elif apart_type == ApartTypeSchema.NEW:
+            elif apart_type == ApartType.NEW:
                 return await self.new_apart_repository.get_districts()
             else:
                 raise NotFoundException
@@ -31,11 +34,11 @@ class ApartService:
 
     async def get_municipal_districts(self, apart_type: str, districts: List[str]):
         try:
-            if apart_type == ApartTypeSchema.OLD:
+            if apart_type == ApartType.OLD:
                 return await self.old_apart_repository.get_municipal_district(
                     districts=districts
                 )
-            elif apart_type == ApartTypeSchema.NEW:
+            elif apart_type == ApartType.NEW:
                 return await self.new_apart_repository.get_municipal_district(
                     districts=districts
                 )
@@ -45,15 +48,15 @@ class ApartService:
             raise HTTPException(detail=error, status_code=http_status.HTTP_409_CONFLICT)
 
     async def get_house_addresses(
-        self, apart_type: str, municipal_districts: List[str]
+        self, apart_type: str, municipal_districts: List[str] = None, district : List[str] = None
     ):
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             return await self.old_apart_repository.get_house_addresses(
-                municipal_districts
+                municipal_districts, district=district
             )
-        elif apart_type == ApartTypeSchema.NEW:
+        elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.get_house_addresses(
-                municipal_districts
+                municipal_districts, district=district
             )
         else:
             raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
@@ -71,8 +74,12 @@ class ApartService:
         room_count: Optional[List[int]] = None,
         is_queue: bool = None,
         is_private: bool = None,
+        statuses : List[str] = None,
+        fio : str = None,
+        stage: List[str] = None,
+        otsel_type: List[str] = None
     ):
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             return await self.old_apart_repository.get_apartments(
                 apart_type=apart_type,
                 house_addresses=house_addresses,
@@ -85,8 +92,12 @@ class ApartService:
                 room_count=room_count,
                 is_queue=is_queue,
                 is_private=is_private,
+                statuses=statuses,
+                fio=fio,
+                stage=stage,
+                otsel_type=otsel_type
             )
-        elif apart_type == ApartTypeSchema.NEW:
+        elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.get_apartments(
                 apart_type=apart_type,
                 house_addresses=house_addresses,
@@ -99,24 +110,25 @@ class ApartService:
                 room_count=room_count,
                 is_queue=is_queue,
                 is_private=is_private,
+                statuses=statuses,
             )
         else:
             raise NotFoundException
 
     async def get_apartment_by_id(self, apart_id: int, apart_type: str):
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             return await self.old_apart_repository.get_apartment_by_id(
                 apart_id=apart_id
             )
-        elif apart_type == ApartTypeSchema.NEW:
+        elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.get_apartment_by_id(
                 apart_id=apart_id
             )
 
     async def get_house_address_with_room_count(self, apart_type: str):
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             result = await self.old_apart_repository.get_house_address_with_room_count()
-        elif apart_type == ApartTypeSchema.NEW:
+        elif apart_type == ApartType.NEW:
             result = await self.new_apart_repository.get_house_address_with_room_count()
         formatted_result = []
         for address, room_counts in result:
@@ -142,11 +154,11 @@ class ApartService:
         )
 
     async def cancell_matching_for_apart(self, apart_id: int, apart_type: str):
-        if apart_type == ApartTypeSchema.OLD:
+        if apart_type == ApartType.OLD:
             return await self.old_apart_repository.cancell_matching_apart(
                 apart_id=apart_id
             )
-        elif apart_type == ApartTypeSchema.NEW:
+        elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.cancell_matching_apart(
                 apart_id=apart_id
             )
@@ -156,10 +168,15 @@ class ApartService:
     async def update_status_for_apart(
         self, apart_id: int, new_apart_id: int, status: str, apart_type: str
     ):
-        if apart_type == ApartTypeSchema.OLD:
-            return await self.old_apart_repository.update_status_for_apart(
-                apart_id=apart_id, new_apart_id=new_apart_id, status=status
-            )
+        if apart_type == ApartType.OLD:
+            is_can_change_the_status = await self.old_apart_repository.validate_apart_status(apart_id=apart_id, new_apart_id=new_apart_id)
+            if is_can_change_the_status:
+                return await self.old_apart_repository.update_status_for_apart(
+                    apart_id=apart_id, new_apart_id=new_apart_id, status=status
+                )
+            else:
+                print({'status': 'Квартира уже подобрана другому человеку', 'error': True})
+                return {'status': 'Квартира уже подобрана другому человеку', 'error': True}
         else:
             raise NotFoundException
 
@@ -181,23 +198,38 @@ class ApartService:
         apartment_layout,
         notes,
     ):
-        return await self.old_apart_repository.set_decline_reason(
-            apartment_id=apart_id,
-            new_apart_id=new_apart_id,
-            min_floor=min_floor,
-            max_floor=max_floor,
-            unom=unom,
-            entrance=entrance,
-            apartment_layout=apartment_layout,
-            notes=notes,
-        )
+        is_can_change_the_status = await self.old_apart_repository.validate_apart_status(apart_id=apart_id, new_apart_id=new_apart_id)
+        if is_can_change_the_status:
+            return await self.old_apart_repository.set_decline_reason(
+                apart_id=apart_id,
+                new_apart_id=new_apart_id,
+                min_floor=min_floor,
+                max_floor=max_floor,
+                unom=unom,
+                entrance=entrance,
+                apartment_layout=apartment_layout,
+                notes=notes,
+            )
+        else:
+            print({'status': 'Квартира уже подобрана другому человеку', 'error': True})
+            return {'status': 'Квартира уже подобрана другому человеку', 'error': True}
 
-    async def set_notes(self, apart_id: int, notes: str, apart_type: str):
-        if apart_type == ApartTypeSchema.OLD:
-            return await self.old_apart_repository.set_notes(apart_id, notes=notes)
-        elif apart_type == ApartTypeSchema.NEW:
+    async def set_notes_for_many(
+        self, apart_ids: list[int], notes: str, apart_type: str
+    ):
+        """
+        Проставляет поле notes и rsm_notes.
+        Строка разбивается по ";".
+        Первый элемент идет в rsm_notes, остальные в notes
+        """
+        notes_list = notes.split(";")
+        rsm_note = notes_list.pop(0)
+        notes = ";".join(notes_list)
+        if apart_type == ApartType.OLD:
+            return await self.old_apart_repository.set_notes(apart_ids, notes=notes, rsm_note=rsm_note)
+        elif apart_type == ApartType.NEW:
             return await self.new_apart_repository.set_notes(
-                apart_id=apart_id, notes=notes
+                apart_ids=apart_ids, notes=notes, rsm_note=rsm_note
             )
         else:
             raise NotFoundException
@@ -238,22 +270,71 @@ class ApartService:
         return {"affected_rows": affected_rows, "status": "done"}
 
     async def set_status_for_many(self, apart_ids, status, apart_type):
-        '''
+        """
         Конкретно данный сервис проставляет статус в offer(в jsonb тоже)
         Либо резервирует новые квартиры
-        '''
-        try: 
-            if apart_type == ApartTypeSchema.OLD:
-                affected_rows = await self.old_apart_repository.set_status_for_many(apart_ids, status=status)
-            elif apart_type == ApartTypeSchema.NEW:
-                if status in (Status.RESERVE.value, Status.PRIVATE.value, Status.FREE.value):
-                    affected_rows = await self.new_apart_repository.set_private_or_reserve_status_for_new_aparts(apart_ids, status=status)
-                else:
-                    raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
+        """
+        try:
+            if apart_type == ApartType.OLD:
+                affected_rows = await self.old_apart_repository.set_status_for_many_old_apart(
+                    apart_ids, status=status
+                )
+            elif apart_type == ApartType.NEW:
+                    affected_rows = await self.new_apart_repository.set_status_for_many_new_apart(
+                        apart_ids, status=status
+                    )
+
             return {"status": "done", "affected_rows": affected_rows}
-        except Exception as e: 
+        except Exception as e:
             print(e)
             raise
 
     async def set_special_needs_for_many(self, apart_ids, is_special_needs_marker):
-        await self.old_apart_repository.set_special_needs_for_many(apart_ids, is_special_needs_marker)
+        await self.old_apart_repository.set_special_needs_for_many(
+            apart_ids, is_special_needs_marker
+        )
+
+    async def get_excel_old_apart(self):
+        try:
+            folders = [Path("uploads")]
+            for folder in folders:
+                folder.mkdir(parents=True, exist_ok=True)
+
+            output_path = os.path.join(os.getcwd(), "././uploads", "old_apart.xlsx")
+            rows, cols = await self.old_apart_repository.get_excel_old_apart()
+            if rows:
+                df = pd.DataFrame(rows, columns=cols)
+            else:
+                df = pd.DataFrame([], columns=cols)
+            df.drop(columns=["created_at", "updated_at"], inplace=True)
+
+            print("DataFrame created:")
+            print(df)
+            await run_in_threadpool(df.to_excel, output_path, index=False)
+            print(f"Data successfully saved to {output_path}")
+            return {"filepath": output_path}
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def get_excel_new_apart(self):
+        try:
+            folders = [Path("uploads")]
+            for folder in folders:
+                folder.mkdir(parents=True, exist_ok=True)
+
+            output_path = os.path.join(os.getcwd(), "././uploads", "new_apart.xlsx")
+            rows, cols = await self.new_apart_repository.get_excel_new_apart()
+            if rows:
+                df = pd.DataFrame(rows, columns=cols)
+            else:
+                df = pd.DataFrame([], columns=cols)
+            df.drop(columns=["created_at", "updated_at"], inplace=True)
+
+            print("DataFrame created:")
+            print(df)
+            await run_in_threadpool(df.to_excel, output_path, index=False)
+            print(f"Data successfully saved to {output_path}")
+            return {"filepath": output_path}
+        except Exception as e:
+            return {"error": str(e)}
+

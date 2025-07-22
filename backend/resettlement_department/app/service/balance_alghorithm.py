@@ -63,8 +63,8 @@ def save_views_to_excel(
                             print('new_query', query_old_ranked)
                             # Добавляем фильтрацию по дате, если указана
                             if date:
-                                query_old_ranked += " AND old_apart.created_at = (SELECT MAX(created_at) FROM old_apart)"
-                                query_new_ranked += " AND new_apart.created_at = (SELECT MAX(created_at) FROM new_apart)"
+                                query_old_ranked += " AND old_apart.created_at = (SELECT MAX(updated_at) FROM old_apart)"
+                                query_new_ranked += " AND new_apart.created_at = (SELECT MAX(updated_at) FROM new_apart)"
 
 
                             df_old_ranked = pd.read_sql(query_old_ranked, conn)
@@ -80,8 +80,10 @@ def save_views_to_excel(
                             """
 
                             max_rank_df = pd.read_sql(max_rank_query, conn)
+                            print('max_rank_df', max_rank_df)
 
                             max_rank_by_room_count = max_rank_df.set_index("room_count")["max_rank"].to_dict()
+                            print('max_rank_by_room_count', max_rank_by_room_count)
 
                             # Объединяем данные старых и новых квартир
                             df_combined = pd.concat(
@@ -125,76 +127,57 @@ def save_views_to_excel(
                                     max_rank = max_rank_by_room_count.get(room_count, 0) + 1
 
                                     if previous_row is not None:
-                                        # Проверяем, является ли previous_row['Ранг'] строкой с диапазоном или целым числом
+                                        # Парсим предыдущий ранг
                                         if (
                                             isinstance(previous_row["Ранг"], str)
                                             and "-" in previous_row["Ранг"]
                                         ):
-                                            previous_rank = int(
-                                                previous_row["Ранг"].split("-")[-1]
-                                            )
+                                            previous_rank = int(previous_row["Ранг"].split("-")[-1])
                                         else:
                                             previous_rank = previous_row["Ранг"]
 
-                                        # Проверяем, можно ли объединять строки
+                                        # Новое условие объединения: Ресурс ИЛИ Баланс равны 0
                                         if (
-                                            (previous_row["Ресурс"] == 0)
+                                            (previous_row["Ресурс"] == 0 or previous_row["Баланс"] == 0) 
                                             and current_rank != max_rank
                                             and previous_rank != max_rank
                                         ):
-                                            # Объединяем строки, если хотя бы одна из них имеет Пот_ть = 0
+                                            # Объединяем строки
                                             previous_row["Пот_ть"] += row["Пот_ть"]
                                             previous_row["Ресурс"] += row["Ресурс"]
                                             previous_row["Баланс"] += row["Баланс"]
-                                            # Обновляем диапазон рангов
-                                            previous_row["Ранг"] = (
-                                                f"{start_rank}-{current_rank}"
-                                            )
+                                            previous_row["Ранг"] = f"{start_rank}-{current_rank}"
                                         else:
-                                            # Добавляем предыдущую строку в список новых строк, если она не None
-                                            if previous_row is not None:
-                                                new_rows.append(previous_row)
-
-                                            # Устанавливаем новую строку как предыдущую
+                                            # Сохраняем предыдущую строку
+                                            new_rows.append(previous_row)
                                             previous_row = row
-                                            start_rank = (
-                                                current_rank  # Начало нового диапазона
-                                            )
+                                            start_rank = current_rank
                                     else:
-                                        # Устанавливаем первую строку как предыдущую
+                                        # Инициализация первой строки
                                         previous_row = row
                                         start_rank = current_rank
 
-                                # Не забываем добавить последнюю строку после цикла
+                                # Добавляем последнюю строку
                                 if previous_row is not None:
                                     new_rows.append(previous_row)
 
-                                # Преобразуем список в DataFrame
+                                # Создаем новый DataFrame
                                 df_new = pd.DataFrame(new_rows)
 
-                                # Пересчитываем итоговые значения
+                                # Пересчитываем итоги
                                 total_potency = df_new["Пот_ть"].sum()
                                 total_resource = df_new["Ресурс"].sum()
                                 total_balance = df_new["Баланс"].sum()
 
-                                # Создаем строку с итогами
-                                totals = pd.DataFrame(
-                                    [
-                                        {
-                                            "Ранг": "Итог",
-                                            "Пот_ть": total_potency,
-                                            "Ресурс": total_resource,
-                                            "Баланс": total_balance,
-                                        }
-                                    ]
-                                )
+                                # Добавляем строку с итогами
+                                totals = pd.DataFrame([{
+                                    "Ранг": "Итог",
+                                    "Пот_ть": total_potency,
+                                    "Ресурс": total_resource,
+                                    "Баланс": total_balance
+                                }])
 
-                                # Добавляем строку с итогами в конец нового DataFrame
-                                df_with_totals = pd.concat(
-                                    [df_new, totals], ignore_index=True
-                                )
-                                
-                                return df_with_totals
+                                return pd.concat([df_new, totals], ignore_index=True)
 
                             # Добавляем итоговые данные по рангу для каждого типа квартиры с использованием add_totals
                             result_data = []

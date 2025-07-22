@@ -9,4 +9,10 @@ cd "$SCRIPT_DIR"
 # Выполняем обновление репозитория и перезапуск сервиса
 git pull upstream dev
 sudo systemctl restart resettlement_backend
+sudo chown -R dsa-dgi:dsa-dgi /opt/auth
+sudo chmod -R 777 /opt/auth
+cp -r backend/auth_service/app /opt/auth/
+sudo chown -R dsa-dgi:dsa-dgi /opt/auth
+sudo chmod -R 777 /opt/auth
+sudo systemctl restart auth
 #sudo systemctl restart resettlement_frontend

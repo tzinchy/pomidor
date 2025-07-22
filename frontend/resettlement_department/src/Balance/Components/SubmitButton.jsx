@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { useDropdown } from './DropdownContext';
 import { HOSTLINK } from '../..';
 
-const SubmitButton = ({ onResponse, type }) => {
+const SubmitButton = ({ onResponse, type, isShadow }) => {
   const { selectedItems } = useDropdown();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
   const handleSubmit = async () => {
     try {
-      // Пропускаем проверку выбранных элементов только для type === 'last'
       if (type !== 'last') {
         const hasSelectedItems = Object.values(selectedItems).some(
           items => items && items.length > 0
@@ -23,14 +22,16 @@ const SubmitButton = ({ onResponse, type }) => {
       
       setErrorMessage(null);
       setLoading(true);
-      
+
+      const totalSelected = selectedItems["new_apartment_house_address_2"];
+
       const requestBody = {
         "old_apartment_house_address": [],
         "new_apartment_house_address": [],
-        "is_date": type === 'last' ? true : false
+        "is_date": type === 'last' ? true : false,
+        "is_shadow": isShadow // Добавляем параметр теневого подбора
       };
       
-      // Добавляем адреса только если type не 'last' или есть выбранные элементы
       if (type !== 'last' || Object.values(selectedItems).some(items => items && items.length > 0)) {
         Object.keys(selectedItems).forEach(dropdownId => {
           const addresses = selectedItems[dropdownId].map(item => item.address);
@@ -38,18 +39,24 @@ const SubmitButton = ({ onResponse, type }) => {
           if (dropdownId.includes('old_apartment_house_address')) {
             requestBody["old_apartment_house_address"] = [...requestBody["old_apartment_house_address"], ...addresses];
           } else if (dropdownId.includes('new_apartment_house_address')) {
-            requestBody["new_apartment_house_address"] = [...requestBody["new_apartment_house_address"], selectedItems["new_apartment_house_address"]];
+            requestBody["new_apartment_house_address"] = [...requestBody["new_apartment_house_address"], selectedItems["new_apartment_house_address_1"]];
           }
         });
       }
       
-      const response = await fetch(`${HOSTLINK}/fisrt_matching/matching`, {
+      const response = totalSelected ? (await fetch(`${HOSTLINK}/wave/process_waves`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(selectedItems)
+      })) : (await fetch(`${HOSTLINK}/fisrt_matching/matching`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody)
-      });
+      }));
 
       if (!response.ok) {
         throw new Error(`Ошибка HTTP: ${response.status}`);
