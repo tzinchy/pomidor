@@ -6,7 +6,7 @@ app = FastAPI()
 
 
 origins = [
-    "http://localhost",  # React Dev Server
+    "http://localhost",  
     "http://127.0.0.1",
     "http://10.9.96.160:3001",
     "http://dsa.mlc.gov",
@@ -15,7 +15,12 @@ origins = [
     "https://dsa.mlc.gov",
     "https://auth.dsa.mlc.gov",
     "https://doccontrol.dsa.mlc.gov",
-    "https://auth.dsa.mlc.gov"
+    "https://auth.dsa.mlc.gov",
+    "https://testdsa.mlc.gov",
+    "https://auth.testdsa.mlc.gov",
+    "https://doccontrol.testdsa.mlc.gov",
+    "https://rstl.testdsa.mlc.gov",
+    "https://up.testdsa.mlc.gov"
 ]
 
 app.add_middleware(
