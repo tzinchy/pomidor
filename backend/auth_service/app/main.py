@@ -20,7 +20,8 @@ origins = [
     "https://auth.testdsa.mlc.gov",
     "https://doccontrol.testdsa.mlc.gov",
     "https://rstl.testdsa.mlc.gov",
-    "https://up.testdsa.mlc.gov"
+    "https://up.testdsa.mlc.gov",
+    "http://10.9.96.162:3001",
 ]
 
 app.add_middleware(
