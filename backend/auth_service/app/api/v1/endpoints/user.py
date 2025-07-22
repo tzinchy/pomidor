@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from service.jwt_service import get_user
-from schemas.user_token_data import UserTokenData
+from schemas.user import User
 from depends import auth_service
 
 router = APIRouter(prefix="/user", tags=["User"])
@@ -18,5 +18,5 @@ async def get_user_info(user_uuid: str):
 
 
 @router.get("/get_subordinates")
-async def get_subordinates_by_uuid(user : UserTokenData = Depends(get_user)):
+async def get_subordinates_by_uuid(user : User = Depends(get_user)):
     return await auth_service.get_subordinates_by_uuid(user_uuid=user.user_uuid) 

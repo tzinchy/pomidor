@@ -1021,9 +1021,6 @@ def match_new_apart_to_family_batch(
                             WHERE manual_load_id = (SELECT manual_load_id FROM manual_load ORDER BY manual_load_id DESC LIMIT 1)
                         )
                     ''')
-                    cursor.execute('DELETE FROM new_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM new_apart)')
-                    cursor.execute('DELETE FROM old_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM old_apart)')
-                    cursor.execute('DELETE FROM manual_load WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM manual_load)')
                     print('Загруженное ручками удалено')
                 if is_shadow:
                     cursor.execute(
@@ -1033,6 +1030,10 @@ def match_new_apart_to_family_batch(
                         WHERE history_id = %s
                         ''', (last_history_id,)
                     )
+                    cursor.execute('DELETE FROM new_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM new_apart)')
+                    cursor.execute('DELETE FROM old_apart WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM old_apart)')
+                    cursor.execute('DELETE FROM manual_load WHERE manual_load_id = (SELECT MAX(manual_load_id) FROM manual_load)')
+                    
                 conn.commit()
                 res = {'cannot_offer': len(cannot_offer_to_insert), 'offer':  len(offers_to_insert)}
                 return res

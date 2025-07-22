@@ -7,18 +7,24 @@ from api.v1.endpoints.rsm import router as rsm_router
 from api.v1.endpoints.wave import router as wave_router
 from api.v1.endpoints.cin import router as cin_router 
 from api.v1.endpoints.admin import router as admin_router 
+from api.v1.endpoints.mock_oath import router as mock_oath_router
 
 from fastapi import APIRouter
 
 router = APIRouter()
 
-router.include_router(apartment_router)
-router.include_router(table_router)
-router.include_router(matching_router)
-router.include_router(dashboard_router)
-router.include_router(history_router)
-router.include_router(rsm_router)
-router.include_router(wave_router)
-router.include_router(cin_router)
-router.include_router(cin_router)
-router.include_router(admin_router)
+routers = [
+    apartment_router,
+    table_router,
+    matching_router,
+    dashboard_router,
+    history_router,
+    rsm_router,
+    wave_router,
+    cin_router,
+    admin_router,
+    mock_oath_router
+]
+
+for endpoint_router in routers:
+    router.include_router(endpoint_router)
