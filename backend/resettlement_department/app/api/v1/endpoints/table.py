@@ -6,7 +6,7 @@ from depends import apartment_service, order_service, offer_service
 from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from schema.apartment import ApartType
 from schema.user import User
-from service.auth_serivce import get_user
+from service.auth import get_user
 
 router = APIRouter(prefix="/tables", tags=["Table and Tree"])
 
