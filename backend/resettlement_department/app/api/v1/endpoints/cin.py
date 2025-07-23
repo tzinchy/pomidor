@@ -8,18 +8,16 @@ router = APIRouter(prefix="/cin", tags=["Cin"])
 
 
 @router.get("")
-async def get_cin(
-    #user : User = Depends(get_user)
-    ):
+async def get_cin():
     return await cin_service.get_cin()
 
 
 @router.patch("/update_cin")
-async def udpate_cin(cin: Cin, user : User = Depends(get_user)):
+async def udpate_cin(cin: Cin):
     return await cin_service.update_cin(cin)
 
 @router.post("/create_cin")
-async def create_cin(cin : CreateCin, user : User = Depends(get_user)): 
+async def create_cin(cin : CreateCin): 
     return await cin_service.create_cin(cin)
 
 
