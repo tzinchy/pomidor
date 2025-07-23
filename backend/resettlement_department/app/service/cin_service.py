@@ -10,8 +10,8 @@ class CinService:
     def __init__(self, repository: CinRepository):
         self.repository = repository
 
-    async def get_cin(self, user_districts):
-        return await self.repository.get_cin(user_districts)
+    async def get_cin(self):
+        return await self.repository.get_cin()
     
     async def update_cin(self, cin):
         return await self.repository.update_cin(cin=cin)

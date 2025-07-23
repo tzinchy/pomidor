@@ -38,16 +38,8 @@ async def get_decline_reason(decline_reason_id: int):
 
 
 @router.get("/{apart_id}/void_aparts")
-async def get_void_aparts_for_apartment(apart_id: int):
+async def get_void_aparts_for_apartment(apart_id: int, user : User = Depends(mp_employee_required)):
     return await apartment_service.get_void_aparts_for_apartment(apart_id)
-
-
-@router.get("/actions/get_house_address")
-async def get_house_address(
-    apart_type: ApartType = Query(..., description="Тип апартаментов"),
-):
-    return await apartment_service.get_house_address(apart_type=apart_type)
-
 
 @router.post("/{apart_id}/manual_matching")
 async def manual_matching(
@@ -55,6 +47,7 @@ async def manual_matching(
     manual_selection: ManualMatching = Body(
         ..., description="Передается списко new_apart_id"
     ),
+    user : User = Depends(mp_employee_required)
 ):
     return await apartment_service.manual_matching(
         apart_id, manual_selection.new_apart_ids

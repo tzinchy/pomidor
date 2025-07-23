@@ -65,16 +65,6 @@ class AuthService:
                     secure=True,
                     path='/'
                 )
-                response.set_cookie(
-                    key="Districts",
-                    value=(create_jwt_token(districts)),
-                    httponly=False,
-                    max_age=60*60*24*90,
-                    samesite="None",
-                    secure=True,
-                    path='/',
-                    domain=".dsa.mlc.gov" 
-                )
             response.set_cookie(
                 key="AuthToken",
                 value=create_jwt_token(jwt_payload),
@@ -94,16 +84,7 @@ class AuthService:
                 secure=True,
                 path='/'
             )
-            response.set_cookie(
-                key="AuthToken",
-                value=create_jwt_token(jwt_payload),
-                httponly=False,
-                max_age=60*60*24*90,
-                samesite="None",
-                secure=True,
-                path='/',
-                domain=".testdsa.mlc.gov" 
-            )
+
             response.set_cookie(
                 key='Frontend',
                 value=create_jwt_token(frontend_payload),
@@ -123,16 +104,7 @@ class AuthService:
                 secure=True,
                 path='/'
             )
-            response.set_cookie(
-                key='Frontend',
-                value=create_jwt_token(frontend_payload),
-                httponly=False,
-                max_age=60*60*24*90,
-                samesite="None",
-                secure=True,
-                path='/',
-                domain=".testdsa.mlc.gov"  
-            )
+
             response.set_cookie(
                 key='uuid',
                 value=str(user_uuid),
@@ -151,16 +123,6 @@ class AuthService:
                 samesite="Lax",
                 secure=False,
                 path='/'  
-            )
-            response.set_cookie(
-                key='uuid',
-                value=str(user_uuid),
-                httponly=False,
-                max_age=60*60*24*90,
-                samesite="None",
-                secure=True,
-                path='/',
-                domain=".testdsa.mlc.gov" 
             )
             return frontend_payload, user_email
         else:

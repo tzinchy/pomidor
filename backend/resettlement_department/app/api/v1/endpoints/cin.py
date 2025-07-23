@@ -8,8 +8,10 @@ router = APIRouter(prefix="/cin", tags=["Cin"])
 
 
 @router.get("")
-async def get_cin(user : User = Depends(get_user)):
-    return await cin_service.get_cin(user.districts)
+async def get_cin(
+    #user : User = Depends(get_user)
+    ):
+    return await cin_service.get_cin()
 
 
 @router.patch("/update_cin")
