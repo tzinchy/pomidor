@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from 'react-router-dom';
 import { motion } from "framer-motion";
 import AuthImage from "./AuthImage";
 import LoginForm from "./LoginForm";
@@ -9,6 +10,8 @@ import ResetPasswordModal from "./ResetPasswordModal";
 // import CookieConsent from "./CookieConsent";
 
 const AuthPage = () => {
+  const [params] = useSearchParams();
+  const redirectUri = params.get('redirect_uri') || 'https://doccontrol.dsa.mlc.gov/';
   const [isRegistering, setIsRegistering] = useState(false);
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem("theme") === "dark"
@@ -58,7 +61,7 @@ const AuthPage = () => {
         {isRegistering ? (
           <RegisterForm key="register" />
         ) : (
-          <LoginForm key="login" />
+          <LoginForm key="login"  redirectUri={redirectUri}/>
         )}
 
         {/* 🔹 Кнопка переключения */}
@@ -88,7 +91,7 @@ const AuthPage = () => {
           <p className="text-grey text-muted-foreground pb-4">
             {isRegistering ? "Введите данные для регистрации" : "Введите данные для входа"}
           </p>
-          {isRegistering ? <RegisterForm /> : <LoginForm />}
+          {isRegistering ? <RegisterForm /> : <LoginForm redirectUri={redirectUri}/>}
         </div>
         {/* <button
                 onClick={() => setIsResetOpen(true)}

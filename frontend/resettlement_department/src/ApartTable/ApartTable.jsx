@@ -9,7 +9,7 @@ import {
   getFilteredRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import axios from "axios";
+import api from "../api";
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ToastContainer, toast } from 'react-toastify';
 
@@ -25,6 +25,7 @@ import ProgressStatusBar from './ProgressStatusBar';
 import StageCell from './Cells/StageCell';
 import ConfirmationModal from './ConfirmationModal';
 import DropdownFilter from './Filters/DropdownFilter';
+import { canSeeDashboard } from '..';
 
 // Добавьте SVG для иконки меню
 const MenuIcon = () => (
@@ -379,7 +380,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
     
-    return axios.post(
+    return api.post(
       `${HOSTLINK}/tables/apartment/rematch`,
       JSON.stringify({ apartment_ids: apartmentIds }),
       { headers: { 'Content-Type': 'application/json' } }
@@ -490,7 +491,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       return;
     }
     try {
-      await axios.post(
+      await api.post(
         `${HOSTLINK}/tables/switch_aparts`,
         {
           first_apart_id: parseInt(Object.keys(rowSelection)[0]),
@@ -509,7 +510,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     console.log('setStatusForMany', apartmentIds, status, apartType)
     
     try {
-      await axios.patch(
+      await api.patch(
         `${HOSTLINK}/tables/apartment/set_status_for_many`,
         { 
           apart_ids: apartmentIds,
@@ -535,7 +536,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     console.log('setSpecialNeedsForMany', apartmentIds, marker, apartType)
     
     try {
-      await axios.patch(
+      await api.patch(
         `${HOSTLINK}/tables/apartment/set_special_needs_for_many`,
         { 
           apart_ids: apartmentIds,
@@ -555,7 +556,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     console.log('setContainerForMany', apartmentIds, marker, apartType)
     
     try {
-      await axios.patch(
+      await api.patch(
         `${HOSTLINK}/tables/apartment/push_container_for_aparts`,
         { 
           apartment_ids: apartmentIds
@@ -585,7 +586,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     console.log('setEntranceForMany', apartmentIds, entrance_number, apartType)
     
     try {
-      await axios.patch(
+      await api.patch(
         `${HOSTLINK}/tables/set_entrance_number_for_many`,
         { 
           new_apart_ids: apartmentIds,
@@ -602,7 +603,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   const handleNotesSave = async (rowData, newNotes) => {
     try {
-      await axios.patch(
+      await api.patch(
         `${HOSTLINK}/apartment/${rowData.id}/notes`,
         { notes: newNotes }
       );
@@ -781,6 +782,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   leaveTo: "transform opacity-0 scale-95"
 };
 
+
   return (
     <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
       {showConfirmModal && (
@@ -958,7 +960,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             </button>
           </div>
         </div>
-          
+        {canSeeDashboard &&  
         <div className='flex items-center'>
 <Popover className="relative inline-block text-left z-[102]">
   <Popover.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
@@ -1050,7 +1052,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   </Transition>
 </Popover>
           <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
-        </div>
+        </div>}
       </div>
       <div className="relative flex flex-col lg:flex-row  w-full transition-all duration-300">
         {loading ? (

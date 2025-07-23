@@ -7,7 +7,7 @@ import ScheduleSelector from "./ScheduleSelector";
 import ChangeEntrences from "./ChangeEntrences";
 import { HOSTLINK } from "../..";
 import AddressDropdown from "./AddressDropdown";
-import axios from "axios"; 
+import api from "../../api"; 
 
 export default function ChangeCin({ props: rowData , fetchTableData, type = "edit" }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -348,9 +348,9 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
         try {
             let response;
             if (type === "create") {
-                response = await axios.post(`${HOSTLINK}/cin/create_cin`, preparedData);
+                response = await api.post(`${HOSTLINK}/cin/create_cin`, preparedData);
             } else {
-                response = await axios.patch(`${HOSTLINK}/cin/update_cin`, preparedData);
+                response = await api.patch(`${HOSTLINK}/cin/update_cin`, preparedData);
             }
             
             console.log('Успешное обновление:', response.data);
