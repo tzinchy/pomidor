@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import axios from "axios";
+import api from "../../../api";
 import { HOSTLINK } from "../../..";
 
 export default function ActionsCell( {props, setData}) {
@@ -13,7 +13,7 @@ export default function ActionsCell( {props, setData}) {
 
   const delete_history = async (history_id) => {
     try {
-      const response = await axios.delete(
+      const response = await api.delete(
         `${HOSTLINK}/delete/${history_id}`,
         {
           params: { history_id: history_id },
@@ -33,7 +33,7 @@ export default function ActionsCell( {props, setData}) {
 
   const approve_history = async (history_id) => {
     try {
-      const response = await axios.patch(
+      const response = await api.patch(
         `${HOSTLINK}/approve/${history_id}`,
         {
           params: { history_id: history_id },
@@ -57,7 +57,7 @@ export default function ActionsCell( {props, setData}) {
 
   const upload_container = async (history_id) => {
     try {
-      const response = await axios.post(
+      const response = await api.post(
         `${HOSTLINK}/push_container/${history_id}`,
         {
           params: { history_id: history_id },

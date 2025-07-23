@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 import { Eye, EyeOff } from "lucide-react";
 
-const LoginForm = () => {
+const LoginForm = ( {redirectUri} ) => {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
@@ -24,7 +24,14 @@ const LoginForm = () => {
         headers: { "Content-Type": "application/json" }, withCredentials:  "include",
       });
 
-      localStorage.setItem("token", response.data.access_token);
+        Cookies.set("roles", response.data.user.roles, {
+          expires: 180, // Срок действия 7 дней
+          path: "/", // Кука будет доступна на всем сайте
+          secure: true, // Только через HTTPS
+          sameSite: "None", // Защита от CSRF
+          domain: import.meta.env.VITE_DOMAIN_ZONE,
+        });
+
     //   Cookies.set("access_token", response.data.access_token, {
     //     expires: 180, // Срок действия 7 дней
     //     path: "/", // Кука будет доступна на всем сайте
@@ -33,11 +40,11 @@ const LoginForm = () => {
     //   });
       setMessage("Успешный вход!");
       // navigate("/home");  // Перенаправляем на домашнюю страницу
-      window.location.href = "https://doccontrol.dsa.mlc.gov/"
+      window.location.href = redirectUri
       // alert("Успех, проверяй куки")
 
     } catch (error) {
-      setMessage("❌ Ошибка: " + (error.response?.data?.detail || "Неизвестная ошибка"));
+      setMessage("❌ Ошибка: " + (error.response?.data?.detail || error));
     }
   };
 

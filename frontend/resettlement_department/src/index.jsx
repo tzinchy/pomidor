@@ -14,12 +14,31 @@ import ParentChildTable from './Test';
 import { data } from './MessegeData';
 import ChessGrid from './ChessGrid';
 import CinPage from './Cin/CinPage';
+import axios from 'axios';
+import Cookies from "js-cookie";
+
+axios.defaults.withCredentials = true;
 
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement); 
 
 export const HOSTLINK = import.meta.env.VITE_HOST_LINK;
 export const ASIDELINK = import.meta.env.VITE_REACT_LINK;
+const allowed = ["mp-boss"]; 
+  // Забираем куку roles
+  const rawRoles = Cookies.get("roles");
+  const roles = Array.isArray(rawRoles)
+    ? rawRoles
+    : (() => {
+        try {
+          return JSON.parse(rawRoles); // если roles хранится как JSON: '["admin","manager"]'
+        } catch {
+          return rawRoles ? [rawRoles] : []; // если просто строка или пусто
+        }
+      })();
+
+
+  export const canSeeDashboard = roles.some(role => allowed.includes(role));
 
 root.render(
   <BrowserRouter>

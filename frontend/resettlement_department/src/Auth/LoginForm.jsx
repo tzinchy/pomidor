@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import axios from "axios";
+import api from "../api";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Cookies from "js-cookie";
@@ -21,7 +21,7 @@ const LoginForm = () => {
       formData.append("email", data.email);
       formData.append("password", data.password);
 
-      const response = await axios.post(`http://10.9.96.160/api/login/auth/auth/login`, data, {
+      const response = await api.post(`http://10.9.96.160/api/login/auth/auth/login`, data, {
         headers: { "Content-Type": "application/json" }, withCredentials:  "include",
       });
 
