@@ -24,7 +24,14 @@ const LoginForm = ( {redirectUri} ) => {
         headers: { "Content-Type": "application/json" }, withCredentials:  "include",
       });
 
-      localStorage.setItem("token", response.data.access_token);
+        Cookies.set("roles", response.data.user.roles, {
+          expires: 180, // Срок действия 7 дней
+          path: "/", // Кука будет доступна на всем сайте
+          secure: true, // Только через HTTPS
+          sameSite: "None", // Защита от CSRF
+          domain: import.meta.env.VITE_DOMAIN_ZONE,
+        });
+
     //   Cookies.set("access_token", response.data.access_token, {
     //     expires: 180, // Срок действия 7 дней
     //     path: "/", // Кука будет доступна на всем сайте
@@ -37,7 +44,7 @@ const LoginForm = ( {redirectUri} ) => {
       // alert("Успех, проверяй куки")
 
     } catch (error) {
-      setMessage("❌ Ошибка: " + (error.response?.data?.detail || "Неизвестная ошибка"));
+      setMessage("❌ Ошибка: " + (error.response?.data?.detail || error));
     }
   };
 
