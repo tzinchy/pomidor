@@ -14,6 +14,9 @@ import ParentChildTable from './Test';
 import { data } from './MessegeData';
 import ChessGrid from './ChessGrid';
 import CinPage from './Cin/CinPage';
+import axios from 'axios';
+
+axios.defaults.withCredentials = true;
 
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement); 
