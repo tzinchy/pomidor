@@ -5,6 +5,9 @@ import { HOSTLINK } from "..";
 import ManualSelectionModal from "./ManualSelectionModal";
 import DetailsAdressCell from "./Cells/DetailsCells/DetailsAddressCell";
 import DeclineResonsCell from "./Cells/DetailsCells/DeclineResonsCell";
+import { canSeeDashboard } from "..";
+
+
 
 export default function ApartDetails({
   className,
@@ -88,7 +91,7 @@ export default function ApartDetails({
               : ""}
           </p>
         </div>
-        {apartType === "OldApart" && (
+        {apartType === "OldApart" && canSeeDashboard && (
           <button
             onClick={() => setIsManualSelectionOpen(true)}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -197,7 +200,7 @@ export default function ApartDetails({
                 })}
               </tbody>
             </table>
-            {apartType === "OldApart" && (
+            {apartType === "OldApart" && canSeeDashboard && (
               <div className="mt-4 flex gap-2">
                 <button
                   onClick={handleCancelMatching}

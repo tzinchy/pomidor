@@ -25,6 +25,7 @@ import ProgressStatusBar from './ProgressStatusBar';
 import StageCell from './Cells/StageCell';
 import ConfirmationModal from './ConfirmationModal';
 import DropdownFilter from './Filters/DropdownFilter';
+import { canSeeDashboard } from '..';
 
 // Добавьте SVG для иконки меню
 const MenuIcon = () => (
@@ -781,6 +782,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   leaveTo: "transform opacity-0 scale-95"
 };
 
+
   return (
     <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
       {showConfirmModal && (
@@ -958,7 +960,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             </button>
           </div>
         </div>
-          
+        {canSeeDashboard &&  
         <div className='flex items-center'>
 <Popover className="relative inline-block text-left z-[102]">
   <Popover.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
@@ -1050,7 +1052,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   </Transition>
 </Popover>
           <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
-        </div>
+        </div>}
       </div>
       <div className="relative flex flex-col lg:flex-row  w-full transition-all duration-300">
         {loading ? (
