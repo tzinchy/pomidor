@@ -1,5 +1,5 @@
 from depends import cin_service
-from service.auth_serivce import get_user
+from service.auth import get_user
 from fastapi import APIRouter, Depends
 from schema.cin import Cin, CreateCin
 from schema.user import User
@@ -13,11 +13,11 @@ async def get_cin(user : User = Depends(get_user)):
 
 
 @router.patch("/update_cin")
-async def udpate_cin(cin: Cin):
+async def udpate_cin(cin: Cin, user : User = Depends(get_user)):
     return await cin_service.update_cin(cin)
 
 @router.post("/create_cin")
-async def create_cin(cin : CreateCin): 
+async def create_cin(cin : CreateCin, user : User = Depends(get_user)): 
     return await cin_service.create_cin(cin)
 
 

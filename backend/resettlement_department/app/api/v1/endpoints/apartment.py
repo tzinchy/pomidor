@@ -1,5 +1,5 @@
 from depends import apartment_service
-from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from schema.apartment import (
     ApartType,
     DeclineReason,
@@ -16,6 +16,7 @@ from service.container_service import (
     upload_container,
 )
 from service.container_service import update_apart_status
+from service.auth import mp_employee_required, User
 
 router = APIRouter(prefix="/tables/apartment", tags=["Apartment Action"])
 
@@ -61,12 +62,12 @@ async def manual_matching(
 
 
 @router.post("/{apart_id}/cancell_matching_for_apart")
-async def cancell_matching_for_apart(apart_id: int, apart_type: ApartType = Query(...)):
+async def cancell_matching_for_apart(apart_id: int, apart_type: ApartType = Query(...), user : User = Depends(mp_employee_required)):
     return await apartment_service.cancell_matching_for_apart(apart_id, apart_type)
 
 
 @router.post("/rematch")
-async def rematch_for_family(rematch_list: Rematch):
+async def rematch_for_family(rematch_list: Rematch, user : User = Depends(mp_employee_required)):
     res = await rematch(rematch_list.apartment_ids)
     return {"res": res}
 

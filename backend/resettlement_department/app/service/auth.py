@@ -84,8 +84,9 @@ class AuthChecker:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             user_data = self.response_model(**payload)
             
-            # Проверка ролей
+            print(user_data)
             if self.required_roles and not any(role in user_data.roles_ids for role in self.required_roles):
+                print(True)
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Insufficient role privileges"
@@ -171,26 +172,20 @@ async def get_district_payload(token : str = Depends(get_districts_token)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)}"
         )
+
+def mp_employee_required(user : User = Depends(get_user)):
+    if user.roles_ids not in (5,6):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient role privileges"
+        )
     
-# Специализированные проверки
-class GetMpAdmin(AuthChecker):
-    def __init__(self):
-        super().__init__(required_roles=[1])  # Пример: роль 1 для админа
-
-class GetHrAdmin(AuthChecker):
-    def __init__(self):
-        super().__init__(required_roles=[2])  # Пример: роль 2 для HR-админа
-
-class GetHrUser(AuthChecker):
-    def __init__(self):
-        super().__init__(required_roles=[3])  # Пример: роль 3 для HR-пользователя
-
-class GetHrCandidate(AuthChecker):
-    def __init__(self):
-        super().__init__(required_roles=[4])  # Пример: роль 4 для кандидата
-
-def SAD_required():
-    return AuthChecker(required_groups=[5,6])
+def mp_boss_required(user : User = Depends(get_user)): 
+    if user.roles_ids not in (5):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Boss role privileges"
+        )
     
 def admin_required():
     return AuthChecker(required_roles=[1], required_groups=[1])
