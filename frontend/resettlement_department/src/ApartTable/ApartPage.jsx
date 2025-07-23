@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import api from "../api";
 import LeftBar from "./LeftBar";
 import Aside from "../Navigation/Aside";
 import ApartTable from "./ApartTable";
@@ -62,7 +62,7 @@ export default function ApartPage() {
 
   const fetchDistricts = async () => {
     try {
-      const response = await axios.get(`${HOSTLINK}/tables/district`, {
+      const response = await api.get(`${HOSTLINK}/tables/district`, {
         params: { apart_type: apartType },
         paramsSerializer
       });
@@ -75,7 +75,7 @@ export default function ApartPage() {
 
   const fetchAllAparts = async () => {
     try {
-      const response = await axios.get(`${HOSTLINK}/tables/apartments`, {
+      const response = await api.get(`${HOSTLINK}/tables/apartments`, {
         params: { apart_type: apartType },
         paramsSerializer
       });
@@ -89,7 +89,7 @@ export default function ApartPage() {
 
   const fetchMunicipalDistricts = async (district) => {
     try {
-      const response = await axios.get(`${HOSTLINK}/tables/municipal_district`, {
+      const response = await api.get(`${HOSTLINK}/tables/municipal_district`, {
         params: {
           apart_type: apartType,
           district: [district] // Исправленное имя параметра
@@ -108,7 +108,7 @@ export default function ApartPage() {
 
   const fetchHouseAddresses = async (municipal) => {
     try {
-      const response = await axios.get(`${HOSTLINK}/tables/house_addresses`, {
+      const response = await api.get(`${HOSTLINK}/tables/house_addresses`, {
         params: {
           apart_type: apartType,
           municipal_districts: [municipal]
@@ -127,7 +127,7 @@ export default function ApartPage() {
 
   const fetchApartments = async (addresses, municipal_districts, stage, otsel_type) => {
     try {
-      const response = await axios.get(`${HOSTLINK}/tables/apartments`, {
+      const response = await api.get(`${HOSTLINK}/tables/apartments`, {
         params: {
           apart_type: apartType,
           house_addresses: addresses,
@@ -149,7 +149,7 @@ export default function ApartPage() {
 
   const fetchApartmentDetails = async (apartmentId) => {
     try {
-      const response = await axios.get(
+      const response = await api.get(
         `${HOSTLINK}/tables/apartment/${apartmentId}`,
         { 
           params: { apart_type: apartType },
