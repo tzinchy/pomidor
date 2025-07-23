@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 import { Eye, EyeOff } from "lucide-react";
 
-const LoginForm = () => {
+const LoginForm = ( {redirectUri} ) => {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
@@ -33,7 +33,7 @@ const LoginForm = () => {
     //   });
       setMessage("Успешный вход!");
       // navigate("/home");  // Перенаправляем на домашнюю страницу
-      window.location.href = "https://doccontrol.dsa.mlc.gov/"
+      window.location.href = redirectUri
       // alert("Успех, проверяй куки")
 
     } catch (error) {
