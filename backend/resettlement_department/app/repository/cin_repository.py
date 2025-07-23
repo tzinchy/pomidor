@@ -2,6 +2,7 @@ from sqlalchemy import text, select, insert, update
 from sqlalchemy.orm import sessionmaker
 from core.logger import logger
 from models.cin import Cin
+from typing import Optional
 
 
 class CinRepository:  # Fixed typo in class name
@@ -64,3 +65,93 @@ class CinRepository:  # Fixed typo in class name
                 await session.rollback()
                 raise Exception("Ошибка при создании записи") from e
             
+    async def get_cin_districts(self, user_districts: Optional[list[str]] = None) -> list[str]:
+        print(user_districts)
+        try:
+            async with self.db() as session:
+                # Base query
+                query = "SELECT DISTINCT district FROM old_apart"
+                params = {}
+                
+                # Add WHERE clause if districts are provided
+                if user_districts:
+                    params = {f"district_{i}": district 
+                            for i, district in enumerate(user_districts)}
+                    placeholders = ", ".join(f":{key}" for key in params.keys())
+                    query += f" WHERE district IN ({placeholders})"
+                
+                # Always add ORDER BY
+                query += " ORDER BY district"
+                print(query.format(params))
+                # Execute query
+                result = await session.execute(text(query), params or None)
+                districts = [row[0] for row in result if row[0] is not None]
+                print(districts)
+                return districts
+
+        except Exception as e:
+            print(f"Database error in get_districts: {str(e)}", exc_info=True)
+            raise e
+
+    async def get_cin_municipal_district(self,districts: list[str] = None) -> list[str]:
+        params = {}
+        placeholders = []
+        query = """
+            SELECT DISTINCT municipal_district
+            FROM old_apart
+        """
+
+        if districts:  # Исправлено: districts вместо district
+            for i, district in enumerate(districts):
+                key = f"district_{i}"
+                placeholders.append(f":{key}")
+                params[key] = district
+
+            placeholders_str = ", ".join(placeholders)
+            query += f"""
+                WHERE district IN ({placeholders_str})
+                ORDER BY municipal_district
+            """
+
+        async with self.db() as session:
+            result = await session.execute(text(query), params)
+            return [row[0] for row in result if row[0] is not None] or []
+
+    async def get_cin_house_addresses(
+        self, municipal_districts: list[str] = None, district : list[str] = None,
+    ) -> list[str]:
+        params = {}
+        query = "SELECT DISTINCT house_address FROM old_apart WHERE 1=1"
+        if district: 
+            # Создаем список параметров для IN-условия
+            placeholders = [f":district_{i}" for i in range(len(municipal_districts))]
+            params = {
+                f"district_{i}": dist for i, dist in enumerate(municipal_districts)
+            }
+
+            # Добавляем условие с пробелом перед WHERE
+            query += f" AND district IN ({', '.join(placeholders)})"
+
+        if municipal_districts:
+            # Создаем список параметров для IN-условия
+            placeholders = [f":municipal_{i}" for i in range(len(municipal_districts))]
+            params = {
+                f"municipal_{i}": dist for i, dist in enumerate(municipal_districts)
+            }
+
+            # Добавляем условие с пробелом перед WHERE
+            query += f" AND municipal_district IN ({', '.join(placeholders)})"
+
+        # Всегда добавляем сортировку
+        query += " ORDER BY house_address"
+
+        print("Final query:", query)
+        print("Params:", params)
+
+        async with self.db() as session:
+            try:
+                result = await session.execute(text(query), params)
+                addresses = [row[0] for row in result if row[0] is not None]
+                return addresses if addresses else []
+            except Exception as e:
+                raise e
