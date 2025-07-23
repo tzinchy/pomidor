@@ -22,10 +22,10 @@ class ApartService:
         self.new_apart_repository = new_apart_repositroy
 
     def resouse_permission(self, user_roles): 
-        return True if 5 not in user_roles else False 
+        return True if 7 not in user_roles else False 
      
     async def get_district(self, apart_type: str, user : User):
-        try:
+        try: 
             if apart_type == ApartType.OLD:
                 return await self.old_apart_repository.get_districts(user.districts)
             elif apart_type == ApartType.NEW:
