@@ -85,6 +85,7 @@ export default function ActionsCell( {props, setData}) {
       // Делаем запрос с responseType: 'arraybuffer' для скачивания файла
       const response = await fetch(`${HOSTLINK}/balance`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -125,6 +126,7 @@ export default function ActionsCell( {props, setData}) {
     try {
       const response = await fetch(`${HOSTLINK}/container/${history_id}`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
