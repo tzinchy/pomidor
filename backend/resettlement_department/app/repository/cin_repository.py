@@ -122,7 +122,7 @@ class CinRepository:  # Fixed typo in class name
         self, municipal_districts: list[str] = None, district : list[str] = None,
     ) -> list[str]:
         params = {}
-        query = "SELECT DISTINCT house_address FROM old_apart WHERE 1=1"
+        query = "SELECT DISTINCT house_address FROM new_apart WHERE 1=1"
         if district: 
             # Создаем список параметров для IN-условия
             placeholders = [f":district_{i}" for i in range(len(municipal_districts))]
