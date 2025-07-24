@@ -912,7 +912,9 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           ) : (
             <div className='w-full'>Загрузка данных...</div>
           )}
-          <div className="flex-shrink-0 ml-2">
+          {/* Фильтры пока убрал */}
+
+          {/* <div className="flex-shrink-0 ml-2">
             <DropdownFilter 
                 item={'Стадия'} 
                 data={stages} 
@@ -935,7 +937,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
                 fetchFunc={fetchApartments}
                 type={'relocationType'}
             />
-          </div>
+          </div> */}
           <div className="flex-shrink-0 ml-2">
             <button
                 onClick={handleResetFilters}
@@ -977,15 +979,42 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     leaveTo="transform opacity-0 scale-95"
   >
     <Popover.Panel className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-      {apartType === 'OldApart' && (
-        <div className="px-1 py-1">
-          <button onClick={startRematchWithNotifications} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Переподбор</button>
-          <button onClick={switchAparts} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Поменять квартиры</button>
-          <button onClick={() => setSpecialNeedsForMany(1)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Проставить инвалидность</button>
-          <button onClick={() => setSpecialNeedsForMany(0)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Снять инвалидность</button>
-          <button onClick={handleContainerClick} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Контейнер</button>
-        </div>
-      )}
+{apartType === 'OldApart' && (
+  <div className="px-1 py-1 space-y-1">
+    <button onClick={startRematchWithNotifications} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Переподбор</button>
+    <button onClick={switchAparts} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Поменять квартиры</button>
+    <button onClick={() => setSpecialNeedsForMany(1)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Проставить инвалидность</button>
+    <button onClick={() => setSpecialNeedsForMany(0)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Снять инвалидность</button>
+    <button onClick={handleContainerClick} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Контейнер</button>
+
+    {/* Подменю Изменить статус */}
+    <Popover className="relative">
+      <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
+        <span>Изменить статус</span>
+      </Popover.Button>
+
+      <Transition as={Fragment} {...transitionProps}>
+        <Popover.Panel className="absolute top-full mt-1 w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
+          <div className="px-1 py-1 space-y-1">
+            {statuses.map((status) => (
+              <button
+                key={status}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setStatusForMany(status, apartType);
+                }}
+                className="group flex w-full rounded-md px-2 py-2 text-xs text-gray-900 hover:bg-gray-100"
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </Popover.Panel>
+      </Transition>
+    </Popover>
+  </div>
+)}
 
       {apartType !== 'OldApart' && (
         <div className="px-1 py-1">
