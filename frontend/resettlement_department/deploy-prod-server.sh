@@ -4,7 +4,7 @@ echo "Начинаю деплой"
 set -o allexport
 source .env.test
 set +o allexport
-echo "Проверяю .env.test"
+echo "Проверяю .env.production"
 # Проверяем переменные
 if [[ -z "$DEPLOY_USER" || -z "$DEPLOY_PASS" || -z "$DEPLOY_HOST" || -z "$DEPLOY_PATH" ]]; then
   echo "❌ Не все переменные заданы в .env.test"
