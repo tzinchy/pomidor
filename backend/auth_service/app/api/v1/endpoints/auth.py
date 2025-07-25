@@ -2,7 +2,7 @@ from fastapi import APIRouter, Response, Depends, BackgroundTasks
 from depends import auth_service
 from schemas.auth import UserLogin, UserResetEmail, CreateUser
 from service.jwt_service import get_user, SAD_required, get_fronted_payload, get_user_uuid, get_district_payload
-from schemas.user_token_data import UserFrontedPayload, UserTokenData
+from schemas.user import UserFrontedPayload, User
 from schemas.user import PasswordSwitch
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -15,7 +15,7 @@ async def login_user(user : UserLogin, response : Response, background_task : Ba
     
     
 @router.post("/user/change_password")
-async def change_password(password_switch : PasswordSwitch, user : UserTokenData = Depends(get_user)):
+async def change_password(password_switch : PasswordSwitch, user : User = Depends(get_user)):
     result = await auth_service.change_password(user_uuid=user.user_uuid, old_password=password_switch.old_password, new_password=password_switch.new_password)
     return result
 
@@ -25,12 +25,12 @@ async def reset_password(user_email: UserResetEmail):
     return result
 
 @router.post("/create_user")
-async def create_user(create_user : CreateUser, user : UserTokenData = Depends(SAD_required)):
+async def create_user(create_user : CreateUser, user : User = Depends(SAD_required)):
     result = await auth_service.create_user(**create_user.model_dump())
     return result
 
 @router.get('/get_backend_paylod')
-async def get_backend_payload(user : UserTokenData = Depends(get_user)):
+async def get_backend_payload(user : User= Depends(get_user)):
     return user
 
 @router.get('/get_frontend_payload')

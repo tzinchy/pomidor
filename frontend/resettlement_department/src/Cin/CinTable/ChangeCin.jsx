@@ -7,7 +7,7 @@ import ScheduleSelector from "./ScheduleSelector";
 import ChangeEntrences from "./ChangeEntrences";
 import { HOSTLINK } from "../..";
 import AddressDropdown from "./AddressDropdown";
-import axios from "axios"; 
+import api from "../../api"; 
 
 export default function ChangeCin({ props: rowData , fetchTableData, type = "edit" }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,23 +51,26 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
         const fetchData = async () => {
             try {
                 // Загрузка адресов
-                const url = new URL(`${HOSTLINK}/tables/house_addresses`);
+                const url = new URL(`${HOSTLINK}/cin/house_addresses`);
                 url.searchParams.append('apart_type', 'NewApartment');            
-                const response = await fetch(url.toString());
+                const response = await fetch(url.toString(), {
+    credentials: 'include',});
                 const fetchedData = await response.json();
                 setNewAddresses(fetchedData);
 
                 // Загрузка районов с параметром apart_type
-                const districtsUrl = new URL(`${HOSTLINK}/tables/district`);
+                const districtsUrl = new URL(`${HOSTLINK}/cin/district`);
                 districtsUrl.searchParams.append('apart_type', 'NewApartment');
-                const districtsResponse = await fetch(districtsUrl.toString());
+                const districtsResponse = await fetch(districtsUrl.toString(), {
+    credentials: 'include',});
                 const districtsData = await districtsResponse.json();
                 setDistrictOptions(districtsData);
 
                 // Загрузка муниципальных округов с параметром apart_type
-                const municipalUrl = new URL(`${HOSTLINK}/tables/municipal_district`);
+                const municipalUrl = new URL(`${HOSTLINK}/cin/municipal_district`);
                 municipalUrl.searchParams.append('apart_type', 'NewApartment');
-                const municipalResponse = await fetch(municipalUrl.toString());
+                const municipalResponse = await fetch(municipalUrl.toString(), {
+    credentials: 'include',});
                 const municipalData = await municipalResponse.json();
                 setMunicipalOptions(municipalData);
             } catch (error) {
@@ -348,9 +351,9 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
         try {
             let response;
             if (type === "create") {
-                response = await axios.post(`${HOSTLINK}/cin/create_cin`, preparedData);
+                response = await api.post(`${HOSTLINK}/cin/create_cin`, preparedData);
             } else {
-                response = await axios.patch(`${HOSTLINK}/cin/update_cin`, preparedData);
+                response = await api.patch(`${HOSTLINK}/cin/update_cin`, preparedData);
             }
             
             console.log('Успешное обновление:', response.data);

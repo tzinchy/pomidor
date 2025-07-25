@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test:build": "vite build --mode test",
+    "test:build": "vite build --mode test && ./deploy-test-server.sh",
     "preview": "vite preview"
   },
   "dependencies": {

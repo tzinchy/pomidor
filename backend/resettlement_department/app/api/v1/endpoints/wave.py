@@ -2,8 +2,10 @@ from fastapi import APIRouter, HTTPException, status
 from typing import Dict, Any
 from repository.database import get_db_connection
 from service.wave import waves
+from service.auth import mp_employee_required, Depends
 
-router = APIRouter(prefix="/wave", tags=["wave"])
+router = APIRouter(prefix="/wave", tags=["wave"], 
+                   dependencies=[Depends(mp_employee_required)])
 
 
 @router.post("/process_waves")

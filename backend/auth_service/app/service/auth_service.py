@@ -84,6 +84,7 @@ class AuthService:
                 secure=True,
                 path='/'
             )
+
             response.set_cookie(
                 key='Frontend',
                 value=create_jwt_token(frontend_payload),
@@ -103,6 +104,7 @@ class AuthService:
                 secure=True,
                 path='/'
             )
+
             response.set_cookie(
                 key='uuid',
                 value=str(user_uuid),
@@ -112,7 +114,6 @@ class AuthService:
                 secure=True,
                 path='/',
                 domain=".dsa.mlc.gov" 
-
             )
             response.set_cookie(
                 key='uuid',
@@ -122,7 +123,6 @@ class AuthService:
                 samesite="Lax",
                 secure=False,
                 path='/'  
-
             )
             return frontend_payload, user_email
         else:

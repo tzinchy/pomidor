@@ -5,15 +5,19 @@ from typing import List
 from fastapi.concurrency import run_in_threadpool
 import pandas as pd
 from depends import env_service
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, UploadFile, Depends
 from RSM.RSM import get_kpu_xlsx_df, get_orders_xlsx_df, get_resurs_xlsx_df
 from schema.history import EnvStatResponse
 from service.apartment_insert import insert_data_to_new_apart, insert_data_to_old_apart
 from service.order_insert import insert_data_to_order_decisions
 from service.cin_insert import insert_cin
+from service.auth import mp_employee_required
 from datetime import timedelta
 
-router = APIRouter(prefix="/rsm", tags=["RSM"])
+router = APIRouter(
+    prefix="/rsm", tags=["RSM"], 
+    dependencies=[Depends(mp_employee_required)]
+)
 
 
 @router.get("/update_info_stat", response_model=List[EnvStatResponse])
