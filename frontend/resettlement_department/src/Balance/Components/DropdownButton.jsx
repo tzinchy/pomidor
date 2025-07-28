@@ -20,7 +20,7 @@ export default function DropdownButton({ placeholder = "Выберите адр�
   useEffect(() => {
     const fetchAddresses = async () => {
       try {
-        const response = await fetch(`${HOSTLINK}/fisrt_matching/${type}/house_addresses`);
+        const response = await fetch(`${HOSTLINK}/fisrt_matching/${type}/house_addresses`, {credentials: 'include',});
         if (!response.ok) throw new Error('Ошибка загрузки адресов');
         const data = await response.json();
         
@@ -45,7 +45,7 @@ export default function DropdownButton({ placeholder = "Выберите адр�
   // Загрузка секций при выборе адреса
   const fetchSections = async (item) => {
     try {
-      const response = await fetch(`${HOSTLINK}/tables/get_entrance_ranges?house_address=${encodeURIComponent(item.originalData.address)}`);
+      const response = await fetch(`${HOSTLINK}/tables/get_entrance_ranges?house_address=${encodeURIComponent(item.originalData.address)}`, {credentials: 'include',});
       if (!response.ok) throw new Error('Ошибка загрузки секций');
       const data = await response.json();
       

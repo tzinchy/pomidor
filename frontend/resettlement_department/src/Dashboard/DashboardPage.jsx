@@ -10,7 +10,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         // Отправка запроса на FastAPI
-        fetch(`${HOSTLINK}/dashboard/dashboard`) // полный путь к маршруту
+        fetch(`${HOSTLINK}/dashboard/dashboard`, {credentials: 'include',}) // полный путь к маршруту
           .then((response) => {
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);

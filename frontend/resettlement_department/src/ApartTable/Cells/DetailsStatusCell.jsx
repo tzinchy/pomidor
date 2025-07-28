@@ -81,6 +81,7 @@ export default function DetailsStatusCell({
       const url = `${HOSTLINK}/tables/apartment/${apartmentId}/${parseInt(newApartId)}/change_status?apart_type=${apartType}`;
       const response = await fetch(url, {
         method: "POST",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
@@ -109,6 +110,7 @@ export default function DetailsStatusCell({
         `${HOSTLINK}/tables/apartment/${apartmentId}/${parseInt(newApartId)}/set_decline_reason`,
         {
           method: "POST",
+          credentials: 'include',
           headers: {
             "Content-Type": "application/json",
           },

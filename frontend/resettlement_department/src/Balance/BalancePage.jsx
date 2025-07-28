@@ -104,7 +104,7 @@ export default function BalancePage() {
                 onChange={() => setIsShadow(!isShadow)}
                 className="mr-2"
               />
-              <label htmlFor="shadowCheckbox">Теневой подбор</label>
+              <label htmlFor="shadowCheckbox">Предподбор</label>
             </div>
             <FileUploader link={`/fisrt_matching/upload-file/`}/>
           </div>
