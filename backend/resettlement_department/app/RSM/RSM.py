@@ -59,22 +59,10 @@ class RsmLogin:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
         "Accept-Encoding": "gzip, deflate, br, zstd",
         "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Cache-Control": "no-cache",
         "Content-Type": "application/x-www-form-urlencoded",
         "Origin": "https://sudir.mos.ru",
-        "Pragma": "no-cache",
-        "Priority": "u=0, i",
         "Referer": "https://sudir.mos.ru/blitz/login/methods/password?bo=%2Fblitz%2Foauth%2Fae%3Fresponse_type%3Dcode%26client_id%3Dwebrsm.mlc.gov%26redirect_uri%3Dhttp%3A%2F%2Fwebrsm.mlc.gov%3A5222%2FSudir%2FAuth%26scope%3Dopenid%2Bprofile",
-        "Sec-Ch-Ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": '"macOS"',
-        "Sec-Ch-Ua-Platform-Version": '"15.5.0"',
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "same-origin",
-        "Sec-Fetch-User": "?1",
-        "Upgrade-Insecure-Requests": "1",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
         }
         #нулевой гет чтобы получить первичный куки и редирект обратно на форму входа
         response = requests.get(url, allow_redirects=False, headers=headers)
