@@ -186,3 +186,7 @@ async def set_entrance_number_for_many(
     return await apartment_service.set_entrance_number_for_many(
         new_apart_ids, entrance_number
     )
+
+@rotuer.get('/get_current_table')
+async def get_current_table(): 
+    pass
