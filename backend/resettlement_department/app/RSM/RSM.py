@@ -105,8 +105,9 @@ class RsmLogin:
         request_data['password'] = password
 
         #засылваем форму входа, теперь можно дергать токен РСМ
-        session.post(url, data=request_data, allow_redirects=True, headers=headers)
-
+        response = session.post(url, data=request_data, allow_redirects=True, headers=headers)
+        print(session.cookies.get_dict())
+        print(response.status_code)
         #вытаскиваем токен из куки сессии
         return session.cookies.get_dict()['Rsm.Cookie']
 
