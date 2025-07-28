@@ -2,7 +2,7 @@
 echo "Начинаю деплой"
 # Загружаем переменные из .env.test
 set -o allexport
-source .env.test
+source .env.production
 set +o allexport
 echo "Проверяю .env.production"
 # Проверяем переменные
