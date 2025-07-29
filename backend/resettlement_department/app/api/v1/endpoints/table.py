@@ -1,7 +1,7 @@
 from typing import List, Literal, Optional
 
 from fastapi.responses import FileResponse
-
+from fastapi.concurrency import run_in_threadpool
 from depends import apartment_service, order_service, offer_service
 from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from schema.apartment import ApartType
@@ -187,6 +187,54 @@ async def set_entrance_number_for_many(
         new_apart_ids, entrance_number
     )
 
-@router.get('/get_current_table')
-async def get_current_table(): 
-    pass
+'''
+@router.get('/get_current_table', response_class=FileResponse)
+async def get_current_table(
+    apart_type: ApartType = Query(..., description="Тип квартиры"),
+    house_addresses: Optional[List[str]] = Query(
+        None, description="Список адресов домов"
+    ),
+    districts: Optional[List[str]] = Query(None, description="Фильтр по районам"),
+    municipal_districts: Optional[List[str]] = Query(
+        None, description="Фильтр по муниципальным округам"
+    ),
+    floor: Optional[int] = Query(None, description="Фильтр по этажу"),
+    min_area: Optional[float] = Query(None, description="Минимальная площадь"),
+    max_area: Optional[float] = Query(None, description="Максимальная площадь"),
+    area_type: Literal["full_living_area", "total_living_area", "living_area"] = Query(
+        "full_living_area", description="Тип площади для фильтрации"
+    ),
+    room_count: Optional[List[int]] = Query(
+        None,
+        description="Фильтр по количеству комнат (можно несколько значений)",
+        example=[1, 2, 3],
+    ),
+    is_queue: bool = None,
+    is_private: bool = None,
+    statuses: Optional[List[str]] = Query(None, example=["Свободная"]),
+    fio : str = Query(None, example='Иванов'),
+    stage: Optional[List[str]] = Query(None, example=["Не начато"]),
+    otsel_type: Optional[List[str]] = Query(None, example=["Полное переселение"]),
+    with_last_offer : Optional[bool] = Query(None, example=False)
+):
+    try:
+        result = await apartment_service.get_current_table(
+            apart_type=apart_type,
+            house_addresses=house_addresses,
+            districts=districts,
+            municipal_districts=municipal_districts,
+            floor=floor,
+            min_area=min_area,
+            max_area=max_area,
+            area_type=area_type,
+            room_count=room_count,
+            is_queue=is_queue,
+            is_private=is_private,
+            statuses=statuses,
+            fio=fio,
+            stage=stage,
+            otsel_type=otsel_type,
+            with_last_offer,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))'''

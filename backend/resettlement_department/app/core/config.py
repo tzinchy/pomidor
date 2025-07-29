@@ -126,3 +126,5 @@ RECOMMENDATION_DASHBOARD_FILE_PATH = './sql/recommendation/dashboard'
 
 print(settings.project_management_setting.ALGORITHM, 'ЭТО АЛГОРИТМ')
 print(settings.project_management_setting.SECRET_KEY, 'А ЭТО КЛЮЧ')
+print(settings.project_management_setting.DATABASE_URL, 'ССЫЛКА НА БАЗУ ДАННЫХ')
+print()

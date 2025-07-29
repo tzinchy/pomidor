@@ -11,6 +11,8 @@ from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
 from schema.apartment import ApartType
 from schema.user import User
+import pandas as pd 
+
 
 class ApartService:
     def __init__(
@@ -343,4 +345,65 @@ class ApartService:
             return {"filepath": output_path}
         except Exception as e:
             return {"error": str(e)}
+        
+    async def get_current_table(
+        self,
+        apart_type: str,
+        house_addresses: Optional[List[str]] = None,
+        districts: Optional[List[str]] = None,
+        municipal_districts: Optional[List[str]] = None,
+        floor: Optional[int] = None,
+        min_area: Optional[float] = None,
+        max_area: Optional[float] = None,
+        area_type: str = "full_living_area",
+        room_count: Optional[List[int]] = None,
+        is_queue: bool = None,
+        is_private: bool = None,
+        statuses : List[str] = None,
+        fio : str = None,
+        stage: List[str] = None,
+        otsel_type: List[str] = None,
+        with_last_offer : Optional[bool] = False,
+    ):
+        if apart_type == ApartType.OLD:
+            if with_last_offer:
+                result = self.old_apart_repository.get_apartments(
+                apart_type=apart_type,
+                house_addresses=house_addresses,
+                districts=districts,
+                municipal_districts=municipal_districts,
+                floor=floor,
+                min_area=min_area,
+                max_area=max_area,
+                area_type=area_type,
+                room_count=room_count,
+                is_queue=is_queue,
+                is_private=is_private,
+                statuses=statuses,
+                fio=fio,
+                stage=stage,
+                otsel_type=otsel_type
+            )
+            else: 
+                pass
+        else: 
+            pass
+        folders = [Path("uploads")]
+        for folder in folders:
+            folder.mkdir(parents=True, exist_ok=True)
+
+        output_path = os.path.join(os.getcwd(), "././uploads", "current_table.xlsx")
+        rows, cols = await self.new_apart_repository.get_excel_new_apart()
+        if rows:
+            df = pd.DataFrame(rows, columns=cols)
+        else:
+            df = pd.DataFrame([], columns=cols)
+        df.drop(columns=["created_at", "updated_at"], inplace=True)
+
+        print("DataFrame created:")
+        print(df)
+        await run_in_threadpool(df.to_excel, output_path, index=False)
+        print(f"Data successfully saved to {output_path}")
+        return pd.DataFrame(result) 
+
 
