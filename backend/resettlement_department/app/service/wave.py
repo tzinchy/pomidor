@@ -462,12 +462,17 @@ def df_for_aparts(cursor, old_selected_addresses=None, new_selected_addresses=No
             old_apart o 
         LEFT JOIN 
             family_member fm ON o.kpu_number = fm.kpu_number 
-        WHERE (o.rsm_status <> 'снято' or rsm_status is NULL) and
-            o.affair_id NOT IN (
-                SELECT affair_id
-                FROM offer
-                WHERE status_id <> 2
-            ) 
+        WHERE (o.rsm_status <> 'снято' or rsm_status is NULL)
+		    AND o.affair_id NOT IN (
+                            SELECT affair_id
+                            FROM  offer
+                            where status_id not in (2, 14)
+                        )
+			AND o.affair_id NOT IN (
+                            SELECT affair_id
+                            FROM  old_apart
+                            where status_id = 14
+                        ) 
     """
     
     old_apart_query_params = []
