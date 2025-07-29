@@ -64,6 +64,11 @@ def match_new_apart_to_family_batch(
                             FROM  offer
                             where status_id not in (2, 14)
                         ) 
+			AND o.affair_id NOT IN (
+                            SELECT affair_id
+                            FROM  old_apart
+                            where status_id = 14
+                        ) 
                 """
                 
                 old_apart_query_params = []
