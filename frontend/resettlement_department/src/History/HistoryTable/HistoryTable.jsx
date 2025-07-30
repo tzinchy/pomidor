@@ -8,7 +8,7 @@ export default function HistoryTable(){
     const [data, setData] = useState([])
 
     useEffect(() => { 
-        fetch(`${HOSTLINK}/history`)
+        fetch(`${HOSTLINK}/history`, {credentials: "include"})
         .then((res) => res.json())
         .then((fetchedData) => {
             setData(fetchedData);

@@ -35,7 +35,7 @@ export default function Table({ filters, searchQuery }) {
   const itemsPerPage = 50; // Количество строк на страницу
 
   useEffect(() => { 
-    fetch(`${HOSTLINK}/dashboard/table`)
+    fetch(`${HOSTLINK}/dashboard/table`, {credentials: "include"})
       .then((res) => res.json())
       .then((fetchedData) => {
         setData(fetchedData);

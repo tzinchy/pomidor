@@ -2,6 +2,8 @@ import React from "react";
 import LinkButton from "./LinkButton/LinkButton";
 import UpdateDataButton from "./UpdateInfo/UpdateModal";
 import { canSeeDashboard } from "..";
+import { LogOut } from "lucide-react";
+import LogoutButton from "./LogoutButton";
 
 export default function Aside() {
 
@@ -15,9 +17,11 @@ export default function Aside() {
         <LinkButton name="aparts" />
         {canSeeDashboard && <LinkButton name="balance" />}
         <LinkButton name="cin" />
-        
-        {canSeeDashboard && <UpdateDataButton />}
       </nav>
+      <div className="mt-auto flex flex-col items-center gap-2 pt-2">
+        {canSeeDashboard && <UpdateDataButton />}
+        <LogoutButton />
+      </div>
     </aside>
   );
 }

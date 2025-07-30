@@ -19,13 +19,14 @@ import PloshCell from './Cells/PloshCell';
 import StatusCell from './Cells/StatusCell';
 import NotesCell from './Cells/Notes';
 import ApartDetails from './ApartDetails';
-import { HOSTLINK } from '..';
+import { approveAvailable, HOSTLINK } from '..';
 import AllFilters from './Filters/AllFilters';
 import ProgressStatusBar from './ProgressStatusBar';
 import StageCell from './Cells/StageCell';
 import ConfirmationModal from './ConfirmationModal';
 import DropdownFilter from './Filters/DropdownFilter';
-import { canSeeDashboard } from '..';
+import { canSeeDashboard} from '..';
+import { CheckCircle } from "lucide-react";
 
 // Добавьте SVG для иконки меню
 const MenuIcon = () => (
@@ -962,6 +963,28 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
             </button>
           </div>
         </div>
+        <div className="flex justify-end items-center gap-2 mt-2">
+        {approveAvailable &&
+<div className='flex items-center'>
+  <button
+    key="Подготовить смотровой"
+    onClick={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setStatusForMany("Подготовить смотровой", "OldApart");
+    }}
+    className="group flex w-full items-center gap-2 rounded-md px-3 py-2 text-s font-medium text-gray-900
+               transition hover:bg-green-100 hover:backdrop-blur-sm hover:text-green-900"
+  >
+    <CheckCircle
+      size={24}
+      className="stroke-green-600 group-hover:scale-110 transition-transform"
+    />
+    Одобрить
+  </button>
+</div>
+  }
+
         {canSeeDashboard &&  
         <div className='flex items-center'>
 <Popover className="relative inline-block text-left z-[102]">
@@ -987,7 +1010,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     <button onClick={() => setSpecialNeedsForMany(0)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Снять инвалидность</button>
     <button onClick={handleContainerClick} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Контейнер</button>
 
-    {/* Подменю Изменить статус */}
+    {/* Подменю Изменить статус
     <Popover className="relative">
       <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
         <span>Изменить статус</span>
@@ -1012,7 +1035,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           </div>
         </Popover.Panel>
       </Transition>
-    </Popover>
+    </Popover> */}
   </div>
 )}
 
@@ -1082,6 +1105,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 </Popover>
           <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
         </div>}
+        </div>
       </div>
       <div className="relative flex flex-col lg:flex-row  w-full transition-all duration-300">
         {loading ? (
