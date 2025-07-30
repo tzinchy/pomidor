@@ -539,6 +539,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
                 entrance_number = COALESCE(EXCLUDED.entrance_number, new_apart.entrance_number),
                 updated_at = NOW()
         """
+        
         # Проставляем справочную информацию об успешной выгрузке
         set_env_true_sql = """
             UPDATE env.data_updates
