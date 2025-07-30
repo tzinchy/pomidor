@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import api from "../../../api";
-import { HOSTLINK } from "../../..";
+import { approveAvailable, HOSTLINK } from "../../..";
 
 export default function ActionsCell( {props, setData}) {
   const value = props;
@@ -85,6 +85,7 @@ export default function ActionsCell( {props, setData}) {
       // Делаем запрос с responseType: 'arraybuffer' для скачивания файла
       const response = await fetch(`${HOSTLINK}/balance`, {
         method: 'POST',
+        credentials: "include",
         headers: {
           'Content-Type': 'application/json',
         },
@@ -125,6 +126,7 @@ export default function ActionsCell( {props, setData}) {
     try {
       const response = await fetch(`${HOSTLINK}/container/${history_id}`, {
         method: 'POST',
+        credentials: "include",
         headers: {
           'Content-Type': 'application/json',
         },
@@ -201,6 +203,8 @@ export default function ActionsCell( {props, setData}) {
           />
           {value.status_id === 1 ? (
             <Button name="Одобрено" isDisabled={true} />
+          ) : !approveAvailable ? (
+            <Button name="Ждет одобрения" isDisabled={true} />
           ) : (
             <Button name="Одобрить" func={() => approve_history(value.history_id)} />
           )}

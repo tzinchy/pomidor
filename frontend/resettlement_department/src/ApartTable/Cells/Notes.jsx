@@ -27,6 +27,7 @@ export default function NotesCell({props, apartType}) {
     try {
       const response = await fetch(`${HOSTLINK}/tables/apartment/${apartment_id}/set_notes?apart_type=${apartType}`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

@@ -24,7 +24,8 @@ const root = ReactDOM.createRoot(rootElement);
 
 export const HOSTLINK = import.meta.env.VITE_HOST_LINK;
 export const ASIDELINK = import.meta.env.VITE_REACT_LINK;
-const allowed = ["mp-boss"]; 
+const allowed = ["mp-boss", "mp-employee"];
+const boss = ["mp-boss"]; 
   // Забираем куку roles
   const rawRoles = Cookies.get("roles");
   const roles = Array.isArray(rawRoles)
@@ -39,6 +40,7 @@ const allowed = ["mp-boss"];
 
 
   export const canSeeDashboard = roles.some(role => allowed.includes(role));
+  export const approveAvailable = roles.some(role => boss.includes(role));
 
 root.render(
   <BrowserRouter>

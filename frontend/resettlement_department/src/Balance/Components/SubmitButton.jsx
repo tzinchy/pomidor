@@ -46,12 +46,14 @@ const SubmitButton = ({ onResponse, type, isShadow }) => {
       
       const response = totalSelected ? (await fetch(`${HOSTLINK}/wave/process_waves`, {
         method: 'POST',
+        credentials: "include",
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(selectedItems)
       })) : (await fetch(`${HOSTLINK}/fisrt_matching/matching`, {
         method: 'POST',
+        credentials: "include",
         headers: {
           'Content-Type': 'application/json',
         },
