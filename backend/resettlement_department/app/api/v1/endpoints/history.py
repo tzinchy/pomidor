@@ -64,25 +64,23 @@ async def balance(requirements: Balance = Body(...)):
 
 @router.post("/container/{history_id}")
 def container(history_id: int):
-    try:
-        # Генерация файла
-        generate_excel_from_two_dataframes(history_id)
+    # Генерация файла
+    generate_excel_from_two_dataframes(history_id)
 
-        # Формируем правильный путь к файлу
-        file_path = f"./uploads/container_{history_id}.xlsx"
+    # Формируем правильный путь к файлу
+    file_path = f"./uploads/container_{history_id}.xlsx"
 
-        # Проверяем, существует ли файл
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="Файл не найден!")
+    # Проверяем, существует ли файл
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Файл не найден!")
 
-        # Возвращаем файл как ответ
-        return FileResponse(
-            path=file_path,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            filename=f"container_{history_id}.xlsx",
-        )
-    except Exception as e:
-        return {"error": str(e)}
+    # Возвращаем файл как ответ
+    return FileResponse(
+        path=file_path,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=f"container_{history_id}.xlsx",
+    )
+
 
 
 @router.post("/push_container/{history_id}")

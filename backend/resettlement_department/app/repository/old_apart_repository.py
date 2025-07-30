@@ -691,3 +691,61 @@ class OldApartRepository:
             column_names = list(result_proxy.keys())
             results_list = result_proxy.all()
         return results_list, column_names
+
+    async def get_current_table(self, apart_ids : list[int]):
+        async with self.db() as session: 
+            result = await session.execute('''select affair_id, kpu_number, fio, people_in_family, category, cad_num, district, municipal_district, house_address, old_apart.room_count, old_apart."floor", total_living_area, full_living_area, living_area from old_apart
+                                        WHERE affair_id IN (:apart_ids)
+                                        ORDER BY affair_id''', {'apart_ids' : apart_ids}
+                                        ) 
+            return [row._mapping for row in result]
+
+    async def get_current_table_with_last_offer(self, apart_ids : list[int]):
+        async with self.db() as session: 
+            result = await session.execute(
+                '''with last_offer AS (
+                with last_offer AS (
+                    SELECT affair_id, KEY::bigint as new_apart_id FROM offer, jsonb_each(new_aparts)
+                    where affair_id in (:apart_ids) 
+                    and offer_id in (select max(offer_id) from offer group by affair_id)
+                )
+                select 
+                    old_apart.affair_id as "ID дела", 
+                    old_apart.kpu_number as "Номер КПУ",
+                    old_apart.fio as "ФИО",
+                    old_apart.people_in_family as "Количество членов семьи",
+                    old_apart.category as "Категория", 
+                    old_apart.cad_num as "Кадастровый номер",
+                    old_apart.district as "КПУ: Район",
+                    old_apart.municipal_district as "КПУ: Муниципальный район",
+                    old_apart.house_address as "КПУ: Адрес",
+                    old_apart.room_count as "КПУ: Количество комнат", 
+                    old_apart."floor" as "КПУ: Этаж",
+                    old_apart.total_living_area as "КПУ: Общая площадь",
+                    old_apart.full_living_area as "КПУ: Полная жилая площадь",
+                    old_apart.living_area as "КПУ: Жилая площадь", 
+                    old_apart.is_queue as "Очередник",
+                    new_apart.new_apart_id as "ID НК", 
+                    new_apart.district as "НК: Район", 
+                    new_apart.municipal_district as "НК: Муниципальный район", 
+                    new_apart.house_address as "НК: Адрес", 
+                    new_apart.full_living_area as "НК: Полная жилая площадь",
+                    new_apart.total_living_area as "НК: Общая площадь", 
+                    new_apart.living_area as "НК: Жилая площадь",
+                    CASE 
+                        WHEN new_apart.for_special_needs_marker = 1 THEN 'Да'
+                        WHEN new_apart.for_special_needs_marker = 0 THEN 'Нет'
+                        ELSE 'Не указано'
+                    END as "НК: Инвалидная",
+                    old_status.status as "КПУ: статус",
+                    new_status.status as "НК: статус"
+                from old_apart 
+                join last_offer using (affair_id)
+                join new_apart using (new_apart_id)
+                left join status as old_status on old_apart.status_id = old_status.status_id
+                left join status as new_status on new_apart.status_id = new_status.status_id
+                ORDER BY affair_id''', 
+                {'apart_ids' : apart_ids}
+                )
+        
+            return [row._mapping for row in result]

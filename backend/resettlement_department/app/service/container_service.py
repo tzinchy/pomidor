@@ -112,11 +112,13 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
 			c.full_house_address,
 			c.full_cin_address,
 			oa.district,
-			na.cad_num
+			na.cad_num,
+			mail_index
         FROM unnst o
         JOIN old_apart oa USING (affair_id)
         JOIN new_apart na USING (new_apart_id) 
         JOIN test_cin c ON c.house_address = na.house_address
+        JOIN mail_index on oa.full_house_address = mail_index.house_address
         WHERE oa.is_queue <> 1
     """
     params = []
@@ -140,7 +142,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
         'full_old_house_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
         'new_address', 'new_number', 'full_living_area', 'total_living_area', 'room_count', 
         'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'entrance_number', 'start_date', 'otdel',
-        'full_house_address', 'full_cin_address', 'old_district', 'old_cad_num'
+        'full_house_address', 'full_cin_address', 'old_district', 'old_cad_num', 'mail_index'
     ])
 
     print(df['full_living_area'], df['total_living_area'], df['living_area'])
@@ -177,9 +179,9 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
 
     # Дополнительные значения и тексты для столбцов
     additional_values = ["VSOOTVET", "INFO_SOB", "ISPOLNITEL", "OSMOTR", "GETKEY", "OTVET"]
-
     # Заполняем данные из DataFrame
     row_num = 3  # Начинаем с третьей строки
+
     for index, row in df.iterrows():
         if row['old_district'] in ("ЗелАО", "ВАО", "ЮВАО", "САО", "СВАО"):
             report_id = 108404 if row['type_of_settlement'] == "частная собственность" else 108407
@@ -192,20 +194,21 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
                 "VSOOTVET": f"Согласно постановлению Правительства Москвы от 01.08.2017 № 497-ПП «О программе реновации жилищного фонда в городе Москве» (далее - Программа реновации) в отношении многоквартирного дома по адресу: г. Москва, {row['full_old_house_address']} принято решение о включении в Программу реновации.",
                 "INFO_SOB": """- заявление о включении в предмет Договора предлагаемого жилого помещения;\n- оригиналы документов личного характера и правоустанавливающие документы на освобождаемое жилое помещение.\nПросим довести указанную в письме информацию до всех правообладателей.""",
                 "ISPOLNITEL": "Кандабаров Н.А.",
-                "OSMOTR": f"""Для осмотра квартиры необходимо {('с ' + (str(row['start_date'])[8:] + '.' + str(row['start_date'])[5:7] + '.' +str(row['start_date'])[:4])) if row['start_date'] != None and row['start_date'] > datetime.now().date() else '' } в течение 7 рабочих дней обратиться в инф. центр по адресу: г. Москва, {row['full_cin_address']} ({row['cin_schedule']}) по пред. записи онлайн на сайте https://www.mos.ru/ в разделе «Осмотр квартиры» (для перехода наведите камеру смартфона на QR~код) или по тел. {row['phone_osmotr']}.""" if row['cin_schedule'] != 'time2plan' else "Предварительная запись на показ жилого помещения доступна на сервисе онлайн-записи «Время планировать вместе с ДГИ»: https://time2plan.online.",
+                "OSMOTR": f"""Для осмотра квартиры необходимо {('с ' + (str(row['start_date'])[8:] + '.' + str(row['start_date'])[5:7] + '.' +str(row['start_date'])[:4])) if row['start_date'] != None and row['start_date'] > datetime.now().date() else '' } в течение 7 рабочих дней обратиться в информационный центр по адресу: г. Москва, {row['full_cin_address']} ({row['cin_schedule']}) по предварительной записи онлайн на сайте https://www.mos.ru/ в разделе «Осмотр квартиры» (для перехода наведите камеру смартфона на QR~код) или по тел. {row['phone_osmotr']}.""" if row['cin_schedule'] != 'time2plan' else "Предварительная запись на показ жилого помещения доступна на сервисе онлайн-записи «Время планировать вместе с ДГИ»: https://time2plan.online.",
                 "GETKEY": " ",
-                "OTVET": f"Всем правообладателям необходимо предоставить свое согласие либо отказ от предлагаемого жилого помещения в срок не позднее 7 рабочих дней в инф. центр по адресу: г. Москва, {row['full_cin_address'] if row['dep_schedule']!= 'отдел' else row['otdel']} {('(' + row['dep_schedule'] + ')') if row['dep_schedule']!= 'отдел' else ''}, по пред. записи по вышеуказанному тел., при себе необходимо иметь следующие документы:"
+                "OTVET": f"Всем правообладателям необходимо предоставить свое согласие либо отказ от предлагаемого жилого помещения в срок не позднее 7 рабочих дней в информационный центр по адресу: г. Москва, {row['full_cin_address'] if row['dep_schedule']!= 'отдел' else row['otdel']} {('(' + row['dep_schedule'] + ')') if row['dep_schedule']!= 'отдел' else ''}, по предварительной записи по вышеуказанному тел., при себе необходимо иметь следующие документы:"
             }
 
             # Номер заявки
             sheet.cell(row=row_num, column=1, value=index + 1)
+
 
             if i == 0:  # Первая строка каждой группы
                 sheet.cell(row=row_num, column=2, value=1)  # appApplicantList.type
                 sheet.cell(row=row_num, column=3, value=1)  # appApplicantList.tab
                 sheet.cell(row=row_num, column=4, value="Уважаемый правообладатель!")  # appApplicantList.firstname
                 sheet.cell(row=row_num, column=6, value=f"{row['full_old_house_address']} кв. {row['old_number']}")  # Адрес
-                sheet.cell(row=row_num, column=7, value=124365)  # Индекс
+                sheet.cell(row=row_num, column=7, value=row['mail_index'])  # Индекс
                 sheet.cell(row=row_num, column=8, value="г. Москва")  # Населенный пункт
                 sheet.cell(row=row_num, column=9, value=row['old_cad_num'])  # Кадастровый номер
                 sheet.cell(row=row_num, column=10, value=f"{row['full_house_address']}, кв. {row['new_number']}")  # flatList.address

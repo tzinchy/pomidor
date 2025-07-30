@@ -26,3 +26,4 @@ class Cin(CINBase):
 
     class Config:
         orm_mode = True
+
