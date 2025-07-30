@@ -72,6 +72,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [pendingAction, setPendingAction] = useState(null);
   const [minApartNumber, setMinApartNumber] = useState([]);
   const [maxApartNumber, setMaxApartNumber] = useState([]);
+  const [showConfirmApprove, setShowConfirmApprove] = useState(false);
   const error_toast = () => {
     return toast.error('Ошибка', {
         position: "bottom-right",
@@ -783,6 +784,12 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   leaveTo: "transform opacity-0 scale-95"
 };
 
+const handleConfirmApprove = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  setStatusForMany("Подготовить смотровой", "OldApart");
+};
+
 
   return (
     <div className='bg-neutral-100 h-[calc(100vh-4rem)]'>
@@ -808,6 +815,22 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           title="Окончательное подтверждение"
           message={`Вы точно хотите отправть отправить контейнер для всех выбранных строк? Это действие нельзя будет отменить. Выбрано ${Object.keys(rowSelection).length} строк(и)?`}
         />
+      )}
+
+      {showConfirmApprove && (
+<ConfirmationModal
+  isOpen={showConfirmApprove}
+  onClose={() => setShowConfirmApprove(false)}
+  onConfirm={handleConfirmApprove}
+  title={<span>Подтверждение действия</span>}
+  message={
+    <span>
+      Вы выбрали <strong>{Object.keys(rowSelection).length}</strong>{" "}
+      строк(и). Продолжая вы одобрите им подбор, продолжить?
+    </span>
+  }
+  confirmText="Да, продолжить"
+/>
       )}
 
       <ToastContainer
@@ -968,11 +991,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 <div className='flex items-center'>
   <button
     key="Подготовить смотровой"
-    onClick={(e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setStatusForMany("Подготовить смотровой", "OldApart");
-    }}
+    onClick={() => setShowConfirmApprove(true)} 
     className="group flex w-full items-center gap-2 rounded-md px-3 py-2 text-s font-medium text-gray-900
                transition hover:bg-green-100 hover:backdrop-blur-sm hover:text-green-900"
   >
@@ -1010,7 +1029,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
     <button onClick={() => setSpecialNeedsForMany(0)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Снять инвалидность</button>
     <button onClick={handleContainerClick} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Контейнер</button>
 
-    {/* Подменю Изменить статус
+    {/* Подменю Изменить статус */}
     <Popover className="relative">
       <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
         <span>Изменить статус</span>
@@ -1019,7 +1038,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       <Transition as={Fragment} {...transitionProps}>
         <Popover.Panel className="absolute top-full mt-1 w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
           <div className="px-1 py-1 space-y-1">
-            {statuses.map((status) => (
+            {/* {statuses.map((status) => (
               <button
                 key={status}
                 onClick={(e) => {
@@ -1031,11 +1050,23 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
               >
                 {status}
               </button>
-            ))}
+              
+            ))} */}
+              <button
+                key={`Подборов не будет`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setStatusForMany(`Подборов не будет`, apartType);
+                }}
+                className="group flex w-full rounded-md px-2 py-2 text-xs text-gray-900 hover:bg-gray-100"
+              >
+                {`Подборов не будет`}
+              </button>
           </div>
         </Popover.Panel>
       </Transition>
-    </Popover> */}
+    </Popover>
   </div>
 )}
 
