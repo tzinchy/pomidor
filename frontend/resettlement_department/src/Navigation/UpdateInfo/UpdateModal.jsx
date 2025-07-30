@@ -3,6 +3,7 @@ import { RefreshCcw } from "lucide-react";
 import { HOSTLINK } from "../..";
 import { RiskIcon } from "../../PloshadkiTable/Table/Icons";
 import FileUploader from "../../Balance/Components/FileUploader";
+import ToolTip from "../ToolTip";
 
 export default function UpdateDataButton() {
     const [isModalOpen, setModalOpen] = useState(false);
@@ -119,12 +120,13 @@ export default function UpdateDataButton() {
     };
 
     return (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center relative group">
+                    <ToolTip text={`Обновить данные`} />
             <button
-                className="absolute bottom-5 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600"
+                className="p-2 mt-2  text-white rounded-full hover:bg-blue-100 rounded-md transition"
                 onClick={() => { setModalOpen(true); fetchAddresses(); fetchStat();}}
             >
-                <RefreshCcw size={24} />
+                <RefreshCcw size={24} className={"stroke-blue-500"}/>
             </button>
             
             {isModalOpen && (
@@ -371,6 +373,7 @@ export default function UpdateDataButton() {
                     </div>
                 </div>
             )}
+
         </div>
     );
 }
