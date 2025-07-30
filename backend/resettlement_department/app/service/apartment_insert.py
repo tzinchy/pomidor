@@ -450,7 +450,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             "РСМ_Кад номер, квартира": "cad_num",
             "К_Инв/к": "for_special_needs_marker",
             "К_№ подъезда": "entrance_number",
-            "Сл.инф_Free_Space_ID": "rsm_apart_id",
+            "Сл.инф_Free_Space_ID": "rsm_apart_id"
         }
         new_apart_df.rename(
             columns=columns_name,
@@ -531,8 +531,13 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
                 {args_str}
             ON CONFLICT (new_apart_id) 
             DO UPDATE SET 
-            {", ".join(f"{col} = EXCLUDED.{col}" for col in columns_db if col != "status_id")},
-            updated_at = NOW()
+                {", ".join(
+                    f"{col} = EXCLUDED.{col}" 
+                    for col in columns_db 
+                    if col not in ["status_id", "entrance_number"]
+                )},
+                entrance_number = COALESCE(EXCLUDED.entrance_number, new_apart.entrance_number),
+                updated_at = NOW()
         """
         # Проставляем справочную информацию об успешной выгрузке
         set_env_true_sql = """
