@@ -24,7 +24,7 @@ import io
 from bs4 import BeautifulSoup
 import hashlib
 import itertools
-
+from fastapi import HTTPException
 class RsmLogin:
 
     #алфавит из pOfw.js aaseta 
@@ -97,7 +97,13 @@ class RsmLogin:
         print(session.cookies.get_dict())
         print(response.status_code)
         #вытаскиваем токен из куки сессии
-        return session.cookies.get_dict()['Rsm.Cookie']
+        if session.cookies.get_dict()['Rsm.Cookie'] is not None:
+            return session.cookies.get_dict()['Rsm.Cookie']
+        else: 
+            raise HTTPException(
+            status_code=424,
+            detail="Авторизация во внешней системе не удалась (401)"
+        )
 
 def generate_key():
     """
@@ -244,6 +250,11 @@ def get_cookie():
     time.sleep(3)
     driver.find_element(By.XPATH, '//*[@id="bind"]').click()
     cooks = driver.get_cookie("Rsm.Cookie")
+    if cooks["value"] is None: 
+        raise HTTPException(
+            status_code=424,
+            detail="Авторизация во внешней системе не удалась (401)"
+        )
     cookie = cooks["value"]
     driver.close()
     return cookie
@@ -284,7 +295,6 @@ def check_token():
     response = requests.get(
         RSM.PING_LINK, cookies={"Rsm.Cookie": value}, allow_redirects=False
     )
-
     if response.status_code == 200:
         return value
     elif response.status_code == 302:
@@ -293,7 +303,8 @@ def check_token():
         print(token)
 
         query = f"""UPDATE env.env
-                SET value = '{token}'
+                SET value = '{token}',
+                    updated_at = NOW()
                 WHERE name = 'rsm_token';
                 """
 

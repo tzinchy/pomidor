@@ -1,5 +1,5 @@
 from depends import mail_index_service
-from schema.mail_index import MailIndexCreate, MailIndexUpdate, MailIndexTable
+from schema.mail_index import MailIndexCreate, MailIndexUpdate
 from fastapi import APIRouter
 
 
@@ -14,7 +14,7 @@ async def mail_index():
 async def udpate_cin(mail_index: MailIndexUpdate):
     return await mail_index_service.update_mail_index(mail_index)
 
-@router.post("/create_mail_index", response_class=MailIndexTable)
+@router.post("/create_mail_index")
 async def create_cin(mail_index : MailIndexCreate): 
     return await mail_index_service.create_mail_index(mail_index)
 
