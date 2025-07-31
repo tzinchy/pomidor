@@ -3,7 +3,14 @@ import IdCell from "./Cells/IdCell";
 import AddressCell from "./Cells/AddressCell";
 import ActionsCell from "./Cells/ActionsCell";
 
-export default function HistoryTableBody({ data, setData, setShowConfirmContainerUpload, setHistoryId, loadingHistoryId }){
+export default function HistoryTableBody({ 
+    data, 
+    setData, 
+    setShowConfirmContainerUpload,
+    setShowConfirmHistoryDelete,
+    setShowConfirmApprove,
+    setHistoryId, 
+    loadingHistoryId }){
     return (
         <tbody>
             {data.map((val, index) => (
@@ -20,7 +27,9 @@ export default function HistoryTableBody({ data, setData, setShowConfirmContaine
                     setData={setData} 
                     setShowConfirmContainerUpload={setShowConfirmContainerUpload}
                     setHistoryId={setHistoryId}
-                    loadingHistoryId={loadingHistoryId} />
+                    loadingHistoryId={loadingHistoryId}
+                    setShowConfirmHistoryDelete={setShowConfirmHistoryDelete}
+                    setShowConfirmApprove={setShowConfirmApprove} />
                 </tr>
             ))}
         </tbody>

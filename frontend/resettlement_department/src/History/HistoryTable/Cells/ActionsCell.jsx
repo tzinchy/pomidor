@@ -9,7 +9,9 @@ export default function ActionsCell( {  history_id,
   is_wave,
   is_shadow,
   setData, 
-  setShowConfirmContainerUpload, 
+  setShowConfirmContainerUpload,
+  setShowConfirmHistoryDelete,
+  setShowConfirmApprove, 
   setHistoryId,
   loadingHistoryId}) {
   // const value = props;
@@ -220,12 +222,42 @@ export default function ActionsCell( {  history_id,
   );
 }
 
-function Button({ name, func = null, isDisabled }) {
+function Button({ name, func = null, isDisabled = false }) {
+  const isSuccessState = name === "Одобрено" || name === "Контейнер загружен";
+  const finalDisabled = isDisabled || isSuccessState;
+
+  const baseStyle = `
+    min-w-[120px] max-w-[120px] px-4 py-2 rounded-md text-sm font-medium
+    flex justify-center items-center text-center transition-all
+    shadow-md hover:shadow-lg active:shadow-none
+    focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-gray-900
+  `;
+
+  const successStyle = `
+    bg-green-50 text-green-900
+    cursor-not-allowed opacity-70
+    focus:ring-green-300
+  `;
+
+  const disabledStyle = `
+    bg-gray-300 text-white opacity-60 cursor-not-allowed
+    focus:ring-gray-300
+  `;
+
+  const activeStyle = `
+    bg-gradient-to-r from-blue-300 to-blue-400 text-white
+    hover:from-blue-500 hover:to-blue-600 active:scale-95
+    focus:ring-blue-300
+  `;
+
   return (
     <button
-      className={`px-6 py-2 bg-gray-400 rounded text-white min-w-[150px] max-w-[150px] ${isDisabled ? 'opacity-50' : ''}`}
-      disabled={isDisabled}
       onClick={func}
+      disabled={finalDisabled}
+      className={`
+        ${baseStyle}
+        ${isSuccessState ? successStyle : finalDisabled ? disabledStyle : activeStyle}
+      `}
     >
       {name}
     </button>

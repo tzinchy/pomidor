@@ -18,6 +18,8 @@ export default function HistoryTable(){
     const [showConfirmContainerUpload, setShowConfirmContainerUpload] = useState(false);
     const [historyId, setHistoryId] = useState(null); 
     const [loadingHistoryId, setLoadingHistoryId] = useState(null);
+    const [showConfirmHistoryDelete, setShowConfirmHistoryDelete] = useState(false);
+    const [showConfirmApprove, setShowConfirmApprove] = useState(false);
 
 
     const upload_container = async (history_id) => {
@@ -91,6 +93,8 @@ export default function HistoryTable(){
                         loadingHistoryId={loadingHistoryId}
                         setData={setData} 
                         setShowConfirmContainerUpload={setShowConfirmContainerUpload}
+                        setShowConfirmApprove={setShowConfirmApprove}
+                        setShowConfirmHistoryDelete={setShowConfirmHistoryDelete}
                         setHistoryId={setHistoryId} />
                     </table>
                 </div>
