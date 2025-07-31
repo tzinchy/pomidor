@@ -548,6 +548,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       );
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
       success_toast('Инвалидность успешно проставлена');
+      
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
       error_toast();
@@ -1135,8 +1136,9 @@ const handleConfirmApprove = (e) => {
     </Popover.Panel>
   </Transition>
 </Popover>
-          <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
+         
         </div>}
+        <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
         </div>
       </div>
       <div className="relative flex flex-col lg:flex-row  w-full transition-all duration-300">
