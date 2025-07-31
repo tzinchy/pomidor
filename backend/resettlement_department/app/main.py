@@ -4,7 +4,6 @@ from api.v1.router import router
 from core.logger import logger
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
@@ -33,13 +32,6 @@ async def log_requests(request: Request, call_next):
     
     return response
 
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    logger.error(f"!!! Error in {request.url.path}: {str(exc)}", context=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal Server Error"},
-    )
 
 app.include_router(router)
 

@@ -126,13 +126,8 @@ RECOMMENDATION_DASHBOARD_FILE_PATH = './sql/recommendation/dashboard'
 
 print(settings.project_management_setting.ALGORITHM, 'ЭТО АЛГОРИТМ')
 print(settings.project_management_setting.SECRET_KEY, 'А ЭТО КЛЮЧ')
-<<<<<<< HEAD
-print(settings.project_management_setting.DATABASE_URL, 'ССЫЛКА НА БАЗУ ДАННЫХ')
-print()
-=======
 print(settings.project_management_setting.DATABASE_URL, 'DATABASE URL')
 print(settings.project_management_setting.DB_HOST, 'DATABASE HOST')
 print(settings.project_management_setting.DB_NAME, 'DATABASE NAME')
 
 
->>>>>>> af06c09 (add print for config pg stat)
