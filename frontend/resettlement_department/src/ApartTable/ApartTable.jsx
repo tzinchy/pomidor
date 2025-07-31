@@ -73,6 +73,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [minApartNumber, setMinApartNumber] = useState([]);
   const [maxApartNumber, setMaxApartNumber] = useState([]);
   const [showConfirmApprove, setShowConfirmApprove] = useState(false);
+
   const error_toast = () => {
     return toast.error('Ошибка', {
         position: "bottom-right",

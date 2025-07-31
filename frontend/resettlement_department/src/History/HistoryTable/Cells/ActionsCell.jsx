@@ -2,23 +2,33 @@ import React, {useState} from "react";
 import api from "../../../api";
 import { approveAvailable, HOSTLINK } from "../../..";
 
-export default function ActionsCell( {props, setData}) {
-  const value = props;
+
+export default function ActionsCell( {  history_id,
+  status_id,
+  is_downloaded,
+  is_wave,
+  is_shadow,
+  setData, 
+  setShowConfirmContainerUpload, 
+  setHistoryId,
+  loadingHistoryId}) {
+  // const value = props;
   const [showDownloadOptions, setShowDownloadOptions] = useState(false);
 
-  const paramsSerializer = {
-    indexes: null,
-    encode: (value) => encodeURIComponent(value)
-  };
+
+  // const paramsSerializer = {
+  //   indexes: null,
+  //   encode: (value) => encodeURIComponent(value)
+  // };
 
   const delete_history = async (history_id) => {
     try {
       const response = await api.delete(
         `${HOSTLINK}/delete/${history_id}`,
-        {
-          params: { history_id: history_id },
-          paramsSerializer,
-        }
+        // {
+        //   params: { history_id: history_id },
+        //   paramsSerializer,
+        // }
       );
 
       // Если запрос на удаление прошел успешно, обновляем данные
@@ -35,10 +45,10 @@ export default function ActionsCell( {props, setData}) {
     try {
       const response = await api.patch(
         `${HOSTLINK}/approve/${history_id}`,
-        {
-          params: { history_id: history_id },
-          paramsSerializer,
-        }
+        // {
+        //   params: { history_id: history_id },
+        //   paramsSerializer,
+        // }
       );
   
       // Если запрос прошел успешно, обновляем данные
@@ -55,27 +65,7 @@ export default function ActionsCell( {props, setData}) {
     }
   };
 
-  const upload_container = async (history_id) => {
-    try {
-      const response = await api.post(
-        `${HOSTLINK}/push_container/${history_id}`,
-        {
-          params: { history_id: history_id },
-          paramsSerializer,
-        }
-      );
-      if (response.status === 200) {
-        // Обновляем локальные данные, изменяя status_id для выбранного history_id
-        setData(prevData => 
-          prevData.map(item => 
-            item.history_id === history_id ? { ...item, status_id: 1 } : item
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error:", error.response?.data);
-    }
-  };
+
 
   const download_balance = async (history_id, is_wave, is_shadow) => {
     const requestBody = { "history_id": parseInt(history_id), "is_wave": is_wave, "is_shadow": is_shadow};
@@ -170,7 +160,7 @@ export default function ActionsCell( {props, setData}) {
         <div className="flex justify-around">
           <button
             onClick={() => {
-              download_balance(value.history_id, value.is_wave, value.is_shadow);
+              download_balance(history_id, is_wave, is_shadow);
               setShowDownloadOptions(false);
             }}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -179,7 +169,7 @@ export default function ActionsCell( {props, setData}) {
           </button>
           <button
             onClick={() => {
-              download_container(value.history_id);
+              download_container(history_id);
               setShowDownloadOptions(false);
             }}
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
@@ -195,30 +185,36 @@ export default function ActionsCell( {props, setData}) {
 
   return (
     <td className="p-2 font-normal">
-      <div className="flex w-full flex-row items-center justify-start gap-1">
+
         <div className="flex flex-1 justify-around">
           <Button
             name="Скачать"
             func={() => setShowDownloadOptions(true)}
           />
-          {value.status_id === 1 ? (
+          {status_id === 1 ? (
             <Button name="Одобрено" isDisabled={true} />
           ) : !approveAvailable ? (
             <Button name="Ждет одобрения" isDisabled={true} />
           ) : (
-            <Button name="Одобрить" func={() => approve_history(value.history_id)} />
+            <Button name="Одобрить" func={() => approve_history(history_id)} />
           )}
-          {value.status_id === 1 ? (
-            value.is_downloaded ? (
+          {status_id === 1 ? (
+            is_downloaded ? (
               <Button name="Контейнер загружен" isDisabled={true} />
             ) : (
-              <Button name="Загрузить контейнер" func={() => upload_container(value.history_id)}/>
+            <Button
+              name={loadingHistoryId === history_id ? "Загрузка..." : "Загрузить контейнер"}
+              isDisabled={loadingHistoryId === history_id}
+              func={() => {
+                setShowConfirmContainerUpload(true);
+                setHistoryId(history_id);
+              }}
+            />
             )
           ) : (
-            <Button name="Отменить" func={() => delete_history(value.history_id) }/>
+            <Button name="Отменить" func={() => delete_history(history_id) }/>
           )}
         </div>
-      </div>
       {showDownloadOptions && <DownloadModal />}
     </td>
   );
