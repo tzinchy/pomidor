@@ -28,6 +28,7 @@ import DropdownFilter from './Filters/DropdownFilter';
 import { canSeeDashboard} from '..';
 import { CheckCircle } from "lucide-react";
 import { showConfirmation } from '../confirm';
+import DownloadApartsXLSX from './DownloadXLSX';
 
 // Добавьте SVG для иконки меню
 const MenuIcon = () => (
@@ -1204,6 +1205,7 @@ const handleConfirmApprove = (e) => {
          
         </div>}
         <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
+        <DownloadApartsXLSX apartType={apartType} apartments={filteredApartments}/>
         </div>
       </div>
       <div className="relative flex flex-col lg:flex-row  w-full transition-all duration-300">
