@@ -162,8 +162,8 @@ const DownloadModal = () => (
           />
           {status_id === 1 ? (
             <Button name="Одобрено" isDisabled={true} />
-          ) : !approveAvailable ? (
-            <Button name="Ждет одобрения" isDisabled={true} />
+          ) : !approveAvailable || is_shadow ? (
+            <Button name={is_shadow ? "Нельзя одобрить": "Ждет одобрения"} isDisabled={true} />
           ) : (
             <Button 
             name={loadingHistoryId === history_id ? "Загрузка..." : "Одобрить"}
@@ -176,7 +176,7 @@ const DownloadModal = () => (
             ) : (
             <Button
               name={loadingHistoryId === history_id ? "Загрузка..." : "Загрузить контейнер"}
-              isDisabled={loadingHistoryId === history_id}
+              isDisabled={loadingHistoryId === history_id || is_shadow}
               func={() => {
                 setShowConfirmContainerUpload(true);
                 setHistoryId(history_id);
