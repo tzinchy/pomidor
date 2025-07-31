@@ -44,7 +44,7 @@ useEffect(() => {
 
   return (
     <div className="fixed inset-0 z-[99999] backdrop-blur-sm flex items-center justify-center animate-fadeIn">
-      <div className="bg-white/30 backdrop-blur-lg border border-white/40 ring-1 ring-white/10 
+      <div className="bg-white/30 backdrop-blur-lg border border-white/40 bg-white/90 ring-1 ring-white/10 
                       shadow-2xl rounded-2xl p-5 max-w-[500px] w-full max-h-[220px] h-full 
                       transition flex flex-col justify-center items-center text-center">
 
