@@ -334,3 +334,33 @@ class NewApartRepository:
             column_names = list(result_proxy.keys())
             results_list = result_proxy.all()
         return results_list, column_names
+
+    async def get_current_table(self, apart_ids : list[int]):
+        async with self.db() as session: 
+            apart_ids = ', '.join(list(map(str,apart_ids)))
+            result = await session.execute(text(f'''
+					SELECT
+					new_apart.new_apart_id as "ID", 
+                    new_apart.cad_num as "Кадастровый номер",
+                    new_apart.district as "НК: Район",
+                    new_apart.municipal_district as "НК: Муниципальный район",
+                    new_apart.house_address as "НК: Адрес",
+                    new_apart.room_count as "НК: Количество комнат", 
+                    new_apart."floor" as "НК: Этаж",
+                    new_apart.total_living_area as "НК: Общая площадь",
+                    new_apart.full_living_area as "НК: Полная жилая площадь",
+                    new_apart.living_area as "НК: Жилая площадь", 
+                    CASE 
+                        WHEN new_apart.for_special_needs_marker = 1 THEN 'Да'
+                        WHEN new_apart.for_special_needs_marker = 0 THEN 'Нет'
+                    ELSE 'Не указано'
+                    END as "НК: Инвалидная",
+                    status.status AS "Статус"
+                    from new_apart
+                    JOIN status USING (status_id)
+                    WHERE new_apart_id IN ({apart_ids})
+                    ORDER BY new_apart_id'''),
+                )
+            return [row._mapping for row in result.fetchall()]
+
+ 

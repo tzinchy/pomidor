@@ -197,12 +197,17 @@ async def set_entrance_number_for_many(
     )
 
 
-@router.get("/curent_table", response_class=FileResponse)
+@router.get("/curent_table")
 async def get_current_table(
     apart_type: ApartType = Query(...),
     apart_ids: List[int] = Query(...),
-    with_last_offer: Optional[bool] = Query(...),
+    with_last_offer: Optional[bool] = Query(None,),
 ):
-    return await apartment_service.get_current_table(
+    filepath = await apartment_service.get_current_table(
         apart_type=apart_type, apart_ids=apart_ids, with_last_offer=with_last_offer
+    )
+    return FileResponse(
+            path=filepath,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            filename="offer.xlsx",
     )
