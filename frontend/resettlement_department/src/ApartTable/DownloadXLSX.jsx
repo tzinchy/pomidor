@@ -1,4 +1,5 @@
 import React from "react";
+import { HOSTLINK } from "..";
 
 export default function DownloadApartsXLSX({ apartType, apartments, withLastOffer = false }) {
   const handleDownload = async () => {
@@ -18,7 +19,7 @@ export default function DownloadApartsXLSX({ apartType, apartments, withLastOffe
 
       apartIds.forEach(id => params.append("apart_ids", id));
 
-      const response = await fetch(`http://127.0.0.1:8000/tables/curent_table?${params.toString()}`, {
+      const response = await fetch(`${HOSTLINK}/tables/curent_table?${params.toString()}`, {
         method: "GET",
         // credentials: "include", // включи при авторизации через сессию
       });
