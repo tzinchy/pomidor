@@ -397,7 +397,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       // Возвращаем данные для обработки в toast
       const failedCount = Object.keys(response.data || {}).length;
       const successCount = apartmentIds.length - failedCount;
-      
+      setRowSelection({});
       return response.data['res']
     })
     .catch(error => {
@@ -501,6 +501,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           second_apart_id: parseInt(Object.keys(rowSelection)[1])
         }
       );
+      setRowSelection({});
       success_toast('Квартиры успешно заменены');
     } catch (error) {
       console.error("Error ", error.response?.data);
@@ -527,6 +528,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         }
       );
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      setRowSelection({});
       success_toast('Статус успешно изменён');
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
@@ -547,6 +549,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         }
       );
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      setRowSelection({});
       success_toast('Инвалидность успешно проставлена');
       
     } catch (error) {
@@ -567,6 +570,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         }
       );
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      setRowSelection({});
       success_toast('Контейнер успешно отправлен');
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
@@ -598,6 +602,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         }
       );
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      setRowSelection({});
       success_toast('Подъезд успешно проставлен');
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
