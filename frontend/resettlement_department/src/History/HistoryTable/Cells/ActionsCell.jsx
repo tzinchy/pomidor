@@ -23,49 +23,7 @@ export default function ActionsCell( {  history_id,
   //   encode: (value) => encodeURIComponent(value)
   // };
 
-  const delete_history = async (history_id) => {
-    try {
-      const response = await api.delete(
-        `${HOSTLINK}/delete/${history_id}`,
-        // {
-        //   params: { history_id: history_id },
-        //   paramsSerializer,
-        // }
-      );
 
-      // Если запрос на удаление прошел успешно, обновляем данные
-      if (response.status === 200) {
-        // Обновляем локальные данные, убирая удаленную строку
-        setData(prevData => prevData.filter(item => item.history_id !== history_id));
-      }
-    } catch (error) {
-      console.error("Error:", error.response?.data); 
-    }
-  };
-
-  const approve_history = async (history_id) => {
-    try {
-      const response = await api.patch(
-        `${HOSTLINK}/approve/${history_id}`,
-        // {
-        //   params: { history_id: history_id },
-        //   paramsSerializer,
-        // }
-      );
-  
-      // Если запрос прошел успешно, обновляем данные
-      if (response.status === 200) {
-        // Обновляем локальные данные, изменяя status_id для выбранного history_id
-        setData(prevData => 
-          prevData.map(item => 
-            item.history_id === history_id ? { ...item, status_id: 1 } : item
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error:", error.response?.data);
-    }
-  };
 
 
 
@@ -198,7 +156,10 @@ export default function ActionsCell( {  history_id,
           ) : !approveAvailable ? (
             <Button name="Ждет одобрения" isDisabled={true} />
           ) : (
-            <Button name="Одобрить" func={() => approve_history(history_id)} />
+            <Button 
+            name={loadingHistoryId === history_id ? "Загрузка..." : "Одобрить"}
+            isDisabled={loadingHistoryId === history_id} 
+            func={() => {setShowConfirmApprove(true); setHistoryId(history_id)}} />
           )}
           {status_id === 1 ? (
             is_downloaded ? (
@@ -214,7 +175,10 @@ export default function ActionsCell( {  history_id,
             />
             )
           ) : (
-            <Button name="Отменить" func={() => delete_history(history_id) }/>
+            <Button 
+            name={loadingHistoryId === history_id ? "Загрузка..." : "Отменить"}
+            isDisabled={loadingHistoryId === history_id}
+            func={() => {setShowConfirmHistoryDelete(true); setHistoryId(history_id) }}/>
           )}
         </div>
       {showDownloadOptions && <DownloadModal />}

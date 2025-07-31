@@ -44,10 +44,70 @@ export default function HistoryTable(){
     }
     };
 
+      const delete_history = async (history_id) => {
+        try {
+          const response = await api.delete(
+            `${HOSTLINK}/delete/${history_id}`,
+            // {
+            //   params: { history_id: history_id },
+            //   paramsSerializer,
+            // }
+          );
+    
+          // Если запрос на удаление прошел успешно, обновляем данные
+          if (response.status === 200) {
+            // Обновляем локальные данные, убирая удаленную строку
+            setData(prevData => prevData.filter(item => item.history_id !== history_id));
+          }
+        } catch (error) {
+          console.error("Error:", error.response?.data); 
+        }
+      };
+    
+      const approve_history = async (history_id) => {
+        try {
+          const response = await api.patch(
+            `${HOSTLINK}/approve/${history_id}`,
+            // {
+            //   params: { history_id: history_id },
+            //   paramsSerializer,
+            // }
+          );
+      
+          // Если запрос прошел успешно, обновляем данные
+          if (response.status === 200) {
+            // Обновляем локальные данные, изменяя status_id для выбранного history_id
+            setData(prevData => 
+              prevData.map(item => 
+                item.history_id === history_id ? { ...item, status_id: 1 } : item
+              )
+            );
+          }
+        } catch (error) {
+          console.error("Error:", error.response?.data);
+        }
+      };
+
     const handleConfirmContainerUpload = async (history_id) => {
     setShowConfirmContainerUpload(false);         // сразу скрыть модалку
     setLoadingHistoryId(history_id);              // начать загрузку
     await upload_container(history_id);
+    setHistoryId(null);
+    setLoadingHistoryId(null);                    // убрать загрузку
+    };
+
+    const handleConfirmHistoryDelete = async (history_id) => {
+    setShowConfirmHistoryDelete(false);         // сразу скрыть модалку
+    setLoadingHistoryId(history_id);              // начать загрузку
+    await delete_history(history_id);
+    setHistoryId(null);
+    setLoadingHistoryId(null);                    // убрать загрузку
+    };
+
+    const handleConfirmApprove = async (history_id) => {
+    setShowConfirmApprove(false);         // сразу скрыть модалку
+    setLoadingHistoryId(history_id);              // начать загрузку
+    await approve_history(history_id);
     setHistoryId(null);
     setLoadingHistoryId(null);                    // убрать загрузку
     };
@@ -65,7 +125,7 @@ export default function HistoryTable(){
 
     return (
         <div>
-                              <div className="flex w-full flex-row items-center justify-start gap-1">
+                <div className="flex w-full flex-row items-center justify-start gap-1">
                     {showConfirmContainerUpload && (
                     <ConfirmationModal
                       isOpen={showConfirmContainerUpload}
@@ -80,7 +140,39 @@ export default function HistoryTable(){
                       confirmText="Да, продолжить"
                     />
                   )}
+
+                  {showConfirmHistoryDelete && (
+                    <ConfirmationModal
+                      isOpen={showConfirmContainerUpload}
+                      onClose={() => setShowConfirmHistoryDelete(false)}
+                      onConfirm={async () => await handleConfirmHistoryDelete(historyId)}
+                      title={<span>Подтверждение действия</span>}
+                      message={
+                        <span>
+                          Вы хотите отменить подбор, продолжить?
+                        </span>
+                      }
+                      confirmText="Да, продолжить"
+                    />
+                  )}
+
+                  {showConfirmApprove && (
+                    <ConfirmationModal
+                      isOpen={showConfirmContainerUpload}
+                      onClose={() => setShowConfirmApprove(false)}
+                      onConfirm={async () => await handleConfirmApprove(historyId)}
+                      title={<span>Подтверждение действия</span>}
+                      message={
+                        <span>
+                          Вы хотите одобрить подбор, продолжить?
+                        </span>
+                      }
+                      confirmText="Да, продолжить"
+                    />
+                  )}
                   </div>
+                
+                
 
         <div className="relative flex flex-col lg:flex-row h-[90vh] gap-2 bg-neutral-100 w-full transition-all duration-300">
 
