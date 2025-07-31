@@ -102,44 +102,53 @@ export default function ActionsCell( {  history_id,
     }
   };
 
-  const DownloadModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-xl">
-        <div className="flex items-center content-center">
-          <h3 className="text-lg font-semibold mb-4 mr-4">Выберите тип скачивания</h3>
-          <button
-            onClick={() => setShowDownloadOptions(false)}
-            className="mb-4 text-gray-500 hover:text-gray-700"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x stroke-muted-foreground opacity-50 group-hover:opacity-100">
-              <path d="M18 6 6 18"></path>
-              <path d="m6 6 12 12"></path>
-            </svg>
-          </button>
-        </div>
-        <div className="flex justify-around">
-          <button
-            onClick={() => {
-              download_balance(history_id, is_wave, is_shadow);
-              setShowDownloadOptions(false);
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Баланс
-          </button>
-          <button
-            onClick={() => {
-              download_container(history_id);
-              setShowDownloadOptions(false);
-            }}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            Контейнер
-          </button>
-        </div>
+const DownloadModal = () => (
+  <div className="fixed inset-0 z-[99999] backdrop-blur-sm flex items-center justify-center animate-fadeIn">
+    <div className="relative bg-white/30 backdrop-blur-lg border border-white/40 bg-white/90 ring-1 ring-white/10 
+                    shadow-2xl rounded-2xl px-6 py-6 w-[340px] max-w-full transition text-center">
+
+      {/* Крестик в правом верхнем углу */}
+      <button
+        onClick={() => setShowDownloadOptions(false)}
+        className="absolute top-3 right-3 text-gray-500 hover:text-red-600 transition"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+             className="lucide lucide-x stroke-muted-foreground opacity-60 hover:opacity-100 transition">
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>
+
+      {/* Заголовок по центру */}
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-6 mt-2">
+        Выберите тип скачивания
+      </h3>
+
+      {/* Кнопки */}
+      <div className="flex justify-center gap-4">
+        <button
+          onClick={() => {
+            download_balance(history_id, is_wave, is_shadow);
+            setShowDownloadOptions(false);
+          }}
+          className="flex-1 py-2 text-sm font-medium bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+        >
+          Баланс
+        </button>
+        <button
+          onClick={() => {
+            download_container(history_id);
+            setShowDownloadOptions(false);
+          }}
+          className="flex-1 py-2 text-sm font-medium bg-green-500 text-white rounded-md hover:bg-green-600 transition"
+        >
+          Контейнер
+        </button>
       </div>
     </div>
-  );
+  </div>
+);
   
 
 
