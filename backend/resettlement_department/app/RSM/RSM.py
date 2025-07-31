@@ -295,7 +295,6 @@ def check_token():
     response = requests.get(
         RSM.PING_LINK, cookies={"Rsm.Cookie": value}, allow_redirects=False
     )
-    response = 302
     if response.status_code == 200:
         return value
     elif response.status_code == 302:
