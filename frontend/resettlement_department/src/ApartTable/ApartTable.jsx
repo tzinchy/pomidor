@@ -27,6 +27,7 @@ import ConfirmationModal from './ConfirmationModal';
 import DropdownFilter from './Filters/DropdownFilter';
 import { canSeeDashboard} from '..';
 import { CheckCircle } from "lucide-react";
+import { showConfirmation } from '../confirm';
 
 // Добавьте SVG для иконки меню
 const MenuIcon = () => (
@@ -382,7 +383,15 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
 
   const rematch = async () => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+        const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
     
+    if (result) {
+      // Пользователь подтвердил
     return api.post(
       `${HOSTLINK}/tables/apartment/rematch`,
       JSON.stringify({ apartment_ids: apartmentIds }),
@@ -404,6 +413,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       console.error("Error rematch:", error.response?.data);
       throw new Error(error.response?.data?.detail || "Неизвестная ошибка при переподборе");
     });
+  }
   };
 
   // Функция для запуска переподбора с уведомлениями
@@ -480,6 +490,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   };
 
   const switchAparts = async () => {
+    
     if ((Object.keys(rowSelection).length !== 2) || (apartType === 'NewApartment')) {
       toast.warn('Нужно выбрать 2 квартиры', {
         position: "bottom-right",
@@ -493,6 +504,15 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         });
       return;
     }
+    const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
+    
+    if (result) {
+      // Пользователь подтвердил
     try {
       await api.post(
         `${HOSTLINK}/tables/switch_aparts`,
@@ -507,12 +527,21 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       console.error("Error ", error.response?.data);
       error_toast();
     }
+  }
   };
 
   const setStatusForMany = async (status) => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
     console.log('setStatusForMany', apartmentIds, status, apartType)
+    const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
     
+    if (result) {
+      // Пользователь подтвердил
     try {
       await api.patch(
         `${HOSTLINK}/tables/apartment/set_status_for_many`,
@@ -534,12 +563,21 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       console.error("Error setting status:", error.response?.data);
       error_toast();
     }
+    }
   };
 
   const setSpecialNeedsForMany = async (marker) => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
     console.log('setSpecialNeedsForMany', apartmentIds, marker, apartType)
+    const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
     
+    if (result) {
+      // Пользователь подтвердил
     try {
       await api.patch(
         `${HOSTLINK}/tables/apartment/set_special_needs_for_many`,
@@ -556,12 +594,21 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       console.error("Error setting status:", error.response?.data);
       error_toast();
     }
+    }
   };
 
   const setContainerForMany = async (marker) => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
     console.log('setContainerForMany', apartmentIds, marker, apartType)
+      const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
     
+    if (result) {
+      // Пользователь подтвердил
     try {
       await api.patch(
         `${HOSTLINK}/tables/apartment/push_container_for_aparts`,
@@ -576,6 +623,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       console.error("Error setting status:", error.response?.data);
       error_toast();
     }
+  }
   };
 
   const handleEntranceSubmit = async () => {
@@ -592,7 +640,15 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const setEntranceForMany = async (entrance_number) => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
     console.log('setEntranceForMany', apartmentIds, entrance_number, apartType)
+    const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
     
+    if (result) {
+      // Пользователь подтвердил
     try {
       await api.patch(
         `${HOSTLINK}/tables/set_entrance_number_for_many`,
@@ -608,6 +664,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       console.error("Error setting status:", error.response?.data);
       error_toast();
     }
+  }
   };
 
   const handleNotesSave = async (rowData, newNotes) => {
