@@ -382,15 +382,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor, minApartNumber, maxApartNumber, minPeople, maxPeople, searchApartQuery, searchFioQuery, searchNotesQuery]);
 
   const rematch = async () => {
+
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
-        const result = await showConfirmation({
-      title: "Необходимость подтверждения",
-      message: "Вы действительно хотите это сделать?",
-      confirmText: "Да",
-      cancelText: "Нет"
-    });
+
     
-    if (result) {
+
       // Пользователь подтвердил
     return api.post(
       `${HOSTLINK}/tables/apartment/rematch`,
@@ -413,11 +409,17 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       console.error("Error rematch:", error.response?.data);
       throw new Error(error.response?.data?.detail || "Неизвестная ошибка при переподборе");
     });
-  }
   };
 
   // Функция для запуска переподбора с уведомлениями
-  const startRematchWithNotifications = () => {
+  const startRematchWithNotifications = async () => {
+    const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
+    if (result) {
     toast.promise(
       rematch(),
       {
@@ -487,6 +489,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         toastClassName: "!z-[9999]", // Дополнительное повышение z-index
       }
     );
+  }
   };
 
   const switchAparts = async () => {
