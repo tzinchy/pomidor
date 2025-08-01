@@ -179,3 +179,19 @@ def push_container_for_aparts(apart_ids: Rematch):
     update_apart_status(apart_ids=apart_ids.apartment_ids)
     file_path = "./uploads/container_0.xlsx"
     upload_container(history_id=0, file_path=file_path)
+
+
+@router.patch("/set_district_notes_for_many")
+async def set_district_notes_for_many(
+    apart_ids: list[int] = Body(..., description="Список apart_id"),
+    apart_type: ApartType = Query(..., description="Тип апартаментов"),
+    notes: SetNotes = None,
+):
+    """
+    Проставляет поле notes и rsm_notes.
+    Строка разбивается по ";".
+    Первый элемент идет в rsm_notes, остальные в notes
+    """
+    return await apartment_service.set_district_notes_for_many(
+        apart_ids, notes.notes, apart_type
+    )

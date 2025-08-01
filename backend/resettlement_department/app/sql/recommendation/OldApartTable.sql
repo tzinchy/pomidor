@@ -32,7 +32,8 @@ WITH ranked_apartments AS (
 			WHEN (b.terms->'actual'->>'firstResetlementStart')::date IS NULL THEN 'Не начато'
 			ELSE 'Переселение'
 		END as "buildingRelocationStatus",
-		type
+		type,
+        district_notes
     FROM
         old_apart oa
     LEFT JOIN

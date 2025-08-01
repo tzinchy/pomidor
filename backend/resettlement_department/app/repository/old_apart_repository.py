@@ -781,3 +781,21 @@ class OldApartRepository:
                 ORDER BY affair_id'''))
         
             return [row._mapping for row in result]
+        
+    async def set_district_notes(self, apart_ids: list[int], notes: str):
+        async with self.db() as session:
+            try:
+                placeholder = ",".join(map(str, apart_ids))
+                await session.execute(
+                    text(f"""
+                    UPDATE old_apart 
+                    SET district_notes = :notes
+                    WHERE affair_id IN ({placeholder})
+                    """),
+                    {"notes": notes},
+                )
+                await session.commit()
+                return {"status": "done"}
+            except Exception as error:
+                session.rollback()
+                raise error

@@ -366,8 +366,11 @@ class ApartService:
         await run_in_threadpool(df.to_excel, output_path, index=False)
 
         return output_path
-            
-
-            
-
-
+                 
+    async def set_district_notes_for_many(
+        self, apart_ids: list[int], notes: str, apart_type: str
+    ):
+        if apart_type == ApartType.OLD:
+            return await self.old_apart_repository.set_district_notes(apart_ids, notes=notes)
+        else:
+            raise NotFoundException
