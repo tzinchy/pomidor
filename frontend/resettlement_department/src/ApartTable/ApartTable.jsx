@@ -27,6 +27,8 @@ import ConfirmationModal from './ConfirmationModal';
 import DropdownFilter from './Filters/DropdownFilter';
 import { canSeeDashboard} from '..';
 import { CheckCircle } from "lucide-react";
+import { showConfirmation } from '../confirm';
+import DownloadApartsXLSX from './DownloadXLSX';
 
 // Добавьте SVG для иконки меню
 const MenuIcon = () => (
@@ -73,6 +75,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const [minApartNumber, setMinApartNumber] = useState([]);
   const [maxApartNumber, setMaxApartNumber] = useState([]);
   const [showConfirmApprove, setShowConfirmApprove] = useState(false);
+
   const error_toast = () => {
     return toast.error('Ошибка', {
         position: "bottom-right",
@@ -380,8 +383,12 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   }, [data, filters, firstMinArea, firstMaxArea, secondMinArea, secondMaxArea, thirdMinArea, thirdMaxArea, minFloor, maxFloor, minApartNumber, maxApartNumber, minPeople, maxPeople, searchApartQuery, searchFioQuery, searchNotesQuery]);
 
   const rematch = async () => {
+
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
+
     
+
+      // Пользователь подтвердил
     return api.post(
       `${HOSTLINK}/tables/apartment/rematch`,
       JSON.stringify({ apartment_ids: apartmentIds }),
@@ -396,7 +403,7 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
       // Возвращаем данные для обработки в toast
       const failedCount = Object.keys(response.data || {}).length;
       const successCount = apartmentIds.length - failedCount;
-      
+      setRowSelection({});
       return response.data['res']
     })
     .catch(error => {
@@ -406,7 +413,14 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   };
 
   // Функция для запуска переподбора с уведомлениями
-  const startRematchWithNotifications = () => {
+  const startRematchWithNotifications = async () => {
+    const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
+    if (result) {
     toast.promise(
       rematch(),
       {
@@ -476,9 +490,11 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         toastClassName: "!z-[9999]", // Дополнительное повышение z-index
       }
     );
+  }
   };
 
   const switchAparts = async () => {
+    
     if ((Object.keys(rowSelection).length !== 2) || (apartType === 'NewApartment')) {
       toast.warn('Нужно выбрать 2 квартиры', {
         position: "bottom-right",
@@ -492,6 +508,15 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         });
       return;
     }
+    const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
+    
+    if (result) {
+      // Пользователь подтвердил
     try {
       await api.post(
         `${HOSTLINK}/tables/switch_aparts`,
@@ -500,17 +525,27 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
           second_apart_id: parseInt(Object.keys(rowSelection)[1])
         }
       );
+      setRowSelection({});
       success_toast('Квартиры успешно заменены');
     } catch (error) {
       console.error("Error ", error.response?.data);
       error_toast();
     }
+  }
   };
 
   const setStatusForMany = async (status) => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
     console.log('setStatusForMany', apartmentIds, status, apartType)
+    const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
     
+    if (result) {
+      // Пользователь подтвердил
     try {
       await api.patch(
         `${HOSTLINK}/tables/apartment/set_status_for_many`,
@@ -526,17 +561,27 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         }
       );
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      setRowSelection({});
       success_toast('Статус успешно изменён');
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
       error_toast();
+    }
     }
   };
 
   const setSpecialNeedsForMany = async (marker) => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
     console.log('setSpecialNeedsForMany', apartmentIds, marker, apartType)
+    const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
     
+    if (result) {
+      // Пользователь подтвердил
     try {
       await api.patch(
         `${HOSTLINK}/tables/apartment/set_special_needs_for_many`,
@@ -546,17 +591,28 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         }
       );
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      setRowSelection({});
       success_toast('Инвалидность успешно проставлена');
+      
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
       error_toast();
+    }
     }
   };
 
   const setContainerForMany = async (marker) => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
     console.log('setContainerForMany', apartmentIds, marker, apartType)
+      const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
     
+    if (result) {
+      // Пользователь подтвердил
     try {
       await api.patch(
         `${HOSTLINK}/tables/apartment/push_container_for_aparts`,
@@ -565,11 +621,13 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         }
       );
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      setRowSelection({});
       success_toast('Контейнер успешно отправлен');
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
       error_toast();
     }
+  }
   };
 
   const handleEntranceSubmit = async () => {
@@ -586,7 +644,15 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
   const setEntranceForMany = async (entrance_number) => {
     const apartmentIds = Object.keys(rowSelection).map(id => parseInt(id, 10));
     console.log('setEntranceForMany', apartmentIds, entrance_number, apartType)
+    const result = await showConfirmation({
+      title: "Необходимость подтверждения",
+      message: "Вы действительно хотите это сделать?",
+      confirmText: "Да",
+      cancelText: "Нет"
+    });
     
+    if (result) {
+      // Пользователь подтвердил
     try {
       await api.patch(
         `${HOSTLINK}/tables/set_entrance_number_for_many`,
@@ -596,11 +662,13 @@ const ApartTable = ({ data, loading, selectedRow, setSelectedRow, isDetailsVisib
         }
       );
       fetchApartments(lastSelectedAddres, lastSelectedMunicipal);
+      setRowSelection({});
       success_toast('Подъезд успешно проставлен');
     } catch (error) {
       console.error("Error setting status:", error.response?.data);
       error_toast();
     }
+  }
   };
 
   const handleNotesSave = async (rowData, newNotes) => {
@@ -1134,8 +1202,10 @@ const handleConfirmApprove = (e) => {
     </Popover.Panel>
   </Transition>
 </Popover>
-          <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
+         
         </div>}
+        <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
+        <DownloadApartsXLSX apartType={apartType} apartments={filteredApartments}/>
         </div>
       </div>
       <div className="relative flex flex-col lg:flex-row  w-full transition-all duration-300">
