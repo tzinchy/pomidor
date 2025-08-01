@@ -6,7 +6,7 @@ from typing import List
 
 from schema.history import HistoryResponse
 from schema.apartment import Balance
-from service.auth import mp_employee_required
+from service.auth import mp_employee_required, mp_boss_required
 from depends import history_service
 
 from service.balance_alghorithm import save_views_to_excel
@@ -98,7 +98,7 @@ def push_container(history_id: int):
 
 
 @router.patch("/approve/{history_id}")
-async def approve_history(history_id: int):
+async def approve_history(history_id: int, user = Depends(mp_boss_required)):
     return await history_service.approve_history(history_id)
 
 

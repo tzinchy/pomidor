@@ -178,6 +178,7 @@ def mp_employee_required(user: User = Depends(get_user)):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Insufficient role privileges"
         )
+    return user 
     
 def mp_boss_required(user: User = Depends(get_user)): 
     if 5 not in user.roles_ids:
@@ -185,6 +186,7 @@ def mp_boss_required(user: User = Depends(get_user)):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Boss role privileges"
         )
+    return user
     
 # Специализированные проверки
 class GetMpAdmin(AuthChecker):
