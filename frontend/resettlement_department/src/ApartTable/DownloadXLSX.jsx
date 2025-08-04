@@ -1,7 +1,7 @@
 import React from "react";
 import { HOSTLINK } from "..";
 
-export default function DownloadApartsXLSX({ apartType, apartments, withLastOffer = false }) {
+export default function DownloadApartsXLSX({ apartType, apartments, withLastOffer = true }) {
   const handleDownload = async () => {
     let apartIds = [];
 

@@ -998,7 +998,7 @@ const handleConfirmApprove = (e) => {
             maxApartNumber={maxApartNumber}
             setMaxApartNumber={setMaxApartNumber}
           />
-{/*fetchApartments*/}
+          {/*fetchApartments*/}
           {allStatuses ? (
             <ProgressStatusBar data={allStatuses} handleFilterChange={handleFilterChange} />
           ) : (
@@ -1055,156 +1055,154 @@ const handleConfirmApprove = (e) => {
           </div>
         </div>
         <div className="flex justify-end items-center gap-2 mt-2">
-        {approveAvailable &&
-<div className='flex items-center'>
-  <button
-    key="Подготовить смотровой"
-    onClick={() => setShowConfirmApprove(true)} 
-    className="group flex w-full items-center gap-2 rounded-md px-3 py-2 text-s font-medium text-gray-900
-               transition hover:bg-green-100 hover:backdrop-blur-sm hover:text-green-900"
-  >
-    <CheckCircle
-      size={24}
-      className="stroke-green-600 group-hover:scale-110 transition-transform"
-    />
-    Одобрить
-  </button>
-</div>
-  }
-
-        {canSeeDashboard &&  
-        <div className='flex items-center'>
-<Popover className="relative inline-block text-left z-[102]">
-  <Popover.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
-    <MenuIcon />
-  </Popover.Button>
-
-  <Transition
-    as={Fragment}
-    enter="transition ease-out duration-100"
-    enterFrom="transform opacity-0 scale-95"
-    enterTo="transform opacity-100 scale-100"
-    leave="transition ease-in duration-75"
-    leaveFrom="transform opacity-100 scale-100"
-    leaveTo="transform opacity-0 scale-95"
-  >
-    <Popover.Panel className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-{apartType === 'OldApart' && (
-  <div className="px-1 py-1 space-y-1">
-    <button onClick={startRematchWithNotifications} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Переподбор</button>
-    <button onClick={switchAparts} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Поменять квартиры</button>
-    <button onClick={() => setSpecialNeedsForMany(1)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Проставить инвалидность</button>
-    <button onClick={() => setSpecialNeedsForMany(0)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Снять инвалидность</button>
-    <button onClick={handleContainerClick} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Контейнер</button>
-
-    {/* Подменю Изменить статус */}
-    <Popover className="relative">
-      <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
-        <span>Изменить статус</span>
-      </Popover.Button>
-
-      <Transition as={Fragment} {...transitionProps}>
-        <Popover.Panel className="absolute top-full mt-1 w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
-          <div className="px-1 py-1 space-y-1">
-            {/* {statuses.map((status) => (
-              <button
-                key={status}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setStatusForMany(status, apartType);
-                }}
-                className="group flex w-full rounded-md px-2 py-2 text-xs text-gray-900 hover:bg-gray-100"
-              >
-                {status}
-              </button>
-              
-            ))} */}
-              <button
-                key={`Подборов не будет`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setStatusForMany(`Подборов не будет`, apartType);
-                }}
-                className="group flex w-full rounded-md px-2 py-2 text-xs text-gray-900 hover:bg-gray-100"
-              >
-                {`Подборов не будет`}
-              </button>
+          {approveAvailable &&
+          <div className='flex items-center'>
+            <button
+              key="Подготовить смотровой"
+              onClick={() => setShowConfirmApprove(true)} 
+              className="group flex w-full items-center gap-2 rounded-md px-3 py-2 text-s font-medium text-gray-900
+                        transition hover:bg-green-100 hover:backdrop-blur-sm hover:text-green-900"
+            >
+              <CheckCircle
+                size={24}
+                className="stroke-green-600 group-hover:scale-110 transition-transform"
+              />
+              Одобрить
+            </button>
           </div>
-        </Popover.Panel>
-      </Transition>
-    </Popover>
-  </div>
-)}
+          }
+            {canSeeDashboard &&  
+            <div className='flex items-center'>
+              <Popover className="relative inline-block text-left z-[102]">
+                <Popover.Button className="bg-white hover:bg-gray-100 border border-dashed px-3 rounded whitespace-nowrap text-sm font-medium mx-2 h-8 flex items-center">
+                  <MenuIcon />
+                </Popover.Button>
 
-      {apartType !== 'OldApart' && (
-        <div className="px-1 py-1">
-          {/* Подменю Проставить подъезд */}
-          <Popover className="relative">
-            <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
-              <span>Проставить подъезд</span>
-            </Popover.Button>
-
-            <Transition as={Fragment} {...transitionProps}>
-              <Popover.Panel className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
-                <div className="space-y-2">
-                  <input
-                    type="number"
-                    placeholder="Введите номер подъезда"
-                    className="w-full px-2 py-1 text-sm border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    onChange={(e) => setEntranceInput(e.target.value)}
-                    value={entranceInput}
-                    autoFocus
-                  />
-                  <div className="flex justify-end space-x-2">
-                    <Popover.Button as="button" className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded" onClick={() => setEntranceInput('')}>Отмена</Popover.Button>
-                    <Popover.Button as="button" className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600" onClick={() => {
-                      if (entranceInput) {
-                        setEntranceForMany(entranceInput);
-                        setEntranceInput('');
-                      }
-                    }}>Подтвердить</Popover.Button>
-                  </div>
-                </div>
-              </Popover.Panel>
-            </Transition>
-          </Popover>
-
-          {/* Подменю Изменить статус */}
-          <Popover className="relative">
-            <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
-              <span>Изменить статус</span>
-            </Popover.Button>
-
-            <Transition as={Fragment} {...transitionProps}>
-              <Popover.Panel className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
+                <Transition
+                  as={Fragment}
+                  enter="transition ease-out duration-100"
+                  enterFrom="transform opacity-0 scale-95"
+                  enterTo="transform opacity-100 scale-100"
+                  leave="transition ease-in duration-75"
+                  leaveFrom="transform opacity-100 scale-100"
+                  leaveTo="transform opacity-0 scale-95"
+                >
+                  <Popover.Panel className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              {apartType === 'OldApart' && (
                 <div className="px-1 py-1 space-y-1">
-                  {statuses.map((status) => (
-                    <button
-                      key={status}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setStatusForMany(status, apartType);
-                      }}
-                      className="group flex w-full rounded-md px-2 py-2 text-xs text-gray-900 hover:bg-gray-100"
-                    >
-                      {status}
-                    </button>
-                  ))}
+                  <button onClick={startRematchWithNotifications} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Переподбор</button>
+                  <button onClick={switchAparts} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Поменять квартиры</button>
+                  <button onClick={() => setSpecialNeedsForMany(1)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Проставить инвалидность</button>
+                  <button onClick={() => setSpecialNeedsForMany(0)} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Снять инвалидность</button>
+                  <button onClick={handleContainerClick} className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 hover:bg-gray-100">Контейнер</button>
+
+                  {/* Подменю Изменить статус */}
+                  <Popover className="relative">
+                    <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
+                      <span>Изменить статус</span>
+                    </Popover.Button>
+
+                    <Transition as={Fragment} {...transitionProps}>
+                      <Popover.Panel className="absolute top-full mt-1 w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
+                        <div className="px-1 py-1 space-y-1">
+                          {/* {statuses.map((status) => (
+                            <button
+                              key={status}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setStatusForMany(status, apartType);
+                              }}
+                              className="group flex w-full rounded-md px-2 py-2 text-xs text-gray-900 hover:bg-gray-100"
+                            >
+                              {status}
+                            </button>
+                            
+                          ))} */}
+                            <button
+                              key={`Подборов не будет`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setStatusForMany(`Подборов не будет`, apartType);
+                              }}
+                              className="group flex w-full rounded-md px-2 py-2 text-xs text-gray-900 hover:bg-gray-100"
+                            >
+                              {`Подборов не будет`}
+                            </button>
+                        </div>
+                      </Popover.Panel>
+                    </Transition>
+                  </Popover>
                 </div>
-              </Popover.Panel>
-            </Transition>
-          </Popover>
-        </div>
-      )}
-    </Popover.Panel>
-  </Transition>
-</Popover>
-         
+              )}
+
+              {apartType !== 'OldApart' && (
+                <div className="px-1 py-1">
+                  {/* Подменю Проставить подъезд */}
+                  <Popover className="relative">
+                    <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
+                      <span>Проставить подъезд</span>
+                    </Popover.Button>
+
+                    <Transition as={Fragment} {...transitionProps}>
+                      <Popover.Panel className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
+                        <div className="space-y-2">
+                          <input
+                            type="number"
+                            placeholder="Введите номер подъезда"
+                            className="w-full px-2 py-1 text-sm border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            onChange={(e) => setEntranceInput(e.target.value)}
+                            value={entranceInput}
+                            autoFocus
+                          />
+                          <div className="flex justify-end space-x-2">
+                            <Popover.Button as="button" className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded" onClick={() => setEntranceInput('')}>Отмена</Popover.Button>
+                            <Popover.Button as="button" className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600" onClick={() => {
+                              if (entranceInput) {
+                                setEntranceForMany(entranceInput);
+                                setEntranceInput('');
+                              }
+                            }}>Подтвердить</Popover.Button>
+                          </div>
+                        </div>
+                      </Popover.Panel>
+                    </Transition>
+                  </Popover>
+
+                  {/* Подменю Изменить статус */}
+                  <Popover className="relative">
+                    <Popover.Button className="group flex w-full rounded-md px-2 py-2 text-sm text-gray-900 justify-between items-center hover:bg-gray-100">
+                      <span>Изменить статус</span>
+                    </Popover.Button>
+
+                    <Transition as={Fragment} {...transitionProps}>
+                      <Popover.Panel className="absolute w-56 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-2">
+                        <div className="px-1 py-1 space-y-1">
+                          {statuses.map((status) => (
+                            <button
+                              key={status}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setStatusForMany(status, apartType);
+                              }}
+                              className="group flex w-full rounded-md px-2 py-2 text-xs text-gray-900 hover:bg-gray-100"
+                            >
+                              {status}
+                            </button>
+                          ))}
+                        </div>
+                      </Popover.Panel>
+                    </Transition>
+                  </Popover>
+                </div>
+              )}
+            </Popover.Panel>
+          </Transition>
+        </Popover>
         </div>}
-        <p className='ml-8 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
+        <p className='ml-2 mr-2 text-gray-400'>{ Object.keys(rowSelection).length} / {filteredApartments.length}</p>
         <DownloadApartsXLSX apartType={apartType} apartments={filteredApartments}/>
         </div>
       </div>
@@ -1254,7 +1252,7 @@ const handleConfirmApprove = (e) => {
             <div className="flex flex-1 overflow-hidden">
             {/* Таблица */}
             <div
-              className={` rounded-md h-[calc(100vh-3.67rem)] transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
+              className={` rounded-md h-[calc(100vh-4.7rem)] transition-all duration-300 ease-in-out  ${isDetailsVisible ? 'w-[55vw]' : 'flex-grow'}`}
             >
               <div
                 ref={tableContainerRef}
