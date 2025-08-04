@@ -5,22 +5,30 @@ import localeRu from 'air-datepicker/locale/ru';
 import AddressDropdown from "./AddressDropdown";
 
 export default function RelocationTab({ addresses, formData, setFormData }) {
+  // Преобразуем входные данные в объект с id в качестве ключа
   const [stages, setStages] = useState(() => {
     const initialStages = formData.relocation_stages || [
       {
         id: 1,
-        inspection_date: '',
-        relocation_date: '',
+        inspection_date: null,
+        relocation_date: null,
         houses: ['']
       }
     ];
     
-    return initialStages.map(stage => ({
-      ...stage,
-      inspection_date: stage.inspection_date || '',
-      relocation_date: stage.relocation_date || ''
-    }));
+    // Конвертируем массив в объект
+    return initialStages.reduce((acc, stage) => {
+      const { id, ...rest } = stage;
+      acc[id] = rest;
+      return acc;
+    }, {});
   });
+
+  // Конвертируем обратно в массив для рендеринга
+  const stagesArray = Object.entries(stages).map(([id, data]) => ({
+    id: Number(id),
+    ...data
+  }));
 
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return '';
@@ -32,45 +40,54 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
   };
 
   const handleAddStage = () => {
-    const newId = stages.length > 0 ? Math.max(...stages.map(s => s.id)) + 1 : 1;
-    setStages([...stages, {
-      id: newId,
-      inspection_date: '',
-      relocation_date: '',
-      houses: ['']
-    }]);
+    const newId = Object.keys(stages).length > 0 
+      ? Math.max(...Object.keys(stages).map(Number)) + 1 
+      : 1;
+    
+    setStages(prev => ({
+      ...prev,
+      [newId]: {
+        inspection_date: null,
+        relocation_date: null,
+        houses: ['']
+      }
+    }));
   };
 
   const handleRemoveStage = (stageId) => {
-    if (stages.length <= 1) return;
+    if (Object.keys(stages).length <= 1) return;
     
-    const newStages = stages
-      .filter(stage => stage.id !== stageId)
-      .map((stage, index) => ({
-        ...stage,
-        id: index + 1
-      }));
+    const newStages = { ...stages };
+    delete newStages[stageId];
     
-    setStages(newStages);
+    // Перенумеровываем оставшиеся этапы
+    const renumberedStages = Object.entries(newStages).reduce((acc, [_, stage], index) => {
+      const newId = index + 1;
+      acc[newId] = stage;
+      return acc;
+    }, {});
+    
+    setStages(renumberedStages);
   };
 
   const handleAddHouse = (stageId) => {
-    setStages(stages.map(stage => 
-      stage.id === stageId 
-        ? { ...stage, houses: [...stage.houses, ''] } 
-        : stage
-    ));
+    setStages(prev => ({
+      ...prev,
+      [stageId]: {
+        ...prev[stageId],
+        houses: [...prev[stageId].houses, '']
+      }
+    }));
   };
 
   const handleRemoveHouse = (stageId, houseIndex) => {
-    setStages(stages.map(stage => 
-      stage.id === stageId 
-        ? { 
-            ...stage, 
-            houses: stage.houses.filter((_, index) => index !== houseIndex) 
-          } 
-        : stage
-    ));
+    setStages(prev => ({
+      ...prev,
+      [stageId]: {
+        ...prev[stageId],
+        houses: prev[stageId].houses.filter((_, index) => index !== houseIndex)
+      }
+    }));
   };
 
   const handleDateChange = (stageId, field, date) => {
@@ -80,30 +97,31 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
     const day = String(localDate.getDate()).padStart(2, '0');
     const dateString = `${year}-${month}-${day}`;
 
-    setStages(stages.map(stage => 
-      stage.id === stageId 
-        ? { ...stage, [field]: dateString } 
-        : stage
-    ));
+    setStages(prev => ({
+      ...prev,
+      [stageId]: {
+        ...prev[stageId],
+        [field]: dateString
+      }
+    }));
   };
 
   const handleHouseChange = (stageId, houseIndex, value) => {
-    setStages(stages.map(stage => 
-      stage.id === stageId 
-        ? { 
-            ...stage, 
-            houses: stage.houses.map((house, index) => 
-              index === houseIndex ? value : house
-            ) 
-          } 
-        : stage
-    ));
+    setStages(prev => ({
+      ...prev,
+      [stageId]: {
+        ...prev[stageId],
+        houses: prev[stageId].houses.map((house, index) => 
+          index === houseIndex ? value : house
+        )
+      }
+    }));
   };
 
   useEffect(() => {
     const pickers = [];
     
-    stages.forEach((stage, index) => {
+    stagesArray.forEach((stage, index) => {
       const inspectionInput = document.getElementById(`inspection-date-${stage.id}-${index}`);
       const relocationInput = document.getElementById(`relocation-date-${stage.id}-${index}`);
       
@@ -139,26 +157,28 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
     return () => {
       pickers.forEach(picker => picker && picker.destroy());
     };
-  }, [stages]);
+  }, [stagesArray]);
 
   useEffect(() => {
+    // Конвертируем обратно в массив для сохранения
+    const stagesForSave = Object.entries(stages).map(([id, data]) => ({
+      id: Number(id),
+      ...data
+    }));
+    
     setFormData(prev => ({
       ...prev,
-      relocation_stages: stages.map(stage => ({
-        ...stage,
-        inspection_date: stage.inspection_date || null,
-        relocation_date: stage.relocation_date || null
-      }))
+      relocation_stages: stagesForSave
     }));
   }, [stages, setFormData]);
 
   return (
     <div className="space-y-6">
-      {stages.map((stage, stageIndex) => (
+      {stagesArray.map((stage, stageIndex) => (
         <div key={`stage-${stage.id}-${stageIndex}`} className="border border-gray-200 rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-medium">Этап {stage.id}</h3>
-            {stages.length > 1 && (
+            {stagesArray.length > 1 && (
               <button
                 onClick={() => handleRemoveStage(stage.id)}
                 className="text-red-500 hover:text-red-700"
@@ -179,6 +199,7 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
                 value={stage.inspection_date ? formatDateForDisplay(stage.inspection_date) : ''}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 readOnly
+                placeholder="Выберите дату"
               />
             </div>
             <div>
@@ -191,6 +212,7 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
                 value={stage.relocation_date ? formatDateForDisplay(stage.relocation_date) : ''}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 readOnly
+                placeholder="Выберите дату"
               />
             </div>
           </div>
@@ -203,13 +225,13 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
             {stage.houses.map((house, houseIndex) => (
               <div key={`house-${stage.id}-${houseIndex}`} className="flex items-center gap-2">
                 <div className="w-full">
-                    <AddressDropdown
-                        addresses={addresses}
-                        value={house}
-                        onChange={(value) => handleHouseChange(stage.id, houseIndex, value)}
-                        placeholder="Выберите адрес дома"
-                        className="flex-1"
-                        />
+                  <AddressDropdown
+                    addresses={addresses}
+                    value={house}
+                    onChange={(value) => handleHouseChange(stage.id, houseIndex, value)}
+                    placeholder="Выберите адрес отселяемого дома"
+                    className="flex-1"
+                  />
                 </div>
                 {stage.houses.length > 1 && (
                   <button
@@ -244,8 +266,11 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
         </svg>
         Добавить этап отселения
       </button>
-      <button onClick={() => {console.log('stages', stages)}} className="bg-blue-300">
-        Log
+      <button 
+        onClick={() => console.log('stages', stages)} 
+        className="mt-4 px-4 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 flex items-center"
+      >
+        Log stages
       </button>
     </div>
   );
