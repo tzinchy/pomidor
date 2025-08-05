@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, HTTPException, Depends
 from fastapi.responses import FileResponse
 import os
 from pathlib import Path
@@ -6,7 +6,7 @@ from typing import List
 
 from schema.history import HistoryResponse
 from schema.apartment import Balance
-
+from service.auth import mp_employee_required, mp_boss_required
 from depends import history_service
 
 from service.balance_alghorithm import save_views_to_excel
@@ -18,8 +18,7 @@ from service.container_service import (
 )
 from service.container_service import update_apart_status_by_history_id
 
-router = APIRouter(tags=["History"])
-
+router = APIRouter(tags=["History"], dependencies=[Depends(mp_employee_required)])
 
 @router.get("/history", response_model=List[HistoryResponse])
 async def get_history():
@@ -65,25 +64,23 @@ async def balance(requirements: Balance = Body(...)):
 
 @router.post("/container/{history_id}")
 def container(history_id: int):
-    try:
-        # Генерация файла
-        generate_excel_from_two_dataframes(history_id)
+    # Генерация файла
+    generate_excel_from_two_dataframes(history_id)
 
-        # Формируем правильный путь к файлу
-        file_path = f"./uploads/container_{history_id}.xlsx"
+    # Формируем правильный путь к файлу
+    file_path = f"./uploads/container_{history_id}.xlsx"
 
-        # Проверяем, существует ли файл
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="Файл не найден!")
+    # Проверяем, существует ли файл
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Файл не найден!")
 
-        # Возвращаем файл как ответ
-        return FileResponse(
-            path=file_path,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            filename=f"container_{history_id}.xlsx",
-        )
-    except Exception as e:
-        return {"error": str(e)}
+    # Возвращаем файл как ответ
+    return FileResponse(
+        path=file_path,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=f"container_{history_id}.xlsx",
+    )
+
 
 
 @router.post("/push_container/{history_id}")
@@ -101,7 +98,7 @@ def push_container(history_id: int):
 
 
 @router.patch("/approve/{history_id}")
-async def approve_history(history_id: int):
+async def approve_history(history_id: int, user = Depends(mp_boss_required)):
     return await history_service.approve_history(history_id)
 
 

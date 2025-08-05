@@ -7,6 +7,8 @@ from repository.new_apart_repository import NewApartRepository
 from repository.offer_repository import OfferRepository
 from repository.old_apart_repository import OldApartRepository
 from repository.order_repository import OrderRepository
+from repository.mail_index_repository import MailIndexRepositroy
+
 from service.apart_service import ApartService
 from service.cin_service import CinService
 from service.dashboard_service import DashboardService
@@ -14,6 +16,7 @@ from service.env_service import EnvService
 from service.history_service import HistoryService
 from service.offer_service import OfferService
 from service.order_service import OrderService
+from service.mail_index import MailIndexService
 
 old_apartment_repository = OldApartRepository(project_managment_session)
 new_apartment_repository = NewApartRepository(project_managment_session)
@@ -36,3 +39,6 @@ offer_service = OfferService(offer_repository)
 
 cin_repository = CinRepository(project_managment_session)
 cin_service = CinService(cin_repository)
+
+mail_index_repository = MailIndexRepositroy(project_managment_session)
+mail_index_service = MailIndexService(mail_index_repository)

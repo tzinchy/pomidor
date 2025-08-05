@@ -5,6 +5,7 @@ backend/__pycache__
 backend/.venv 
 build/*
 .env
+.log
 frontend/resettlement_department/.env 
 __pycache__ 
 /__pycache__

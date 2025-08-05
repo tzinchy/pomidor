@@ -10,6 +10,8 @@ from handlers.httpexceptions import NotFoundException
 from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
 from schema.apartment import ApartType
+from schema.user import User
+import pandas as pd 
 
 
 class ApartService:
@@ -21,12 +23,18 @@ class ApartService:
         self.old_apart_repository = old_apart_repository
         self.new_apart_repository = new_apart_repositroy
 
-    async def get_district(self, apart_type: str,):
-        try:
+    def resouse_permission(self, user_roles): 
+        return True if 7 not in user_roles else False 
+     
+    async def get_district(self, apart_type: str, user : User):
+        try: 
             if apart_type == ApartType.OLD:
-                return await self.old_apart_repository.get_districts()
+                return await self.old_apart_repository.get_districts(user.districts)
             elif apart_type == ApartType.NEW:
-                return await self.new_apart_repository.get_districts()
+                if self.resouse_permission(user_roles=user.roles_ids):
+                    return await self.new_apart_repository.get_districts()
+                else: 
+                    return []
             else:
                 raise NotFoundException
         except Exception as error:
@@ -337,4 +345,32 @@ class ApartService:
             return {"filepath": output_path}
         except Exception as e:
             return {"error": str(e)}
+        
+    async def get_current_table(
+        self,
+        apart_type: str,
+        apart_ids : List[int] = None,
+        with_last_offer : Optional[bool] = None
+    ):
+        if apart_type == ApartType.OLD: 
+            if with_last_offer: 
+                result = await self.old_apart_repository.get_current_table_with_last_offer(apart_ids=apart_ids)
+            else: 
+                result = await self.old_apart_repository.get_current_table(apart_ids=apart_ids)
+        else: 
+            result = await self.new_apart_repository.get_current_table(apart_ids=apart_ids)
+        df = pd.DataFrame(result)
 
+        output_path = os.path.join(os.getcwd(), "././uploads", "current_table.xlsx")
+
+        await run_in_threadpool(df.to_excel, output_path, index=False)
+
+        return output_path
+                 
+    async def set_district_notes_for_many(
+        self, apart_ids: list[int], notes: str, apart_type: str
+    ):
+        if apart_type == ApartType.OLD:
+            return await self.old_apart_repository.set_district_notes(apart_ids, notes=notes)
+        else:
+            raise NotFoundException

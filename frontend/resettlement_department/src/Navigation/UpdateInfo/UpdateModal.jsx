@@ -3,6 +3,7 @@ import { RefreshCcw } from "lucide-react";
 import { HOSTLINK } from "../..";
 import { RiskIcon } from "../../PloshadkiTable/Table/Icons";
 import FileUploader from "../../Balance/Components/FileUploader";
+import ToolTip from "../ToolTip";
 
 export default function UpdateDataButton() {
     const [isModalOpen, setModalOpen] = useState(false);
@@ -31,7 +32,7 @@ export default function UpdateDataButton() {
                  type === "newApart" ? "newApart" : "orderDecisions"]: true
             }));
 
-            const response = await fetch(url, { method: "PATCH" });
+            const response = await fetch(url, { method: "PATCH" , credentials: 'include',});
             if (!response.ok) throw new Error("Ошибка обновления");
             
             // Обновляем историю после успешного обновления
@@ -62,7 +63,7 @@ export default function UpdateDataButton() {
                  type === "offers" ? "offers" : "orderDecisions"]: true
             }));
 
-            const response = await fetch(url);
+            const response = await fetch(url, {credentials: 'include',});
             if (!response.ok) throw new Error("Ошибка загрузки файла");
             
             const blob = await response.blob();
@@ -96,7 +97,7 @@ export default function UpdateDataButton() {
 
     const fetchAddresses = async () => {
         try {
-            const response = await fetch(`${HOSTLINK}/rsm/update_info_stat`);
+            const response = await fetch(`${HOSTLINK}/rsm/update_info_stat`, {credentials: 'include',});
             if (!response.ok) throw new Error('Ошибка загрузки адресов');
             const data = await response.json();
             setUpdateHistory(data);
@@ -108,7 +109,7 @@ export default function UpdateDataButton() {
 
     const fetchStat = async () => {
         try {
-            const response = await fetch(`${HOSTLINK}/tables/get_stat`);
+            const response = await fetch(`${HOSTLINK}/tables/get_stat`, {credentials: 'include',});
             if (!response.ok) throw new Error('Ошибка загрузки статистики');
             const data = await response.json();
             console.log('stat data', data);
@@ -119,12 +120,13 @@ export default function UpdateDataButton() {
     };
 
     return (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center relative group">
+                    <ToolTip text={`Обновить данные`} />
             <button
-                className="absolute bottom-5 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600"
+                className="p-2 mt-2  text-white rounded-full hover:bg-blue-100 rounded-md transition"
                 onClick={() => { setModalOpen(true); fetchAddresses(); fetchStat();}}
             >
-                <RefreshCcw size={24} />
+                <RefreshCcw size={24} className={"stroke-blue-500"}/>
             </button>
             
             {isModalOpen && (
@@ -371,6 +373,7 @@ export default function UpdateDataButton() {
                     </div>
                 </div>
             )}
+
         </div>
     );
 }

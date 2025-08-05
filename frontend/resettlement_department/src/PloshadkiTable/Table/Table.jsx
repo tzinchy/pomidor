@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { TableHead, TableBody } from "./Components";
-import axios from "axios";
+import api from "../../api";
 import { HOSTLINK } from "../..";
 import HouseDetails from '../HouseDetails/HouseDetails' 
 
@@ -35,7 +35,7 @@ export default function Table({ filters, searchQuery }) {
   const itemsPerPage = 50; // Количество строк на страницу
 
   useEffect(() => { 
-    fetch(`${HOSTLINK}/dashboard/table`)
+    fetch(`${HOSTLINK}/dashboard/table`, {credentials: 'include',})
       .then((res) => res.json())
       .then((fetchedData) => {
         setData(fetchedData);
@@ -48,7 +48,7 @@ export default function Table({ filters, searchQuery }) {
 
   const fetchHouseDetails = async (houseId) => {
     try {
-      const response = await axios.get(
+      const response = await api.get(
         `${HOSTLINK}/dashboard/table/${houseId}`,
         { 
           params: { houseId: houseId },

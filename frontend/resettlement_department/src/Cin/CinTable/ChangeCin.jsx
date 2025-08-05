@@ -7,7 +7,8 @@ import ScheduleSelector from "./ScheduleSelector";
 import ChangeEntrences from "./ChangeEntrences";
 import { HOSTLINK } from "../..";
 import AddressDropdown from "./AddressDropdown";
-import axios from "axios"; 
+import api from "../../api"; 
+import RelocationTab from "./RelocationTab";
 
 export default function ChangeCin({ props: rowData , fetchTableData, type = "edit" }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,6 +28,7 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
     });
     const [districtOptions, setDistrictOptions] = useState([]);
     const [municipalOptions, setMunicipalOptions] = useState([]);
+    const [activeTab, setActiveTab] = useState('cin'); // 'cin' или 'relocation'
     const daysOfWeek = [
         { id: 'mon', label: 'пн' },
         { id: 'tue', label: 'вт' },
@@ -51,23 +53,29 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
         const fetchData = async () => {
             try {
                 // Загрузка адресов
-                const url = new URL(`${HOSTLINK}/tables/house_addresses`);
+                const url = new URL(`${HOSTLINK}/cin/house_addresses`);
                 url.searchParams.append('apart_type', 'NewApartment');            
-                const response = await fetch(url.toString());
+                const response = await fetch(url.toString(), {
+                    credentials: 'include',
+                });
                 const fetchedData = await response.json();
                 setNewAddresses(fetchedData);
 
                 // Загрузка районов с параметром apart_type
-                const districtsUrl = new URL(`${HOSTLINK}/tables/district`);
+                const districtsUrl = new URL(`${HOSTLINK}/cin/district`);
                 districtsUrl.searchParams.append('apart_type', 'NewApartment');
-                const districtsResponse = await fetch(districtsUrl.toString());
+                const districtsResponse = await fetch(districtsUrl.toString(), {
+                    credentials: 'include',
+                });
                 const districtsData = await districtsResponse.json();
                 setDistrictOptions(districtsData);
 
                 // Загрузка муниципальных округов с параметром apart_type
-                const municipalUrl = new URL(`${HOSTLINK}/tables/municipal_district`);
+                const municipalUrl = new URL(`${HOSTLINK}/cin/municipal_district`);
                 municipalUrl.searchParams.append('apart_type', 'NewApartment');
-                const municipalResponse = await fetch(municipalUrl.toString());
+                const municipalResponse = await fetch(municipalUrl.toString(), {
+                    credentials: 'include',
+                });
                 const municipalData = await municipalResponse.json();
                 setMunicipalOptions(municipalData);
             } catch (error) {
@@ -319,14 +327,6 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
     const prepareFormData = () => {
         const data = { ...formData };
         
-        // Убедимся, что все обязательные поля присутствуют
-        if (type === "create") {
-            if (!data.unom) {
-                alert('Поле UNOM обязательно для заполнения');
-                return null;
-            }
-        }
-        
         // Преобразуем даты в правильный формат
         if (data.start_dates_by_entrence) {
             const formattedDates = {};
@@ -348,9 +348,9 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
         try {
             let response;
             if (type === "create") {
-                response = await axios.post(`${HOSTLINK}/cin/create_cin`, preparedData);
+                response = await api.post(`${HOSTLINK}/cin/create_cin`, preparedData);
             } else {
-                response = await axios.patch(`${HOSTLINK}/cin/update_cin`, preparedData);
+                response = await api.patch(`${HOSTLINK}/cin/update_cin`, preparedData);
             }
             
             console.log('Успешное обновление:', response.data);
@@ -413,161 +413,195 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
                             <h2 className="text-xl font-semibold">
                                 {type === "create" ? "Создание нового ЦИНа" : "Редактирование ЦИНа"}
                             </h2>
-                            <button 
-                                onClick={handleCloseModal}
-                                className="text-gray-500 hover:text-gray-700"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
+                            <div className="flex">
+                                <div className="flex border-b border-gray-200 mr-4">
+                                    <button
+                                        onClick={() => setActiveTab('cin')}
+                                        className={`px-4 py-2 relative ${activeTab === 'cin' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-800'}`}
+                                    >
+                                        ЦИН
+                                        {activeTab === 'cin' && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-500"></div>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('relocation')}
+                                        className={`px-4 py-2 relative ${activeTab === 'relocation' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-800'}`}
+                                    >
+                                        Отселение
+                                        {activeTab === 'relocation' && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-500"></div>
+                                        )}
+                                    </button>
+                                </div>
+                                <button 
+                                    onClick={handleCloseModal}
+                                    className="text-gray-500 hover:text-gray-700 border-white"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>  
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Адрес ЦИНа</label>
+                        {activeTab === 'cin' ? (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Адрес ЦИНа</label>
+                                            <AddressDropdown 
+                                                addresses={newAddresses} 
+                                                value={formData.cin_address || ''}
+                                                onChange={(value) => setFormData(prev => ({ ...prev, cin_address: value }))}
+                                                placeholder="Выберите адрес ЦИНа"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">"Правильный" адрес ЦИНа</label>
+                                            <input
+                                                name="full_cin_address"
+                                                type="text"
+                                                value={formData.full_cin_address || ''}
+                                                onChange={handleInputChange}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Округ</label>
+                                            <AddressDropdown 
+                                                addresses={districtOptions} 
+                                                value={formData.district || ''}
+                                                onChange={(value) => setFormData(prev => ({ ...prev, district: value }))}
+                                                placeholder="Выберите район"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">График работы ЦИНа</label>
+                                            <ScheduleSelector 
+                                                value={formData.cin_schedule || ''} 
+                                                onChange={(value) => setFormData(prev => ({ ...prev, cin_schedule: value }))}
+                                                type='cin' 
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Телефон для осмотра</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={phoneParts.osmotr.main}
+                                                    onChange={(e) => handlePhoneChange(e, 'osmotr')}
+                                                    placeholder="+7 (XXX) XXX XX XX"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                />
+                                                <div className="flex items-center">
+                                                    <span className="px-2 text-gray-500">доп.</span>
+                                                    <input
+                                                        type="text"
+                                                        value={phoneParts.osmotr.ext}
+                                                        onChange={(e) => handlePhoneExtChange(e, 'osmotr')}
+                                                        placeholder="XXXX"
+                                                        maxLength={4}
+                                                        className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Адрес заселения</label>
+                                            <AddressDropdown 
+                                                addresses={newAddresses} 
+                                                value={formData.house_address || ''}
+                                                onChange={(value) => setFormData(prev => ({ ...prev, house_address: value }))}
+                                                placeholder="Выберите адрес заселения"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">"Правильный" адрес заселения</label>
+                                            <input
+                                                name="full_house_address"
+                                                type="text"
+                                                value={formData.full_house_address || ''}
+                                                onChange={handleInputChange}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Район</label>
+                                            <AddressDropdown 
+                                                addresses={municipalOptions} 
+                                                value={formData.municipal_district || ''}
+                                                onChange={(value) => setFormData(prev => ({ ...prev, municipal_district: value }))}
+                                                placeholder="Выберите муниципальный округ"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">График работы Департамента</label>
+                                            <ScheduleSelector 
+                                                value={formData.dep_schedule || ''} 
+                                                onChange={(value) => setFormData(prev => ({ ...prev, dep_schedule: value }))}
+                                                type='dep' 
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Телефон для ответа</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={phoneParts.otvet.main}
+                                                    onChange={(e) => handlePhoneChange(e, 'otvet')}
+                                                    placeholder="+7 (XXX) XXX XX XX"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                />
+                                                <div className="flex items-center">
+                                                    <span className="px-2 text-gray-500">доп.</span>
+                                                    <input
+                                                        type="text"
+                                                        value={phoneParts.otvet.ext}
+                                                        onChange={(e) => handlePhoneExtChange(e, 'otvet')}
+                                                        placeholder="XXXX"
+                                                        maxLength={4}
+                                                        className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Секция с датами по подъездам */}
+                                <ChangeEntrences 
+                                    newEntranceNumber={newEntranceNumber}
+                                    setNewEntranceNumber={setNewEntranceNumber}
+                                    handleAddEntrance={handleAddEntrance}
+                                    entrances={entrances}
+                                    handleRemoveEntrance={handleRemoveEntrance}
+                                    activeTab={activeTab}
+                                    dates={dates}
+                                />
+
+                                <div className="mt-6">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Адрес Отдела</label>
                                     <AddressDropdown 
-                                        addresses={newAddresses} 
-                                        value={formData.cin_address || ''}
-                                        onChange={(value) => setFormData(prev => ({ ...prev, cin_address: value }))}
+                                        addresses={vseOtdel} 
+                                        value={formData.otdel}
+                                        onChange={(value) => setFormData(prev => ({ ...prev, otdel: value }))}
                                         placeholder="Выберите адрес ЦИНа"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">"Правильный" адрес ЦИНа</label>
-                                    <input
-                                        name="full_cin_address"
-                                        type="text"
-                                        value={formData.full_cin_address || ''}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Округ</label>
-                                    <AddressDropdown 
-                                        addresses={districtOptions} 
-                                        value={formData.district || ''}
-                                        onChange={(value) => setFormData(prev => ({ ...prev, district: value }))}
-                                        placeholder="Выберите район"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">График работы ЦИНа</label>
-                                    <ScheduleSelector 
-                                        value={formData.cin_schedule || ''} 
-                                        onChange={(value) => setFormData(prev => ({ ...prev, cin_schedule: value }))}
-                                        type='cin' 
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Телефон для осмотра</label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={phoneParts.osmotr.main}
-                                            onChange={(e) => handlePhoneChange(e, 'osmotr')}
-                                            placeholder="+7 (XXX) XXX XX XX"
-                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        />
-                                        <div className="flex items-center">
-                                            <span className="px-2 text-gray-500">доп.</span>
-                                            <input
-                                                type="text"
-                                                value={phoneParts.osmotr.ext}
-                                                onChange={(e) => handlePhoneExtChange(e, 'osmotr')}
-                                                placeholder="XXXX"
-                                                maxLength={4}
-                                                className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Адрес заселения</label>
-                                    <AddressDropdown 
-                                        addresses={newAddresses} 
-                                        value={formData.house_address || ''}
-                                        onChange={(value) => setFormData(prev => ({ ...prev, house_address: value }))}
-                                        placeholder="Выберите адрес заселения"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">"Правильный" адрес заселения</label>
-                                    <input
-                                        name="full_house_address"
-                                        type="text"
-                                        value={formData.full_house_address || ''}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Район</label>
-                                    <AddressDropdown 
-                                        addresses={municipalOptions} 
-                                        value={formData.municipal_district || ''}
-                                        onChange={(value) => setFormData(prev => ({ ...prev, municipal_district: value }))}
-                                        placeholder="Выберите муниципальный округ"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">График работы Департамента</label>
-                                    <ScheduleSelector 
-                                        value={formData.dep_schedule || ''} 
-                                        onChange={(value) => setFormData(prev => ({ ...prev, dep_schedule: value }))}
-                                        type='dep' 
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Телефон для ответа</label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={phoneParts.otvet.main}
-                                            onChange={(e) => handlePhoneChange(e, 'otvet')}
-                                            placeholder="+7 (XXX) XXX XX XX"
-                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        />
-                                        <div className="flex items-center">
-                                            <span className="px-2 text-gray-500">доп.</span>
-                                            <input
-                                                type="text"
-                                                value={phoneParts.otvet.ext}
-                                                onChange={(e) => handlePhoneExtChange(e, 'otvet')}
-                                                placeholder="XXXX"
-                                                maxLength={4}
-                                                className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Секция с датами по подъездам */}
-                        <ChangeEntrences 
-                            newEntranceNumber={newEntranceNumber}
-                            setNewEntranceNumber={setNewEntranceNumber}
-                            handleAddEntrance={handleAddEntrance}
-                            entrances={entrances}
-                            handleRemoveEntrance={handleRemoveEntrance}
-                        />
-
-                        <div className="mt-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Адрес Отдела</label>
-                            <AddressDropdown 
-                                addresses={vseOtdel} 
-                                value={formData.otdel}
-                                onChange={(value) => setFormData(prev => ({ ...prev, otdel: value }))}
-                                placeholder="Выберите адрес ЦИНа"
-                            />
-                        </div>
+                            </>
+                        ) : (
+                            <RelocationTab 
+                                addresses={newAddresses} 
+                                formData={formData} 
+                                setFormData={setFormData} 
+                                />
+                        )}
                         
                         <div className="mt-6 flex justify-end space-x-3">
                             <button

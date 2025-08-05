@@ -8,8 +8,7 @@ from models.user_frontend_payload import UserFrontendPayload
 from schemas.user import UserUuid
 from sqlalchemy import update
 from models.subordinates_by_uuid import SubordinatesByUuid
-from typing import List, Optional
-
+from typing import List
 
 class AuthRepository:
     def __init__(self, db: AsyncSession):

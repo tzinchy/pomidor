@@ -19,7 +19,7 @@ class Cin(Base):
     otdel = Column(String)
     phone_otvet = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True))
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     manual_load_id = Column(SmallInteger)
     start_dates_by_entrence = Column(JSONB)
     full_cin_address = Column(String)

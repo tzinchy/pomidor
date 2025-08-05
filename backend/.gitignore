@@ -1,1 +1,6 @@
-.DS_Store 
+
+.DS_Store
+loader/*.log
+cron.log
+.log
+loader/cron.log

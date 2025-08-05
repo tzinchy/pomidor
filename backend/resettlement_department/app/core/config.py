@@ -123,3 +123,11 @@ print(settings.project_management_setting.DATABASE_URL)
 RENOVATION_FILE_PATH = "./sql/renovation/"
 RECOMMENDATION_FILE_PATH = "./sql/recommendation"
 RECOMMENDATION_DASHBOARD_FILE_PATH = './sql/recommendation/dashboard'
+
+print(settings.project_management_setting.ALGORITHM, 'ЭТО АЛГОРИТМ')
+print(settings.project_management_setting.SECRET_KEY, 'А ЭТО КЛЮЧ')
+print(settings.project_management_setting.DATABASE_URL, 'DATABASE URL')
+print(settings.project_management_setting.DB_HOST, 'DATABASE HOST')
+print(settings.project_management_setting.DB_NAME, 'DATABASE NAME')
+
+

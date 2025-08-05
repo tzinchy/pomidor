@@ -14,9 +14,11 @@ export default function CinPage(){
 
     const fetchData = async () => {
             try {
-                const response = await fetch(`${HOSTLINK}/cin`);
+                const response = await fetch(`${HOSTLINK}/cin`, {
+    credentials: 'include',});
                 const fetchedData = await response.json();
                 setCinData(fetchedData);
+                console.log('fetchedData', fetchedData);
             } catch (error) {
                 console.log('Error fetching cin: ', error);
             }

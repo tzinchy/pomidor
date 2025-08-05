@@ -84,8 +84,8 @@ class AuthChecker:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             user_data = self.response_model(**payload)
             
-            # Проверка ролей
             if self.required_roles and not any(role in user_data.roles_ids for role in self.required_roles):
+
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Insufficient role privileges"
@@ -171,6 +171,22 @@ async def get_district_payload(token : str = Depends(get_districts_token)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)}"
         )
+
+def mp_employee_required(user: User = Depends(get_user)):
+    if not any(role_id in (5, 6) for role_id in user.roles_ids):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient role privileges"
+        )
+    return user 
+    
+def mp_boss_required(user: User = Depends(get_user)): 
+    if 5 not in user.roles_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Boss role privileges"
+        )
+    return user
     
 # Специализированные проверки
 class GetMpAdmin(AuthChecker):

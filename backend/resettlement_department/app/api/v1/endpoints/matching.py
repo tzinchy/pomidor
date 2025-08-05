@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from depends import apartment_service
+from service.auth import mp_employee_required
 from schema.apartment import ApartType, Matching
 from service.alghorithm import match_new_apart_to_family_batch
 from fastapi import File, HTTPException, UploadFile
@@ -9,7 +10,11 @@ from service.apartment_insert import insert_to_db
 from pathlib import Path
 
 
-router = APIRouter(prefix="/fisrt_matching", tags=["First Matching and Upload File"])
+router = APIRouter(
+    prefix="/fisrt_matching",
+    tags=["First Matching and Upload File"],
+    dependencies=[Depends(mp_employee_required)],
+)
 
 
 @router.get("/old_apartment/house_addresses")
@@ -36,7 +41,7 @@ async def start_matching(requirements: Matching):
         new_selected_addresses=requirements.new_apartment_house_address,
         old_selected_addresses=requirements.old_apartment_house_address,
         date=requirements.is_date,
-        is_shadow=requirements.is_shadow
+        is_shadow=requirements.is_shadow,
     )
 
     return matching_result

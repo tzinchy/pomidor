@@ -8,17 +8,15 @@ class UserLogin(BaseModel):
     @field_validator('login_or_email')
     @classmethod
     def validate_login_or_email(cls, v: str) -> str:
-        # Try to validate as email
         try:
-            return EmailStr._validate(v)  # Correct way in Pydantic V2
+            return EmailStr._validate(v)  
         except ValueError:
-            # If not email, validate as login
             if len(v) < 3:
                 raise ValueError("Login must be at least 3 characters")
             return v
 
 class UserRegister(BaseModel):
-    email: EmailStr  # This will auto-validate as email
+    email: EmailStr  
     password: str
 
 class UserResetEmail(BaseModel):
