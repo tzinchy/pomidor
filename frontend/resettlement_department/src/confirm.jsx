@@ -2,7 +2,7 @@
 import { createRoot } from "react-dom/client";
 import RConfirmationModal from "./ApartTable/ConfirmationModalResponse";
 
-export function showConfirmation({ title, message, confirmText, cancelText }) {
+export function showConfirmation({ title = "Подтверждение действия", message, confirmText = "Да", cancelText = "Нет" }) {
   return new Promise((resolve) => {
     const modalRoot = document.createElement("div");
     document.body.appendChild(modalRoot);

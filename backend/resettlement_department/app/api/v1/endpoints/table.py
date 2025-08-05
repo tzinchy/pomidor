@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse
 from fastapi.concurrency import run_in_threadpool
 from depends import apartment_service, order_service, offer_service
 from fastapi import APIRouter, Body, HTTPException, Query, Depends
+from models.xlsx import CurrentTableRequest
 from schema.apartment import ApartType
 from schema.user import User
 from service.auth import get_user
@@ -197,14 +198,12 @@ async def set_entrance_number_for_many(
     )
 
 
-@router.get("/curent_table")
-async def get_current_table(
-    apart_type: ApartType = Query(...),
-    apart_ids: List[int] = Query(...),
-    with_last_offer: Optional[bool] = Query(None,),
-):
+@router.post("/curent_table")
+async def get_current_table(payload: CurrentTableRequest):
     filepath = await apartment_service.get_current_table(
-        apart_type=apart_type, apart_ids=apart_ids, with_last_offer=with_last_offer
+        apart_type=payload.apart_type,
+        apart_ids=payload.apart_ids,
+        with_last_offer=payload.with_last_offer,
     )
     return FileResponse(
             path=filepath,

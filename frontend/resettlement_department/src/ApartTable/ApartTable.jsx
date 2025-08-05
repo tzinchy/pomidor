@@ -1131,6 +1131,17 @@ const handleConfirmApprove = (e) => {
               >
                 {`Подборов не будет`}
               </button>
+              <button
+                key={`Ожидание`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setStatusForMany(`Ожидание`, apartType);
+                }}
+                className="group flex w-full rounded-md px-2 py-2 text-xs text-gray-900 hover:bg-gray-100"
+              >
+                {`Ожидание`}
+              </button>
           </div>
         </Popover.Panel>
       </Transition>
