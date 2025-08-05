@@ -12,17 +12,24 @@ export default function DownloadApartsXLSX({ apartType, apartments, withLastOffe
     }
 
     try {
-      const params = new URLSearchParams({
+    //   const params = new URLSearchParams({
+    //     apart_type: apartType,
+    //     with_last_offer: withLastOffer.toString(),
+    //   });
+
+    //   apartIds.forEach(id => params.append("apart_ids", id));
+
+    const response = await fetch(`${HOSTLINK}/tables/curent_table`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         apart_type: apartType,
-        with_last_offer: withLastOffer.toString(),
-      });
-
-      apartIds.forEach(id => params.append("apart_ids", id));
-
-      const response = await fetch(`${HOSTLINK}/tables/curent_table?${params.toString()}`, {
-        method: "GET",
-        // credentials: "include", // включи при авторизации через сессию
-      });
+        apart_ids: apartIds,
+        with_last_offer: withLastOffer,
+      }),
+    });
 
       if (!response.ok) throw new Error("Ошибка сети");
 
