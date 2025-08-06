@@ -13,7 +13,7 @@ elif current_os == 'Darwin':
 elif current_os == 'Windows':
     folder_name = 'win64_instantclient_23'
 
-INSTANT_CLIENT_DIR = Path(__file__).resolve().parent / f"oracle/{folder_name}"
+INSTANT_CLIENT_DIR = Path(__file__).resolve().parent.parent.parent / f"oracle/{folder_name}"
 oracledb.init_oracle_client(lib_dir=str(INSTANT_CLIENT_DIR))
 
 class OracleClient:
