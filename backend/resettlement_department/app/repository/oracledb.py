@@ -1,6 +1,18 @@
 import oracledb
+import os
+import platform
 
-oracledb.init_oracle_client(lib_dir='/Users/viktor/Downloads/instantclient_23_3')
+current_os = platform.system()
+print(current_os)
+folder_name = ''
+if current_os == 'Linux':
+    folder_name = 'linux_instantclient_23'
+elif current_os == 'Darwin':
+    folder_name = 'macos_instantclient_23'
+elif current_os == 'Windows':
+    folder_name = 'win64_instantclient_23'
+
+oracledb.init_oracle_client(lib_dir=f'{os.getcwd()}/../oracle/{folder_name}')
 
 class OracleClient:
     def __init__(self, user: str, password: str, host: str, port: int, service_name: str):
