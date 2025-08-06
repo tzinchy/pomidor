@@ -1,6 +1,7 @@
 import oracledb
 import os
 import platform
+from pathlib import Path
 
 current_os = platform.system()
 print(current_os)
@@ -12,7 +13,8 @@ elif current_os == 'Darwin':
 elif current_os == 'Windows':
     folder_name = 'win64_instantclient_23'
 
-oracledb.init_oracle_client(lib_dir=f'{os.getcwd()}/../oracle/{folder_name}')
+INSTANT_CLIENT_DIR = Path(__file__).resolve().parent / f"oracle/{folder_name}"
+oracledb.init_oracle_client(lib_dir=str(INSTANT_CLIENT_DIR))
 
 class OracleClient:
     def __init__(self, user: str, password: str, host: str, port: int, service_name: str):
