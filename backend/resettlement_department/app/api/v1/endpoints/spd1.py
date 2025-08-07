@@ -1,14 +1,21 @@
 from fastapi import APIRouter, File, HTTPException, UploadFile, Depends
+from fastapi.responses import JSONResponse
 from fastapi.concurrency import run_in_threadpool
-from repository.oracledb import OracleClient
+from service.spd1_service import Spd1Service
 from depends import get_oracle_client
+
+spd1_service = Spd1Service(client=get_oracle_client())
 
 
 router = APIRouter(
     prefix="/spd1", tags=["SPD1"], 
 )
 
-@router.get("/test")
-async def test_spd1(client: OracleClient = Depends(get_oracle_client)):
-
-    return await run_in_threadpool(client.fetchall, "SELECT a.appid, a.APPNAME, a.APPDATE, a.PGUDATE, a.MODUSER, a.MODCOMP, sdk.actdocnum, f.CADNUM, a2.DOCNAME, a2.SIGNSTATUS, a2.CREATEDATE, a2.SIGNEDDOCNAME, a2.SIGNEDDOCDATE FROM GOSUSLDOC.APPLICATIONS a LEFT JOIN GOSUSLDOC.APPLICATIONS_DK sdk ON a.APPID = sdk.APPID LEFT JOIN GOSUSLDOC.FLATS f ON a.APPID = f.APPID LEFT JOIN  GOSUSLDOC.APPDOCS a2 ON a.APPID = a2.APPID WHERE a.REGID = 934 AND sdk.ACTDOCNUM IN ('59-70-959001-2025-0922') ORDER BY a.PGUDATE DESC")
+@router.get("/update_data")
+async def update_spd1_data():
+    '''
+    router for update scheduler
+    just add "curl -X GET http://127.0.0.1:PORT/spd1/update_data" in the crontab
+    '''
+    result, detail = await spd1_service.update_data()
+    return JSONResponse(content={"message": detail}, status_code=result)
