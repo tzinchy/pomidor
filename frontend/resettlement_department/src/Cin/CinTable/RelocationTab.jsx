@@ -66,11 +66,11 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
       [newId]: {
         inspection_date: null,
         relocation_date: null,
-        ranges: stages.id === 1 ? [{
+        ranges: [{
           date_range: null,
           time_from: '',
           time_to: ''
-        }] : [],
+        }],
         houses: ['']
       }
     }));
@@ -256,15 +256,15 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
 
       // Инициализация datepicker'ов для периодов отселения (только для первого этапа)
       if (stage.id === 1) {
-        stage.ranges.forEach((_, rangeIndex) => {
+        stage.ranges.forEach((range, rangeIndex) => {
           const rangeInput = document.getElementById(`date-range-${stage.id}-${rangeIndex}-${stageIndex}`);
           if (rangeInput) {
             const rangePicker = new AirDatepicker(rangeInput, {
               locale: localeRu,
               range: true,
               dateFormat: 'dd.MM.yyyy',
-              selectedDates: stage.ranges[rangeIndex].date_range 
-                ? stage.ranges[rangeIndex].date_range.split('_').map(d => new Date(d)).filter(d => !isNaN(d.getTime()))
+              selectedDates: range.date_range 
+                ? range.date_range.split('_').map(d => new Date(d)).filter(d => !isNaN(d.getTime()))
                 : [],
               onSelect: ({ date }) => {
                 handleRangeChange(stage.id, rangeIndex, date);
@@ -284,7 +284,17 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
   useEffect(() => {
     const stagesForSave = Object.entries(stages).map(([id, data]) => ({
       id: Number(id),
-      ...data
+      ...data,
+      // Преобразуем ranges в строку перед сохранением
+      ranges: data.ranges.map(range => ({
+        ...range,
+        date_range_display: range.date_range 
+          ? `с ${formatDateForDisplay(range.date_range.split('_')[0])} по ${formatDateForDisplay(range.date_range.split('_')[1])}`
+          : '',
+        time_display: range.time_from && range.time_to 
+          ? `с ${range.time_from} до ${range.time_to}`
+          : ''
+      }))
     }));
     
     setFormData(prev => ({
@@ -348,37 +358,29 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
               </label>
               
               {stage.ranges.map((range, rangeIndex) => (
-                <div key={`range-${stage.id}-${rangeIndex}`} className="flex items-center">
-                  <div className="flex items-center gap-2 w-1/2">
-                    <div className="flex-1">
-                      <input
-                        id={`date-range-${stage.id}-${rangeIndex}-${stageIndex}`}
-                        type="text"
-                        value={formatRangeForDisplay(range.date_range)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        readOnly
-                        placeholder="Выберите период"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 w-1/2">
-                    <div className="flex-1 flex items-center gap-2">
-                      <label className="text-sm font-medium text-gray-700 ml-2">с</label>
-                      <input
-                        type="time"
-                        value={range.time_from}
-                        onChange={(e) => handleTimeChange(stage.id, rangeIndex, 'time_from', e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      <label className="text-sm font-medium text-gray-700">до</label>
-                      <input
-                        type="time"
-                        value={range.time_to}
-                        onChange={(e) => handleTimeChange(stage.id, rangeIndex, 'time_to', e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
+                <div key={`range-${stage.id}-${rangeIndex}`} className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 flex items-center gap-2">
+                    <input
+                      id={`date-range-${stage.id}-${rangeIndex}-${stageIndex}`}
+                      type="text"
+                      value={range.date_range ? formatRangeForDisplay(range.date_range) : ''}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      readOnly
+                      placeholder="Выберите период"
+                    />
+                    <input
+                      type="time"
+                      value={range.time_from}
+                      onChange={(e) => handleTimeChange(stage.id, rangeIndex, 'time_from', e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <span>-</span>
+                    <input
+                      type="time"
+                      value={range.time_to}
+                      onChange={(e) => handleTimeChange(stage.id, rangeIndex, 'time_to', e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
                   </div>
                   {stage.ranges.length > 1 && (
                     <button
