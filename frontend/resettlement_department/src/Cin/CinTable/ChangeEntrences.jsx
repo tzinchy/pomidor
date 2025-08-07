@@ -1,5 +1,24 @@
+import { useEffect } from "react";
+import AirDatepicker from 'air-datepicker';
+import 'air-datepicker/air-datepicker.css';
+import localeRu from 'air-datepicker/locale/ru';
 
-export default function ChangeEntrences({newEntranceNumber, setNewEntranceNumber, handleAddEntrance, entrances, handleRemoveEntrance}) {
+export default function ChangeEntrences({newEntranceNumber, setNewEntranceNumber, handleAddEntrance, entrances, handleRemoveEntrance, activeTab, dates }) {
+
+    useEffect(() => {
+        if (activeTab === 'cin') {
+        entrances.forEach(entrance => {
+            new AirDatepicker(`#datepicker-${entrance}`, {
+            locale: localeRu,
+            dateFormat: 'dd.MM.yyyy',
+            selectedDates: [dates[entrance] ? new Date(dates[entrance]) : new Date()],
+            onSelect: ({ date }) => {
+                handleDateChange(entrance, date.toISOString());
+            }
+            });
+        });
+        }
+    }, [activeTab, entrances]);
 
     return (
         <div className="mt-6">
