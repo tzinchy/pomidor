@@ -1,6 +1,7 @@
 .venv
 .env
 pycache
+/oracle
 /pycache
 uploads/
 app/uploads/
