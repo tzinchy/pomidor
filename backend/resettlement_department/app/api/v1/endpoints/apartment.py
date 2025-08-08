@@ -176,9 +176,9 @@ async def set_notes_for_many(
 def push_container_for_aparts(apart_ids: Rematch):
     print(apart_ids.apartment_ids)
     generate_excel_from_two_dataframes(affair_ids=apart_ids.apartment_ids)
-    update_apart_status(apart_ids=apart_ids.apartment_ids)
+    #update_apart_status(apart_ids=apart_ids.apartment_ids)
     file_path = "./uploads/container_0.xlsx"
-    upload_container(history_id=0, file_path=file_path)
+    #upload_container(history_id=0, file_path=file_path)
 
 
 @router.patch("/set_district_notes_for_many")

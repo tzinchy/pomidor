@@ -3,29 +3,46 @@ import AirDatepicker from 'air-datepicker';
 import 'air-datepicker/air-datepicker.css';
 import localeRu from 'air-datepicker/locale/ru';
 import AddressDropdown from "./AddressDropdown";
+import { HOSTLINK } from "../..";
 
-export default function RelocationTab({ addresses, formData, setFormData }) {
+export default function RelocationTab({ formData, setFormData }) {
   const [stages, setStages] = useState(() => {
-    const initialStages = formData.relocation_stages || [
-      {
-        id: 1,
+    const initialStages = formData.otsel_addresses_and_dates || {
+      1: {
         inspection_date: null,
         relocation_date: null,
         ranges: [{
           date_range: null,
           time_from: '',
-          time_to: ''
+          time_to: '',
+          final: ''
         }],
         houses: []
       }
-    ];
-    
-    return initialStages.reduce((acc, stage) => {
-      const { id, ...rest } = stage;
-      acc[id] = rest;
-      return acc;
-    }, {});
+    };
+    return initialStages;
   });
+
+  const [oldAddresses, setOldAddresses] = useState([]);
+
+  useEffect(() => { 
+    const fetchData = async () => {
+        try {
+            // Загрузка адресов
+            const url = new URL(`${HOSTLINK}/tables/house_addresses`);
+            url.searchParams.append('apart_type', 'OldApart');            
+            const response = await fetch(url.toString(), {
+                credentials: 'include',
+            });
+            const fetchedData = await response.json();
+            setOldAddresses(fetchedData);
+        } catch (error) {
+            console.log('Error fetching data: ', error);
+        }
+    };
+    
+    fetchData();
+  }, []);
 
   const stagesArray = Object.entries(stages).map(([id, data]) => ({
     id: Number(id),
@@ -56,6 +73,18 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
     }
   };
 
+  const formatFinalRangeString = (range) => {
+    if (!range.date_range) return '';
+    
+    const [start, end] = range.date_range.split('_');
+    const startDate = formatDateForDisplay(start);
+    const endDate = formatDateForDisplay(end);
+    const timeFrom = range.time_from || '';
+    const timeTo = range.time_to || '';
+    
+    return `${startDate} - ${endDate}${timeFrom ? ` с ${timeFrom} до ${timeTo}` : ''}`;
+  };
+
   const handleAddStage = () => {
     const newId = Object.keys(stages).length > 0 
       ? Math.max(...Object.keys(stages).map(Number)) + 1 
@@ -69,7 +98,8 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
         ranges: [{
           date_range: null,
           time_from: '',
-          time_to: ''
+          time_to: '',
+          final: ''
         }],
         houses: ['']
       }
@@ -119,7 +149,8 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
         ranges: [...prev[stageId].ranges, {
           date_range: null,
           time_from: '',
-          time_to: ''
+          time_to: '',
+          final: ''
         }]
       }
     }));
@@ -177,7 +208,11 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
 
       setStages(prev => {
         const newRanges = [...prev[stageId].ranges];
-        newRanges[rangeIndex].date_range = rangeString;
+        newRanges[rangeIndex] = {
+          ...newRanges[rangeIndex],
+          date_range: rangeString,
+          final: formatFinalRangeString({ ...newRanges[rangeIndex], date_range: rangeString })
+        };
         
         return {
           ...prev,
@@ -195,7 +230,11 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
   const handleTimeChange = (stageId, rangeIndex, field, value) => {
     setStages(prev => {
       const newRanges = [...prev[stageId].ranges];
-      newRanges[rangeIndex][field] = value;
+      newRanges[rangeIndex] = {
+        ...newRanges[rangeIndex],
+        [field]: value,
+        final: formatFinalRangeString({ ...newRanges[rangeIndex], [field]: value })
+      };
       
       return {
         ...prev,
@@ -254,7 +293,6 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
         pickers.push(relocationPicker);
       }
 
-      // Инициализация datepicker'ов для периодов отселения (только для первого этапа)
       if (stage.id === 1) {
         stage.ranges.forEach((range, rangeIndex) => {
           const rangeInput = document.getElementById(`date-range-${stage.id}-${rangeIndex}-${stageIndex}`);
@@ -282,24 +320,9 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
   }, [stagesArray]);
 
   useEffect(() => {
-    const stagesForSave = Object.entries(stages).map(([id, data]) => ({
-      id: Number(id),
-      ...data,
-      // Преобразуем ranges в строку перед сохранением
-      ranges: data.ranges.map(range => ({
-        ...range,
-        date_range_display: range.date_range 
-          ? `с ${formatDateForDisplay(range.date_range.split('_')[0])} по ${formatDateForDisplay(range.date_range.split('_')[1])}`
-          : '',
-        time_display: range.time_from && range.time_to 
-          ? `с ${range.time_from} до ${range.time_to}`
-          : ''
-      }))
-    }));
-    
     setFormData(prev => ({
       ...prev,
-      relocation_stages: stagesForSave
+      otsel_addresses_and_dates: stages
     }));
   }, [stages, setFormData]);
 
@@ -350,7 +373,6 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
             </div>
           </div>
 
-          {/* График работы только для первого этапа */}
           {stage.id === 1 && (
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
@@ -416,7 +438,7 @@ export default function RelocationTab({ addresses, formData, setFormData }) {
               <div key={`house-${stage.id}-${houseIndex}`} className="flex items-center gap-2">
                 <div className="w-full">
                   <AddressDropdown
-                    addresses={addresses}
+                    addresses={oldAddresses}
                     value={house}
                     onChange={(value) => handleHouseChange(stage.id, houseIndex, value)}
                     placeholder="Выберите адрес отселяемого дома"

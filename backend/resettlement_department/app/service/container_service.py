@@ -113,7 +113,8 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
 			c.full_cin_address,
 			oa.district,
 			na.cad_num,
-			mail_index
+			mail_index,
+			otsel_addresses_and_dates
         FROM unnst o
         JOIN old_apart oa USING (affair_id)
         JOIN new_apart na USING (new_apart_id) 
@@ -142,10 +143,9 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
         'full_old_house_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
         'new_address', 'new_number', 'full_living_area', 'total_living_area', 'room_count', 
         'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'entrance_number', 'start_date', 'otdel',
-        'full_house_address', 'full_cin_address', 'old_district', 'old_cad_num', 'mail_index'
+        'full_house_address', 'full_cin_address', 'old_district', 'old_cad_num', 'mail_index', 'otsel_addresses_and_dates'
     ])
 
-    print(df['full_living_area'], df['total_living_area'], df['living_area'])
     print(df)
 
     # Создаем новую книгу Excel и выбираем активный лист
@@ -183,6 +183,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
     row_num = 3  # Начинаем с третьей строки
 
     for index, row in df.iterrows():
+        print('otsel_addresses_and_dates', row['otsel_addresses_and_dates'])
         if row['old_district'] in ("ЗелАО", "ВАО", "ЮВАО", "САО", "СВАО"):
             report_id = 108404 if row['type_of_settlement'] == "частная собственность" else 108407
         elif row['old_district'] in ("ЗАО", "СЗАО", "ЮАО", "ЮЗАО", "ТАО", "НАО"):

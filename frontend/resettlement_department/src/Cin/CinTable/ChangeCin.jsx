@@ -597,7 +597,6 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
                             </>
                         ) : (
                             <RelocationTab 
-                                addresses={newAddresses} 
                                 formData={formData} 
                                 setFormData={setFormData} 
                                 />
