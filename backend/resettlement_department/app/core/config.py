@@ -4,6 +4,14 @@ import os
 
 load_dotenv()
 
+@dataclass
+class OracleSettings:
+    DB_HOST: str = os.environ.get("ORACLE_DB_HOST")
+    DB_PORT: str = os.environ.get("ORACLE_DB_PORT")
+    DB_USER: str = os.environ.get("ORACLE_DB_USER")
+    DB_PASSWORD: str = os.environ.get("ORACLE_DB_PASS")
+    DB_NAME: str = os.environ.get("ORACLE_DB_NAME")
+
 
 @dataclass
 class ProjectManagementSettings:

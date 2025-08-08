@@ -9,6 +9,7 @@ from api.v1.endpoints.cin import router as cin_router
 from api.v1.endpoints.admin import router as admin_router 
 from api.v1.endpoints.mock_oath import router as mock_oath_router
 from api.v1.endpoints.mail_index import router as mail_index_router 
+from api.v1.endpoints.spd1 import router as spd1_router 
 from fastapi import APIRouter
 
 router = APIRouter()
@@ -24,7 +25,8 @@ routers = [
     cin_router,
     admin_router,
     mock_oath_router, 
-    mail_index_router
+    mail_index_router,
+    spd1_router
 ]
 
 for endpoint_router in routers:

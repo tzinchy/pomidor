@@ -10,8 +10,23 @@ WITH unnested_offer AS (
         updated_at,
         (value->>'decline_reason_id')::integer AS decline_reason_id
     FROM offer, 
-    jsonb_each(new_aparts)
-    order by created_at ASC, updated_at ASC
+        jsonb_each(new_aparts)
+),
+spd1_filtered AS (
+    SELECT
+        offer_id,
+        appid,
+        appname,
+        appdate,
+        pgudate,
+        kpu_num,
+        cad_num,
+        docname,
+        signstatus,
+        createdate,
+        signeddocname,
+        signeddocdate
+    FROM spd1
 ),
 joined_aparts AS (
     SELECT 
@@ -34,7 +49,20 @@ joined_aparts AS (
                 'sentence_date', o.sentence_date::DATE,
                 'answer_date', o.answer_date::DATE,
                 'decline_reason_id', o.decline_reason_id,
-                'created_at', o.created_at::DATE
+                'created_at', o.created_at::DATE,
+
+                --spd1
+                'spd_appid', s1.appid,
+                'spd_appname', s1.appname,
+                'spd_appdate', s1.appdate,
+                'spd_pgudate', s1.pgudate,
+                'spd_kpu_num', s1.kpu_num,
+                'spd_cad_num', s1.cad_num,
+                'spd_docname', s1.docname,
+                'spd_signstatus', s1.signstatus,
+                'spd_createdate', s1.createdate,
+                'spd_signeddocname', s1.signeddocname,
+                'spd_signeddocdate', s1.signeddocdate
             )
         ) AS offers
     FROM 
@@ -43,15 +71,19 @@ joined_aparts AS (
         new_apart na ON o.new_apart_id = na.new_apart_id
     LEFT JOIN 
         status s ON o.status_id = s.status_id
-    LEFT JOIN
+    LEFT JOIN 
         decline_reason dr ON o.decline_reason_id = dr.decline_reason_id  
-	LEFT JOIN old_apart  oa USING (affair_id)
+    LEFT JOIN 
+        old_apart oa USING (affair_id)
+    LEFT JOIN 
+        spd1_filtered s1 ON o.offer_id = s1.offer_id
     WHERE 
         o.new_apart_id IS NOT NULL  
     GROUP BY 
         o.offer_id,
         o.new_apart_id
 )
+
 SELECT
     new_apart.new_apart_id, 
     new_apart.house_address,
@@ -67,14 +99,16 @@ SELECT
     new_apart.floor,
     new_apart.rsm_apart_id, 
     new_apart.status_id,
+
     JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
         joined_aparts.offers
         ORDER BY joined_aparts.offer_id
     ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL) AS offers
+
 FROM new_apart  
 LEFT JOIN joined_aparts USING (new_apart_id)
-WHERE new_apart_id = :apart_id
+WHERE new_apart.new_apart_id = :apart_id
 GROUP BY
     new_apart.new_apart_id, 
     new_apart.house_address,
