@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from core.logger import logger
 from models.cin import Cin
 from typing import Optional
+from schema.cin import CreateCin
 
 
 class CinRepository:  # Fixed typo in class name
@@ -34,7 +35,7 @@ class CinRepository:  # Fixed typo in class name
         except Exception as e: 
             print(e)
 
-    async def update_cin(self, cin):
+    async def update_cin(self, cin : Cin):
         async with self.db() as session:
             cin_data = cin.dict()
             
@@ -51,10 +52,10 @@ class CinRepository:  # Fixed typo in class name
             await session.execute(stmt)
             await session.commit()
 
-    async def create_cin(self, cin):
+    async def create_cin(self, cin : CreateCin):
         async with self.db() as session:
             try:
-                data = cin.dict(exclude_unset=True)
+                data = cin.model_dump()
                 stmt = insert(Cin).values(**data).returning(Cin)
                 result = await session.execute(stmt)
                 new_cin = result.scalar_one()

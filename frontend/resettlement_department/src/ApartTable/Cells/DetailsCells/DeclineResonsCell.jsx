@@ -28,7 +28,7 @@ export default function DeclineResonsCell({ props, newApartId, apartmentDetails,
         `${HOSTLINK}/tables/apartment/decline_reason/${decline_reason_id}/update_declined_reason`,
         {
           method: "PATCH",
-          credentials: "include",
+          credentials: 'include',
           headers: {
             "Content-Type": "application/json",
           },

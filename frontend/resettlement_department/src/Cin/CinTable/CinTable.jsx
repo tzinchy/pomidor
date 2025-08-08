@@ -36,7 +36,7 @@ export default function CinTable({cinData, fetchData}) {
             size: 100, // Фиксированная ширина
         },
         {
-            accessorKey: 'full_cin_address',
+            accessorKey: 'full_house_address',
             header: '"Правильный" адрес заселения',
             size: 100, // Фиксированная ширина
         },

@@ -32,7 +32,7 @@ export default function UpdateDataButton() {
                  type === "newApart" ? "newApart" : "orderDecisions"]: true
             }));
 
-            const response = await fetch(url, { method: "PATCH", credentials: "include" });
+            const response = await fetch(url, { method: "PATCH" , credentials: 'include',});
             if (!response.ok) throw new Error("Ошибка обновления");
             
             // Обновляем историю после успешного обновления
@@ -63,7 +63,7 @@ export default function UpdateDataButton() {
                  type === "offers" ? "offers" : "orderDecisions"]: true
             }));
 
-            const response = await fetch(url, {credentials: "include"});
+            const response = await fetch(url, {credentials: 'include',});
             if (!response.ok) throw new Error("Ошибка загрузки файла");
             
             const blob = await response.blob();
@@ -97,7 +97,7 @@ export default function UpdateDataButton() {
 
     const fetchAddresses = async () => {
         try {
-            const response = await fetch(`${HOSTLINK}/rsm/update_info_stat`, {credentials: "include"});
+            const response = await fetch(`${HOSTLINK}/rsm/update_info_stat`, {credentials: 'include',});
             if (!response.ok) throw new Error('Ошибка загрузки адресов');
             const data = await response.json();
             setUpdateHistory(data);
@@ -109,7 +109,7 @@ export default function UpdateDataButton() {
 
     const fetchStat = async () => {
         try {
-            const response = await fetch(`${HOSTLINK}/tables/get_stat`, {credentials: "include"});
+            const response = await fetch(`${HOSTLINK}/tables/get_stat`, {credentials: 'include',});
             if (!response.ok) throw new Error('Ошибка загрузки статистики');
             const data = await response.json();
             console.log('stat data', data);

@@ -11,6 +11,8 @@ from repository.new_apart_repository import NewApartRepository
 from repository.old_apart_repository import OldApartRepository
 from schema.apartment import ApartType
 from schema.user import User
+import pandas as pd 
+
 
 class ApartService:
     def __init__(
@@ -343,4 +345,32 @@ class ApartService:
             return {"filepath": output_path}
         except Exception as e:
             return {"error": str(e)}
+        
+    async def get_current_table(
+        self,
+        apart_type: str,
+        apart_ids : List[int] = None,
+        with_last_offer : Optional[bool] = None
+    ):
+        if apart_type == ApartType.OLD: 
+            if with_last_offer: 
+                result = await self.old_apart_repository.get_current_table_with_last_offer(apart_ids=apart_ids)
+            else: 
+                result = await self.old_apart_repository.get_current_table(apart_ids=apart_ids)
+        else: 
+            result = await self.new_apart_repository.get_current_table(apart_ids=apart_ids)
+        df = pd.DataFrame(result)
 
+        output_path = os.path.join(os.getcwd(), "././uploads", "current_table.xlsx")
+
+        await run_in_threadpool(df.to_excel, output_path, index=False)
+
+        return output_path
+                 
+    async def set_district_notes_for_many(
+        self, apart_ids: list[int], notes: str, apart_type: str
+    ):
+        if apart_type == ApartType.OLD:
+            return await self.old_apart_repository.set_district_notes(apart_ids, notes=notes)
+        else:
+            raise NotFoundException

@@ -18,6 +18,7 @@ export default function CinPage(){
     credentials: 'include',});
                 const fetchedData = await response.json();
                 setCinData(fetchedData);
+                console.log('fetchedData', fetchedData);
             } catch (error) {
                 console.log('Error fetching cin: ', error);
             }

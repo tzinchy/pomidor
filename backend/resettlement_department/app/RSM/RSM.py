@@ -21,7 +21,89 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import warnings
 import re
 import io
+from bs4 import BeautifulSoup
+import hashlib
+import itertools
+from fastapi import HTTPException
+class RsmLogin:
 
+    #алфавит из pOfw.js aaseta 
+    ALPHABET = "0123456789/+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+    def find_suffix_pow(self, base: str, max_len=4, required_leading_zero_bytes=2):
+        """
+        Подбирает суффикс, такой что sha1(base + ':' + suffix) начинается с required_leading_zero_bytes нулей
+        """
+        for length in range(1, max_len + 1):
+            for combo in itertools.product(self.ALPHABET, repeat=length):
+                suffix = ''.join(combo)
+                candidate = f"{base}:{suffix}"
+                digest = hashlib.sha1(candidate.encode("utf-8")).digest()
+                if digest.startswith(b'\x00' * required_leading_zero_bytes):
+                    return candidate
+        raise RuntimeError("Не найден рабочий proofOfWork")
+
+
+    def get_pow(self, login, password):
+        #урл для редиректа
+        base_url = 'https://sudir.mos.ru'
+
+        #урл для входа в рсм
+        url = 'https://sudir.mos.ru/blitz/login/methods/password?bo=%2Fblitz%2Foauth%2Fae%3Fresponse_type%3Dcode%26client_id%3Dwebrsm.mlc.gov%26redirect_uri%3Dhttp%3A%2F%2Fwebrsm.mlc.gov%3A5222%2FSudir%2FAuth%26scope%3Dopenid%2Bprofile'
+        
+        #открываем сессию
+        session = requests.Session()
+
+        #Заголовки из браузера, не уверен нужны ли они
+        headers = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Origin": "https://sudir.mos.ru",
+        "Referer": "https://sudir.mos.ru/blitz/login/methods/password?bo=%2Fblitz%2Foauth%2Fae%3Fresponse_type%3Dcode%26client_id%3Dwebrsm.mlc.gov%26redirect_uri%3Dhttp%3A%2F%2Fwebrsm.mlc.gov%3A5222%2FSudir%2FAuth%26scope%3Dopenid%2Bprofile",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        }
+        #нулевой гет чтобы получить первичный куки и редирект обратно на форму входа
+        response = requests.get(url, allow_redirects=False, headers=headers)
+
+        #начальный гет чтобы получить все Set-Cookie
+        response = session.get(base_url+response.headers['Location'], headers=headers)
+        # print(response.status_code)
+        # print(session.cookies.get_dict())  # тут уже будут все куки
+
+        #Заводит пэйлоад
+        soup = BeautifulSoup(response.text, 'html.parser')
+        request_data = {
+            'proofOfWork': '',
+            'isDelayed': 'false',
+            'login': '',
+            'password': '',
+            'bfp': '23f2ab015b787a1a0bad5d5b5b3e99b9' #какой-то служебный токен, статичный
+        }
+        #достаем значение value из input 
+        proof_input = soup.find('input', attrs={'name': 'proofOfWork'}).get('value')
+
+        base = proof_input.rstrip(':')
+        #генерируем валидный pow
+        final_proof = self.find_suffix_pow(base)
+
+        request_data['proofOfWork'] = final_proof
+        request_data['login'] = login
+        request_data['password'] = password
+
+        #засылваем форму входа, теперь можно дергать токен РСМ
+        response = session.post(url, data=request_data, allow_redirects=True, headers=headers)
+        print(session.cookies.get_dict())
+        print(response.status_code)
+        #вытаскиваем токен из куки сессии
+        if session.cookies.get_dict()['Rsm.Cookie'] is not None:
+            return session.cookies.get_dict()['Rsm.Cookie']
+        else: 
+            raise HTTPException(
+            status_code=424,
+            detail="Авторизация во внешней системе не удалась (401)"
+        )
 
 def generate_key():
     """
@@ -168,6 +250,11 @@ def get_cookie():
     time.sleep(3)
     driver.find_element(By.XPATH, '//*[@id="bind"]').click()
     cooks = driver.get_cookie("Rsm.Cookie")
+    if cooks["value"] is None: 
+        raise HTTPException(
+            status_code=424,
+            detail="Авторизация во внешней системе не удалась (401)"
+        )
     cookie = cooks["value"]
     driver.close()
     return cookie
@@ -208,15 +295,16 @@ def check_token():
     response = requests.get(
         RSM.PING_LINK, cookies={"Rsm.Cookie": value}, allow_redirects=False
     )
-
     if response.status_code == 200:
         return value
     elif response.status_code == 302:
-        token = get_cookie()
+        rsm_login = RsmLogin()
+        token = rsm_login.get_pow(RSM.LOGIN, RSM.PASS)
         print(token)
 
         query = f"""UPDATE env.env
-                SET value = '{token}'
+                SET value = '{token}',
+                    updated_at = NOW()
                 WHERE name = 'rsm_token';
                 """
 

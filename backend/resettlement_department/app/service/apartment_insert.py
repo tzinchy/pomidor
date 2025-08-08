@@ -450,7 +450,7 @@ def insert_data_to_new_apart(new_apart_df: pd.DataFrame):
             "РСМ_Кад номер, квартира": "cad_num",
             "К_Инв/к": "for_special_needs_marker",
             "К_№ подъезда": "entrance_number",
-            "Сл.инф_Free_Space_ID": "rsm_apart_id",
+            "Сл.инф_Free_Space_ID": "rsm_apart_id"
         }
         new_apart_df.rename(
             columns=columns_name,

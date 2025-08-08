@@ -90,7 +90,9 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
   
     try {
       const response = await fetch(
-        `${HOSTLINK}/tables/apartment/${apartmentId}/void_aparts`, {credentials: "include"}
+        `${HOSTLINK}/tables/apartment/${apartmentId}/void_aparts`, {
+          credentials: 'include',
+        }
       );
   
       if (!response.ok) {
@@ -285,7 +287,7 @@ export default function ManualSelectionModal({ isOpen, onClose, apartmentId, fet
         `${HOSTLINK}/tables/apartment/${apartmentId}/manual_matching?apart_type=OldApart`,
         {
           method: "POST",
-          credentials: "include",
+          credentials: 'include',
           headers: {
             "Content-Type": "application/json",
           },

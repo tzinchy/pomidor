@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body, Response
 
-router = APIRouter(prefix="/mock-oath")
+router = APIRouter(prefix="/mock-oath", tags=['mock-oath'])
 
 
 @router.post("")
