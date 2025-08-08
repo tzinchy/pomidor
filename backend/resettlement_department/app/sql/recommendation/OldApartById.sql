@@ -10,7 +10,23 @@ WITH unnested_offer AS (
         updated_at,
         (value->>'decline_reason_id')::integer AS decline_reason_id 
     FROM offer, 
-    jsonb_each(new_aparts) AS each(key, value)
+        jsonb_each(new_aparts) AS each(key, value)
+),
+spd1_filtered AS (
+    SELECT 
+        offer_id,
+        appid,
+        appname,
+        appdate,
+        pgudate,
+        kpu_num,
+        cad_num,
+        docname,
+        signstatus,
+        createdate,
+        signeddocname,
+        signeddocdate
+    FROM public.spd1
 ),
 joined_aparts AS (
     SELECT 
@@ -42,7 +58,20 @@ joined_aparts AS (
                     'entrance', dr.entrance, 
                     'apartment_layout', dr.apartment_layout, 
                     'notes', dr.notes
-                )
+                ),
+
+                --спд1
+                'spd_appid', s1.appid,
+                'spd_appname', s1.appname,
+                'spd_appdate', s1.appdate,
+                'spd_pgudate', s1.pgudate,
+                'spd_kpu_num', s1.kpu_num,
+                'spd_cad_num', s1.cad_num,
+                'spd_docname', s1.docname,
+                'spd_signstatus', s1.signstatus,
+                'spd_createdate', s1.createdate,
+                'spd_signeddocname', s1.signeddocname,
+                'spd_signeddocdate', s1.signeddocdate
             )
         ) AS new_apartments
     FROM 
@@ -53,12 +82,15 @@ joined_aparts AS (
         status s ON o.status_id = s.status_id
     LEFT JOIN 
         decline_reason dr ON o.decline_reason_id = dr.decline_reason_id  
+    LEFT JOIN 
+        spd1_filtered s1 ON o.offer_id = s1.offer_id
     WHERE 
         o.new_apart_id IS NOT NULL  
     GROUP BY 
         o.offer_id,
         o.affair_id
 )
+
 SELECT 
     old_apart.affair_id, 
     old_apart.house_address,
@@ -77,16 +109,19 @@ SELECT
     old_apart.floor,
 	affair_timeline.timeline_events,
     old_apart.status_id,
+
     JSONB_OBJECT_AGG(
         joined_aparts.offer_id::text,
         joined_aparts.new_apartments
         ORDER BY joined_aparts.offer_id
     ) FILTER (WHERE joined_aparts.offer_id IS NOT NULL) AS offers
+
 FROM
     old_apart  
 LEFT JOIN 
     joined_aparts ON old_apart.affair_id = joined_aparts.affair_id
-LEFT JOIN affair_timeline ON affair_timeline.old_apart_id = old_apart.affair_id
+LEFT JOIN 
+    affair_timeline ON affair_timeline.old_apart_id = old_apart.affair_id
 WHERE old_apart.affair_id = :apart_id
 GROUP BY 
     old_apart.affair_id, 

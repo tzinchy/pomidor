@@ -8,6 +8,8 @@ from repository.offer_repository import OfferRepository
 from repository.old_apart_repository import OldApartRepository
 from repository.order_repository import OrderRepository
 from repository.mail_index_repository import MailIndexRepositroy
+from repository.oracledb import OracleClient
+from core.config import OracleSettings
 
 from service.apart_service import ApartService
 from service.cin_service import CinService
@@ -42,3 +44,13 @@ cin_service = CinService(cin_repository)
 
 mail_index_repository = MailIndexRepositroy(project_managment_session)
 mail_index_service = MailIndexService(mail_index_repository)
+
+oracle_client = OracleClient(
+    user=OracleSettings.DB_USER,
+    password=OracleSettings.DB_PASSWORD,
+    host=OracleSettings.DB_HOST,
+    port=OracleSettings.DB_PORT,
+    service_name=OracleSettings.DB_NAME
+)
+def get_oracle_client() -> OracleClient:
+    return oracle_client

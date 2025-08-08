@@ -17,6 +17,8 @@ from service.container_service import (
 )
 from service.container_service import update_apart_status
 from service.auth import mp_employee_required, User
+from repository.spd1_repository import Spd1Repository
+from depends import get_oracle_client
 
 router = APIRouter(prefix="/tables/apartment", tags=["Apartment Action"])
 
@@ -173,12 +175,15 @@ async def set_notes_for_many(
 
 
 @router.patch("/push_container_for_aparts")
-def push_container_for_aparts(apart_ids: Rematch):
+async def push_container_for_aparts(apart_ids: Rematch, client=Depends(get_oracle_client)):
+    spd1_repository = Spd1Repository()
     print(apart_ids.apartment_ids)
-    generate_excel_from_two_dataframes(affair_ids=apart_ids.apartment_ids)
+    df_for_spd = generate_excel_from_two_dataframes(affair_ids=apart_ids.apartment_ids)
     #update_apart_status(apart_ids=apart_ids.apartment_ids)
     file_path = "./uploads/container_0.xlsx"
     #upload_container(history_id=0, file_path=file_path)
+    await spd1_repository.insert_data(await spd1_repository.get_spd_1_orders(df_for_spd, client=client))
+
 
 
 @router.patch("/set_district_notes_for_many")

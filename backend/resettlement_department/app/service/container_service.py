@@ -89,6 +89,8 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
             ORDER BY offer_id DESC
         )
         SELECT 
+            oa.kpu_number,
+            o.offer_id,
             oa.full_house_address, 
             oa.apart_number, 
             oa.type_of_settlement, 
@@ -139,13 +141,17 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
     print('aparts', aparts)
 
     # Создаем DataFrame из результатов запроса
-    df = pd.DataFrame(aparts, columns=[
+    df = pd.DataFrame(aparts, columns=['kpu', 'offer_id',
         'full_old_house_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
         'new_address', 'new_number', 'full_living_area', 'total_living_area', 'room_count', 
         'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'entrance_number', 'start_date', 'otdel',
         'full_house_address', 'full_cin_address', 'old_district', 'old_cad_num', 'mail_index', 'otsel_addresses_and_dates'
     ])
 
+    df_for_spd = df[['kpu', 'offer_id']]
+    df = df.drop(['kpu', 'offer_id'], axis=1)
+
+    print(df['full_living_area'], df['total_living_area'], df['living_area'])
     print(df)
 
     # Создаем новую книгу Excel и выбираем активный лист
@@ -235,6 +241,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
     print(f"Excel файл '{output_path}' создан.")
     connection.close()
     print('-------------------------------------------------------------\nDONE\n---------------------------------------------------------------------')
+    return df_for_spd
 
 def set_is_uploaded(history_id):
     connection = get_db_connection()
