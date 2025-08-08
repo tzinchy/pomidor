@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
-import { HOSTLINK } from "../..";
+import { canSeeDashboard, HOSTLINK } from "../..";
 import DeclineModal from "./DeclineModal";
 
 export default function DetailsStatusCell({
@@ -26,7 +26,7 @@ export default function DetailsStatusCell({
   const [apartment_layout, setApartment_layout] = useState("");
   const [notes, setNotes] = useState("");
 
-  const colors = {
+  const colors = canSeeDashboard ? {
     "Ждёт одобрения": "bg-blue-100 text-blue-500",
     "Подготовить смотровой": "bg-orange-100 text-orange-500",
     'Ожидание': "bg-yellow-100 text-amber-600",
@@ -35,6 +35,9 @@ export default function DetailsStatusCell({
     'Суд': "bg-red-300 text-white",
     "МФР Компенсация": "bg-violet-200 text-violet-500",
     "МФР Докупка": "bg-violet-200 text-violet-500",
+  } : {
+    'Согласие': "bg-green-100 text-emerald-600",
+    'Отказ': "bg-red-100  text-red-700 ",
   };
 
   const toggleDropdown = () => setIsOpen(!isOpen);
@@ -81,7 +84,7 @@ export default function DetailsStatusCell({
       const url = `${HOSTLINK}/tables/apartment/${apartmentId}/${parseInt(newApartId)}/change_status?apart_type=${apartType}`;
       const response = await fetch(url, {
         method: "POST",
-        credentials: "include",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
@@ -110,7 +113,7 @@ export default function DetailsStatusCell({
         `${HOSTLINK}/tables/apartment/${apartmentId}/${parseInt(newApartId)}/set_decline_reason`,
         {
           method: "POST",
-          credentials: "include",
+          credentials: 'include',
           headers: {
             "Content-Type": "application/json",
           },

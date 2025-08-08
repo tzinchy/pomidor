@@ -405,7 +405,7 @@ def match_new_apart_to_family_batch(
                 delta = {1: 1.5, 2: 3, 3: 5, 4: 6.5, 5: 8, 6: 9.5, 7: 11, 8: 12.5}
                 df_new_apart_second = df_new_apart_rev.loc[::-1]
                 min_rank_by_room = {}
-                flag_ficit = 1
+                flag_ficit = {}
 
                 for i in range(1, (df_old_apart['room_count'].max() if df_old_apart['room_count'].max() > df_new_apart['room_count'].max() else df_new_apart['room_count'].max()) + 1):
                     if (((old_apart_ranks[i] if old_apart_ranks.get(i) is not None else  0) > (max_rank_by_room_count[i] if max_rank_by_room_count.get(i) is not None else  0)) 
@@ -415,7 +415,7 @@ def match_new_apart_to_family_batch(
                         old_apart_list = []
 
                         print("DEFICIT")
-                        flag_ficit = 2
+                        flag_ficit[i] = 2
 
                         for _, old_apart in df_old_apart_reversed[df_old_apart_reversed["room_count"] == i].iterrows():
                             old_apart_id = int(old_apart["affair_id"])
@@ -723,6 +723,7 @@ def match_new_apart_to_family_batch(
                                     offers_to_insert.append((old_apart_id, new_apart_id,))
                     else:
                         a[i] = 1
+                        flag_ficit[i] = 1
                         print("PROFICIT")
 
                         for _, old_apart in df_old_apart[
@@ -966,52 +967,43 @@ def match_new_apart_to_family_batch(
                         new_apart_rank_update
                     )
 
-                if flag_ficit == 2:
-                    if cannot_offer_to_insert and not df_new_apart_second.empty:                    
-                        # Подготавливаем данные для обновления
-                        update_data = []
-                        for _, row in df_new_apart_second.iterrows():
-                            room_count = row['room_count']
-                            new_id = row['new_apart_id']
+                # Определяем, из какого DataFrame брать данные в зависимости от flag_ficit
+                if cannot_offer_to_insert:
+                    update_data = []
+                    
+                    # Обрабатываем каждую room_count отдельно
+                    for room_count, flag_value in flag_ficit.items():
+                        # Выбираем соответствующий DataFrame в зависимости от значения flag_ficit
+                        if flag_value == 2:
+                            df_source = df_new_apart_second
+                        else:
+                            df_source = df_new_apart
+                            
+                        if df_source.empty:
+                            continue
+                            
+                        # Фильтруем DataFrame по текущей room_count
+                        df_filtered = df_source[df_source['room_count'] == room_count]
+                        
+                        # Получаем минимальный ранг для данной комнатности
+                        min_rank = min_rank_by_room.get(room_count)
+                        if not min_rank:
+                            continue
+                            
+                        print(f'min_rank {"DEFECIT" if flag_value == 2 else "PROFICIT"} -------------- ', min_rank, room_count)
+                        
+                        # Добавляем данные для обновления
+                        for _, row in df_filtered.iterrows():
+                            update_data.append((min_rank-1, row['new_apart_id']))
 
-                            # Получаем минимальный ранг для данной комнатности
-                            min_rank = min_rank_by_room.get(room_count)
-                            if not min_rank:
-                                continue
-                            print('min_rank -------------- ', min_rank, room_count)
-                            update_data.append((min_rank-1, new_id))
-
-                        # Выполняем массовое обновление
-                        if update_data:
-                            cursor.executemany(
-                                """UPDATE public.new_apart
-                                    SET rank = %s
-                                    WHERE new_apart_id = %s""",
-                                update_data
-                            )
-                else:
-                    if cannot_offer_to_insert and not df_new_apart.empty:                    
-                        # Подготавливаем данные для обновления
-                        update_data = []
-                        for _, row in df_new_apart.iterrows():
-                            room_count = row['room_count']
-                            new_id = row['new_apart_id']
-
-                            # Получаем минимальный ранг для данной комнатности
-                            min_rank = min_rank_by_room.get(room_count)
-                            if not min_rank:
-                                continue
-                            print('min_rank -------------- ', min_rank, room_count)
-                            update_data.append((min_rank-1, new_id))
-
-                        # Выполняем массовое обновление
-                        if update_data:
-                            cursor.executemany(
-                                """UPDATE public.new_apart
-                                    SET rank = %s
-                                    WHERE new_apart_id = %s""",
-                                update_data
-                            )
+                    # Выполняем массовое обновление
+                    if update_data:
+                        cursor.executemany(
+                            """UPDATE public.new_apart
+                                SET rank = %s
+                                WHERE new_apart_id = %s""",
+                            update_data
+                        )
                 conn.commit()
                 uploads_folder = os.path.join(os.getcwd(), "././uploads/")
                 file_name = f"matching_result_{last_history_id}.xlsx"

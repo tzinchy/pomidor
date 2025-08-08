@@ -42,6 +42,7 @@ export default function ApartDetails({
       const url = `${HOSTLINK}/tables/apartment/${apartmentDetails.affair_id}/cancell_matching_for_apart?apart_type=${apartType}`;
       const response = await fetch(url, {
         method: "POST",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },

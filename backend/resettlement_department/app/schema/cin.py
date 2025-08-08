@@ -23,8 +23,7 @@ class CreateCin(CINBase):
 
 class Cin(CINBase):
     cin_id: int
-    created_at: datetime
-    updated_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True
+

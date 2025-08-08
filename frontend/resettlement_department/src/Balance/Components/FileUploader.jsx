@@ -40,7 +40,7 @@ const FileUploader = ({link}) => {
     try {
       const response = await fetch(`${HOSTLINK}${link}`, {
         method: 'POST',
-        credentials: "include",
+        credentials: 'include',
         body: formData,
       });
 
