@@ -91,7 +91,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
         SELECT 
             oa.kpu_number,
             o.offer_id,
-            oa.full_house_address, 
+            oa.house_address, 
             oa.apart_number, 
             oa.type_of_settlement, 
             oa.kpu_number, 
@@ -115,13 +115,12 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
 			c.full_cin_address,
 			oa.district,
 			na.cad_num,
-			mail_index,
-			otsel_addresses_and_dates
+			otsel_addresses_and_dates,
+	        c.ispolnitel
         FROM unnst o
         JOIN old_apart oa USING (affair_id)
         JOIN new_apart na USING (new_apart_id) 
         JOIN test_cin c ON c.house_address = na.house_address
-        JOIN mail_index on oa.full_house_address = mail_index.house_address
         WHERE oa.is_queue <> 1
     """
     params = []
@@ -142,17 +141,14 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
 
     # Создаем DataFrame из результатов запроса
     df = pd.DataFrame(aparts, columns=['kpu', 'offer_id',
-        'full_old_house_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
+        'old_house_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
         'new_address', 'new_number', 'full_living_area', 'total_living_area', 'room_count', 
         'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'entrance_number', 'start_date', 'otdel',
-        'full_house_address', 'full_cin_address', 'old_district', 'old_cad_num', 'mail_index', 'otsel_addresses_and_dates'
+        'full_house_address', 'full_cin_address', 'old_district', 'old_cad_num', 'otsel_addresses_and_dates', 'ispolnitel'
     ])
 
     df_for_spd = df[['kpu', 'offer_id']]
     df = df.drop(['kpu', 'offer_id'], axis=1)
-
-    print(df['full_living_area'], df['total_living_area'], df['living_area'])
-    print(df)
 
     # Создаем новую книгу Excel и выбираем активный лист
     wb = openpyxl.Workbook()
@@ -189,21 +185,57 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
     row_num = 3  # Начинаем с третьей строки
 
     for index, row in df.iterrows():
-        print('otsel_addresses_and_dates', row['otsel_addresses_and_dates'])
+        start_date_str = None
+        first_stage_schedule = None
+        mail_index = None  # Инициализируем переменную для почтового индекса
+        
+        # Проверяем, что otsel_addresses_and_dates является словарём
+        if isinstance(row['otsel_addresses_and_dates'], dict):
+            for key, data in row['otsel_addresses_and_dates'].items():
+                # Проверяем наличие адреса в ключах словаря houses
+                houses_dict = data.get('houses', {})
+                if isinstance(houses_dict, dict) and row['old_house_address'] in houses_dict:
+                    # Сохраняем почтовый индекс
+                    mail_index = houses_dict[row['old_house_address']]
+                    
+                    # Обработка даты переселения
+                    relocation_date_str = data.get('relocation_date')
+                    if relocation_date_str:
+                        try:
+                            relocation_date = datetime.strptime(relocation_date_str, '%Y-%m-%d')
+                            start_date_str = relocation_date.strftime('%d.%m.%Y')
+                        except ValueError:
+                            pass  # Обработка неверного формата даты
+                    
+                    # Формируем first_stage_schedule из ranges
+                    if 'ranges' in data and isinstance(data['ranges'], list):
+                        valid_finals = [
+                            r['final'] 
+                            for r in data['ranges'] 
+                            if r.get('final')
+                        ]
+                        first_stage_schedule = ', '.join(valid_finals)
+                    
+                    break  # Прерываем цикл после нахождения адреса
+        
+        # Если не нашли в otsel_addresses_and_dates, используем row['start_date']
+        if start_date_str is None and row['start_date'] is not None:
+            start_date_str = row['start_date'].strftime('%d.%m.%Y') 
+        
         if row['old_district'] in ("ЗелАО", "ВАО", "ЮВАО", "САО", "СВАО"):
             report_id = 108404 if row['type_of_settlement'] == "частная собственность" else 108407
         elif row['old_district'] in ("ЗАО", "СЗАО", "ЮАО", "ЮЗАО", "ТАО", "НАО"):
             report_id = 108406 if row['type_of_settlement'] == "частная собственность" else 108409
         elif row['old_district'] in ("ЦАО"):
             report_id = 108405 if row['type_of_settlement'] == "частная собственность" else 108408
+        
         for i, tag in enumerate(additional_values):
             additional_texts = {
-                "VSOOTVET": f"Согласно постановлению Правительства Москвы от 01.08.2017 № 497-ПП «О программе реновации жилищного фонда в городе Москве» (далее - Программа реновации) в отношении многоквартирного дома по адресу: г. Москва, {row['full_old_house_address']} принято решение о включении в Программу реновации.",
-                "INFO_SOB": """- заявление о включении в предмет Договора предлагаемого жилого помещения;\n- оригиналы документов личного характера и правоустанавливающие документы на освобождаемое жилое помещение.\nПросим довести указанную в письме информацию до всех правообладателей.""",
-                "ISPOLNITEL": "Кандабаров Н.А.",
-                "OSMOTR": f"""Для осмотра квартиры необходимо {('с ' + (str(row['start_date'])[8:] + '.' + str(row['start_date'])[5:7] + '.' +str(row['start_date'])[:4])) if row['start_date'] != None and row['start_date'] > datetime.now().date() else '' } в течение 7 рабочих дней обратиться в информационный центр по адресу: г. Москва, {row['full_cin_address']} ({row['cin_schedule']}) по предварительной записи онлайн на сайте https://www.mos.ru/ в разделе «Осмотр квартиры» (для перехода наведите камеру смартфона на QR~код) или по тел. {row['phone_osmotr']}.""" if row['cin_schedule'] != 'time2plan' else "Предварительная запись на показ жилого помещения доступна на сервисе онлайн-записи «Время планировать вместе с ДГИ»: https://time2plan.online.",
-                "GETKEY": " ",
-                "OTVET": f"Всем правообладателям необходимо предоставить свое согласие либо отказ от предлагаемого жилого помещения в срок не позднее 7 рабочих дней в информационный центр по адресу: г. Москва, {row['full_cin_address'] if row['dep_schedule']!= 'отдел' else row['otdel']} {('(' + row['dep_schedule'] + ')') if row['dep_schedule']!= 'отдел' else ''}, по предварительной записи по вышеуказанному тел., при себе необходимо иметь следующие документы:"
+                "VSOOTVET": f"Согласно постановлению Правительства Москвы от 01.08.2017 № 497-ПП «О программе реновации жилищного фонда в городе Москве» (далее - Программа реновации) в отношении многоквартирного дома по адресу: г. Москва, {row['old_house_address']} принято решение о включении в Программу реновации.",
+                "INFO_SOB": """- заявление о включении в предмет Договора предлагаемого жилого помещения;\n- оригиналы документов личного характера и правоустанавливающие документы на освобождаемое жилое помещение.\nПросим довести указанную в письме информацию до всех правообладателей.""",
+                "ISPOLNITEL": row['ispolnitel'],
+                "OSMOTR": f"""Для осмотра квартиры необходимо {('с ' + start_date_str) if start_date_str and datetime.strptime(start_date_str, '%d.%m.%Y').date() > datetime.now().date() else ''} в течение 7 рабочих дней обратиться в информационный центр по адресу: г. Москва, {row['full_cin_address']} ({f"{first_stage_schedule}, {row['cin_schedule']}" if first_stage_schedule != '' else row['cin_schedule']}) по предварительной записи онлайн на сайте https://www.mos.ru/ в разделе «Осмотр квартиры» (для перехода наведите камеру смартфона на QR~код) или по тел. {row['phone_osmotr']}.""" if row['cin_schedule'] != 'time2plan' else "Предварительная запись на показ жилого помещения доступна на сервисе онлайн-записи «Время планировать вместе с ДГИ»: https://time2plan.online.",                "GETKEY": " ",
+                "OTVET": f"Всем правообладателям необходимо предоставить свое согласие либо отказ от предлагаемого жилого помещения в срок не позднее 7 рабочих дней в информационный центр по адресу: г. Москва, {row['full_cin_address'] if row['dep_schedule']!= 'отдел' else row['otdel']} {('(' + row['dep_schedule'] + ')') if row['dep_schedule']!= 'отдел' else ''}, по предварительной записи по вышеуказанному тел., при себе необходимо иметь следующие документы:"
             }
 
             # Номер заявки
@@ -214,8 +246,8 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
                 sheet.cell(row=row_num, column=2, value=1)  # appApplicantList.type
                 sheet.cell(row=row_num, column=3, value=1)  # appApplicantList.tab
                 sheet.cell(row=row_num, column=4, value="Уважаемый правообладатель!")  # appApplicantList.firstname
-                sheet.cell(row=row_num, column=6, value=f"{row['full_old_house_address']} кв. {row['old_number']}")  # Адрес
-                sheet.cell(row=row_num, column=7, value=row['mail_index'])  # Индекс
+                sheet.cell(row=row_num, column=6, value=f"{row['old_house_address']} кв. {row['old_number']}")  # Адрес
+                sheet.cell(row=row_num, column=7, value=mail_index)  # Индекс
                 sheet.cell(row=row_num, column=8, value="г. Москва")  # Населенный пункт
                 sheet.cell(row=row_num, column=9, value=row['old_cad_num'])  # Кадастровый номер
                 sheet.cell(row=row_num, column=10, value=f"{row['full_house_address']}, кв. {row['new_number']}")  # flatList.address

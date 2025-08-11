@@ -17,9 +17,26 @@ export default function RelocationTab({ formData, setFormData }) {
           time_to: '',
           final: ''
         }],
-        houses: []
+        houses: {}
       }
     };
+    
+    // Преобразуем существующие данные к новой структуре
+    if (formData.otsel_addresses_and_dates) {
+      Object.values(formData.otsel_addresses_and_dates).forEach(stage => {
+        if (Array.isArray(stage.houses)) {
+          const newHouses = {};
+          stage.houses.forEach((address, index) => {
+            if (address && stage.zip_codes?.[index]) {
+              newHouses[address] = stage.zip_codes[index];
+            }
+          });
+          stage.houses = newHouses;
+          delete stage.zip_codes;
+        }
+      });
+    }
+    
     return initialStages;
   });
 
@@ -28,7 +45,6 @@ export default function RelocationTab({ formData, setFormData }) {
   useEffect(() => { 
     const fetchData = async () => {
         try {
-            // Загрузка адресов
             const url = new URL(`${HOSTLINK}/tables/house_addresses`);
             url.searchParams.append('apart_type', 'OldApart');            
             const response = await fetch(url.toString(), {
@@ -101,7 +117,7 @@ export default function RelocationTab({ formData, setFormData }) {
           time_to: '',
           final: ''
         }],
-        houses: ['']
+        houses: {}
       }
     }));
   };
@@ -126,19 +142,27 @@ export default function RelocationTab({ formData, setFormData }) {
       ...prev,
       [stageId]: {
         ...prev[stageId],
-        houses: [...prev[stageId].houses, '']
+        houses: {
+          ...prev[stageId].houses,
+          '': ''
+        }
       }
     }));
   };
 
-  const handleRemoveHouse = (stageId, houseIndex) => {
-    setStages(prev => ({
-      ...prev,
-      [stageId]: {
-        ...prev[stageId],
-        houses: prev[stageId].houses.filter((_, index) => index !== houseIndex)
-      }
-    }));
+  const handleRemoveHouse = (stageId, address) => {
+    setStages(prev => {
+      const newHouses = { ...prev[stageId].houses };
+      delete newHouses[address];
+      
+      return {
+        ...prev,
+        [stageId]: {
+          ...prev[stageId],
+          houses: newHouses
+        }
+      };
+    });
   };
 
   const handleAddRange = (stageId) => {
@@ -246,14 +270,39 @@ export default function RelocationTab({ formData, setFormData }) {
     });
   };
 
-  const handleHouseChange = (stageId, houseIndex, value) => {
+  const handleAddressChange = (stageId, oldAddress, newAddress) => {
+    setStages(prev => {
+      const newHouses = { ...prev[stageId].houses };
+      
+      // Если адрес меняется, удаляем старый и добавляем новый
+      if (oldAddress !== newAddress) {
+        const zipCode = newHouses[oldAddress] || '';
+        delete newHouses[oldAddress];
+        newHouses[newAddress] = zipCode;
+      }
+      
+      return {
+        ...prev,
+        [stageId]: {
+          ...prev[stageId],
+          houses: newHouses
+        }
+      };
+    });
+  };
+
+  const handleZipCodeChange = (stageId, address, value) => {
+    // Ограничиваем ввод только цифрами и длиной до 6 символов
+    const filteredValue = value.replace(/\D/g, '').slice(0, 6);
+    
     setStages(prev => ({
       ...prev,
       [stageId]: {
         ...prev[stageId],
-        houses: prev[stageId].houses.map((house, index) => 
-          index === houseIndex ? value : house
-        )
+        houses: {
+          ...prev[stageId].houses,
+          [address]: filteredValue
+        }
       }
     }));
   };
@@ -434,27 +483,40 @@ export default function RelocationTab({ formData, setFormData }) {
               Отселяемые дома
             </label>
             
-            {stage.houses.map((house, houseIndex) => (
-              <div key={`house-${stage.id}-${houseIndex}`} className="flex items-center gap-2">
-                <div className="w-full">
-                  <AddressDropdown
-                    addresses={oldAddresses}
-                    value={house}
-                    onChange={(value) => handleHouseChange(stage.id, houseIndex, value)}
-                    placeholder="Выберите адрес отселяемого дома"
-                    className="flex-1"
-                  />
+            {Object.entries(stage.houses || {}).map(([address, zip]) => (
+              <div key={`house-${stage.id}-${address}`} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-full">
+                    <AddressDropdown
+                      addresses={oldAddresses}
+                      value={address}
+                      onChange={(value) => handleAddressChange(stage.id, address, value)}
+                      placeholder="Выберите адрес отселяемого дома"
+                      className="flex-1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={zip}
+                      onChange={(e) => handleZipCodeChange(stage.id, address, e.target.value)}
+                      placeholder="Почтовый инд."
+                      className="w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      maxLength={6}
+                      pattern="\d{6}"
+                    />
+                  </div>
+                  {Object.keys(stage.houses || {}).length > 1 && (
+                    <button
+                      onClick={() => handleRemoveHouse(stage.id, address)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
-                {stage.houses.length > 1 && (
-                  <button
-                    onClick={() => handleRemoveHouse(stage.id, houseIndex)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                )}
               </div>
             ))}
 
@@ -479,12 +541,6 @@ export default function RelocationTab({ formData, setFormData }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
         </svg>
         Добавить этап отселения
-      </button>
-      <button
-        onClick={() => {console.log(stages)}}
-        className="mt-4 px-4 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 flex items-center"
-      >
-        LOG
       </button>
     </div>
   );

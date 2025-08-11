@@ -18,6 +18,7 @@ class CINBase(BaseModel):
     full_cin_address: Optional[str] = None
     full_house_address: Optional[str] = None
     otsel_addresses_and_dates: Optional[Dict] = None
+    ispolnitel: Optional[str] = None
 
 class CreateCin(CINBase):
     pass
