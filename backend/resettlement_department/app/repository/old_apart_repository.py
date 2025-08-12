@@ -748,6 +748,7 @@ class OldApartRepository:
                     old_apart.district as "КПУ: Район",
                     old_apart.municipal_district as "КПУ: Муниципальный район",
                     old_apart.house_address as "КПУ: Адрес",
+                    old_apart.apart_number as "КПУ: № квартиры",
                     old_apart.room_count as "КПУ: Количество комнат", 
                     old_apart."floor" as "КПУ: Этаж",
                     old_apart.total_living_area as "КПУ: Общая площадь",
