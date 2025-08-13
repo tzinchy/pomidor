@@ -179,9 +179,9 @@ async def push_container_for_aparts(apart_ids: Rematch, client=Depends(get_oracl
     spd1_repository = Spd1Repository()
     print(apart_ids.apartment_ids)
     df_for_spd = generate_excel_from_two_dataframes(affair_ids=apart_ids.apartment_ids)
-    #update_apart_status(apart_ids=apart_ids.apartment_ids)
+    update_apart_status(apart_ids=apart_ids.apartment_ids)
     file_path = "./uploads/container_0.xlsx"
-    #upload_container(history_id=0, file_path=file_path)
+    upload_container(history_id=0, file_path=file_path)
     await spd1_repository.insert_data(await spd1_repository.get_spd_1_orders(df_for_spd, client=client))
 
 
