@@ -109,7 +109,6 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
             phone_osmotr, 
             phone_otvet, 
             na.entrance_number,
-            (start_dates_by_entrence->>(na.entrance_number::text))::date AS start_date,
             c.otdel,
 			c.full_house_address,
 			c.full_cin_address,
@@ -143,7 +142,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
     df = pd.DataFrame(aparts, columns=['kpu', 'offer_id',
         'old_house_address', 'old_number', 'type_of_settlement', 'kpu_number', 'new_apart_id', 
         'new_address', 'new_number', 'full_living_area', 'total_living_area', 'room_count', 
-        'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'entrance_number', 'start_date', 'otdel',
+        'living_area', 'floor', 'cin_address', 'cin_schedule', 'dep_schedule', 'phone_osmotr', 'phone_otvet', 'entrance_number', 'otdel',
         'full_house_address', 'full_cin_address', 'old_district', 'old_cad_num', 'otsel_addresses_and_dates', 'ispolnitel'
     ])
 
@@ -216,11 +215,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
                         ]
                         first_stage_schedule = ', '.join(valid_finals)
                     
-                    break  # Прерываем цикл после нахождения адреса
-        
-        # Если не нашли в otsel_addresses_and_dates, используем row['start_date']
-        if start_date_str is None and row['start_date'] is not None:
-            start_date_str = row['start_date'].strftime('%d.%m.%Y') 
+                    break  # Прерываем цикл после нахождения адреса 
         
         if row['old_district'] in ("ЗелАО", "ВАО", "ЮВАО", "САО", "СВАО"):
             report_id = 108404 if row['type_of_settlement'] == "частная собственность" else 108407
