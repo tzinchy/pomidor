@@ -21,7 +21,7 @@ cryptography==45.0.5
 deepdiff==8.5.0
 dnspython==2.7.0
 docopt==0.6.2
-email_validator==2.2.0
+
 et_xmlfile==2.0.0
 exceptiongroup==1.2.2
 fastapi==0.115.5
@@ -90,7 +90,7 @@ tzdata==2024.2
 ujson==5.10.0
 urllib3==2.3.0
 uvicorn==0.32.1
-uvloop==0.21.0
+
 watchfiles==1.0.0
 webdriver-manager==4.0.2
 websocket-client==1.8.0

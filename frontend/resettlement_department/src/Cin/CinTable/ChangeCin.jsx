@@ -594,13 +594,24 @@ export default function ChangeCin({ props: rowData , fetchTableData, type = "edi
                                         placeholder="Выберите адрес ЦИНа"
                                     />
                                 </div>
+
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Исполнитель</label>
+                                    <input
+                                        name="ispolnitel"
+                                        type="text"
+                                        value={formData.ispolnitel || ''}
+                                        onChange={handleInputChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
                             </>
                         ) : (
                             <RelocationTab 
-                                addresses={newAddresses} 
                                 formData={formData} 
                                 setFormData={setFormData} 
-                                />
+                            />
                         )}
                         
                         <div className="mt-6 flex justify-end space-x-3">
