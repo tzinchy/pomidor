@@ -4,13 +4,14 @@ import UpdateDataButton from "./UpdateInfo/UpdateModal";
 import { canSeeDashboard } from "..";
 import { LogOut } from "lucide-react";
 import LogoutButton from "./LogoutButton";
+import { ASIDECOLOR } from "..";
 
 export default function Aside() {
 
-
+  console.log('ASIDECOLOR', ASIDECOLOR);
 
   return (
-    <aside className="bg-neutral-100 fixed inset-y-0 left-0 z-[105] hidden w-14 flex-col justify-between border-r p-2 sm:flex">
+    <aside className={`${ASIDECOLOR} fixed inset-y-0 left-0 z-[105] hidden w-14 flex-col justify-between border-r p-2 sm:flex`}>
       <nav className="items-centergap-4 flex flex-col gap-2">
         {canSeeDashboard && <LinkButton name="dashboard" />}
         {canSeeDashboard && <LinkButton name="table_page" />}
