@@ -726,7 +726,10 @@ class OldApartRepository:
                     WHERE affair_id IN ({apart_ids})
                     ORDER BY affair_id'''),
                 )
-            return [row._mapping for row in result.fetchall()]
+            rows = [row._mapping for row in result]
+            columns = result.keys()
+
+            return rows, columns
 
     async def get_current_table_with_last_offer(self, apart_ids : list[int]):
         async with self.db() as session: 
@@ -739,41 +742,53 @@ class OldApartRepository:
                     and offer_id in (select max(offer_id) from offer group by affair_id)
                 )
                 select 
+                    old_apart.created_at::timestamp as "КПУ: Дата добавления",
+                    old_apart.updated_at::timestamp as "КПУ: Дата изменения",
+                    new_apart.new_apart_id as "ID НК", 
                     old_apart.affair_id as "ID дела", 
-                    old_apart.kpu_number as "Номер КПУ",
-                    old_apart.fio as "ФИО",
-                    old_apart.people_in_family as "Количество членов семьи",
-                    old_apart.category as "Категория", 
-                    old_apart.cad_num as "Кадастровый номер",
                     old_apart.district as "КПУ: Район",
                     old_apart.municipal_district as "КПУ: Муниципальный район",
+                    old_apart.kpu_number as "Номер КПУ",
+                    old_apart.fio as "КПУ: ФИО",
                     old_apart.house_address as "КПУ: Адрес",
                     old_apart.apart_number as "КПУ: № квартиры",
                     old_apart.room_count as "КПУ: Количество комнат", 
                     old_apart."floor" as "КПУ: Этаж",
+                    old_apart.full_living_area as "КПУ: Полная жилая площадь",   
                     old_apart.total_living_area as "КПУ: Общая площадь",
-                    old_apart.full_living_area as "КПУ: Полная жилая площадь",
                     old_apart.living_area as "КПУ: Жилая площадь", 
-                    old_apart.is_queue as "Очередник",
                     CASE 
                         WHEN old_apart.is_special_needs_marker = 1 THEN 'Да'
                         WHEN old_apart.is_special_needs_marker = 0 THEN 'Нет'
                     ELSE 'Не указано'
                     END as "КПУ: Инвалид",
-                    new_apart.new_apart_id as "ID НК", 
+                    old_apart.people_in_family as "КПУ: Количество членов семьи",
+                    old_apart.is_queue as "КПУ: Очередник",
+                    old_apart.category as "КПУ: Категория",
+                    old_apart.notes as "КПУ: Примечание",
+                    old_apart.rsm_notes as "КПУ: РСМ_Примечание",
+                    old_apart.cad_num as "КПУ: Кадастровый номер",
+                    old_status.status as "КПУ: статус",
+                    
                     new_apart.district as "НК: Район", 
                     new_apart.municipal_district as "НК: Муниципальный район", 
                     new_apart.house_address as "НК: Адрес", 
+                    new_apart.apart_number as "НК: Адрес № квартиры", 
+                    new_apart.room_count as "НК: Количество комнат", 
+                    new_apart.floor as "НК: Этаж", 
+                    new_apart.entrance_number as "НК: Номер подъезда", 
                     new_apart.full_living_area as "НК: Полная жилая площадь",
                     new_apart.total_living_area as "НК: Общая площадь", 
                     new_apart.living_area as "НК: Жилая площадь",
+                    new_apart.notes as "НК: Примечание",
+                    new_apart.rsm_notes as "НК: РСМ_Примечание",
+                    new_apart.cad_num as "НК: Кадастровый номер",
                     CASE 
                         WHEN new_apart.for_special_needs_marker = 1 THEN 'Да'
                         WHEN new_apart.for_special_needs_marker = 0 THEN 'Нет'
                         ELSE 'Не указано'
-                    END as "НК: Инвалидная",
-                    old_status.status as "КПУ: статус",
-                    new_status.status as "НК: статус"
+                    END as "НК: Инвалидная"
+                    
                 from old_apart 
                 join last_offer using (affair_id)
                 join new_apart using (new_apart_id)
@@ -781,7 +796,10 @@ class OldApartRepository:
                 left join status as new_status on new_apart.status_id = new_status.status_id
                 ORDER BY affair_id'''))
         
-            return [row._mapping for row in result]
+            rows = [row._mapping for row in result]
+            columns = result.keys()
+
+            return rows, columns
         
     async def set_district_notes(self, apart_ids: list[int], notes: str):
         async with self.db() as session:
