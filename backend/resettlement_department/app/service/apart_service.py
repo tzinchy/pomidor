@@ -354,12 +354,12 @@ class ApartService:
     ):
         if apart_type == ApartType.OLD: 
             if with_last_offer: 
-                result = await self.old_apart_repository.get_current_table_with_last_offer(apart_ids=apart_ids)
+                result, columns = await self.old_apart_repository.get_current_table_with_last_offer(apart_ids=apart_ids)
             else: 
-                result = await self.old_apart_repository.get_current_table(apart_ids=apart_ids)
+                result, columns = await self.old_apart_repository.get_current_table(apart_ids=apart_ids)
         else: 
-            result = await self.new_apart_repository.get_current_table(apart_ids=apart_ids)
-        df = pd.DataFrame(result)
+            result, columns = await self.new_apart_repository.get_current_table(apart_ids=apart_ids)
+        df = pd.DataFrame(result)[columns]
 
         output_path = os.path.join(os.getcwd(), "././uploads", "current_table.xlsx")
 
