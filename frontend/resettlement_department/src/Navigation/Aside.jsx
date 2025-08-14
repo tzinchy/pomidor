@@ -11,7 +11,13 @@ export default function Aside() {
   console.log('ASIDECOLOR', ASIDECOLOR);
 
   return (
-    <aside className={`${ASIDECOLOR} fixed inset-y-0 left-0 z-[105] hidden w-14 flex-col justify-between border-r p-2 sm:flex`}>
+   <aside
+  className={`fixed inset-y-0 left-0 z-[105] hidden w-14 flex-col justify-between border-r p-2 sm:flex ${
+    ASIDECOLOR === "test" ? "bg-orange-500" :
+    ASIDECOLOR === "dev" ? "bg-orange-500" :
+    ASIDECOLOR === "prod" ? "bg-gray-200" : "bg-gray-200"
+  }`}
+>
       <nav className="items-centergap-4 flex flex-col gap-2">
         {canSeeDashboard && <LinkButton name="dashboard" />}
         {canSeeDashboard && <LinkButton name="table_page" />}
