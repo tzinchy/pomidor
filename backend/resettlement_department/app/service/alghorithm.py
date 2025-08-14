@@ -696,6 +696,7 @@ def match_new_apart_to_family_batch(
                                         ]
                                         if suitable_aparts.empty:
                                             print('PROBLEM --- ',old_apart_id)
+                                            print('НЕ ПОДОБРАЛОСЬ ------', old_apart)
                                             cannot_offer_to_insert.append((old_apart_id,))
                                             if i in min_rank_by_room:
                                                 if old_apart["rank"] < min_rank_by_room[i]:

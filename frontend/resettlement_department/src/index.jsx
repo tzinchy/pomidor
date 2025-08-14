@@ -24,6 +24,8 @@ const root = ReactDOM.createRoot(rootElement);
 
 export const HOSTLINK = import.meta.env.VITE_HOST_LINK;
 export const ASIDELINK = import.meta.env.VITE_REACT_LINK;
+export const ASIDECOLOR = import.meta.env.VITE_ASIDE_COLOR;
+
 const allowed = ["mp-boss", "mp-employee"];
 const boss = ["mp-boss"]; 
   // Забираем куку roles
