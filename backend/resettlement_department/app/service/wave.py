@@ -160,8 +160,8 @@ def wave_matching(
 
                 for _, old_apart in df_old_apart_reversed[df_old_apart_reversed["room_count"] == i].iterrows():
                     old_apart_id = int(old_apart["affair_id"])
-                    if old_apart_id not in old_apart_list:
-                        continue
+                    #if old_apart_id not in old_apart_list:
+                        #continue
                     # Определяем условие по этажу
                     floor_condition = (
                         ((df_new_apart_second["floor"]>= (old_apart["min_floor"] - 2))&
@@ -256,7 +256,7 @@ def wave_matching(
                                     (df_new_apart_second["for_special_needs_marker"] == old_apart["is_special_needs_marker"])
                                 ]
                                 if suitable_aparts.empty:
-                                    print('PROBLEM --- ',old_apart_id)
+                                    print('PROBLEM --- ', old_apart)
                                     cannot_offer_to_insert.append((old_apart_id,))
 
                                 else:
@@ -406,15 +406,12 @@ def wave_matching(
                 str(new_apart_id): {"status_id": 7}
             }
             new_aparts_json = json.dumps(new_aparts_data, ensure_ascii=False)
-            print("INSERT INTO public.offer (affair_id, new_aparts, status_id) VALUES (%s, %s, 7)",
-                (old_apart_id, new_aparts_json))
             
             # Вставляем новую запись
             cursor.execute(
                 "INSERT INTO public.offer (affair_id, new_aparts, status_id) VALUES (%s, %s, 7)",
                 (old_apart_id, new_aparts_json)
             )
-            print('INSERTED')
 
         conn.commit()
         res = {'cannot_offer': len(cannot_offer_to_insert), 'offer':  len(offers_to_insert)}
@@ -1218,9 +1215,6 @@ def waves(data, cursor, conn):
     # Обновляем ранги в базе данных для старых и новых квартир
     old_apart_rank_update = list(zip(df_old_apart["rank"], df_old_apart["affair_id"]))
     new_apart_rank_update = list(zip(df_new_apart["rank"], df_new_apart["new_apart_id"]))
-
-    print('old_apart_rank_update', old_apart_rank_update)
-    print('new_apart_rank_update', new_apart_rank_update)
 
     cursor.executemany(
         """UPDATE public.old_apart

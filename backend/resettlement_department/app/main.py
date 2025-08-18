@@ -4,6 +4,7 @@ from api.v1.router import router
 from core.logger import logger
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from depends import oracle_client
 
 app = FastAPI()
 
@@ -33,8 +34,16 @@ async def log_requests(request: Request, call_next):
     return response
 
 
+
 app.include_router(router)
 
 @app.on_event("startup")
 async def startup_event():
     logger.info("🚀 Application started")
+    oracle_client.init_pool(min=2, max=10)
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    if oracle_client.pool:
+        oracle_client.pool.close()
+

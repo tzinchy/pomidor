@@ -59,12 +59,12 @@ def match_new_apart_to_family_batch(
                     LEFT JOIN 
                         family_member fm ON o.kpu_number = fm.kpu_number 
                     WHERE (o.rsm_status <> 'снято' or rsm_status is NULL) 
-		    	AND o.affair_id NOT IN (
+		    	        AND o.affair_id NOT IN (
                             SELECT affair_id
                             FROM  offer
                             where status_id not in (2, 14)
                         )
-			AND o.affair_id NOT IN (
+			            AND o.affair_id NOT IN (
                             SELECT affair_id
                             FROM  old_apart
                             where status_id = 14
@@ -696,6 +696,7 @@ def match_new_apart_to_family_batch(
                                         ]
                                         if suitable_aparts.empty:
                                             print('PROBLEM --- ',old_apart_id)
+                                            print('НЕ ПОДОБРАЛОСЬ ------', old_apart)
                                             cannot_offer_to_insert.append((old_apart_id,))
                                             if i in min_rank_by_room:
                                                 if old_apart["rank"] < min_rank_by_room[i]:
