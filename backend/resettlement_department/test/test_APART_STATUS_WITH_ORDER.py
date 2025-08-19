@@ -1,4 +1,4 @@
-'''import pytest
+import pytest
 from config import get_connection
 from data.mock import order_decisions_test_data
 
@@ -130,4 +130,3 @@ def test_order_decisions(order_data, change_status, expected_status):
             
     finally:
         connection.close()
-'''

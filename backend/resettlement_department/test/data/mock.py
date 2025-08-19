@@ -191,19 +191,8 @@ offer_test_data = [
         'affair_id': 1003,
         'new_aparts': json.dumps({'2003': {'status_id': 2}})
 
-    },
-    {
-    'offer_id': 11,
-        'affair_id': 1003,
-        'new_aparts': json.dumps({'2004': {'status_id': 3}})
-
-    },
-    {
-    'offer_id': 12,
-        'affair_id': 1003,
-        'new_aparts': json.dumps({'2001': {'status_id': 3}})
-
-    }]
+    }
+    ]
 
 order_decisions_test_data = {    
     3 :
