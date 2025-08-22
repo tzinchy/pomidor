@@ -95,7 +95,7 @@ export default function ApartDetails({
         {apartType === "OldApart" && canSeeDashboard && (
           <button
             onClick={() => setIsManualSelectionOpen(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="bg-white text-black border px-4 py-2 rounded duration-300 hover:bg-gray-100"
           >
             Ручной подбор
           </button>
@@ -205,7 +205,7 @@ export default function ApartDetails({
               <div className="mt-4 flex gap-2">
                 <button
                   onClick={handleCancelMatching}
-                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                  className="bg-white text-red-400 border border-red-400 px-4 py-2 rounded hover:bg-red-50"
                 >
                   Отменить подборы
                 </button>
