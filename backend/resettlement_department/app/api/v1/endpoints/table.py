@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse
 from fastapi.concurrency import run_in_threadpool
 from depends import apartment_service, order_service, offer_service
 from fastapi import APIRouter, Body, HTTPException, Query, Depends
-from models.xlsx import CurrentTableRequest
+from schema.xlsx import CurrentTableRequest
 from schema.apartment import ApartType
 from schema.user import User
 from service.auth import get_user
