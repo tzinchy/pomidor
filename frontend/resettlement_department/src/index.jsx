@@ -16,6 +16,7 @@ import ChessGrid from './ChessGrid';
 import CinPage from './Cin/CinPage';
 import axios from 'axios';
 import Cookies from "js-cookie";
+import TaskPage from './TaskPage/TaskPage';
 
 axios.defaults.withCredentials = true;
 
@@ -63,6 +64,7 @@ root.render(
       <Route path="/cin" element={<CinPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/test" element={<ChessGrid />} />
+      <Route path="/taskpage" element={<TaskPage />} />
     </Routes>
   </BrowserRouter>
 );
