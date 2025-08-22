@@ -24,6 +24,7 @@ export default function Aside() {
         <LinkButton name="aparts" />
         {canSeeDashboard && <LinkButton name="balance" />}
         <LinkButton name="cin" />
+        <LinkButton name="taskpage" />
       </nav>
       <div className="mt-auto flex flex-col items-center gap-2 pt-2">
         {canSeeDashboard && <UpdateDataButton />}
