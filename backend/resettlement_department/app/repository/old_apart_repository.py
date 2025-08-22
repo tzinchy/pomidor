@@ -787,14 +787,18 @@ class OldApartRepository:
                         WHEN new_apart.for_special_needs_marker = 1 THEN 'Да'
                         WHEN new_apart.for_special_needs_marker = 0 THEN 'Нет'
                         ELSE 'Не указано'
-                    END as "НК: Инвалидная"
-                    
+                    END as "НК: Инвалидная",
+                    COUNT(*) OVER (PARTITION BY affair_id) as "Кол-во квартир",
+					ROW_NUMBER(*) OVER (PARTITION BY affair_id) as "Порядковый номер"
                 from old_apart 
-                join last_offer using (affair_id)
-                join new_apart using (new_apart_id)
+                left join last_offer using (affair_id)
+                left join new_apart using (new_apart_id)
                 left join status as old_status on old_apart.status_id = old_status.status_id
                 left join status as new_status on new_apart.status_id = new_status.status_id
-                ORDER BY affair_id'''))
+                where affair_id in ({apart_ids})
+                ORDER BY affair_id
+                '''
+                ))
         
             rows = [row._mapping for row in result]
             columns = result.keys()
