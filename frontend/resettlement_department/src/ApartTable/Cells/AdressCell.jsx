@@ -26,6 +26,11 @@ export default function AdressCell( props ){
               Быв. очередник
             </div>
           ) : ''}
+          {(value.rsm_status == "снято") ? (
+            <div className="inline-flex items-center rounded-full border py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground ml-1 h-4 px-1 text-xs bg-indigo-100 border-gray-200">
+              Снята с учёта
+            </div>
+          ) : ''}
         </div>
       </div>
     </div>

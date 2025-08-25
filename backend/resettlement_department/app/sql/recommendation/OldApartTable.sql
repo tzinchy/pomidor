@@ -33,7 +33,8 @@ WITH ranked_apartments AS (
 			ELSE 'Переселение'
 		END as "buildingRelocationStatus",
 		type,
-        district_notes
+        district_notes,
+        rsm_status
     FROM
         old_apart oa
     LEFT JOIN
