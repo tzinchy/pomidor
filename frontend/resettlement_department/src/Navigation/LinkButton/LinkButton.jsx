@@ -86,7 +86,8 @@ function TooltipDesc({ name }){
         'dashboard': 'Дашборд',
         'aparts': 'Ресурс / Отселяемые дома',
         'balance': 'Баланс',
-        'cin': 'ЦИН'
+        'cin': 'ЦИН',
+        'taskpage': 'Задачи'
     } 
 
     return descriptions[name]
