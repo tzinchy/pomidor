@@ -224,7 +224,7 @@ def generate_excel_from_two_dataframes(history_id=None, output_dir="./uploads", 
             report_id = 108406 if row['type_of_settlement'] == "частная собственность" else 108409
         elif row['old_district'] in ("ЦАО"):
             report_id = 108405 if row['type_of_settlement'] == "частная собственность" else 108408
-        
+        #FOR SASHA AND PROD
         for i, tag in enumerate(additional_values):
             additional_texts = {
                 "VSOOTVET": f"Согласно постановлению Правительства Москвы от 01.08.2017 № 497-ПП «О программе реновации жилищного фонда в городе Москве» (далее - Программа реновации) в отношении многоквартирного дома по адресу: г. Москва, {row['full_old_house_address']} принято решение о включении в Программу реновации.",
